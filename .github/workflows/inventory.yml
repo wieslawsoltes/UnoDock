@@ -1,0 +1,46 @@
+name: Reference API inventory
+on:
+  workflow_dispatch:
+  push:
+    paths: ['tools/ApiScan/**', 'tools/resolve-versions.py', 'contracts/reference.json', '.github/workflows/inventory.yml']
+permissions:
+  contents: write
+concurrency:
+  group: reference-inventory
+  cancel-in-progress: false
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Resolve stable Uno package pins
+        run: python3 tools/resolve-versions.py
+      - name: Fetch pinned reference into isolated temporary directory
+        shell: bash
+        run: |
+          set -euo pipefail
+          revision=$(python3 -c "import json; print(json.load(open('contracts/reference.json'))['revision'])")
+          mkdir -p "$RUNNER_TEMP/reference"
+          curl --fail --location --retry 3 "https://codeload.github.com/xceedsoftware/wpftoolkit/tar.gz/$revision" | tar -xz -C "$RUNNER_TEMP/reference" --strip-components=1
+      - name: Extract declarations only, twice
+        shell: bash
+        run: |
+          set -euo pipefail
+          source="$RUNNER_TEMP/reference/ExtendedWPFToolkitSolution/Src/Xceed.Wpf.AvalonDock"
+          dotnet run --project tools/ApiScan -- "$source" contracts/avalondock
+          dotnet run --project tools/ApiScan -- "$source" "$RUNNER_TEMP/repeat"
+          cmp contracts/avalondock.json "$RUNNER_TEMP/repeat.json"
+          rm -rf "$RUNNER_TEMP/reference"
+      - name: Record verified inventory and pins
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add contracts/avalondock.json contracts/avalondock.txt contracts/versions.json global.json
+          git diff --cached --quiet || (git commit -m 'build: record deterministic reference API inventory and stable Uno pins' && git pull --rebase origin main && git push origin HEAD:main)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: reference-contract
+          path: contracts/

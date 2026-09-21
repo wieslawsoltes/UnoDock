@@ -1,0 +1,8 @@
+{
+  "repository": "https://github.com/xceedsoftware/wpftoolkit",
+  "revision": "2c71faba5eecc1b6ae6cd3d269408e0df37715d8",
+  "path": "ExtendedWPFToolkitSolution/Src/Xceed.Wpf.AvalonDock",
+  "method": "declaration-only Roslyn syntax scan; source bodies are neither displayed nor copied",
+  "scope": "public and protected declared API; inherited framework API is mapped separately",
+  "verifiedOn": "2026-09-21"
+}
