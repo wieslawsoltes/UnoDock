@@ -1,0 +1,29 @@
+name: Prepare Uno generators
+on:
+  workflow_dispatch:
+  push:
+    paths: ['.github/workflows/analyzers.yml']
+permissions:
+  contents: read
+jobs:
+  generators:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Restore reference project and export generators
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/project" "$RUNNER_TEMP/generators"
+          cp global.json "$RUNNER_TEMP/project/global.json"
+          echo '<Project Sdk="Uno.Sdk"><PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup></Project>' > "$RUNNER_TEMP/project/Reference.csproj"
+          dotnet restore "$RUNNER_TEMP/project/Reference.csproj"
+          find ~/.nuget/packages/uno.winui/ -type d -path '*/analyzers/dotnet/cs' -print -exec cp -a '{}' "$RUNNER_TEMP/generators/" \;
+      - uses: actions/upload-artifact@v4
+        with:
+          name: uno-generators
+          path: ${{ runner.temp }}/generators/
+          retention-days: 1
