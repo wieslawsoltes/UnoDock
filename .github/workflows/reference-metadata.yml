@@ -32,8 +32,8 @@ jobs:
         shell: pwsh
         run: |
           $stage = Join-Path $env:RUNNER_TEMP 'avalondock-reference'
-          $root = "$stage/framework/build/.NETFramework/"
-          $refs = "$root/v4.0"
+          $root = "$stage/framework/build/"
+          $refs = "$root/.NETFramework/v4.0"
           $project = "$stage/ExtendedWPFToolkitSolution/Src/Xceed.Wpf.AvalonDock/Xceed.Wpf.AvalonDock.csproj"
           dotnet build tools/ApiMetadata -c Release
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

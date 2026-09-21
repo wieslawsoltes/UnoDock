@@ -2,7 +2,7 @@ name: Build and test
 on:
   push:
     branches: [main]
-    paths-ignore: ['.github/workflows/prepare.yml', '.github/workflows/references.yml', '.github/workflows/analyzers.yml', '.github/workflows/import.yml', '.github/workflows/recover.yml', '.github/workflows/complete.yml']
+    paths-ignore: ['tools/ApiMetadata/**', '.github/workflows/reference-metadata.yml', '.github/workflows/recover.yml', '.github/workflows/complete.yml', '.github/workflows/repair.yml', '.github/workflows/prepare.yml', '.github/workflows/references.yml', '.github/workflows/analyzers.yml', '.github/workflows/import.yml']
   pull_request:
   workflow_dispatch:
 permissions:
@@ -83,8 +83,9 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
+      - uses: microsoft/setup-msbuild@v2
       - name: Build generic Uno and native WinUI package targets
-        run: dotnet pack src/UnoDock -c Release -o artifacts/packages -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg
+        run: msbuild src/UnoDock/UnoDock.csproj -restore -t:Pack -p:Configuration=Release -p:PackageOutputPath=${{ github.workspace }}/artifacts/packages -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg
       - name: Package independent core
         run: dotnet pack src/UnoDock.Core -c Release -o artifacts/packages -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg
       - uses: actions/upload-artifact@v4
