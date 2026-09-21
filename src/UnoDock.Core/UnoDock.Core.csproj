@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework><IsPackable>true</IsPackable>
+    <PackageId>UnoDock.Core</PackageId><Description>Portable docking geometry, drag state machine, update batching and bounded layout snapshots.</Description>
+  </PropertyGroup>
+</Project>
