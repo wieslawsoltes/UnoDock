@@ -1,0 +1,97 @@
+name: Build and test
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['.github/workflows/prepare.yml', '.github/workflows/references.yml', '.github/workflows/analyzers.yml', '.github/workflows/import.yml']
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  core:
+    if: ${{ hashFiles('src/UnoDock.Core/UnoDock.Core.csproj') != '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Portable regression and randomized tests
+        run: dotnet run --project tests/UnoDock.Core.Tests -c Release -- artifacts/test-results
+      - name: Check generated adapters are reproducible
+        run: |
+          python3 tools/generate-property-adapters.py
+          git diff --exit-code -- src/
+      - name: Scan implementation and report every declaration difference
+        run: |
+          dotnet run --project tools/ApiScan -- src/UnoDock artifacts/unodock-api
+          python3 tools/audit-api.py artifacts/unodock-api.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: core-and-api-results
+          path: artifacts/
+  desktop:
+    if: ${{ hashFiles('src/UnoDock/UnoDock.csproj') != '' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Build actual Uno desktop application
+        run: dotnet build samples/UnoDock.Gallery -c Release -f net10.0-desktop -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0
+      - name: Install headless desktop dependencies
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y xvfb libx11-6 libxi6 libxrandr2 libxcursor1 libfontconfig1 libgl1 libice6 libsm6
+      - name: Run real Uno model and visual regression tests
+        if: runner.os == 'Linux'
+        env:
+          UNODOCK_SELFTEST: '1'
+          UNODOCK_TEST_RESULTS: ${{ github.workspace }}/artifacts/test-results
+        run: timeout 300s xvfb-run -a dotnet run --project samples/UnoDock.Gallery -c Release -f net10.0-desktop --no-build -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: desktop-${{ runner.os }}
+          path: |
+            artifacts/test-results/
+            samples/UnoDock.Gallery/bin/Release/net10.0-desktop/
+  browser:
+    if: ${{ hashFiles('src/UnoDock/UnoDock.csproj') != '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - run: dotnet workload install wasm-tools
+      - name: Publish browser gallery
+        run: dotnet publish samples/UnoDock.Gallery -c Release -f net10.0-browserwasm -p:UnoDockTargetFrameworks=net10.0-browserwasm -p:UnoDockLibraryFrameworks=net10.0 -o artifacts/browser
+      - uses: actions/upload-artifact@v4
+        with:
+          name: browser-gallery
+          path: artifacts/browser/
+  packages:
+    if: ${{ hashFiles('src/UnoDock/UnoDock.csproj') != '' }}
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Build generic Uno and native WinUI package targets
+        run: dotnet pack src/UnoDock -c Release -o artifacts/packages -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg
+      - name: Package independent core
+        run: dotnet pack src/UnoDock.Core -c Release -o artifacts/packages -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nuget-preview
+          path: artifacts/packages/
