@@ -1,0 +1,60 @@
+name: Apply integration corrections
+on:
+  workflow_dispatch:
+  push:
+    paths: ['.github/workflows/repair.yml']
+permissions:
+  contents: write
+  actions: write
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply reviewed integration corrections
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          def edit(name,old,new):
+              p=Path(name);s=p.read_text()
+              if old in s:s=s.replace(old,new);p.write_text(s)
+              elif new not in s:raise SystemExit('Unexpected source: '+name)
+          p=Path('tests/UnoDock.Runtime.Tests/RuntimeTests.cs');s=p.read_text()
+          s=s.replace('using LayoutPanel = Xceed.Wpf.AvalonDock.Layout.LayoutPanel;\n','').replace('namespace UnoDock.Testing;\n','namespace UnoDock.Testing;\n\nusing LayoutPanel = Xceed.Wpf.AvalonDock.Layout.LayoutPanel;\n');p.write_text(s)
+          edit('src/UnoDock/Layout/Panes.cs','PaneSelection(ILayoutGroup pane, ILayoutContentSelector selector, Action<string> notify)','PaneSelection(ILayoutGroup pane, Action<string> notify)')
+          edit('src/UnoDock/Layout/Panes.cs','new(this, this, Notify)','new(this, Notify)')
+          edit('src/UnoDock/Controls/LayoutFloatingWindowControl.cs','try { _window.AppWindow.MoveAndResize(new Windows.Graphics.RectInt32 { X = (int)(bounds.X * scale), Y = (int)(bounds.Y * scale), Width = (int)(bounds.Width * scale), Height = (int)(bounds.Height * scale) }); }','try { _window.AppWindow.Move(new Windows.Graphics.PointInt32 { X = (int)(bounds.X * scale), Y = (int)(bounds.Y * scale) }); _window.AppWindow.Resize(new Windows.Graphics.SizeInt32 { Width = (int)(bounds.Width * scale), Height = (int)(bounds.Height * scale) }); }')
+          edit('src/UnoDock/Controls/LayoutFloatingWindowControl.cs','internal void HideHost() { if (_window != null) _window.AppWindow.Hide(); else Visibility = Visibility.Collapsed; }','''internal void HideHost()
+              {
+          #if WINDOWS
+                  if (_window != null) _window.AppWindow.Hide();
+          #else
+                  // Uno has no AppWindow.Hide: release the host, retaining the control and content.
+                  if (_window is { } window)
+                  {
+                      _closingHost = true;
+                      try
+                      {
+                          window.AppWindow.Closing -= OnNativeClosing;
+                          window.AppWindow.Changed -= OnNativeChanged;
+                          window.Closed -= OnNativeClosed;
+                          window.Content = null;
+                          window.Close();
+                          _window = null;
+                      }
+                      finally { _closingHost = false; }
+                  }
+          #endif
+                  Visibility = Visibility.Collapsed;
+              }''')
+          edit('src/UnoDock/Controls/LayoutFloatingWindowControl.cs','if (_hostDisposed) return;\n        if (_window == null)','if (_hostDisposed) return;\n        Visibility = Visibility.Visible;\n        if (_window == null)')
+          PY
+      - name: Commit and validate source changes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src tests
+          git diff --cached --quiet || (git commit -m 'fix: correct linked test aliases and preserve content across Uno native-host hiding' && git pull --rebase origin main && git push origin HEAD:main)
+          gh workflow run ci.yml --ref main
