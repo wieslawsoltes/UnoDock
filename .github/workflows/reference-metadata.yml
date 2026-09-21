@@ -1,0 +1,63 @@
+name: Reference metadata contract
+on:
+  workflow_dispatch:
+  push:
+    paths: ['tools/ApiMetadata/**', 'contracts/reference.json', '.github/workflows/reference-metadata.yml']
+permissions:
+  contents: write
+concurrency:
+  group: reference-metadata
+  cancel-in-progress: false
+jobs:
+  metadata:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - uses: microsoft/setup-msbuild@v2
+      - name: Prepare isolated pinned reference and framework metadata
+        shell: pwsh
+        run: |
+          $revision = (Get-Content contracts/reference.json | ConvertFrom-Json).revision
+          $stage = Join-Path $env:RUNNER_TEMP 'avalondock-reference'
+          New-Item -ItemType Directory -Force $stage | Out-Null
+          Invoke-WebRequest "https://codeload.github.com/xceedsoftware/wpftoolkit/tar.gz/$revision" -OutFile "$stage/reference.tar.gz"
+          tar -xzf "$stage/reference.tar.gz" --strip-components=1 -C $stage
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Invoke-WebRequest 'https://api.nuget.org/v3-flatcontainer/microsoft.netframework.referenceassemblies.net40/1.0.3/microsoft.netframework.referenceassemblies.net40.1.0.3.nupkg' -OutFile "$stage/framework.zip"
+          Expand-Archive "$stage/framework.zip" "$stage/framework"
+      - name: Build original projects in isolation and inspect exported metadata only
+        shell: pwsh
+        run: |
+          $stage = Join-Path $env:RUNNER_TEMP 'avalondock-reference'
+          $root = "$stage/framework/build/.NETFramework/"
+          $refs = "$root/v4.0"
+          $project = "$stage/ExtendedWPFToolkitSolution/Src/Xceed.Wpf.AvalonDock/Xceed.Wpf.AvalonDock.csproj"
+          dotnet build tools/ApiMetadata -c Release
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          foreach ($configuration in @('Release','Debug')) {
+            $output = "$stage/bin/$configuration/"
+            msbuild $project /nologo /v:minimal /p:Configuration=$configuration /p:TargetFrameworkRootPath=$root /p:OutputPath=$output /p:Deterministic=true /p:GenerateSerializationAssemblies=Off
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            $profile = "net40-client-$($configuration.ToLowerInvariant())"
+            $prefix = "contracts/avalondock-metadata-$($configuration.ToLowerInvariant())"
+            dotnet run --no-build --project tools/ApiMetadata -c Release -- "$output/Xceed.Wpf.AvalonDock.dll" $prefix --ref-dir $refs --profile $profile
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            dotnet run --no-build --project tools/ApiMetadata -c Release -- "$output/Xceed.Wpf.AvalonDock.dll" "$stage/repeat" --ref-dir $refs --profile $profile
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            if ((Get-FileHash "$prefix.json").Hash -ne (Get-FileHash "$stage/repeat.json").Hash) { throw 'Non-deterministic metadata inventory' }
+          }
+          Remove-Item -Recurse -Force $stage
+      - name: Commit verified public metadata contracts
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add contracts/avalondock-metadata-*.json contracts/avalondock-metadata-*.txt
+          git diff --cached --quiet || (git commit -m 'test: record resolved AvalonDock public metadata for release and debug profiles' && git pull --rebase origin main && git push origin HEAD:main)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: reference-public-metadata
+          path: contracts/avalondock-metadata-*
