@@ -1,0 +1,43 @@
+name: Recover interrupted source upload
+on:
+  workflow_dispatch:
+  push:
+    paths: ['.github/workflows/recover.yml']
+permissions:
+  contents: read
+jobs:
+  recover:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Recover uploaded source fragments without changing repository files
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import base64, hashlib, json, lzma, os, pathlib, urllib.request
+          shas = ['90b30b836ada6392e1a1bf088d0b8d312f81878a','1715a98fc2d8576b1cf821920e1cc1dacd113ef3','ccc6acaf12e53d7951ea529af89d47fc2c88257b','7f693af59a5391618a3b6a57b564fdf97213bf0a']
+          output = pathlib.Path('recovered'); output.mkdir()
+          pieces = []
+          for sha in shas:
+              request = urllib.request.Request(f'https://api.github.com/repos/{os.environ["GITHUB_REPOSITORY"]}/git/blobs/{sha}', headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'], 'Accept':'application/vnd.github+json'})
+              with urllib.request.urlopen(request, timeout=60) as response: blob = json.load(response)
+              data = base64.b64decode(blob['content'])
+              assert hashlib.sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest() == sha
+              pieces.append(data)
+          compressed = b''.join(pieces)
+          (output/'source-fragments.xz').write_bytes(compressed)
+          decoder = lzma.LZMADecompressor()
+          data = decoder.decompress(compressed)
+          (output/'payload').write_bytes(data)
+          report = {'compressedBytes':len(compressed),'recoveredBytes':len(data),'complete':decoder.eof,'sha256':hashlib.sha256(data).hexdigest()}
+          (output/'recovery.json').write_text(json.dumps(report,indent=2)+'\n')
+          print(json.dumps(report))
+          PY
+      - name: Export current repository alongside recovery data
+        run: git archive HEAD -o recovered/repository.tar
+      - uses: actions/upload-artifact@v4
+        with:
+          name: recovered-source
+          path: recovered/
+          retention-days: 7
