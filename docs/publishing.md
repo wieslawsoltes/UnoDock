@@ -1,29 +1,44 @@
 # Build and release configuration
 
-CI runs on push/PR/manual dispatch. Portable tests emit JSON and JUnit XML; desktop UI
-tests run inside the gallery on Linux/Xvfb. Windows/macOS desktop builds and browser
-publishing are separate jobs. NuGet artifacts are built from the same source revision.
-Inspect all job conclusions before promoting a revision.
+CI runs on push, pull request and manual dispatch. Portable tests emit JSON/JUnit XML.
+The Linux gallery runs model/control and original-layout interoperability tests inside
+a real Uno application under Xvfb. Separate jobs build Windows/macOS desktop heads,
+publish the browser head and package the generic Uno/native WinUI targets.
 
-The `Publish NuGet` workflow accepts a release tag `v<semver>` or a manual `version`
-input. Tags must resolve to the selected commit. It runs tests and packages both
-`UnoDock.Core` and `UnoDock`, including symbols. It refuses a stable 1.0+ release unless
-`contracts/release-attestation.json` explicitly attests complete compatibility at that
-exact source revision. The initial preview contains no such attestation.
+Artifacts include test/API reports, a source ZIP with revision/checksum, desktop builds,
+the browser build, and UnoDock/UnoDock.Core NuGet packages with symbols. A build-only
+platform is not reported as runtime-tested. Inspect every job for the exact revision.
 
-Choose one authentication option:
+Native WinUI XAML packing uses Visual Studio MSBuild (`microsoft/setup-msbuild`) rather
+than dotnet MSBuild, because its current XAML task target requires that host.
 
-1. Set `NUGET_API_KEY` as a repository or `nuget` environment secret. Scope the key to
-   the two package IDs with push permissions and an appropriate expiry.
-2. Set repository variable `NUGET_USER`, and configure NuGet trusted publishing for
-   owner `wieslawsoltes`, repository `UnoDock`, workflow `publish.yml`, and environment
-   `nuget`. The workflow requests OIDC and exchanges it via `NuGet/login@v1`.
+## Publication
 
-Configure required reviewers on the `nuget` environment for release approval. Secrets
-and trusted-publishing policies are account administration tasks; merely adding this
-workflow does not create them. No package has been represented as published until a
-successful publishing run is observed.
+`Publish NuGet` accepts a published release tag `v<semver>` or a manual version input.
+Release tags must identify the checked-out commit. The validation job runs portable
+tests, adapter reproduction, and the real Linux gallery/runtime/interoperability suite.
+The gated Windows job packs both libraries and associated .snupkg symbol packages.
 
-Preview packages disclose compatibility limitations. Do not label preview package
-metadata or release notes as full AvalonDock parity. Add behavior fixtures and platform
-acceptance evidence before removing the compatibility disclaimer.
+Choose one authentication method:
+
+1. Repository or `nuget` environment secret `NUGET_API_KEY`, scoped to package IDs
+   UnoDock and UnoDock.Core with appropriate push permissions and expiry.
+2. Repository variable `NUGET_USER` plus a NuGet trusted-publishing policy for owner
+   wieslawsoltes, repository UnoDock, workflow publish.yml, environment nuget. The
+   workflow requests GitHub OIDC and exchanges it using NuGet/login@v1.
+
+Configure reviewers on the `nuget` environment for approval. Workflow files cannot
+create NuGet account policies or credentials. Publication is not represented as
+successful until an actual publishing run completes successfully.
+
+## Stable-release attestation
+
+A stable 1.0+ release requires contracts/release-attestation.json with
+`fullCompatibilityVerified: true` and a matching `sourceTreeSha256`. Compute the latter
+with `python3 tools/source-fingerprint.py` after committing the verified source.
+The fingerprint covers the tracked tree except the attestation itself, avoiding an
+impossible self-referential commit hash. Any other tracked change invalidates it.
+
+The preview intentionally provides no full-compatibility attestation. Its package
+metadata and README disclose remaining API, behavior, windowing and platform limits.
+An attestation is an explicit reviewed assertion, not a substitute for acceptance tests.

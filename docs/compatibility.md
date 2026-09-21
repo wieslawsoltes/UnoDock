@@ -1,69 +1,85 @@
 # Compatibility contract and remaining boundaries
 
-This preview is **not 100% API or feature compatible**. The intended migration target
-is source compatibility with explicit WPF-to-WinUI mappings, not WPF binary identity.
-Do not replace a production docking system without exercising the application's
-layout fixtures, commands, custom styles, input, accessibility, and windowing paths.
+This preview is **not 100% API or feature compatible**. The migration target is source
+compatibility with explicit WPF-to-WinUI mappings, not WPF binary identity. Applications
+must validate their own layouts, commands, custom styles, input, accessibility and
+windowing paths before replacing an existing docking system.
 
 ## Implemented independently
 
-The primary model hierarchy, ownership and cycle validation, selection/activation,
-root/sides/hidden/floating collections, nested panels and panes, document/tool docking,
-float/dock restoration, auto-hide groups, cancellable close/hide and transition events,
-observable MVVM sources, content templates/styles, command adapters, XML layout
-persistence/content callbacks, retained editors, split dividers, scrollable headers,
-context menus, in-surface floating hosts, desktop native-window composition, navigator,
-light/dark resource palettes, and the gallery exist as real implementations.
+The solution contains an actual layout/model hierarchy, ownership/cycle validation,
+selection/activation, root/sides/hidden/floating collections, nested panels/panes,
+document/tool docking, float/dock restoration, auto-hide/pin groups, cancellable
+close/hide events, observable MVVM sources, content templates/styles, command adapters,
+XML persistence/content callbacks, retained editor presenters, split dividers,
+scrollable headers, context menus, in-surface floating hosts, desktop native-window
+composition, MRU navigation, independent light/dark palettes and an interactive gallery.
 
-Behavior tests distinguish portable kernel assertions from tests run in a real Uno
-application. Neither compilation nor the names in the API inventory prove all of the
-above behave exactly as AvalonDock on every platform.
+The original public defaults and serialized fixtures have exposed and driven corrections
+to horizontal orientation defaults, nullable titles, floating/auto-hide default sizes,
+empty-pane capability values, the auto-hide timeout and mixed-orientation policy.
+Display-size fallbacks are kept separate from persisted zero-valued model defaults.
+Same-pane tab insertion uses boundary indices, avoiding forward-move off-by-one errors.
 
-## Explicit platform mappings
+`CanMove`, `CanRepositionItems` and position-sensitive mixed-orientation checks are shared
+between docking operations, command enablement and drag previews. These specific tests
+are implemented; exhaustive original behavioral equivalence is not asserted.
+
+## Explicit framework mappings
 
 | WPF contract | UnoDock mapping and consequence |
 | --- | --- |
-| System.Windows UI types | Microsoft.UI.Xaml types; consumer source and XAML must change |
-| Window-derived floating/navigator/overlay controls | ContentControl plus native-window composition, or in-surface overlays |
+| System.Windows UI types | Microsoft.UI.Xaml types; consumer source and XAML change |
+| Window-derived floating/navigator/overlay controls | ContentControl plus native-window composition or in-surface overlays |
 | HwndHost auto-hide | Managed ContentControl; no HWND message/native-host contract |
 | Thumb inheritance | ContentControl containing WinUI's sealed Thumb |
 | ContextMenu / MenuItem | MenuFlyout / MenuFlyoutItem |
-| RoutedEvent identity and bubbling | Explicit docking event IDs/handlers, not WPF routed event infrastructure |
-| IValueConverter CultureInfo | Both CultureInfo overloads and WinUI language-string adapter |
-| IMultiValueConverter/MultiBinding | Callable multi-value converter, no native WPF MultiBinding engine |
-| Binding.DoNothing | UnsetValue fallback semantics; not identical to WPF suppression semantics |
-| WPF resource and template syntax | Must be translated to Uno/WinUI XAML |
-| Microsoft.Windows.Shell, WindowChrome, Freezable, Win32 hooks | No compatibility implementation in this preview |
+| RoutedEvent identity and bubbling | Explicit docking event IDs/handlers, not WPF routed-event infrastructure |
+| IValueConverter CultureInfo | CultureInfo overloads and WinUI language-string adapter |
+| IMultiValueConverter/MultiBinding | Callable multi-value converter; no native WPF MultiBinding engine |
+| Binding.DoNothing | UnsetValue fallback; not identical suppression semantics |
+| WPF resources/templates | Require Uno/WinUI XAML translation |
+| Microsoft.Windows.Shell, WindowChrome, Freezable and Win32 hooks | No compatibility implementation in this preview |
 
-## Remaining verification and implementation work
+## Evidence and its limits
 
-* Complete semantic API comparison: the baseline scanner is a syntax declaration
-  inventory. It does not resolve framework inheritance, implicit constructors,
-  attributes, all conditional-compilation profiles, or implicit enum ordinals.
-  The exact declaration difference report is deliberately conservative; inherited
-  equivalents may be reported as differences and require review.
-* Additional original public controls, drop/overlay APIs, WPF-specific protected
-  overrides, template-part/state contracts, automation peers, attached-property
-  metadata, shell/chrome APIs, and custom theme compatibility are not all present.
-* Native cross-window docking is incomplete. Uno flags ContentCoordinateConverter
-  unimplemented on its backends; that implementation is therefore compiled only for
-  native WinUI. The Uno/Skia default has no coordinate adapter. Native title-bar drag,
-  OS snapping, monitor changes, DPI transitions, owner activation, and all drop targets
-  require platform-specific validation and additional host integration.
-* `AllowMixedOrientation` policy, `AnchorableShowStrategy.Most`, duplicate-content
-  policy details, source resets with custom insertion strategies, and some legacy
-  converter edge cases are not yet certified equivalent.
-* XML roundtrips are tested within UnoDock. A corpus of original AvalonDock-produced
-  fixtures, including legacy versions and every custom extension, is still needed
-  before claiming lossless original-format interoperability.
-* Full keyboard parity, native window chrome, touch/pen edge cases, screen-reader
-  traversal, right-to-left layout, localization coverage, drag auto-scroll, and pixel
-  comparisons remain acceptance work.
-* Content caching is implemented; full tab virtualization and workload-based
-  performance parity with WPF AvalonDock have not been established.
-* Desktop/browser sample heads exist. Mobile sample heads, hardware/device tests,
-  release signing, and notarization are not included.
+The pinned declaration scan has 996 entries. A separate resolved PE metadata scan
+records 105 exported types, 1,031 Release API entries and 1,020 Debug entries, including
+attributes, enum values, implicit public constructors and inheritance information.
+Both profiles are scanned twice and compared byte for byte. This addresses limitations
+of the initial syntax-only reference inventory; it does not complete the counterpart
+mapping or missing implementation APIs.
 
-The publishing workflow supports preview releases. Stable 1.0+ releases require an
-explicit owner-maintained compatibility attestation; the repository does not supply
-an attestation claiming these boundaries are closed.
+The suite contains 45 portable tests, 36 actual Uno runtime/control tests and 44
+interoperability/default/policy tests. The latter consume 13 original public-serializer
+layouts and defaults for 13 original types. Original random container IDs are normalized
+without breaking PreviousContainerId links. No original algorithm is translated.
+
+Original import checks cover IDs, titles, capabilities, dimensions, timestamps,
+selection, hidden/auto-hide restoration, floating child element names and directional
+AddToLayout topology with/without Most. Invalid input is checked for atomic failure.
+The public-default tests check scalar CLR properties; the fixture also captures
+reference dependency-property metadata, whose complete cross-framework mapping is
+still outstanding.
+
+## Remaining implementation and acceptance work
+
+* Complete resolved implementation-to-reference API comparison, inherited counterpart
+  classification, remaining controls/drop/overlay APIs, protected extension points,
+  attached-property metadata, template-part/state contracts and automation peers.
+* Native cross-window docking on Uno Skia. The coordinate-conversion implementation is
+  available only to native WinUI; other hosts need ICrossWindowCoordinates integration.
+  Native title-bar dragging, OS snapping, monitor/DPI transitions, owner activation and
+  every cross-window target are not validated across all hosts.
+* Broader original behavioral fixtures: event ordering/reentrancy, duplicate-content
+  policy, custom insertion strategies/source resets, converter edge cases, legacy XML
+  versions/custom extensions, and nested docking policy combinations.
+* Full keyboard parity, touch/pen delivery, screen-reader traversal, right-to-left
+  layout, localization breadth, drag auto-scroll and pixel-level visual comparisons.
+* Full tab virtualization and workload-based performance parity. Retained content is
+  implemented, but that is not a performance-equivalence certificate.
+* Android/iOS sample heads and device tests, release signing and notarization.
+
+NuGet publishing supports previews. Stable 1.0+ requires an owner-maintained explicit
+compatibility attestation bound to the source-tree fingerprint. No attestation claiming
+these boundaries are closed is included.
