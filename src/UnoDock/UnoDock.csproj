@@ -1,0 +1,12 @@
+<Project Sdk="Uno.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks Condition="'$(UnoDockLibraryFrameworks)' == ''">net10.0;net10.0-windows10.0.26100.0</TargetFrameworks>
+    <TargetFrameworks Condition="'$(UnoDockLibraryFrameworks)' != ''">$(UnoDockLibraryFrameworks)</TargetFrameworks>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting><IsPackable>true</IsPackable>
+    <PackageId>UnoDock</PackageId><RootNamespace>Xceed.Wpf.AvalonDock</RootNamespace><AssemblyName>UnoDock</AssemblyName>
+    <Description>Independent AvalonDock-style docking controls and layout models for Uno Platform and WinUI.</Description>
+    <GenerateLibraryLayout>true</GenerateLibraryLayout>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+  <ItemGroup><ProjectReference Include="../UnoDock.Core/UnoDock.Core.csproj" /></ItemGroup>
+</Project>

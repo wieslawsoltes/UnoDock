@@ -1,0 +1,1 @@
+{"navigationFallback":{"rewrite":"index.html","exclude":["/*.{wasm,dll,pdb,json,js,css,dat,br,gz}"]},"mimeTypes":{".wasm":"application/wasm"}}

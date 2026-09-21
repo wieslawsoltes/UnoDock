@@ -1,0 +1,16 @@
+<Project Sdk="Uno.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks Condition="'$(UnoDockTargetFrameworks)' == ''">net10.0-desktop;net10.0-browserwasm</TargetFrameworks>
+    <TargetFrameworks Condition="'$(UnoDockTargetFrameworks)' != ''">$(UnoDockTargetFrameworks)</TargetFrameworks>
+    <OutputType>Exe</OutputType><UnoSingleProject>true</UnoSingleProject><IsPackable>false</IsPackable>
+    <ApplicationTitle>UnoDock Gallery</ApplicationTitle><ApplicationId>org.unodock.gallery</ApplicationId>
+    <ApplicationDisplayVersion>0.1.0</ApplicationDisplayVersion><ApplicationVersion>1</ApplicationVersion>
+    <ApplicationPublisher>UnoDock contributors</ApplicationPublisher><ApplicationDescription>AvalonDock-style docking on Uno Platform</ApplicationDescription>
+    <UnoFeatures>SkiaRenderer;</UnoFeatures>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/UnoDock/UnoDock.csproj" />
+    <Compile Include="../../tests/UnoDock.Testing/TestRunner.cs" Link="Testing/TestRunner.cs" />
+    <Compile Include="../../tests/UnoDock.Runtime.Tests/RuntimeTests.cs" Link="Testing/RuntimeTests.cs" />
+  </ItemGroup>
+</Project>

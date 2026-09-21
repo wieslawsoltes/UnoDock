@@ -1,0 +1,15 @@
+global using System;
+global using System.Collections.Generic;
+global using System.Collections.ObjectModel;
+global using System.ComponentModel;
+global using System.IO;
+global using System.Linq;
+global using System.Threading.Tasks;
+global using Microsoft.UI.Xaml;
+global using Microsoft.UI.Xaml.Controls;
+global using Microsoft.UI.Xaml.Media;
+global using Xceed.Wpf.AvalonDock;
+global using Xceed.Wpf.AvalonDock.Layout;
+global using Xceed.Wpf.AvalonDock.Layout.Serialization;
+global using UnoDock.Core;
+global using LayoutPanel = Xceed.Wpf.AvalonDock.Layout.LayoutPanel;

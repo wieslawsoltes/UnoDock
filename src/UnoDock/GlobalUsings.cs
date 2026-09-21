@@ -1,0 +1,15 @@
+global using System.Collections;
+global using System.Collections.ObjectModel;
+global using System.Collections.Specialized;
+global using System.ComponentModel;
+global using System.Runtime.CompilerServices;
+global using System.Windows.Input;
+global using Microsoft.UI.Xaml;
+global using Microsoft.UI.Xaml.Controls;
+global using Microsoft.UI.Xaml.Controls.Primitives;
+global using Microsoft.UI.Xaml.Media;
+global using Microsoft.UI.Xaml.Markup;
+global using Windows.Foundation;
+global using UnoDock.Core;
+
+global using LayoutPanel = Xceed.Wpf.AvalonDock.Layout.LayoutPanel;

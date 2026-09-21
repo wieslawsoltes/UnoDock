@@ -1,0 +1,5 @@
+<Solution>
+ <Folder Name="/src/"><Project Path="src/UnoDock.Core/UnoDock.Core.csproj"/><Project Path="src/UnoDock/UnoDock.csproj"/></Folder>
+ <Folder Name="/samples/"><Project Path="samples/UnoDock.Gallery/UnoDock.Gallery.csproj"/></Folder>
+ <Folder Name="/tests/"><Project Path="tests/UnoDock.Core.Tests/UnoDock.Core.Tests.csproj"/></Folder>
+</Solution>
