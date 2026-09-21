@@ -8,7 +8,7 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 lines = (ROOT / 'contracts/avalondock.txt').read_text(encoding='utf-8').splitlines()
 namespace = 'Xceed.Wpf.AvalonDock'
 classes = [namespace + '.DockingManager', namespace + '.Controls.LayoutItem', namespace + '.Controls.LayoutAnchorableItem', namespace + '.Controls.LayoutDocumentItem']
-defaults = {'AllowMixedOrientation': 'true', 'AllowMovingFloatingWindowWithKeyboard': 'true', 'ShowSystemMenu': 'true', 'GridSplitterHeight': '6d', 'GridSplitterWidth': '6d', 'AutoHideWindowClosingTimer': '400', 'CanClose': 'true', 'CanFloat': 'true', 'CanHide': 'true'}
+defaults = {'AllowMixedOrientation': 'false', 'AllowMovingFloatingWindowWithKeyboard': 'false', 'ShowSystemMenu': 'true', 'GridSplitterHeight': '6d', 'GridSplitterWidth': '6d', 'AutoHideWindowClosingTimer': '1500', 'CanClose': 'true', 'CanFloat': 'true', 'CanHide': 'true'}
 skip = {'Layout', 'FloatingWindows', 'LogicalChildrenPublic', 'View', 'LayoutElement', 'Model'}
 for full in classes:
     ns, cls = full.rsplit('.', 1)

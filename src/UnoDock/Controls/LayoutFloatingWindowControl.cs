@@ -49,7 +49,7 @@ public abstract class LayoutFloatingWindowControl : ContentControl, ILayoutContr
     public Window? NativeWindow => _window;
     internal IEnumerable<LayoutContent> Contents => Model.Descendents().OfType<LayoutContent>();
     private LayoutContent? PositionModel => Contents.FirstOrDefault();
-    internal DockRect Bounds => PositionModel is { } p ? new(p.FloatingLeft, p.FloatingTop, Math.Max(160, p.FloatingWidth), Math.Max(100, p.FloatingHeight)) : new(80, 80, 640, 480);
+    internal DockRect Bounds => PositionModel is { } p ? new(p.FloatingLeft, p.FloatingTop, p.FloatingWidth > 0 ? Math.Max(160, p.FloatingWidth) : 640, p.FloatingHeight > 0 ? Math.Max(100, p.FloatingHeight) : 480) : new(80, 80, 640, 480);
     protected virtual bool CanClose() => Contents.Any() && Contents.All(c => c.CanClose || c is LayoutAnchorable { CanHide: true });
     protected virtual bool CanHide() => Contents.Any() && Contents.All(c => c is LayoutAnchorable { CanHide: true });
     protected virtual void DoHide() { foreach (var tool in Contents.OfType<LayoutAnchorable>().ToArray()) tool.Hide(); }

@@ -12,5 +12,7 @@
     <ProjectReference Include="../../src/UnoDock/UnoDock.csproj" />
     <Compile Include="../../tests/UnoDock.Testing/TestRunner.cs" Link="Testing/TestRunner.cs" />
     <Compile Include="../../tests/UnoDock.Runtime.Tests/RuntimeTests.cs" Link="Testing/RuntimeTests.cs" />
+    <Compile Include="../../tests/UnoDock.Runtime.Tests/InteropTests.cs" Link="Testing/InteropTests.cs" />
+    <EmbeddedResource Include="../../contracts/reference-fixtures/*.xml" LogicalName="ReferenceFixtures.%(Filename)%(Extension)" />
   </ItemGroup>
 </Project>

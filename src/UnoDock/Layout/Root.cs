@@ -31,7 +31,7 @@ public class LayoutRoot : LayoutElement, ILayoutContainer, ILayoutRoot, IXmlSeri
     public LayoutAnchorSide LeftSide { get => _left!; set { ArgumentNullException.ThrowIfNull(value); LayoutTree.ReplaceSlot(this, ref _left, value, nameof(LeftSide)); value.SetSide(AnchorSide.Left); } }
     public ObservableCollection<LayoutFloatingWindow> FloatingWindows { get; }
     public ObservableCollection<LayoutAnchorable> Hidden { get; }
-    public LayoutContent? LastFocusedDocument { get; private set; }
+    public LayoutContent? LastFocusedDocument { get; internal set; }
     public LayoutContent? ActiveContent
     {
         get => _active;
@@ -91,7 +91,7 @@ public class LayoutRoot : LayoutElement, ILayoutContainer, ILayoutRoot, IXmlSeri
             Notify(nameof(ActiveContent));
         }
         if (LastFocusedDocument != null && !ReferenceEquals(LastFocusedDocument.Root, this))
-        { LastFocusedDocument.IsLastFocusedDocument = false; LastFocusedDocument = null; }
+        { LastFocusedDocument.IsLastFocusedDocument = false; LastFocusedDocument = null; Notify(nameof(LastFocusedDocument)); }
     }
     internal AnchorSide SideOf(LayoutAnchorSide side) => ReferenceEquals(side, _top) ? AnchorSide.Top : ReferenceEquals(side, _left) ? AnchorSide.Left : ReferenceEquals(side, _bottom) ? AnchorSide.Bottom : AnchorSide.Right;
     internal LayoutAnchorSide GetSide(AnchorSide side) => side switch { AnchorSide.Top => TopSide, AnchorSide.Left => LeftSide, AnchorSide.Bottom => BottomSide, _ => RightSide };
@@ -175,7 +175,7 @@ public class LayoutDocumentFloatingWindow : LayoutFloatingWindow
 public class LayoutAnchorableFloatingWindow : LayoutFloatingWindow, ILayoutElementWithVisibility
 {
     private LayoutAnchorablePaneGroup? _panel;
-    private bool _visible;
+    private bool _visible = true;
     public LayoutAnchorableFloatingWindow() { }
     public LayoutAnchorablePaneGroup? RootPanel
     {

@@ -65,8 +65,8 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
         CommandDefault(DockAsDocumentCommandProperty, () => LayoutElement.DockAsDocument(), CanExecuteDockAsDocumentCommand);
         CommandDefault(CloseAllCommandProperty, () => CloseDocuments(false), () => Documents().Any(d => d.CanClose));
         CommandDefault(CloseAllButThisCommandProperty, () => CloseDocuments(true), () => Documents().Any(d => !ReferenceEquals(d, LayoutElement) && d.CanClose));
-        CommandDefault(NewHorizontalTabGroupCommandProperty, () => Split(DockPosition.Bottom), CanSplit);
-        CommandDefault(NewVerticalTabGroupCommandProperty, () => Split(DockPosition.Right), CanSplit);
+        CommandDefault(NewHorizontalTabGroupCommandProperty, () => Split(DockPosition.Bottom), () => CanSplit(DockPosition.Bottom));
+        CommandDefault(NewVerticalTabGroupCommandProperty, () => Split(DockPosition.Right), () => CanSplit(DockPosition.Right));
         CommandDefault(MoveToNextTabGroupCommandProperty, () => Move(1), () => AdjacentPane(1) != null && DockOperations.CanMove(LayoutElement));
         CommandDefault(MoveToPreviousTabGroupCommandProperty, () => Move(-1), () => AdjacentPane(-1) != null && DockOperations.CanMove(LayoutElement));
     }
@@ -84,7 +84,7 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
         if (LayoutElement == null || _attaching || _disposed) return;
         switch (name)
         {
-            case nameof(Title): LayoutElement.Title = Title ?? ""; break;
+            case nameof(Title): LayoutElement.Title = Title; break;
             case nameof(ContentId): LayoutElement.ContentId = ContentId; break;
             case nameof(IconSource): LayoutElement.IconSource = IconSource; break;
             case nameof(IsActive): LayoutElement.IsActive = IsActive; break;
@@ -116,8 +116,8 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
     }
     private IEnumerable<LayoutDocument> Documents() => (LayoutElement.Root as LayoutRoot)?.Descendents().OfType<LayoutDocument>() ?? [];
     private void CloseDocuments(bool exceptThis) { foreach (var document in Documents().Where(d => !exceptThis || !ReferenceEquals(d, LayoutElement)).ToArray()) document.Close(); }
-    private bool CanSplit() => LayoutElement.Parent is LayoutDocumentPane { ChildrenCount: > 1 } && DockOperations.CanMove(LayoutElement);
-    private void Split(DockPosition position) { if (LayoutElement.Parent is ILayoutGroup pane && CanSplit()) DockOperations.Dock(LayoutElement, pane, position); }
+    private bool CanSplit(DockPosition position) => LayoutElement.Parent is LayoutDocumentPane { ChildrenCount: > 1 } pane && DockOperations.CanDock(LayoutElement, pane, position);
+    private void Split(DockPosition position) { if (LayoutElement.Parent is ILayoutGroup pane && CanSplit(position)) DockOperations.Dock(LayoutElement, pane, position); }
     private LayoutDocumentPane? AdjacentPane(int direction)
     {
         var panes = (LayoutElement.Root as LayoutRoot)?.Descendents().OfType<LayoutDocumentPane>().ToArray() ?? [];

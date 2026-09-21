@@ -24,8 +24,9 @@ public partial class App : Application
                 try
                 {
                     await Task.Delay(300);
-                    exitCode = await Testing.RuntimeTests.Run(gallery.Dock,
-                        Environment.GetEnvironmentVariable("UNODOCK_TEST_RESULTS") ?? "artifacts/test-results");
+                    var output = Environment.GetEnvironmentVariable("UNODOCK_TEST_RESULTS") ?? "artifacts/test-results";
+                    exitCode = await Testing.RuntimeTests.Run(gallery.Dock, output);
+                    exitCode |= await Testing.InteropTests.Run(output);
                 }
                 catch (Exception e) { Console.Error.WriteLine(e); }
                 finally

@@ -62,7 +62,7 @@ internal static class LayoutXml
             Put("Title", content.Title); Put("ContentId", content.ContentId); Put("IsSelected", content.IsSelected); Put("IsActive", content.IsActive);
             Put("CanClose", content.CanClose); Put("CanFloat", content.CanFloat); Put("IsEnabled", content.IsEnabled);
             Put("FloatingLeft", content.FloatingLeft); Put("FloatingTop", content.FloatingTop); Put("FloatingWidth", content.FloatingWidth); Put("FloatingHeight", content.FloatingHeight);
-            Put("IsMaximized", content.IsMaximized); Put("LastActivationTimeStamp", content.LastActivationTimeStamp);
+            Put("IsMaximized", content.IsMaximized); Put("IsLastFocusedDocument", content.IsLastFocusedDocument); Put("LastActivationTimeStamp", content.LastActivationTimeStamp?.ToString("MM/dd/yyyy HH:mm:ss", Invariant));
             if (content is LayoutDocument document) { Put("CanMove", document.CanMove); Put("Description", document.Description); }
             if (content is LayoutAnchorable anchorable)
             {
@@ -84,8 +84,8 @@ internal static class LayoutXml
                 var floats = new LayoutSnapshotNode("FloatingWindows"); foreach (var f in root.FloatingWindows) floats.Children.Add(Capture(f)); node.Children.Add(floats);
                 var hidden = new LayoutSnapshotNode("Hidden"); foreach (var h in root.Hidden) hidden.Children.Add(Capture(h)); node.Children.Add(hidden);
                 break;
-            case LayoutDocumentFloatingWindow floating when floating.RootDocument != null: node.Children.Add(Capture(floating.RootDocument, "RootDocument")); break;
-            case LayoutAnchorableFloatingWindow floating when floating.RootPanel != null: node.Children.Add(Capture(floating.RootPanel, "RootPanel")); break;
+            case LayoutDocumentFloatingWindow floating when floating.RootDocument != null: node.Children.Add(Capture(floating.RootDocument)); break;
+            case LayoutAnchorableFloatingWindow floating when floating.RootPanel != null: node.Children.Add(Capture(floating.RootPanel)); break;
             case ILayoutContainer group: foreach (var child in group.Children) node.Children.Add(Capture((LayoutElement)child)); break;
         }
         return node;
@@ -109,11 +109,12 @@ internal static class LayoutXml
         }
         if (element is LayoutContent content)
         {
-            content.Title = S("Title") ?? ""; content.ContentId = S("ContentId");
+            content.Title = S("Title"); content.ContentId = S("ContentId");
             B("CanClose", v => content.CanClose = v); B("CanFloat", v => content.CanFloat = v); B("IsEnabled", v => content.IsEnabled = v);
             D("FloatingLeft", v => content.FloatingLeft = v); D("FloatingTop", v => content.FloatingTop = v); D("FloatingWidth", v => content.FloatingWidth = v); D("FloatingHeight", v => content.FloatingHeight = v);
             B("IsMaximized", v => content.IsMaximized = v);
-            if (S("LastActivationTimeStamp") is { } dt) content.LastActivationTimeStamp = XmlConvert.ToDateTime(dt, XmlDateTimeSerializationMode.RoundtripKind);
+            if (S("LastActivationTimeStamp") is { } dt) content.LastActivationTimeStamp = ParseTimestamp(dt);
+            B("IsLastFocusedDocument", v => content.IsLastFocusedDocument = v);
             if (content is LayoutDocument document) { B("CanMove", v => document.CanMove = v); document.Description = S("Description"); }
             if (content is LayoutAnchorable anchorable)
             {
@@ -162,7 +163,17 @@ internal static class LayoutXml
         else if (element is ILayoutGroup group)
         {
             while (group.ChildrenCount > 0) group.RemoveChildAt(group.ChildrenCount - 1);
-            foreach (var child in node.Children) group.InsertChildAt(group.ChildrenCount, Create(child));
+            var selectedIndex = -1;
+            foreach (var child in node.Children)
+            {
+                var item = Create(child);
+                // Restore explicit selection only after collection insertion has
+                // completed its first-child selection initialization.
+                if (item is LayoutContent { IsSelected: true }) selectedIndex = group.ChildrenCount;
+                group.InsertChildAt(group.ChildrenCount, item);
+            }
+            if (group is ILayoutContentSelector selection && selectedIndex >= 0)
+                selection.SelectedContentIndex = selectedIndex;
         }
         else if (node.Children.Count > 0) throw new XmlException("A content node cannot have child layout nodes.");
         if (element is ILayoutContentSelector selector && S("SelectedContentIndex") != null)
@@ -191,9 +202,20 @@ internal static class LayoutXml
             if (content.PreviousContainerId is { Length: > 0 } id && ids.TryGetValue(id, out var previous)) content.SetPrevious(previous, content.PreviousContainerIndex);
         foreach (var group in root.Descendents().OfType<LayoutAnchorGroup>())
             if (group.PreviousContainerId is { Length: > 0 } id && ids.TryGetValue(id, out var previous)) group.PreviousContainer = previous;
+        var lastFocused = root.Descendents().OfType<LayoutContent>().FirstOrDefault(c => c.IsLastFocusedDocument);
+        root.LastFocusedDocument = lastFocused;
+        foreach (var c in root.Descendents().OfType<LayoutContent>())
+            if (!ReferenceEquals(c, lastFocused)) c.IsLastFocusedDocument = false;
         var active = root.Descendents().OfType<LayoutContent>().FirstOrDefault(c => c.IsActive && c.IsEnabled && c is not LayoutAnchorable { IsHidden: true });
         foreach (var c in root.Descendents().OfType<LayoutContent>()) if (!ReferenceEquals(c, active)) c.SetActive(false);
         if (active != null) { var timestamp = active.LastActivationTimeStamp; root.ActiveContent = active; active.LastActivationTimeStamp = timestamp; }
+    }
+    private static DateTime ParseTimestamp(string text)
+    {
+        // Accept the observed original invariant format and earlier UnoDock ISO layouts.
+        if (DateTime.TryParseExact(text, "MM/dd/yyyy HH:mm:ss", Invariant, DateTimeStyles.None, out var value)) return value;
+        try { return XmlConvert.ToDateTime(text, XmlDateTimeSerializationMode.RoundtripKind); }
+        catch (FormatException e) { throw new XmlException("Invalid LastActivationTimeStamp.", e); }
     }
     private static string Length(GridLength length) => length.IsAuto ? "Auto" : length.Value.ToString("R", Invariant) + (length.IsStar ? "*" : "");
     private static GridLength ParseLength(string text)

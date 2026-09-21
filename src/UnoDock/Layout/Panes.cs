@@ -5,8 +5,8 @@ namespace Xceed.Wpf.AvalonDock.Layout;
 public abstract class LayoutPositionableGroup<T> : LayoutGroup<T>, ILayoutPositionableElement where T : class, ILayoutElement
 {
     private GridLength _width = new(1, GridUnitType.Star), _height = new(1, GridUnitType.Star);
-    private double _minWidth = 25, _minHeight = 25, _left, _top, _floatingWidth = 640, _floatingHeight = 480;
-    private bool _maximized, _reposition = true, _duplicates;
+    private double _minWidth = 25, _minHeight = 25, _left, _top, _floatingWidth, _floatingHeight;
+    private bool _maximized, _reposition = true, _duplicates = true;
     public LayoutPositionableGroup() { }
     public GridLength DockWidth { get => _width; set { if (Set(ref _width, value)) OnDockWidthChanged(); } }
     public GridLength DockHeight { get => _height; set { if (Set(ref _height, value)) OnDockHeightChanged(); } }
@@ -94,8 +94,8 @@ public class LayoutAnchorablePane : LayoutPositionableGroup<LayoutAnchorable>, I
     public int SelectedContentIndex { get => _selection.Index; set => _selection.Index = value; }
     public int IndexOf(LayoutContent content) => content is LayoutAnchorable a ? Children.IndexOf(a) : -1;
     public string? Name { get => _name; set => Set(ref _name, value); }
-    public bool CanClose => Children.Count > 0 && Children.All(c => c.CanClose);
-    public bool CanHide => Children.Count > 0 && Children.All(c => c.CanHide);
+    public bool CanClose => Children.All(c => c.CanClose);
+    public bool CanHide => Children.All(c => c.CanHide);
     public bool IsHostedInFloatingWindow => this.FindParent<LayoutFloatingWindow>() != null;
     public bool IsDirectlyHostedInFloatingWindow => this.FindParent<LayoutAnchorableFloatingWindow>() is { IsSinglePane: true };
     protected override bool GetVisibility() => Children.Count > 0;
@@ -109,7 +109,7 @@ public class LayoutAnchorablePane : LayoutPositionableGroup<LayoutAnchorable>, I
 
 public class LayoutPanel : LayoutPositionableGroup<ILayoutPanelElement>, ILayoutPanelElement, ILayoutOrientableGroup
 {
-    private Orientation _orientation;
+    private Orientation _orientation = Orientation.Horizontal;
     public LayoutPanel() { }
     public LayoutPanel(ILayoutPanelElement firstChild) => Children.Add(firstChild);
     public Orientation Orientation { get => _orientation; set => Set(ref _orientation, value); }
@@ -119,7 +119,7 @@ public class LayoutPanel : LayoutPositionableGroup<ILayoutPanelElement>, ILayout
 }
 public class LayoutDocumentPaneGroup : LayoutPositionableGroup<ILayoutDocumentPane>, ILayoutDocumentPane, ILayoutOrientableGroup
 {
-    private Orientation _orientation;
+    private Orientation _orientation = Orientation.Horizontal;
     public LayoutDocumentPaneGroup() { }
     public LayoutDocumentPaneGroup(LayoutDocumentPane documentPane) => Children.Add(documentPane);
     public Orientation Orientation { get => _orientation; set => Set(ref _orientation, value); }
@@ -129,7 +129,7 @@ public class LayoutDocumentPaneGroup : LayoutPositionableGroup<ILayoutDocumentPa
 }
 public class LayoutAnchorablePaneGroup : LayoutPositionableGroup<ILayoutAnchorablePane>, ILayoutAnchorablePane, ILayoutOrientableGroup
 {
-    private Orientation _orientation;
+    private Orientation _orientation = Orientation.Horizontal;
     public LayoutAnchorablePaneGroup() { }
     public LayoutAnchorablePaneGroup(LayoutAnchorablePane firstChild) => Children.Add(firstChild);
     public Orientation Orientation { get => _orientation; set => Set(ref _orientation, value); }

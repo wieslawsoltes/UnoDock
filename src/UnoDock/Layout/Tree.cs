@@ -182,7 +182,7 @@ public abstract class LayoutGroupBase : LayoutElement
 [ContentProperty(Name = nameof(Children))]
 public abstract class LayoutGroup<T> : LayoutGroupBase, ILayoutGroup, IXmlSerializable, ILayoutElementWithVisibility where T : class, ILayoutElement
 {
-    private bool _visible;
+    private bool _visible = true;
     protected LayoutGroup() => Children = new OwnedCollection<T>(this, Changed);
     public ObservableCollection<T> Children { get; }
     IEnumerable<ILayoutElement> ILayoutContainer.Children => Children;

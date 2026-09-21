@@ -7,16 +7,16 @@ namespace Xceed.Wpf.AvalonDock.Layout;
 [ContentProperty(Name = nameof(Content))]
 public abstract class LayoutContent : LayoutElement, IComparable<LayoutContent>, IXmlSerializable, ILayoutPreviousContainer
 {
-    public static readonly DependencyProperty TitleProperty = DependencyProperty.Register(nameof(Title), typeof(string), typeof(LayoutContent), new PropertyMetadata("", (d, e) => ((LayoutContent)d).Notify(nameof(Title))));
+    public static readonly DependencyProperty TitleProperty = DependencyProperty.Register(nameof(Title), typeof(string), typeof(LayoutContent), new PropertyMetadata(null, (d, e) => ((LayoutContent)d).Notify(nameof(Title))));
     public static readonly DependencyProperty ContentIdProperty = DependencyProperty.Register(nameof(ContentId), typeof(string), typeof(LayoutContent), new PropertyMetadata(null, (d, e) => ((LayoutContent)d).Notify(nameof(ContentId))));
     private object? _content, _toolTip;
     private ImageSource? _icon;
     private bool _enabled = true, _canClose = true, _canFloat = true, _active, _selected, _floating, _lastFocused, _maximized;
-    private double _left = 80, _top = 80, _width = 640, _height = 480;
+    private double _left, _top, _width, _height;
     private DateTime? _activated;
     private ILayoutContainer? _previous;
-    private int _previousIndex;
-    public string Title { get => (string?)GetValue(TitleProperty) ?? ""; set => SetValue(TitleProperty, value ?? ""); }
+    private int _previousIndex = -1;
+    public string? Title { get => (string?)GetValue(TitleProperty); set => SetValue(TitleProperty, value); }
     public string? ContentId { get => (string?)GetValue(ContentIdProperty); set => SetValue(ContentIdProperty, value); }
     public object? Content { get => _content; set => Set(ref _content, value); }
     public object? ToolTip { get => _toolTip; set => Set(ref _toolTip, value); }
@@ -125,7 +125,7 @@ public class LayoutDocument : LayoutContent
 public class LayoutAnchorable : LayoutContent
 {
     private bool _canHide = true, _canAutoHide = true, _canDocument = true;
-    private double _autoWidth = 320, _autoHeight = 240, _autoMinWidth = 100, _autoMinHeight = 100;
+    private double _autoWidth, _autoHeight, _autoMinWidth = 100, _autoMinHeight = 100;
     public LayoutAnchorable() => CanClose = false;
     public bool CanHide { get => _canHide; set => Set(ref _canHide, value); }
     public bool CanAutoHide { get => _canAutoHide; set => Set(ref _canAutoHide, value); }

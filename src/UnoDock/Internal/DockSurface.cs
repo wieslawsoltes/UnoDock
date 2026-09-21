@@ -90,8 +90,8 @@ internal sealed class DockSurface : Grid, IDisposable
     {
         if (_autoHide?.Model is not LayoutAnchorable model) return;
         var side = model.GetSide(); var horizontal = side is AnchorSide.Left or AnchorSide.Right;
-        _autoHide.Width = horizontal ? Math.Min(Math.Max(model.AutoHideWidth, model.AutoHideMinWidth), Math.Max(0, ActualWidth - 40)) : double.NaN;
-        _autoHide.Height = horizontal ? double.NaN : Math.Min(Math.Max(model.AutoHideHeight, model.AutoHideMinHeight), Math.Max(0, ActualHeight - 40));
+        _autoHide.Width = horizontal ? Math.Min(Math.Max(model.AutoHideWidth > 0 ? model.AutoHideWidth : 300, model.AutoHideMinWidth), Math.Max(0, ActualWidth - 40)) : double.NaN;
+        _autoHide.Height = horizontal ? double.NaN : Math.Min(Math.Max(model.AutoHideHeight > 0 ? model.AutoHideHeight : 240, model.AutoHideMinHeight), Math.Max(0, ActualHeight - 40));
         _autoHide.HorizontalAlignment = side == AnchorSide.Left ? HorizontalAlignment.Left : side == AnchorSide.Right ? HorizontalAlignment.Right : HorizontalAlignment.Stretch;
         _autoHide.VerticalAlignment = side == AnchorSide.Top ? VerticalAlignment.Top : side == AnchorSide.Bottom ? VerticalAlignment.Bottom : VerticalAlignment.Stretch;
         _autoHide.Margin = new Thickness(34, 32, 34, 32);
@@ -150,8 +150,10 @@ internal sealed class DockSurface : Grid, IDisposable
         var point = GetPoint(args); _drag.Move(args.Pointer.PointerId, new(point.X, point.Y), DropTargets());
         if (_drag.State != DockDragState.Dragging) return;
         var target = _drag.Target;
-        _preview.Visibility = target == null ? Visibility.Collapsed : Visibility.Visible;
-        if (target != null)
+        var allowed = target is { } drop && (drop.Id == "root" ? _drag.Position != DockPosition.Inside :
+            _dropGroups.TryGetValue(drop.Id, out var group) && DockOperations.CanDock(_dragContent, group, _drag.Position));
+        _preview.Visibility = allowed ? Visibility.Visible : Visibility.Collapsed;
+        if (allowed && target != null)
         {
             var bounds = DockSplitSolver.Preview(target.Value.Bounds, _drag.Position);
             Canvas.SetLeft(_preview, bounds.X); Canvas.SetTop(_preview, bounds.Y); _preview.Width = bounds.Width; _preview.Height = bounds.Height;
