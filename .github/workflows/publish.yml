@@ -1,0 +1,115 @@
+name: Publish NuGet
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'NuGet semantic version, for example 0.1.0-preview.1'
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: nuget-release
+  cancel-in-progress: false
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Validate version and stable-release attestation
+        id: version
+        env:
+          REQUESTED_VERSION: ${{ inputs.version }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          python3 - <<'PY'
+          import json, os, pathlib, re, subprocess
+          tag = os.environ.get('RELEASE_TAG', '')
+          version = tag.removeprefix('v') if tag else os.environ['REQUESTED_VERSION']
+          match = re.fullmatch(r'(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-([0-9A-Za-z]+(?:[.-][0-9A-Za-z]+)*))?', version)
+          if not match:
+              raise SystemExit('Invalid semantic package version')
+          sha = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
+          if tag and subprocess.check_output(['git','rev-parse',tag+'^{commit}'],text=True).strip() != sha:
+              raise SystemExit('Release tag does not identify the checked-out commit')
+          if int(match[1]) >= 1 and not match[4]:
+              path = pathlib.Path('contracts/release-attestation.json')
+              attestation = json.loads(path.read_text()) if path.exists() else {}
+              if attestation.get('fullCompatibilityVerified') is not True or attestation.get('revision') != sha:
+                  raise SystemExit('Stable 1.0+ requires a compatibility attestation for this exact revision')
+          with open(os.environ['GITHUB_OUTPUT'],'a') as output:
+              output.write('version='+version+'\n')
+          PY
+      - name: Portable tests
+        run: dotnet run --project tests/UnoDock.Core.Tests -c Release -- artifacts/test-results
+      - name: Check generated adapters
+        run: python3 tools/generate-property-adapters.py && git diff --exit-code -- src/
+      - name: Build runtime test host
+        run: dotnet build samples/UnoDock.Gallery -c Release -f net10.0-desktop -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0
+      - run: sudo apt-get update && sudo apt-get install -y xvfb libx11-6 libxi6 libxrandr2 libxcursor1 libfontconfig1 libgl1 libice6 libsm6
+      - name: Real Uno model and UI tests
+        env:
+          UNODOCK_SELFTEST: '1'
+          UNODOCK_TEST_RESULTS: ${{ github.workspace }}/artifacts/test-results
+        run: timeout 300s xvfb-run -a dotnet run --project samples/UnoDock.Gallery -c Release -f net10.0-desktop --no-build -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: release-test-results
+          path: artifacts/test-results/
+  publish:
+    needs: validate
+    runs-on: windows-latest
+    environment: nuget
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      PACKAGE_VERSION: ${{ needs.validate.outputs.version }}
+      NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Package generic Uno, native WinUI and portable core with symbols
+        shell: pwsh
+        run: |
+          dotnet pack src/UnoDock -c Release -o artifacts/packages -p:Version=$env:PACKAGE_VERSION -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          dotnet pack src/UnoDock.Core -c Release -o artifacts/packages -p:Version=$env:PACKAGE_VERSION -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-packages
+          path: artifacts/packages/
+      - name: Verify authentication configuration
+        shell: pwsh
+        env:
+          NUGET_USER: ${{ vars.NUGET_USER }}
+        run: |
+          if (-not $env:NUGET_API_KEY -and -not $env:NUGET_USER) { throw 'Configure NUGET_API_KEY or NUGET_USER plus a NuGet trusted-publishing policy.' }
+      - name: Exchange GitHub OIDC token
+        if: env.NUGET_API_KEY == ''
+        id: login
+        uses: NuGet/login@v1
+        with:
+          user: ${{ vars.NUGET_USER }}
+      - name: Push NuGet packages and symbols
+        shell: pwsh
+        env:
+          PUSH_KEY: ${{ steps.login.outputs.NUGET_API_KEY || secrets.NUGET_API_KEY }}
+        run: |
+          Get-ChildItem artifacts/packages/*.nupkg | ForEach-Object {
+            dotnet nuget push $_.FullName --source https://api.nuget.org/v3/index.json --api-key $env:PUSH_KEY --skip-duplicate
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
