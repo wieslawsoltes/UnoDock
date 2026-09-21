@@ -13,13 +13,6 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
-      - name: Generate official Uno application and library templates
-        run: |
-          set -euo pipefail
-          version=$(python3 -c "import json; print(json.load(open('contracts/versions.json'))['Uno.Templates'])")
-          dotnet new install "Uno.Templates::$version"
-          dotnet new unoapp -preset=blank -o "$RUNNER_TEMP/generated/Sample" --no-restore
-          dotnet new unolib -o "$RUNNER_TEMP/generated/Library" --no-restore
       - name: Assemble offline CSharp validation tools
         run: |
           set -euo pipefail
@@ -35,10 +28,17 @@ jobs:
           tar -cf "$RUNNER_TEMP/offline-compiler.tar" -C "$stage" .
       - uses: actions/upload-artifact@v4
         with:
-          name: uno-templates
-          path: ${{ runner.temp }}/generated/
-      - uses: actions/upload-artifact@v4
-        with:
           name: offline-compiler
           path: ${{ runner.temp }}/offline-compiler.tar
           retention-days: 1
+      - name: Generate official Uno application and library templates
+        run: |
+          set -euo pipefail
+          version=$(python3 -c "import json; print(json.load(open('contracts/versions.json'))['Uno.Templates'])")
+          dotnet new install "Uno.Templates@$version"
+          dotnet new unoapp -preset=blank -o "$RUNNER_TEMP/generated/Sample"
+          dotnet new unolib -o "$RUNNER_TEMP/generated/Library"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: uno-templates
+          path: ${{ runner.temp }}/generated/
