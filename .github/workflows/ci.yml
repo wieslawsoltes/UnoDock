@@ -2,7 +2,7 @@ name: Build and test
 on:
   push:
     branches: [main]
-    paths-ignore: ['.github/workflows/prepare.yml', '.github/workflows/references.yml', '.github/workflows/analyzers.yml', '.github/workflows/import.yml']
+    paths-ignore: ['.github/workflows/prepare.yml', '.github/workflows/references.yml', '.github/workflows/analyzers.yml', '.github/workflows/import.yml', '.github/workflows/recover.yml', '.github/workflows/complete.yml']
   pull_request:
   workflow_dispatch:
 permissions:
@@ -12,7 +12,6 @@ concurrency:
   cancel-in-progress: true
 jobs:
   core:
-    if: ${{ hashFiles('src/UnoDock.Core/UnoDock.Core.csproj') != '' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -35,7 +34,6 @@ jobs:
           name: core-and-api-results
           path: artifacts/
   desktop:
-    if: ${{ hashFiles('src/UnoDock/UnoDock.csproj') != '' }}
     strategy:
       fail-fast: false
       matrix:
@@ -65,7 +63,6 @@ jobs:
             artifacts/test-results/
             samples/UnoDock.Gallery/bin/Release/net10.0-desktop/
   browser:
-    if: ${{ hashFiles('src/UnoDock/UnoDock.csproj') != '' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -80,7 +77,6 @@ jobs:
           name: browser-gallery
           path: artifacts/browser/
   packages:
-    if: ${{ hashFiles('src/UnoDock/UnoDock.csproj') != '' }}
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
