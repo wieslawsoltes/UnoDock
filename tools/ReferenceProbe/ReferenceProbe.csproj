@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType><TargetFramework>net48</TargetFramework>
+    <UseWPF>true</UseWPF><IsPackable>false</IsPackable>
+    <ImplicitUsings>disable</ImplicitUsings><Nullable>disable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Xceed.Wpf.AvalonDock"><HintPath>$(ReferenceAssembly)</HintPath><Private>true</Private></Reference>
+  </ItemGroup>
+  <Target Name="RequireReference" BeforeTargets="ResolveReferences" Condition="!Exists('$(ReferenceAssembly)')">
+    <Error Text="Pass ReferenceAssembly pointing to the isolated pinned AvalonDock build." />
+  </Target>
+</Project>

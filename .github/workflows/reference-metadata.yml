@@ -2,7 +2,7 @@ name: Reference metadata contract
 on:
   workflow_dispatch:
   push:
-    paths: ['tools/ApiMetadata/**', 'contracts/reference.json', '.github/workflows/reference-metadata.yml']
+    paths: ['tools/ApiMetadata/**', 'tools/ReferenceProbe/**', 'contracts/reference.json', '.github/workflows/reference-metadata.yml']
 permissions:
   contents: write
 concurrency:
@@ -35,11 +35,12 @@ jobs:
           $root = "$stage/framework/build/"
           $refs = "$root/.NETFramework/v4.0"
           $project = "$stage/ExtendedWPFToolkitSolution/Src/Xceed.Wpf.AvalonDock/Xceed.Wpf.AvalonDock.csproj"
+          $copyTargets = Join-Path $env:GITHUB_WORKSPACE 'tools/ReferenceProbe/LegacyCopy.targets'
           dotnet build tools/ApiMetadata -c Release
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           foreach ($configuration in @('Release','Debug')) {
             $output = "$stage/bin/$configuration/"
-            msbuild $project /nologo /v:minimal /p:Configuration=$configuration /p:TargetFrameworkRootPath=$root /p:OutputPath=$output /p:Deterministic=true /p:GenerateSerializationAssemblies=Off
+            msbuild $project /nologo /v:minimal /p:Configuration=$configuration /p:TargetFrameworkRootPath=$root /p:OutputPath=$output /p:Deterministic=true /p:GenerateSerializationAssemblies=Off /p:CustomAfterMicrosoftCommonTargets=$copyTargets
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
             $profile = "net40-client-$($configuration.ToLowerInvariant())"
             $prefix = "contracts/avalondock-metadata-$($configuration.ToLowerInvariant())"
@@ -49,15 +50,35 @@ jobs:
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
             if ((Get-FileHash "$prefix.json").Hash -ne (Get-FileHash "$stage/repeat.json").Hash) { throw 'Non-deterministic metadata inventory' }
           }
-          Remove-Item -Recurse -Force $stage
-      - name: Commit verified public metadata contracts
+      - name: Capture deterministic public-API behavior and serialized fixtures
+        shell: pwsh
+        run: |
+          $stage = Join-Path $env:RUNNER_TEMP 'avalondock-reference'
+          dotnet build tools/ReferenceProbe -c Release -p:ReferenceAssembly="$stage/bin/Release/Xceed.Wpf.AvalonDock.dll"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Copy-Item "$stage/bin/Release/Xceed.Wpf.Toolkit.dll" 'tools/ReferenceProbe/bin/Release/net48/'
+          & tools/ReferenceProbe/bin/Release/net48/ReferenceProbe.exe contracts/reference-fixtures
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & tools/ReferenceProbe/bin/Release/net48/ReferenceProbe.exe "$stage/repeat-fixtures"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Get-ChildItem contracts/reference-fixtures/*.xml | ForEach-Object {
+            if ((Get-FileHash $_.FullName).Hash -ne (Get-FileHash "$stage/repeat-fixtures/$($_.Name)").Hash) { throw "Non-deterministic fixture $($_.Name)" }
+          }
+      - name: Remove isolated reference implementation
+        if: always()
+        shell: pwsh
+        run: Remove-Item -Recurse -Force -ErrorAction SilentlyContinue (Join-Path $env:RUNNER_TEMP 'avalondock-reference')
+      - name: Commit verified public contracts and behavior fixtures
         shell: bash
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add contracts/avalondock-metadata-*.json contracts/avalondock-metadata-*.txt
-          git diff --cached --quiet || (git commit -m 'test: record resolved AvalonDock public metadata for release and debug profiles' && git pull --rebase origin main && git push origin HEAD:main)
+          git add contracts/avalondock-metadata-*.json contracts/avalondock-metadata-*.txt contracts/reference-fixtures/
+          git diff --cached --quiet || (git commit -m 'test: record resolved public metadata, defaults and original-format layout fixtures' && git pull --rebase origin main && git push origin HEAD:main)
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: reference-public-metadata
-          path: contracts/avalondock-metadata-*
+          path: |
+            contracts/avalondock-metadata-*
+            contracts/reference-fixtures/

@@ -1,0 +1,10 @@
+<Project>
+  <!-- Current .NET Framework reference packs omit legacy normalization data.
+       Remove only missing non-code companion files from the copy-local stage;
+       compilation inputs, original sources and emitted public APIs are unchanged. -->
+  <Target Name="SkipMissingLegacyNormalizationCompanions" BeforeTargets="_CopyFilesMarkedCopyLocal">
+    <ItemGroup>
+      <ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)" Condition="'%(ReferenceCopyLocalPaths.Extension)' == '.nlp' and !Exists('%(ReferenceCopyLocalPaths.Identity)')" />
+    </ItemGroup>
+  </Target>
+</Project>
