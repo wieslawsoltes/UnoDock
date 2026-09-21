@@ -1,0 +1,35 @@
+name: Prepare Uno references
+on:
+  workflow_dispatch:
+  push:
+    paths: ['.github/workflows/references.yml']
+permissions:
+  contents: read
+jobs:
+  references:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Resolve actual Uno compile references
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/uno-reference"
+          cp global.json "$RUNNER_TEMP/uno-reference/global.json"
+          cat > "$RUNNER_TEMP/uno-reference/Reference.csproj" <<'PROJECT'
+          <Project Sdk="Uno.Sdk">
+            <PropertyGroup><TargetFramework>net10.0</TargetFramework><GenerateLibraryLayout>true</GenerateLibraryLayout></PropertyGroup>
+            <Target Name="ExportReferences" DependsOnTargets="ResolveReferences">
+              <Copy SourceFiles="@(ReferencePath)" DestinationFolder="$(OutputDirectory)" />
+            </Target>
+          </Project>
+          PROJECT
+          dotnet msbuild "$RUNNER_TEMP/uno-reference/Reference.csproj" -restore -t:ExportReferences -p:OutputDirectory="$RUNNER_TEMP/uno-assemblies"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: uno-reference-assemblies
+          path: ${{ runner.temp }}/uno-assemblies/
+          retention-days: 1
