@@ -6,9 +6,10 @@ using UnoDock.Core;
 using Xceed.Wpf.AvalonDock;
 using Xceed.Wpf.AvalonDock.Layout;
 using Xceed.Wpf.AvalonDock.Layout.Serialization;
-using LayoutPanel = Xceed.Wpf.AvalonDock.Layout.LayoutPanel;
 
 namespace UnoDock.Testing;
+
+using LayoutPanel = Xceed.Wpf.AvalonDock.Layout.LayoutPanel;
 
 public static class RuntimeTests
 {

@@ -90,6 +90,7 @@ public abstract class LayoutFloatingWindowControl : ContentControl, ILayoutContr
     internal void ShowNative()
     {
         if (_hostDisposed) return;
+        Visibility = Visibility.Visible;
         if (_window == null)
         {
             VisualParenting.Detach(this); Width = double.NaN; Height = double.NaN;
@@ -99,7 +100,7 @@ public abstract class LayoutFloatingWindowControl : ContentControl, ILayoutContr
             _window.Closed += OnNativeClosed;
             var bounds = Bounds; var scale = Math.Max(1, XamlRoot?.RasterizationScale ?? 1);
             _syncBounds = true;
-            try { _window.AppWindow.MoveAndResize(new Windows.Graphics.RectInt32 { X = (int)(bounds.X * scale), Y = (int)(bounds.Y * scale), Width = (int)(bounds.Width * scale), Height = (int)(bounds.Height * scale) }); }
+            try { _window.AppWindow.Move(new Windows.Graphics.PointInt32 { X = (int)(bounds.X * scale), Y = (int)(bounds.Y * scale) }); _window.AppWindow.Resize(new Windows.Graphics.SizeInt32 { Width = (int)(bounds.Width * scale), Height = (int)(bounds.Height * scale) }); }
             finally { _syncBounds = false; }
             if (PositionModel?.IsMaximized == true && _window.AppWindow.Presenter is OverlappedPresenter presenter) presenter.Maximize();
             _window.Activate();
@@ -123,7 +124,29 @@ public abstract class LayoutFloatingWindowControl : ContentControl, ILayoutContr
         IsMaximized = maximized;
         foreach (var content in Contents) content.IsMaximized = maximized;
     }
-    internal void HideHost() { if (_window != null) _window.AppWindow.Hide(); else Visibility = Visibility.Collapsed; }
+    internal void HideHost()
+    {
+#if WINDOWS
+        if (_window != null) _window.AppWindow.Hide();
+#else
+        // Uno has no AppWindow.Hide: release the host, retaining the control and content.
+        if (_window is { } window)
+        {
+            _closingHost = true;
+            try
+            {
+                window.AppWindow.Closing -= OnNativeClosing;
+                window.AppWindow.Changed -= OnNativeChanged;
+                window.Closed -= OnNativeClosed;
+                window.Content = null;
+                window.Close();
+                _window = null;
+            }
+            finally { _closingHost = false; }
+        }
+#endif
+        Visibility = Visibility.Collapsed;
+    }
     internal void CloseHost()
     {
         if (_hostDisposed) return; _hostDisposed = true; _closingHost = true;

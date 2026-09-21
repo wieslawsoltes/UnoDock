@@ -28,7 +28,7 @@ public abstract class LayoutPositionableGroup<T> : LayoutGroup<T>, ILayoutPositi
 }
 
 /// <summary>Selection is tracked by identity, not by an index that becomes stale during collection edits.</summary>
-internal sealed class PaneSelection(ILayoutGroup pane, ILayoutContentSelector selector, Action<string> notify)
+internal sealed class PaneSelection(ILayoutGroup pane, Action<string> notify)
 {
     private LayoutContent? _selected;
     private bool _changing;
@@ -69,7 +69,7 @@ public class LayoutDocumentPane : LayoutPositionableGroup<LayoutContent>, ILayou
 {
     private readonly PaneSelection _selection;
     private bool _showHeader = true;
-    public LayoutDocumentPane() => _selection = new(this, this, Notify);
+    public LayoutDocumentPane() => _selection = new(this, Notify);
     public LayoutDocumentPane(LayoutContent firstChild) : this() => Children.Add(firstChild);
     public LayoutContent? SelectedContent => _selection.Content;
     public int SelectedContentIndex { get => _selection.Index; set => _selection.Index = value; }
@@ -88,7 +88,7 @@ public class LayoutAnchorablePane : LayoutPositionableGroup<LayoutAnchorable>, I
 {
     private readonly PaneSelection _selection;
     private string? _name;
-    public LayoutAnchorablePane() => _selection = new(this, this, Notify);
+    public LayoutAnchorablePane() => _selection = new(this, Notify);
     public LayoutAnchorablePane(LayoutAnchorable anchorable) : this() => Children.Add(anchorable);
     public LayoutContent? SelectedContent => _selection.Content;
     public int SelectedContentIndex { get => _selection.Index; set => _selection.Index = value; }
