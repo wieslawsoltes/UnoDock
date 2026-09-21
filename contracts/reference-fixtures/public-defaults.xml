@@ -1,0 +1,213 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<PublicDefaults>
+  <Type Name="Xceed.Wpf.AvalonDock.DockingManager">
+    <Property Name="AllowMixedOrientation" Type="System.Boolean" Value="False" />
+    <Property Name="AllowMovingFloatingWindowWithKeyboard" Type="System.Boolean" Value="False" />
+    <Property Name="AutoHideWindowClosingTimer" Type="System.Int32" Value="1500" />
+    <Property Name="GridSplitterHeight" Type="System.Double" Value="6" />
+    <Property Name="GridSplitterWidth" Type="System.Double" Value="6" />
+    <Property Name="ShowSystemMenu" Type="System.Boolean" Value="True" />
+    <DependencyProperty Name="ActiveContent" Type="System.Object" Null="true" AffectsMeasure="false" AffectsArrange="false" AffectsRender="false" BindsTwoWayByDefault="false" />
+    <DependencyProperty Name="AllowMixedOrientation" Type="System.Boolean" Value="False" AffectsMeasure="false" AffectsArrange="false" AffectsRender="false" BindsTwoWayByDefault="false" />
+    <DependencyProperty Name="AllowMovingFloatingWindowWithKeyboard" Type="System.Boolean" Value="False" AffectsMeasure="false" AffectsArrange="false" AffectsRender="false" BindsTwoWayByDefault="false" />
+    <DependencyProperty Name="AnchorGroupTemplate" Type="System.Windows.Controls.ControlTemplate" Null="true" AffectsMeasure="false" AffectsArrange="false" AffectsRender="false" BindsTwoWayByDefault="false" />
+    <DependencyProperty Name="AnchorSideTemplate" Type="System.Windows.Controls.ControlTemplate" Null="true" AffectsMeasure="false" AffectsArrange="false" AffectsRender="false" BindsTwoWayByDefault="false" />
+    <DependencyProperty Name="AnchorTemplate" Type="System.Windows.Controls.ControlTemplate" Null="true" AffectsMeasure="false" AffectsArrange="false" AffectsRender="false" BindsTwoWayByDefault="false" />
+    <DependencyProperty Name="AnchorableContextMenu" Type="System.Windows.Controls.ContextMenu" Null="true" AffectsMeasure="false" AffectsArrange="false" AffectsRender="false" BindsTwoWayByDefault="false" />
+    <DependencyProperty Name="AnchorableHeaderTemplate" Type="System.Windows.DataTemplate" Null="true" AffectsMeasure="false" AffectsArrange="false" AffectsRender="false" BindsTwoWayByDefault="false" />
+    <DependencyProperty Name="AnchorableHeaderTemplateSelector" Type="System.Windows.Controls.DataTemplateSelector" Null="true" AffectsMeasure="false" AffectsArrange="false" AffectsRender="false" BindsTwoWayByDefault="false" />
+    <DependencyProperty Name="AnchorablePaneControlStyle" Type="System.Windows.Style" Null="true" AffectsMeasure="false" AffectsArrange="false" AffectsRender="false" BindsTwoWayByDefault="false" />
+    <DependencyProperty Name="AnchorableTitleTemplate" Type="System.Windows.DataTemplate" Null="true" AffectsMeasure="false" AffectsArrange="false" AffectsRender="false" BindsTwoWayByDefault="false" />
+    <DependencyProperty Name="AnchorableTitleTemplateSelector" Type="System.Windows.Controls.DataTemplateSelector" Null="true" AffectsMeasure="false" AffectsArrange="false" AffectsRender="false" BindsTwoWayByDefault="false" />
+    <DependencyProperty Name="AnchorablesSource" Type="System.Collections.IEnumerable" Null="true" AffectsMeasure="false" AffectsArrange="false" AffectsRender="false" BindsTwoWayByDefault="false" />
+    <DependencyProperty Name="AutoHideWindowClosingTimer" Type="System.Int32" Value="1500" AffectsMeasure="false" AffectsArrange="false" AffectsRender="false" BindsTwoWayByDefault="false" />
+    <DependencyProperty Name="AutoHideWindow" Type="Xceed.Wpf.AvalonDock.Controls.LayoutAutoHideWindowControl" Null="true" AffectsMeasure="false" AffectsArrange="false" AffectsRender="false" BindsTwoWayByDefault="false" />
+    <DependencyProperty Name="BottomSidePanel" Type="Xceed.Wpf.AvalonDock.Controls.LayoutAnchorSideControl" Null="true" AffectsMeasure="false" AffectsArrange="false" AffectsRender="false" BindsTwoWayByDefault="false" />
+    <DependencyProperty Name="DocumentContextMenu" Type="System.Windows.Controls.ContextMenu" Null="true" AffectsMeasure="false" AffectsArrange="false" AffectsRender="false" BindsTwoWayByDefault="false" />
+    <DependencyProperty Name="DocumentHeaderTemplate" Type="System.Windows.DataTemplate" Null="true" AffectsMeasure="false" AffectsArrange="false" AffectsRender="false" BindsTwoWayByDefault="false" />
+    <DependencyProperty Name="DocumentHeaderTemplateSelector" Type="System.Windows.Controls.DataTemplateSelector" Null="true" AffectsMeasure="false" AffectsArrange="false" AffectsRender="false" BindsTwoWayByDefault="false" />
+    <DependencyProperty Name="DocumentPaneControlStyle" Type="System.Windows.Style" Null="true" AffectsMeasure="false" AffectsArrange="false" AffectsRender="false" BindsTwoWayByDefault="false" />
+    <DependencyProperty Name="DocumentPaneMenuItemHeaderTemplate" Type="System.Windows.DataTemplate" Null="true" AffectsMeasure="false" AffectsArrange="false" AffectsRender="false" BindsTwoWayByDefault="false" />
+    <DependencyProperty Name="DocumentPaneMenuItemHeaderTemplateSelector" Type="System.Windows.Controls.DataTemplateSelector" Null="true" AffectsMeasure="false" AffectsArrange="false" AffectsRender="false" BindsTwoWayByDefault="false" />
+    <DependencyProperty Name="DocumentTitleTemplate" Type="System.Windows.DataTemplate" Null="true" AffectsMeasure="false" AffectsArrange="false" AffectsRender="false" BindsTwoWayByDefault="false" />
+    <DependencyProperty Name="DocumentTitleTemplateSelector" Type="System.Windows.Controls.DataTemplateSelector" Null="true" AffectsMeasure="false" AffectsArrange="false" AffectsRender="false" BindsTwoWayByDefault="false" />
+    <DependencyProperty Name="DocumentsSource" Type="System.Collections.IEnumerable" Null="true" AffectsMeasure="false" AffectsArrange="false" AffectsRender="false" BindsTwoWayByDefault="false" />
+    <DependencyProperty Name="GridSplitterHeight" Type="System.Double" Value="6" AffectsMeasure="false" AffectsArrange="false" AffectsRender="false" BindsTwoWayByDefault="false" />
+    <DependencyProperty Name="GridSplitterWidth" Type="System.Double" Value="6" AffectsMeasure="false" AffectsArrange="false" AffectsRender="false" BindsTwoWayByDefault="false" />
+    <DependencyProperty Name="IconContentTemplate" Type="System.Windows.DataTemplate" Null="true" AffectsMeasure="false" AffectsArrange="false" AffectsRender="false" BindsTwoWayByDefault="false" />
+    <DependencyProperty Name="IconContentTemplateSelector" Type="System.Windows.Controls.DataTemplateSelector" Null="true" AffectsMeasure="false" AffectsArrange="false" AffectsRender="false" BindsTwoWayByDefault="false" />
+    <DependencyProperty Name="LayoutItemContainerStyle" Type="System.Windows.Style" Null="true" AffectsMeasure="false" AffectsArrange="false" AffectsRender="false" BindsTwoWayByDefault="false" />
+    <DependencyProperty Name="LayoutItemContainerStyleSelector" Type="System.Windows.Controls.StyleSelector" Null="true" AffectsMeasure="false" AffectsArrange="false" AffectsRender="false" BindsTwoWayByDefault="false" />
+    <DependencyProperty Name="LayoutItemTemplate" Type="System.Windows.DataTemplate" Null="true" AffectsMeasure="false" AffectsArrange="false" AffectsRender="false" BindsTwoWayByDefault="false" />
+    <DependencyProperty Name="LayoutItemTemplateSelector" Type="System.Windows.Controls.DataTemplateSelector" Null="true" AffectsMeasure="false" AffectsArrange="false" AffectsRender="false" BindsTwoWayByDefault="false" />
+    <DependencyProperty Name="Layout" Type="Xceed.Wpf.AvalonDock.Layout.LayoutRoot" Null="true" AffectsMeasure="false" AffectsArrange="false" AffectsRender="false" BindsTwoWayByDefault="false" />
+    <DependencyProperty Name="LayoutRootPanel" Type="Xceed.Wpf.AvalonDock.Controls.LayoutPanelControl" Null="true" AffectsMeasure="false" AffectsArrange="false" AffectsRender="false" BindsTwoWayByDefault="false" />
+    <DependencyProperty Name="LayoutUpdateStrategy" Type="Xceed.Wpf.AvalonDock.Layout.ILayoutUpdateStrategy" Null="true" AffectsMeasure="false" AffectsArrange="false" AffectsRender="false" BindsTwoWayByDefault="false" />
+    <DependencyProperty Name="LeftSidePanel" Type="Xceed.Wpf.AvalonDock.Controls.LayoutAnchorSideControl" Null="true" AffectsMeasure="false" AffectsArrange="false" AffectsRender="false" BindsTwoWayByDefault="false" />
+    <DependencyProperty Name="RightSidePanel" Type="Xceed.Wpf.AvalonDock.Controls.LayoutAnchorSideControl" Null="true" AffectsMeasure="false" AffectsArrange="false" AffectsRender="false" BindsTwoWayByDefault="false" />
+    <DependencyProperty Name="ShowSystemMenu" Type="System.Boolean" Value="True" AffectsMeasure="false" AffectsArrange="false" AffectsRender="false" BindsTwoWayByDefault="false" />
+    <DependencyProperty Name="Theme" Type="Xceed.Wpf.AvalonDock.Themes.Theme" Null="true" AffectsMeasure="false" AffectsArrange="false" AffectsRender="false" BindsTwoWayByDefault="false" />
+    <DependencyProperty Name="TopSidePanel" Type="Xceed.Wpf.AvalonDock.Controls.LayoutAnchorSideControl" Null="true" AffectsMeasure="false" AffectsArrange="false" AffectsRender="false" BindsTwoWayByDefault="false" />
+  </Type>
+  <Type Name="Xceed.Wpf.AvalonDock.Layout.LayoutAnchorGroup">
+    <Property Name="ChildrenCount" Type="System.Int32" Value="0" />
+    <Property Name="IsVisible" Type="System.Boolean" Value="True" />
+  </Type>
+  <Type Name="Xceed.Wpf.AvalonDock.Layout.LayoutAnchorSide">
+    <Property Name="ChildrenCount" Type="System.Int32" Value="0" />
+    <Property Name="IsVisible" Type="System.Boolean" Value="True" />
+    <Property Name="Side" Type="Xceed.Wpf.AvalonDock.Layout.AnchorSide" Value="Left" />
+  </Type>
+  <Type Name="Xceed.Wpf.AvalonDock.Layout.LayoutAnchorable">
+    <Property Name="AutoHideHeight" Type="System.Double" Value="0" />
+    <Property Name="AutoHideMinHeight" Type="System.Double" Value="100" />
+    <Property Name="AutoHideMinWidth" Type="System.Double" Value="100" />
+    <Property Name="AutoHideWidth" Type="System.Double" Value="0" />
+    <Property Name="CanAutoHide" Type="System.Boolean" Value="True" />
+    <Property Name="CanClose" Type="System.Boolean" Value="False" />
+    <Property Name="CanDockAsTabbedDocument" Type="System.Boolean" Value="True" />
+    <Property Name="CanFloat" Type="System.Boolean" Value="True" />
+    <Property Name="CanHide" Type="System.Boolean" Value="True" />
+    <Property Name="ContentId" Type="System.String" Null="true" />
+    <Property Name="FloatingHeight" Type="System.Double" Value="0" />
+    <Property Name="FloatingLeft" Type="System.Double" Value="0" />
+    <Property Name="FloatingTop" Type="System.Double" Value="0" />
+    <Property Name="FloatingWidth" Type="System.Double" Value="0" />
+    <Property Name="IsActive" Type="System.Boolean" Value="False" />
+    <Property Name="IsAutoHidden" Type="System.Boolean" Value="False" />
+    <Property Name="IsEnabled" Type="System.Boolean" Value="True" />
+    <Property Name="IsFloating" Type="System.Boolean" Value="False" />
+    <Property Name="IsHidden" Type="System.Boolean" Value="False" />
+    <Property Name="IsLastFocusedDocument" Type="System.Boolean" Value="False" />
+    <Property Name="IsMaximized" Type="System.Boolean" Value="False" />
+    <Property Name="IsSelected" Type="System.Boolean" Value="False" />
+    <Property Name="IsVisible" Type="System.Boolean" Value="False" />
+    <Property Name="PreviousContainerId" Type="System.String" Null="true" />
+    <Property Name="PreviousContainerIndex" Type="System.Int32" Value="-1" />
+    <Property Name="Title" Type="System.String" Null="true" />
+    <DependencyProperty Name="ContentId" Type="System.String" Null="true" />
+    <DependencyProperty Name="Title" Type="System.String" Null="true" />
+  </Type>
+  <Type Name="Xceed.Wpf.AvalonDock.Layout.LayoutAnchorableFloatingWindow">
+    <Property Name="ChildrenCount" Type="System.Int32" Value="0" />
+    <Property Name="IsSinglePane" Type="System.Boolean" Value="False" />
+    <Property Name="IsValid" Type="System.Boolean" Value="False" />
+    <Property Name="IsVisible" Type="System.Boolean" Value="True" />
+  </Type>
+  <Type Name="Xceed.Wpf.AvalonDock.Layout.LayoutAnchorablePane">
+    <Property Name="AllowDuplicateContent" Type="System.Boolean" Value="True" />
+    <Property Name="CanClose" Type="System.Boolean" Value="True" />
+    <Property Name="CanHide" Type="System.Boolean" Value="True" />
+    <Property Name="CanRepositionItems" Type="System.Boolean" Value="True" />
+    <Property Name="ChildrenCount" Type="System.Int32" Value="0" />
+    <Property Name="DockHeight" Type="System.Windows.GridLength" Value="1*" />
+    <Property Name="DockMinHeight" Type="System.Double" Value="25" />
+    <Property Name="DockMinWidth" Type="System.Double" Value="25" />
+    <Property Name="DockWidth" Type="System.Windows.GridLength" Value="1*" />
+    <Property Name="FloatingHeight" Type="System.Double" Value="0" />
+    <Property Name="FloatingLeft" Type="System.Double" Value="0" />
+    <Property Name="FloatingTop" Type="System.Double" Value="0" />
+    <Property Name="FloatingWidth" Type="System.Double" Value="0" />
+    <Property Name="IsDirectlyHostedInFloatingWindow" Type="System.Boolean" Value="False" />
+    <Property Name="IsHostedInFloatingWindow" Type="System.Boolean" Value="False" />
+    <Property Name="IsMaximized" Type="System.Boolean" Value="False" />
+    <Property Name="IsVisible" Type="System.Boolean" Value="True" />
+    <Property Name="Name" Type="System.String" Null="true" />
+    <Property Name="SelectedContentIndex" Type="System.Int32" Value="-1" />
+  </Type>
+  <Type Name="Xceed.Wpf.AvalonDock.Layout.LayoutAnchorablePaneGroup">
+    <Property Name="AllowDuplicateContent" Type="System.Boolean" Value="True" />
+    <Property Name="CanRepositionItems" Type="System.Boolean" Value="True" />
+    <Property Name="ChildrenCount" Type="System.Int32" Value="0" />
+    <Property Name="DockHeight" Type="System.Windows.GridLength" Value="1*" />
+    <Property Name="DockMinHeight" Type="System.Double" Value="25" />
+    <Property Name="DockMinWidth" Type="System.Double" Value="25" />
+    <Property Name="DockWidth" Type="System.Windows.GridLength" Value="1*" />
+    <Property Name="FloatingHeight" Type="System.Double" Value="0" />
+    <Property Name="FloatingLeft" Type="System.Double" Value="0" />
+    <Property Name="FloatingTop" Type="System.Double" Value="0" />
+    <Property Name="FloatingWidth" Type="System.Double" Value="0" />
+    <Property Name="IsMaximized" Type="System.Boolean" Value="False" />
+    <Property Name="IsVisible" Type="System.Boolean" Value="True" />
+    <Property Name="Orientation" Type="System.Windows.Controls.Orientation" Value="Horizontal" />
+  </Type>
+  <Type Name="Xceed.Wpf.AvalonDock.Layout.LayoutDocument">
+    <Property Name="CanClose" Type="System.Boolean" Value="True" />
+    <Property Name="CanFloat" Type="System.Boolean" Value="True" />
+    <Property Name="CanMove" Type="System.Boolean" Value="True" />
+    <Property Name="ContentId" Type="System.String" Null="true" />
+    <Property Name="Description" Type="System.String" Null="true" />
+    <Property Name="FloatingHeight" Type="System.Double" Value="0" />
+    <Property Name="FloatingLeft" Type="System.Double" Value="0" />
+    <Property Name="FloatingTop" Type="System.Double" Value="0" />
+    <Property Name="FloatingWidth" Type="System.Double" Value="0" />
+    <Property Name="IsActive" Type="System.Boolean" Value="False" />
+    <Property Name="IsEnabled" Type="System.Boolean" Value="True" />
+    <Property Name="IsFloating" Type="System.Boolean" Value="False" />
+    <Property Name="IsLastFocusedDocument" Type="System.Boolean" Value="False" />
+    <Property Name="IsMaximized" Type="System.Boolean" Value="False" />
+    <Property Name="IsSelected" Type="System.Boolean" Value="False" />
+    <Property Name="IsVisible" Type="System.Boolean" Value="True" />
+    <Property Name="PreviousContainerId" Type="System.String" Null="true" />
+    <Property Name="PreviousContainerIndex" Type="System.Int32" Value="-1" />
+    <Property Name="Title" Type="System.String" Null="true" />
+    <DependencyProperty Name="ContentId" Type="System.String" Null="true" />
+    <DependencyProperty Name="Title" Type="System.String" Null="true" />
+  </Type>
+  <Type Name="Xceed.Wpf.AvalonDock.Layout.LayoutDocumentFloatingWindow">
+    <Property Name="ChildrenCount" Type="System.Int32" Value="0" />
+    <Property Name="IsValid" Type="System.Boolean" Value="False" />
+  </Type>
+  <Type Name="Xceed.Wpf.AvalonDock.Layout.LayoutDocumentPane">
+    <Property Name="AllowDuplicateContent" Type="System.Boolean" Value="True" />
+    <Property Name="CanRepositionItems" Type="System.Boolean" Value="True" />
+    <Property Name="ChildrenCount" Type="System.Int32" Value="0" />
+    <Property Name="DockHeight" Type="System.Windows.GridLength" Value="1*" />
+    <Property Name="DockMinHeight" Type="System.Double" Value="25" />
+    <Property Name="DockMinWidth" Type="System.Double" Value="25" />
+    <Property Name="DockWidth" Type="System.Windows.GridLength" Value="1*" />
+    <Property Name="FloatingHeight" Type="System.Double" Value="0" />
+    <Property Name="FloatingLeft" Type="System.Double" Value="0" />
+    <Property Name="FloatingTop" Type="System.Double" Value="0" />
+    <Property Name="FloatingWidth" Type="System.Double" Value="0" />
+    <Property Name="IsMaximized" Type="System.Boolean" Value="False" />
+    <Property Name="IsVisible" Type="System.Boolean" Value="True" />
+    <Property Name="SelectedContentIndex" Type="System.Int32" Value="-1" />
+    <Property Name="ShowHeader" Type="System.Boolean" Value="True" />
+  </Type>
+  <Type Name="Xceed.Wpf.AvalonDock.Layout.LayoutDocumentPaneGroup">
+    <Property Name="AllowDuplicateContent" Type="System.Boolean" Value="True" />
+    <Property Name="CanRepositionItems" Type="System.Boolean" Value="True" />
+    <Property Name="ChildrenCount" Type="System.Int32" Value="0" />
+    <Property Name="DockHeight" Type="System.Windows.GridLength" Value="1*" />
+    <Property Name="DockMinHeight" Type="System.Double" Value="25" />
+    <Property Name="DockMinWidth" Type="System.Double" Value="25" />
+    <Property Name="DockWidth" Type="System.Windows.GridLength" Value="1*" />
+    <Property Name="FloatingHeight" Type="System.Double" Value="0" />
+    <Property Name="FloatingLeft" Type="System.Double" Value="0" />
+    <Property Name="FloatingTop" Type="System.Double" Value="0" />
+    <Property Name="FloatingWidth" Type="System.Double" Value="0" />
+    <Property Name="IsMaximized" Type="System.Boolean" Value="False" />
+    <Property Name="IsVisible" Type="System.Boolean" Value="True" />
+    <Property Name="Orientation" Type="System.Windows.Controls.Orientation" Value="Horizontal" />
+  </Type>
+  <Type Name="Xceed.Wpf.AvalonDock.Layout.LayoutPanel">
+    <Property Name="AllowDuplicateContent" Type="System.Boolean" Value="True" />
+    <Property Name="CanRepositionItems" Type="System.Boolean" Value="True" />
+    <Property Name="ChildrenCount" Type="System.Int32" Value="0" />
+    <Property Name="DockHeight" Type="System.Windows.GridLength" Value="1*" />
+    <Property Name="DockMinHeight" Type="System.Double" Value="25" />
+    <Property Name="DockMinWidth" Type="System.Double" Value="25" />
+    <Property Name="DockWidth" Type="System.Windows.GridLength" Value="1*" />
+    <Property Name="FloatingHeight" Type="System.Double" Value="0" />
+    <Property Name="FloatingLeft" Type="System.Double" Value="0" />
+    <Property Name="FloatingTop" Type="System.Double" Value="0" />
+    <Property Name="FloatingWidth" Type="System.Double" Value="0" />
+    <Property Name="IsMaximized" Type="System.Boolean" Value="False" />
+    <Property Name="IsVisible" Type="System.Boolean" Value="True" />
+    <Property Name="Orientation" Type="System.Windows.Controls.Orientation" Value="Horizontal" />
+  </Type>
+  <Type Name="Xceed.Wpf.AvalonDock.Layout.LayoutRoot">
+    <Property Name="ChildrenCount" Type="System.Int32" Value="5" />
+  </Type>
+</PublicDefaults>

@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<LayoutRoot>
+  <RootPanel Orientation="Vertical">
+    <LayoutPanel Orientation="Horizontal">
+      <LayoutAnchorablePane DockWidth="240">
+        <LayoutAnchorable AutoHideWidth="270" AutoHideMinWidth="100" AutoHideMinHeight="100" Title="Explorer" IsSelected="True" ContentId="explorer" CanClose="False" LastActivationTimeStamp="01/01/2000 00:00:00" />
+      </LayoutAnchorablePane>
+      <LayoutDocumentPaneGroup Orientation="Vertical">
+        <LayoutDocumentPane>
+          <LayoutDocument Title="Program.cs" IsSelected="True" ContentId="doc:program" CanClose="False" LastActivationTimeStamp="01/01/2000 00:00:00" />
+          <LayoutDocument Title="Notes &lt;draft&gt; &amp; β" ContentId="doc:notes&amp;β" CanClose="True" LastActivationTimeStamp="01/01/2000 00:00:00" Description="fixture" />
+        </LayoutDocumentPane>
+        <LayoutDocumentPane>
+          <LayoutDocument Title="Readme" IsSelected="True" ContentId="doc:readme" CanClose="True" LastActivationTimeStamp="01/01/2000 00:00:00" />
+        </LayoutDocumentPane>
+      </LayoutDocumentPaneGroup>
+      <LayoutAnchorablePane DockWidth="2*">
+        <LayoutAnchorable CanHide="False" AutoHideMinWidth="100" AutoHideMinHeight="100" Title="Properties" IsSelected="True" ContentId="properties" CanClose="False" LastActivationTimeStamp="01/01/2000 00:00:00" />
+      </LayoutAnchorablePane>
+    </LayoutPanel>
+    <LayoutAnchorablePane>
+      <LayoutAnchorable AutoHideMinWidth="100" AutoHideMinHeight="100" Title="Added" IsSelected="True" ContentId="added" CanClose="False" LastActivationTimeStamp="01/01/2000 00:00:00" />
+    </LayoutAnchorablePane>
+  </RootPanel>
+  <TopSide />
+  <RightSide />
+  <LeftSide />
+  <BottomSide />
+  <FloatingWindows />
+  <Hidden />
+</LayoutRoot>

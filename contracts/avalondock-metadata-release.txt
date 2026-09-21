@@ -1,0 +1,1031 @@
+Microsoft.Windows.Shell.SystemCommands | public static class : System.Object interfaces[]
+Microsoft.Windows.Shell.SystemCommands | public static method System.Void CloseWindow(System.Windows.Window window)
+Microsoft.Windows.Shell.SystemCommands | public static method System.Void MaximizeWindow(System.Windows.Window window)
+Microsoft.Windows.Shell.SystemCommands | public static method System.Void MinimizeWindow(System.Windows.Window window)
+Microsoft.Windows.Shell.SystemCommands | public static method System.Void RestoreWindow(System.Windows.Window window)
+Microsoft.Windows.Shell.SystemCommands | public static method System.Void ShowSystemMenu(System.Windows.Window window,System.Windows.Point screenLocation)
+Microsoft.Windows.Shell.SystemCommands | public static property System.Windows.Input.RoutedCommand CloseWindowCommand() { public get;  }
+Microsoft.Windows.Shell.SystemCommands | public static property System.Windows.Input.RoutedCommand MaximizeWindowCommand() { public get;  }
+Microsoft.Windows.Shell.SystemCommands | public static property System.Windows.Input.RoutedCommand MinimizeWindowCommand() { public get;  }
+Microsoft.Windows.Shell.SystemCommands | public static property System.Windows.Input.RoutedCommand RestoreWindowCommand() { public get;  }
+Microsoft.Windows.Shell.SystemCommands | public static property System.Windows.Input.RoutedCommand ShowSystemMenuCommand() { public get;  }
+Microsoft.Windows.Shell.SystemParameters2 | public  class : System.Object interfaces[System.ComponentModel.INotifyPropertyChanged]
+Microsoft.Windows.Shell.SystemParameters2 | public  event System.ComponentModel.PropertyChangedEventHandler PropertyChanged
+Microsoft.Windows.Shell.SystemParameters2 | public  property System.Boolean HighContrast() { public get;  }
+Microsoft.Windows.Shell.SystemParameters2 | public  property System.Boolean IsGlassEnabled() { public get;  }
+Microsoft.Windows.Shell.SystemParameters2 | public  property System.Double WindowCaptionHeight() { public get;  }
+Microsoft.Windows.Shell.SystemParameters2 | public  property System.String UxThemeColor() { public get;  }
+Microsoft.Windows.Shell.SystemParameters2 | public  property System.String UxThemeName() { public get;  }
+Microsoft.Windows.Shell.SystemParameters2 | public  property System.Windows.CornerRadius WindowCornerRadius() { public get;  }
+Microsoft.Windows.Shell.SystemParameters2 | public  property System.Windows.Media.Color WindowGlassColor() { public get;  }
+Microsoft.Windows.Shell.SystemParameters2 | public  property System.Windows.Media.SolidColorBrush WindowGlassBrush() { public get;  }
+Microsoft.Windows.Shell.SystemParameters2 | public  property System.Windows.Rect WindowCaptionButtonsLocation() { public get;  }
+Microsoft.Windows.Shell.SystemParameters2 | public  property System.Windows.Size SmallIconSize() { public get;  }
+Microsoft.Windows.Shell.SystemParameters2 | public  property System.Windows.Thickness WindowNonClientFrameThickness() { public get;  }
+Microsoft.Windows.Shell.SystemParameters2 | public  property System.Windows.Thickness WindowResizeBorderThickness() { public get;  }
+Microsoft.Windows.Shell.SystemParameters2 | public static property Microsoft.Windows.Shell.SystemParameters2 Current() { public get;  }
+Microsoft.Windows.Shell.WindowChrome | protected override method System.Windows.Freezable CreateInstanceCore()
+Microsoft.Windows.Shell.WindowChrome | public  class : System.Windows.Freezable interfaces[]
+Microsoft.Windows.Shell.WindowChrome | public  constructor System.Void .ctor()
+Microsoft.Windows.Shell.WindowChrome | public  property System.Boolean ShowSystemMenu() { public get; public set;  }
+Microsoft.Windows.Shell.WindowChrome | public  property System.Double CaptionHeight() { public get; public set;  }
+Microsoft.Windows.Shell.WindowChrome | public  property System.Windows.CornerRadius CornerRadius() { public get; public set;  }
+Microsoft.Windows.Shell.WindowChrome | public  property System.Windows.Thickness GlassFrameThickness() { public get; public set;  }
+Microsoft.Windows.Shell.WindowChrome | public  property System.Windows.Thickness ResizeBorderThickness() { public get; public set;  }
+Microsoft.Windows.Shell.WindowChrome | public static field System.Windows.DependencyProperty CaptionHeightProperty readonly
+Microsoft.Windows.Shell.WindowChrome | public static field System.Windows.DependencyProperty CornerRadiusProperty readonly
+Microsoft.Windows.Shell.WindowChrome | public static field System.Windows.DependencyProperty GlassFrameThicknessProperty readonly
+Microsoft.Windows.Shell.WindowChrome | public static field System.Windows.DependencyProperty IsHitTestVisibleInChromeProperty readonly
+Microsoft.Windows.Shell.WindowChrome | public static field System.Windows.DependencyProperty ResizeBorderThicknessProperty readonly
+Microsoft.Windows.Shell.WindowChrome | public static field System.Windows.DependencyProperty WindowChromeProperty readonly
+Microsoft.Windows.Shell.WindowChrome | public static method Microsoft.Windows.Shell.WindowChrome GetWindowChrome(System.Windows.Window window)
+Microsoft.Windows.Shell.WindowChrome | public static method System.Boolean GetIsHitTestVisibleInChrome(System.Windows.IInputElement inputElement)
+Microsoft.Windows.Shell.WindowChrome | public static method System.Void SetIsHitTestVisibleInChrome(System.Windows.IInputElement inputElement,System.Boolean hitTestVisible)
+Microsoft.Windows.Shell.WindowChrome | public static method System.Void SetWindowChrome(System.Windows.Window window,Microsoft.Windows.Shell.WindowChrome chrome)
+Microsoft.Windows.Shell.WindowChrome | public static property System.Windows.Thickness GlassFrameCompleteThickness() { public get;  }
+Xceed.Wpf.AvalonDock.Controls.AnchorablePaneControlOverlayArea | public  class : Xceed.Wpf.AvalonDock.Controls.OverlayArea interfaces[]
+Xceed.Wpf.AvalonDock.Controls.AnchorablePaneTabPanel | protected override method System.Windows.Size ArrangeOverride(System.Windows.Size finalSize)
+Xceed.Wpf.AvalonDock.Controls.AnchorablePaneTabPanel | protected override method System.Windows.Size MeasureOverride(System.Windows.Size availableSize)
+Xceed.Wpf.AvalonDock.Controls.AnchorablePaneTabPanel | public  class : System.Windows.Controls.Panel interfaces[]
+Xceed.Wpf.AvalonDock.Controls.AnchorablePaneTabPanel | public  constructor System.Void .ctor()
+Xceed.Wpf.AvalonDock.Controls.AnchorablePaneTitle | protected  method System.Void SetLayoutItem(Xceed.Wpf.AvalonDock.Controls.LayoutItem value)
+Xceed.Wpf.AvalonDock.Controls.AnchorablePaneTitle | protected override method System.Void OnMouseLeave(System.Windows.Input.MouseEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.AnchorablePaneTitle | protected override method System.Void OnMouseLeftButtonDown(System.Windows.Input.MouseButtonEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.AnchorablePaneTitle | protected override method System.Void OnMouseLeftButtonUp(System.Windows.Input.MouseButtonEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.AnchorablePaneTitle | protected override method System.Void OnMouseMove(System.Windows.Input.MouseEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.AnchorablePaneTitle | protected virtual method System.Void OnModelChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.AnchorablePaneTitle | public  class : System.Windows.Controls.Control interfaces[]
+Xceed.Wpf.AvalonDock.Controls.AnchorablePaneTitle | public  constructor System.Void .ctor()
+Xceed.Wpf.AvalonDock.Controls.AnchorablePaneTitle | public  property Xceed.Wpf.AvalonDock.Controls.LayoutItem LayoutItem() { public get;  }
+Xceed.Wpf.AvalonDock.Controls.AnchorablePaneTitle | public  property Xceed.Wpf.AvalonDock.Layout.LayoutAnchorable Model() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Controls.AnchorablePaneTitle | public static field System.Windows.DependencyProperty LayoutItemProperty readonly
+Xceed.Wpf.AvalonDock.Controls.AnchorablePaneTitle | public static field System.Windows.DependencyProperty ModelProperty readonly
+Xceed.Wpf.AvalonDock.Controls.ContextMenuEx | protected override method System.Void OnOpened(System.Windows.RoutedEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.ContextMenuEx | protected override method System.Windows.DependencyObject GetContainerForItemOverride()
+Xceed.Wpf.AvalonDock.Controls.ContextMenuEx | public  class : System.Windows.Controls.ContextMenu interfaces[]
+Xceed.Wpf.AvalonDock.Controls.ContextMenuEx | public  constructor System.Void .ctor()
+Xceed.Wpf.AvalonDock.Controls.DockingManagerOverlayArea | public  class : Xceed.Wpf.AvalonDock.Controls.OverlayArea interfaces[]
+Xceed.Wpf.AvalonDock.Controls.DocumentPaneControlOverlayArea | public  class : Xceed.Wpf.AvalonDock.Controls.OverlayArea interfaces[]
+Xceed.Wpf.AvalonDock.Controls.DocumentPaneTabPanel | protected override method System.Void OnMouseLeave(System.Windows.Input.MouseEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.DocumentPaneTabPanel | protected override method System.Windows.Size ArrangeOverride(System.Windows.Size finalSize)
+Xceed.Wpf.AvalonDock.Controls.DocumentPaneTabPanel | protected override method System.Windows.Size MeasureOverride(System.Windows.Size availableSize)
+Xceed.Wpf.AvalonDock.Controls.DocumentPaneTabPanel | public  class : System.Windows.Controls.Panel interfaces[]
+Xceed.Wpf.AvalonDock.Controls.DocumentPaneTabPanel | public  constructor System.Void .ctor()
+Xceed.Wpf.AvalonDock.Controls.DropAreaType | public  constructor System.Void .ctor()
+Xceed.Wpf.AvalonDock.Controls.DropAreaType | public sealed enum : System.Enum interfaces[]
+Xceed.Wpf.AvalonDock.Controls.DropAreaType | public static field Xceed.Wpf.AvalonDock.Controls.DropAreaType AnchorablePane const=3
+Xceed.Wpf.AvalonDock.Controls.DropAreaType | public static field Xceed.Wpf.AvalonDock.Controls.DropAreaType DockingManager const=0
+Xceed.Wpf.AvalonDock.Controls.DropAreaType | public static field Xceed.Wpf.AvalonDock.Controls.DropAreaType DocumentPane const=1
+Xceed.Wpf.AvalonDock.Controls.DropAreaType | public static field Xceed.Wpf.AvalonDock.Controls.DropAreaType DocumentPaneGroup const=2
+Xceed.Wpf.AvalonDock.Controls.DropArea`1 | public  class : System.Object interfaces[Xceed.Wpf.AvalonDock.Controls.IDropArea] <T:System.Windows.FrameworkElement>
+Xceed.Wpf.AvalonDock.Controls.DropArea`1 | public  property System.Windows.Rect DetectionRect() { public get;  }
+Xceed.Wpf.AvalonDock.Controls.DropArea`1 | public  property T AreaElement() { public get;  }
+Xceed.Wpf.AvalonDock.Controls.DropArea`1 | public  property Xceed.Wpf.AvalonDock.Controls.DropAreaType Type() { public get;  }
+Xceed.Wpf.AvalonDock.Controls.DropDownButton | protected override method System.Void OnClick()
+Xceed.Wpf.AvalonDock.Controls.DropDownButton | protected virtual method System.Void OnDropDownContextMenuChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.DropDownButton | public  class : System.Windows.Controls.Primitives.ToggleButton interfaces[]
+Xceed.Wpf.AvalonDock.Controls.DropDownButton | public  constructor System.Void .ctor()
+Xceed.Wpf.AvalonDock.Controls.DropDownButton | public  property System.Object DropDownContextMenuDataContext() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Controls.DropDownButton | public  property System.Windows.Controls.ContextMenu DropDownContextMenu() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Controls.DropDownButton | public static field System.Windows.DependencyProperty DropDownContextMenuDataContextProperty readonly
+Xceed.Wpf.AvalonDock.Controls.DropDownButton | public static field System.Windows.DependencyProperty DropDownContextMenuProperty readonly
+Xceed.Wpf.AvalonDock.Controls.DropDownControlArea | protected override method System.Void OnMouseRightButtonDown(System.Windows.Input.MouseButtonEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.DropDownControlArea | protected override method System.Void OnPreviewMouseRightButtonUp(System.Windows.Input.MouseButtonEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.DropDownControlArea | public  class : System.Windows.Controls.UserControl interfaces[]
+Xceed.Wpf.AvalonDock.Controls.DropDownControlArea | public  constructor System.Void .ctor()
+Xceed.Wpf.AvalonDock.Controls.DropDownControlArea | public  property System.Object DropDownContextMenuDataContext() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Controls.DropDownControlArea | public  property System.Windows.Controls.ContextMenu DropDownContextMenu() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Controls.DropDownControlArea | public static field System.Windows.DependencyProperty DropDownContextMenuDataContextProperty readonly
+Xceed.Wpf.AvalonDock.Controls.DropDownControlArea | public static field System.Windows.DependencyProperty DropDownContextMenuProperty readonly
+Xceed.Wpf.AvalonDock.Controls.DropTargetType | public  constructor System.Void .ctor()
+Xceed.Wpf.AvalonDock.Controls.DropTargetType | public sealed enum : System.Enum interfaces[]
+Xceed.Wpf.AvalonDock.Controls.DropTargetType | public static field Xceed.Wpf.AvalonDock.Controls.DropTargetType AnchorablePaneDockBottom const=13
+Xceed.Wpf.AvalonDock.Controls.DropTargetType | public static field Xceed.Wpf.AvalonDock.Controls.DropTargetType AnchorablePaneDockInside const=14
+Xceed.Wpf.AvalonDock.Controls.DropTargetType | public static field Xceed.Wpf.AvalonDock.Controls.DropTargetType AnchorablePaneDockLeft const=10
+Xceed.Wpf.AvalonDock.Controls.DropTargetType | public static field Xceed.Wpf.AvalonDock.Controls.DropTargetType AnchorablePaneDockRight const=12
+Xceed.Wpf.AvalonDock.Controls.DropTargetType | public static field Xceed.Wpf.AvalonDock.Controls.DropTargetType AnchorablePaneDockTop const=11
+Xceed.Wpf.AvalonDock.Controls.DropTargetType | public static field Xceed.Wpf.AvalonDock.Controls.DropTargetType DockingManagerDockBottom const=3
+Xceed.Wpf.AvalonDock.Controls.DropTargetType | public static field Xceed.Wpf.AvalonDock.Controls.DropTargetType DockingManagerDockLeft const=0
+Xceed.Wpf.AvalonDock.Controls.DropTargetType | public static field Xceed.Wpf.AvalonDock.Controls.DropTargetType DockingManagerDockRight const=2
+Xceed.Wpf.AvalonDock.Controls.DropTargetType | public static field Xceed.Wpf.AvalonDock.Controls.DropTargetType DockingManagerDockTop const=1
+Xceed.Wpf.AvalonDock.Controls.DropTargetType | public static field Xceed.Wpf.AvalonDock.Controls.DropTargetType DocumentPaneDockAsAnchorableBottom const=18
+Xceed.Wpf.AvalonDock.Controls.DropTargetType | public static field Xceed.Wpf.AvalonDock.Controls.DropTargetType DocumentPaneDockAsAnchorableLeft const=15
+Xceed.Wpf.AvalonDock.Controls.DropTargetType | public static field Xceed.Wpf.AvalonDock.Controls.DropTargetType DocumentPaneDockAsAnchorableRight const=17
+Xceed.Wpf.AvalonDock.Controls.DropTargetType | public static field Xceed.Wpf.AvalonDock.Controls.DropTargetType DocumentPaneDockAsAnchorableTop const=16
+Xceed.Wpf.AvalonDock.Controls.DropTargetType | public static field Xceed.Wpf.AvalonDock.Controls.DropTargetType DocumentPaneDockBottom const=7
+Xceed.Wpf.AvalonDock.Controls.DropTargetType | public static field Xceed.Wpf.AvalonDock.Controls.DropTargetType DocumentPaneDockInside const=8
+Xceed.Wpf.AvalonDock.Controls.DropTargetType | public static field Xceed.Wpf.AvalonDock.Controls.DropTargetType DocumentPaneDockLeft const=4
+Xceed.Wpf.AvalonDock.Controls.DropTargetType | public static field Xceed.Wpf.AvalonDock.Controls.DropTargetType DocumentPaneDockRight const=6
+Xceed.Wpf.AvalonDock.Controls.DropTargetType | public static field Xceed.Wpf.AvalonDock.Controls.DropTargetType DocumentPaneDockTop const=5
+Xceed.Wpf.AvalonDock.Controls.DropTargetType | public static field Xceed.Wpf.AvalonDock.Controls.DropTargetType DocumentPaneGroupDockInside const=9
+Xceed.Wpf.AvalonDock.Controls.Extentions | public static class : System.Object interfaces[]
+Xceed.Wpf.AvalonDock.Controls.Extentions | public static method System.Collections.Generic.IEnumerable<System.Windows.DependencyObject> FindLogicalAncestorsAndSelf(System.Windows.DependencyObject self)
+Xceed.Wpf.AvalonDock.Controls.Extentions | public static method System.Collections.Generic.IEnumerable<T> FindLogicalChildren<T:System.Windows.DependencyObject>(System.Windows.DependencyObject depObj)
+Xceed.Wpf.AvalonDock.Controls.Extentions | public static method System.Collections.Generic.IEnumerable<T> FindVisualChildren<T:System.Windows.DependencyObject>(System.Windows.DependencyObject depObj)
+Xceed.Wpf.AvalonDock.Controls.Extentions | public static method System.Windows.DependencyObject FindVisualTreeRoot(System.Windows.DependencyObject initial)
+Xceed.Wpf.AvalonDock.Controls.Extentions | public static method T FindLogicalAncestor<T:class>(System.Windows.DependencyObject dependencyObject)
+Xceed.Wpf.AvalonDock.Controls.Extentions | public static method T FindVisualAncestor<T:class>(System.Windows.DependencyObject dependencyObject)
+Xceed.Wpf.AvalonDock.Controls.IDropArea | public abstract interface :  interfaces[]
+Xceed.Wpf.AvalonDock.Controls.IDropArea | public abstract property System.Windows.Rect DetectionRect() { public get;  }
+Xceed.Wpf.AvalonDock.Controls.IDropArea | public abstract property Xceed.Wpf.AvalonDock.Controls.DropAreaType Type() { public get;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorControl | protected  method System.Void SetSide(Xceed.Wpf.AvalonDock.Layout.AnchorSide value)
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorControl | protected override method System.Void OnMouseDown(System.Windows.Input.MouseButtonEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorControl | protected override method System.Void OnMouseEnter(System.Windows.Input.MouseEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorControl | protected override method System.Void OnMouseLeave(System.Windows.Input.MouseEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorControl | public  class : System.Windows.Controls.Control interfaces[Xceed.Wpf.AvalonDock.Layout.ILayoutControl]
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorControl | public  property Xceed.Wpf.AvalonDock.Layout.AnchorSide Side() { public get;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorControl | public  property Xceed.Wpf.AvalonDock.Layout.ILayoutElement Model() { public get;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorControl | public static field System.Windows.DependencyProperty SideProperty readonly
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorGroupControl | public  class : System.Windows.Controls.Control interfaces[Xceed.Wpf.AvalonDock.Layout.ILayoutControl]
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorGroupControl | public  property System.Collections.ObjectModel.ObservableCollection<Xceed.Wpf.AvalonDock.Controls.LayoutAnchorControl> Children() { public get;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorGroupControl | public  property Xceed.Wpf.AvalonDock.Layout.ILayoutElement Model() { public get;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorSideControl | protected  method System.Void SetIsBottomSide(System.Boolean value)
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorSideControl | protected  method System.Void SetIsLeftSide(System.Boolean value)
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorSideControl | protected  method System.Void SetIsRightSide(System.Boolean value)
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorSideControl | protected  method System.Void SetIsTopSide(System.Boolean value)
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorSideControl | public  class : System.Windows.Controls.Control interfaces[Xceed.Wpf.AvalonDock.Layout.ILayoutControl]
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorSideControl | public  property System.Boolean IsBottomSide() { public get;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorSideControl | public  property System.Boolean IsLeftSide() { public get;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorSideControl | public  property System.Boolean IsRightSide() { public get;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorSideControl | public  property System.Boolean IsTopSide() { public get;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorSideControl | public  property System.Collections.ObjectModel.ObservableCollection<Xceed.Wpf.AvalonDock.Controls.LayoutAnchorGroupControl> Children() { public get;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorSideControl | public  property Xceed.Wpf.AvalonDock.Layout.ILayoutElement Model() { public get;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorSideControl | public static field System.Windows.DependencyProperty IsBottomSideProperty readonly
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorSideControl | public static field System.Windows.DependencyProperty IsLeftSideProperty readonly
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorSideControl | public static field System.Windows.DependencyProperty IsRightSideProperty readonly
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorSideControl | public static field System.Windows.DependencyProperty IsTopSideProperty readonly
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableControl | protected  method System.Void SetLayoutItem(Xceed.Wpf.AvalonDock.Controls.LayoutItem value)
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableControl | protected override method System.Void OnGotKeyboardFocus(System.Windows.Input.KeyboardFocusChangedEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableControl | protected virtual method System.Void OnModelChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableControl | public  class : System.Windows.Controls.Control interfaces[]
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableControl | public  constructor System.Void .ctor()
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableControl | public  property Xceed.Wpf.AvalonDock.Controls.LayoutItem LayoutItem() { public get;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableControl | public  property Xceed.Wpf.AvalonDock.Layout.LayoutAnchorable Model() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableControl | public static field System.Windows.DependencyProperty LayoutItemProperty readonly
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableControl | public static field System.Windows.DependencyProperty ModelProperty readonly
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableFloatingWindowControl | protected override method System.Boolean CanClose(System.Object parameter=null)
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableFloatingWindowControl | protected override method System.Boolean CanHide(System.Object parameter=null)
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableFloatingWindowControl | protected override method System.IntPtr FilterMessage(System.IntPtr hwnd,System.Int32 msg,System.IntPtr wParam,System.IntPtr lParam,ref System.Boolean handled)
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableFloatingWindowControl | protected override method System.Void DoHide()
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableFloatingWindowControl | protected override method System.Void OnClosed(System.EventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableFloatingWindowControl | protected override method System.Void OnInitialized(System.EventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableFloatingWindowControl | protected virtual method System.Void OnSingleContentLayoutItemChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableFloatingWindowControl | public  class : Xceed.Wpf.AvalonDock.Controls.LayoutFloatingWindowControl interfaces[Xceed.Wpf.AvalonDock.Controls.IOverlayWindowHost]
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableFloatingWindowControl | public  property System.Windows.Input.ICommand CloseWindowCommand() { public get;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableFloatingWindowControl | public  property System.Windows.Input.ICommand HideWindowCommand() { public get;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableFloatingWindowControl | public  property Xceed.Wpf.AvalonDock.Controls.LayoutItem SingleContentLayoutItem() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableFloatingWindowControl | public override property Xceed.Wpf.AvalonDock.Layout.ILayoutElement Model() { public get;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableFloatingWindowControl | public static field System.Windows.DependencyProperty SingleContentLayoutItemProperty readonly
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableItem | protected override method System.Boolean CanExecuteDockAsDocumentCommand()
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableItem | protected override method System.Void ClearDefaultBindings()
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableItem | protected override method System.Void ClearDefaultCommands()
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableItem | protected override method System.Void Close()
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableItem | protected override method System.Void InitDefaultCommands()
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableItem | protected override method System.Void OnVisibilityChanged()
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableItem | protected override method System.Void SetDefaultBindings()
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableItem | protected virtual method System.Void OnAutoHideCommandChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableItem | protected virtual method System.Void OnCanHideChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableItem | protected virtual method System.Void OnDockCommandChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableItem | protected virtual method System.Void OnHideCommandChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableItem | public  class : Xceed.Wpf.AvalonDock.Controls.LayoutItem interfaces[]
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableItem | public  property System.Boolean CanHide() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableItem | public  property System.Windows.Input.ICommand AutoHideCommand() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableItem | public  property System.Windows.Input.ICommand DockCommand() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableItem | public  property System.Windows.Input.ICommand HideCommand() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableItem | public static field System.Windows.DependencyProperty AutoHideCommandProperty readonly
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableItem | public static field System.Windows.DependencyProperty CanHideProperty readonly
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableItem | public static field System.Windows.DependencyProperty DockCommandProperty readonly
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableItem | public static field System.Windows.DependencyProperty HideCommandProperty readonly
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorablePaneControl | protected override method System.Void OnGotKeyboardFocus(System.Windows.Input.KeyboardFocusChangedEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorablePaneControl | protected override method System.Void OnMouseLeftButtonDown(System.Windows.Input.MouseButtonEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorablePaneControl | protected override method System.Void OnMouseRightButtonDown(System.Windows.Input.MouseButtonEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorablePaneControl | public  class : Xceed.Wpf.AvalonDock.Controls.LayoutCachePaneControl interfaces[Xceed.Wpf.AvalonDock.Layout.ILayoutControl]
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorablePaneControl | public  constructor System.Void .ctor(Xceed.Wpf.AvalonDock.Layout.LayoutAnchorablePane model)
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorablePaneControl | public  property Xceed.Wpf.AvalonDock.Layout.ILayoutElement Model() { public get;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorablePaneGroupControl | protected override method System.Void OnFixChildrenDockLengths()
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorablePaneGroupControl | public  class : Xceed.Wpf.AvalonDock.Controls.LayoutGridControl<Xceed.Wpf.AvalonDock.Layout.ILayoutAnchorablePane> interfaces[Xceed.Wpf.AvalonDock.Layout.ILayoutControl]
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableTabItem | protected  method System.Void SetLayoutItem(Xceed.Wpf.AvalonDock.Controls.LayoutItem value)
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableTabItem | protected override method System.Void OnMouseEnter(System.Windows.Input.MouseEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableTabItem | protected override method System.Void OnMouseLeave(System.Windows.Input.MouseEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableTabItem | protected override method System.Void OnMouseLeftButtonDown(System.Windows.Input.MouseButtonEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableTabItem | protected override method System.Void OnMouseLeftButtonUp(System.Windows.Input.MouseButtonEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableTabItem | protected override method System.Void OnMouseMove(System.Windows.Input.MouseEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableTabItem | protected virtual method System.Void OnModelChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableTabItem | public  class : System.Windows.Controls.Control interfaces[]
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableTabItem | public  constructor System.Void .ctor()
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableTabItem | public  property Xceed.Wpf.AvalonDock.Controls.LayoutItem LayoutItem() { public get;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableTabItem | public  property Xceed.Wpf.AvalonDock.Layout.LayoutContent Model() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableTabItem | public static field System.Windows.DependencyProperty LayoutItemProperty readonly
+Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableTabItem | public static field System.Windows.DependencyProperty ModelProperty readonly
+Xceed.Wpf.AvalonDock.Controls.LayoutAutoHideWindowControl | protected override method System.Boolean HasFocusWithinCore()
+Xceed.Wpf.AvalonDock.Controls.LayoutAutoHideWindowControl | protected override method System.Runtime.InteropServices.HandleRef BuildWindowCore(System.Runtime.InteropServices.HandleRef hwndParent)
+Xceed.Wpf.AvalonDock.Controls.LayoutAutoHideWindowControl | protected override method System.Void DestroyWindowCore(System.Runtime.InteropServices.HandleRef hwnd)
+Xceed.Wpf.AvalonDock.Controls.LayoutAutoHideWindowControl | protected override method System.Windows.Size ArrangeOverride(System.Windows.Size finalSize)
+Xceed.Wpf.AvalonDock.Controls.LayoutAutoHideWindowControl | protected override method System.Windows.Size MeasureOverride(System.Windows.Size constraint)
+Xceed.Wpf.AvalonDock.Controls.LayoutAutoHideWindowControl | protected override property System.Collections.IEnumerator LogicalChildren() { protected get;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutAutoHideWindowControl | public  class : System.Windows.Interop.HwndHost interfaces[Xceed.Wpf.AvalonDock.Layout.ILayoutControl]
+Xceed.Wpf.AvalonDock.Controls.LayoutAutoHideWindowControl | public  property System.Windows.Media.Brush Background() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutAutoHideWindowControl | public  property System.Windows.Style AnchorableStyle() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutAutoHideWindowControl | public  property Xceed.Wpf.AvalonDock.Layout.ILayoutElement Model() { public get;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutAutoHideWindowControl | public static field System.Windows.DependencyProperty AnchorableStyleProperty readonly
+Xceed.Wpf.AvalonDock.Controls.LayoutAutoHideWindowControl | public static field System.Windows.DependencyProperty BackgroundProperty readonly
+Xceed.Wpf.AvalonDock.Controls.LayoutCachePaneControl | protected override method System.Void OnSelectionChanged(System.Windows.Controls.SelectionChangedEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutCachePaneControl | public  class : System.Windows.Controls.TabControl interfaces[]
+Xceed.Wpf.AvalonDock.Controls.LayoutCachePaneControl | public  constructor System.Void .ctor()
+Xceed.Wpf.AvalonDock.Controls.LayoutDocumentControl | protected  method System.Void SetLayoutItem(Xceed.Wpf.AvalonDock.Controls.LayoutItem value)
+Xceed.Wpf.AvalonDock.Controls.LayoutDocumentControl | protected override method System.Void OnPreviewGotKeyboardFocus(System.Windows.Input.KeyboardFocusChangedEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutDocumentControl | protected override method System.Void OnPreviewMouseLeftButtonDown(System.Windows.Input.MouseButtonEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutDocumentControl | protected override method System.Void OnPreviewMouseRightButtonDown(System.Windows.Input.MouseButtonEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutDocumentControl | protected virtual method System.Void OnModelChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutDocumentControl | public  class : System.Windows.Controls.Control interfaces[]
+Xceed.Wpf.AvalonDock.Controls.LayoutDocumentControl | public  constructor System.Void .ctor()
+Xceed.Wpf.AvalonDock.Controls.LayoutDocumentControl | public  property Xceed.Wpf.AvalonDock.Controls.LayoutItem LayoutItem() { public get;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutDocumentControl | public  property Xceed.Wpf.AvalonDock.Layout.LayoutContent Model() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutDocumentControl | public static field System.Windows.DependencyProperty LayoutItemProperty readonly
+Xceed.Wpf.AvalonDock.Controls.LayoutDocumentControl | public static field System.Windows.DependencyProperty ModelProperty readonly
+Xceed.Wpf.AvalonDock.Controls.LayoutDocumentFloatingWindowControl | protected override method System.Boolean CanClose(System.Object parameter=null)
+Xceed.Wpf.AvalonDock.Controls.LayoutDocumentFloatingWindowControl | protected override method System.IntPtr FilterMessage(System.IntPtr hwnd,System.Int32 msg,System.IntPtr wParam,System.IntPtr lParam,ref System.Boolean handled)
+Xceed.Wpf.AvalonDock.Controls.LayoutDocumentFloatingWindowControl | protected override method System.Void OnClosed(System.EventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutDocumentFloatingWindowControl | protected override method System.Void OnInitialized(System.EventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutDocumentFloatingWindowControl | public  class : Xceed.Wpf.AvalonDock.Controls.LayoutFloatingWindowControl interfaces[]
+Xceed.Wpf.AvalonDock.Controls.LayoutDocumentFloatingWindowControl | public  property Xceed.Wpf.AvalonDock.Controls.LayoutItem RootDocumentLayoutItem() { public get;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutDocumentFloatingWindowControl | public override property Xceed.Wpf.AvalonDock.Layout.ILayoutElement Model() { public get;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutDocumentItem | protected override method System.Void Close()
+Xceed.Wpf.AvalonDock.Controls.LayoutDocumentItem | protected override method System.Void OnVisibilityChanged()
+Xceed.Wpf.AvalonDock.Controls.LayoutDocumentItem | protected virtual method System.Void OnDescriptionChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutDocumentItem | public  class : Xceed.Wpf.AvalonDock.Controls.LayoutItem interfaces[]
+Xceed.Wpf.AvalonDock.Controls.LayoutDocumentItem | public  property System.String Description() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutDocumentItem | public static field System.Windows.DependencyProperty DescriptionProperty readonly
+Xceed.Wpf.AvalonDock.Controls.LayoutDocumentPaneControl | protected override method System.Void OnMouseLeftButtonDown(System.Windows.Input.MouseButtonEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutDocumentPaneControl | protected override method System.Void OnMouseRightButtonDown(System.Windows.Input.MouseButtonEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutDocumentPaneControl | protected override method System.Void OnSelectionChanged(System.Windows.Controls.SelectionChangedEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutDocumentPaneControl | protected override property System.Collections.IEnumerator LogicalChildren() { protected get;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutDocumentPaneControl | public  class : Xceed.Wpf.AvalonDock.Controls.LayoutCachePaneControl interfaces[Xceed.Wpf.AvalonDock.Layout.ILayoutControl]
+Xceed.Wpf.AvalonDock.Controls.LayoutDocumentPaneControl | public  property Xceed.Wpf.AvalonDock.Layout.ILayoutElement Model() { public get;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutDocumentPaneGroupControl | protected override method System.Void OnFixChildrenDockLengths()
+Xceed.Wpf.AvalonDock.Controls.LayoutDocumentPaneGroupControl | public  class : Xceed.Wpf.AvalonDock.Controls.LayoutGridControl<Xceed.Wpf.AvalonDock.Layout.ILayoutDocumentPane> interfaces[Xceed.Wpf.AvalonDock.Layout.ILayoutControl]
+Xceed.Wpf.AvalonDock.Controls.LayoutDocumentTabItem | protected  method System.Void SetLayoutItem(Xceed.Wpf.AvalonDock.Controls.LayoutItem value)
+Xceed.Wpf.AvalonDock.Controls.LayoutDocumentTabItem | protected override method System.Void OnMouseDown(System.Windows.Input.MouseButtonEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutDocumentTabItem | protected override method System.Void OnMouseEnter(System.Windows.Input.MouseEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutDocumentTabItem | protected override method System.Void OnMouseLeave(System.Windows.Input.MouseEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutDocumentTabItem | protected override method System.Void OnMouseLeftButtonDown(System.Windows.Input.MouseButtonEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutDocumentTabItem | protected override method System.Void OnMouseLeftButtonUp(System.Windows.Input.MouseButtonEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutDocumentTabItem | protected override method System.Void OnMouseMove(System.Windows.Input.MouseEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutDocumentTabItem | protected virtual method System.Void OnModelChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutDocumentTabItem | public  class : System.Windows.Controls.Control interfaces[]
+Xceed.Wpf.AvalonDock.Controls.LayoutDocumentTabItem | public  constructor System.Void .ctor()
+Xceed.Wpf.AvalonDock.Controls.LayoutDocumentTabItem | public  property Xceed.Wpf.AvalonDock.Controls.LayoutItem LayoutItem() { public get;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutDocumentTabItem | public  property Xceed.Wpf.AvalonDock.Layout.LayoutContent Model() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutDocumentTabItem | public static field System.Windows.DependencyProperty LayoutItemProperty readonly
+Xceed.Wpf.AvalonDock.Controls.LayoutDocumentTabItem | public static field System.Windows.DependencyProperty ModelProperty readonly
+Xceed.Wpf.AvalonDock.Controls.LayoutFloatingWindowControl | protected  constructor System.Void .ctor(Xceed.Wpf.AvalonDock.Layout.ILayoutElement model)
+Xceed.Wpf.AvalonDock.Controls.LayoutFloatingWindowControl | protected  constructor System.Void .ctor(Xceed.Wpf.AvalonDock.Layout.ILayoutElement model,System.Boolean isContentImmutable)
+Xceed.Wpf.AvalonDock.Controls.LayoutFloatingWindowControl | protected  method System.Void SetIsDragging(System.Boolean value)
+Xceed.Wpf.AvalonDock.Controls.LayoutFloatingWindowControl | protected  property System.Boolean CloseInitiatedByUser() { protected get;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutFloatingWindowControl | protected override method System.Void OnClosed(System.EventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutFloatingWindowControl | protected override method System.Void OnClosing(System.ComponentModel.CancelEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutFloatingWindowControl | protected override method System.Void OnInitialized(System.EventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutFloatingWindowControl | protected override method System.Void OnKeyDown(System.Windows.Input.KeyEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutFloatingWindowControl | protected override method System.Void OnPreviewKeyDown(System.Windows.Input.KeyEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutFloatingWindowControl | protected override method System.Void OnStateChanged(System.EventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutFloatingWindowControl | protected virtual method System.Boolean CanClose(System.Object parameter=null)
+Xceed.Wpf.AvalonDock.Controls.LayoutFloatingWindowControl | protected virtual method System.Boolean CanHide(System.Object parameter=null)
+Xceed.Wpf.AvalonDock.Controls.LayoutFloatingWindowControl | protected virtual method System.IntPtr FilterMessage(System.IntPtr hwnd,System.Int32 msg,System.IntPtr wParam,System.IntPtr lParam,ref System.Boolean handled)
+Xceed.Wpf.AvalonDock.Controls.LayoutFloatingWindowControl | protected virtual method System.Void DoHide()
+Xceed.Wpf.AvalonDock.Controls.LayoutFloatingWindowControl | protected virtual method System.Void OnIsDraggingChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutFloatingWindowControl | public  property System.Boolean IsContentImmutable() { public get;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutFloatingWindowControl | public  property System.Boolean IsDragging() { public get;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutFloatingWindowControl | public  property System.Boolean IsMaximized() { public get;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutFloatingWindowControl | public  property System.Windows.Thickness ResizeBorderThickness() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutFloatingWindowControl | public abstract class : System.Windows.Window interfaces[Xceed.Wpf.AvalonDock.Layout.ILayoutControl]
+Xceed.Wpf.AvalonDock.Controls.LayoutFloatingWindowControl | public abstract property Xceed.Wpf.AvalonDock.Layout.ILayoutElement Model() { public get;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutFloatingWindowControl | public static field System.Windows.DependencyProperty IsContentImmutableProperty readonly
+Xceed.Wpf.AvalonDock.Controls.LayoutFloatingWindowControl | public static field System.Windows.DependencyProperty IsDraggingProperty readonly
+Xceed.Wpf.AvalonDock.Controls.LayoutFloatingWindowControl | public static field System.Windows.DependencyProperty IsMaximizedProperty readonly
+Xceed.Wpf.AvalonDock.Controls.LayoutFloatingWindowControl | public static field System.Windows.DependencyProperty ResizeBorderThicknessProperty readonly
+Xceed.Wpf.AvalonDock.Controls.LayoutGridControl`1 | protected  method System.Void FixChildrenDockLengths()
+Xceed.Wpf.AvalonDock.Controls.LayoutGridControl`1 | protected abstract method System.Void OnFixChildrenDockLengths()
+Xceed.Wpf.AvalonDock.Controls.LayoutGridControl`1 | protected override method System.Void OnInitialized(System.EventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutGridControl`1 | public  property System.Windows.Controls.Orientation Orientation() { public get;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutGridControl`1 | public  property Xceed.Wpf.AvalonDock.Layout.ILayoutElement Model() { public get;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutGridControl`1 | public abstract class : System.Windows.Controls.Grid interfaces[Xceed.Wpf.AvalonDock.Layout.ILayoutControl] <T:class&Xceed.Wpf.AvalonDock.Layout.ILayoutPanelElement>
+Xceed.Wpf.AvalonDock.Controls.LayoutGridResizerControl | public  class : System.Windows.Controls.Primitives.Thumb interfaces[]
+Xceed.Wpf.AvalonDock.Controls.LayoutGridResizerControl | public  constructor System.Void .ctor()
+Xceed.Wpf.AvalonDock.Controls.LayoutGridResizerControl | public  property System.Double OpacityWhileDragging() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutGridResizerControl | public  property System.Windows.Media.Brush BackgroundWhileDragging() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutGridResizerControl | public static field System.Windows.DependencyProperty BackgroundWhileDraggingProperty readonly
+Xceed.Wpf.AvalonDock.Controls.LayoutGridResizerControl | public static field System.Windows.DependencyProperty OpacityWhileDraggingProperty readonly
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | protected abstract method System.Void Close()
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | protected virtual method System.Boolean CanExecuteDockAsDocumentCommand()
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | protected virtual method System.Void ClearDefaultBindings()
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | protected virtual method System.Void ClearDefaultCommands()
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | protected virtual method System.Void Float()
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | protected virtual method System.Void InitDefaultCommands()
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | protected virtual method System.Void OnActivateCommandChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | protected virtual method System.Void OnCanCloseChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | protected virtual method System.Void OnCanFloatChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | protected virtual method System.Void OnCloseAllButThisCommandChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | protected virtual method System.Void OnCloseAllCommandChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | protected virtual method System.Void OnCloseCommandChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | protected virtual method System.Void OnContentIdChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | protected virtual method System.Void OnDockAsDocumentCommandChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | protected virtual method System.Void OnFloatCommandChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | protected virtual method System.Void OnIconSourceChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | protected virtual method System.Void OnIsActiveChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | protected virtual method System.Void OnIsSelectedChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | protected virtual method System.Void OnMoveToNextTabGroupCommandChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | protected virtual method System.Void OnMoveToPreviousTabGroupCommandChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | protected virtual method System.Void OnNewHorizontalTabGroupCommandChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | protected virtual method System.Void OnNewVerticalTabGroupCommandChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | protected virtual method System.Void OnTitleChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | protected virtual method System.Void OnVisibilityChanged()
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | protected virtual method System.Void SetDefaultBindings()
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | public  property System.Boolean CanClose() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | public  property System.Boolean CanFloat() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | public  property System.Boolean IsActive() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | public  property System.Boolean IsSelected() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | public  property System.Object Model() { public get;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | public  property System.String ContentId() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | public  property System.String Title() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | public  property System.Windows.Controls.ContentPresenter View() { public get;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | public  property System.Windows.Input.ICommand ActivateCommand() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | public  property System.Windows.Input.ICommand CloseAllButThisCommand() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | public  property System.Windows.Input.ICommand CloseAllCommand() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | public  property System.Windows.Input.ICommand CloseCommand() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | public  property System.Windows.Input.ICommand DockAsDocumentCommand() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | public  property System.Windows.Input.ICommand FloatCommand() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | public  property System.Windows.Input.ICommand MoveToNextTabGroupCommand() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | public  property System.Windows.Input.ICommand MoveToPreviousTabGroupCommand() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | public  property System.Windows.Input.ICommand NewHorizontalTabGroupCommand() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | public  property System.Windows.Input.ICommand NewVerticalTabGroupCommand() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | public  property System.Windows.Media.ImageSource IconSource() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | public  property Xceed.Wpf.AvalonDock.Layout.LayoutContent LayoutElement() { public get;  }
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | public abstract class : System.Windows.FrameworkElement interfaces[]
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | public static field System.Windows.DependencyProperty ActivateCommandProperty readonly
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | public static field System.Windows.DependencyProperty CanCloseProperty readonly
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | public static field System.Windows.DependencyProperty CanFloatProperty readonly
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | public static field System.Windows.DependencyProperty CloseAllButThisCommandProperty readonly
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | public static field System.Windows.DependencyProperty CloseAllCommandProperty readonly
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | public static field System.Windows.DependencyProperty CloseCommandProperty readonly
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | public static field System.Windows.DependencyProperty ContentIdProperty readonly
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | public static field System.Windows.DependencyProperty DockAsDocumentCommandProperty readonly
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | public static field System.Windows.DependencyProperty FloatCommandProperty readonly
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | public static field System.Windows.DependencyProperty IconSourceProperty readonly
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | public static field System.Windows.DependencyProperty IsActiveProperty readonly
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | public static field System.Windows.DependencyProperty IsSelectedProperty readonly
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | public static field System.Windows.DependencyProperty MoveToNextTabGroupCommandProperty readonly
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | public static field System.Windows.DependencyProperty MoveToPreviousTabGroupCommandProperty readonly
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | public static field System.Windows.DependencyProperty NewHorizontalTabGroupCommandProperty readonly
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | public static field System.Windows.DependencyProperty NewVerticalTabGroupCommandProperty readonly
+Xceed.Wpf.AvalonDock.Controls.LayoutItem | public static field System.Windows.DependencyProperty TitleProperty readonly
+Xceed.Wpf.AvalonDock.Controls.LayoutPanelControl | protected override method System.Void OnFixChildrenDockLengths()
+Xceed.Wpf.AvalonDock.Controls.LayoutPanelControl | public  class : Xceed.Wpf.AvalonDock.Controls.LayoutGridControl<Xceed.Wpf.AvalonDock.Layout.ILayoutPanelElement> interfaces[Xceed.Wpf.AvalonDock.Layout.ILayoutControl]
+Xceed.Wpf.AvalonDock.Controls.MenuItemEx | protected virtual method System.Void OnIconTemplateChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.MenuItemEx | protected virtual method System.Void OnIconTemplateSelectorChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.MenuItemEx | public  class : System.Windows.Controls.MenuItem interfaces[]
+Xceed.Wpf.AvalonDock.Controls.MenuItemEx | public  constructor System.Void .ctor()
+Xceed.Wpf.AvalonDock.Controls.MenuItemEx | public  property System.Windows.Controls.DataTemplateSelector IconTemplateSelector() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Controls.MenuItemEx | public  property System.Windows.DataTemplate IconTemplate() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Controls.MenuItemEx | public static field System.Windows.DependencyProperty IconTemplateProperty readonly
+Xceed.Wpf.AvalonDock.Controls.MenuItemEx | public static field System.Windows.DependencyProperty IconTemplateSelectorProperty readonly
+Xceed.Wpf.AvalonDock.Controls.NavigatorWindow | protected  method System.Void SetAnchorables(System.Collections.Generic.IEnumerable<Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableItem> value)
+Xceed.Wpf.AvalonDock.Controls.NavigatorWindow | protected  method System.Void SetDocuments(Xceed.Wpf.AvalonDock.Controls.LayoutDocumentItem[] value)
+Xceed.Wpf.AvalonDock.Controls.NavigatorWindow | protected override method System.Void OnPreviewKeyDown(System.Windows.Input.KeyEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.NavigatorWindow | protected override method System.Void OnPreviewKeyUp(System.Windows.Input.KeyEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.NavigatorWindow | protected virtual method System.Void OnSelectedAnchorableChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.NavigatorWindow | protected virtual method System.Void OnSelectedDocumentChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.NavigatorWindow | public  class : System.Windows.Window interfaces[]
+Xceed.Wpf.AvalonDock.Controls.NavigatorWindow | public  constructor System.Void .ctor(Xceed.Wpf.AvalonDock.DockingManager manager)
+Xceed.Wpf.AvalonDock.Controls.NavigatorWindow | public  property System.Collections.Generic.IEnumerable<Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableItem> Anchorables() { public get;  }
+Xceed.Wpf.AvalonDock.Controls.NavigatorWindow | public  property System.String LayoutAnchorablesLabel() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Controls.NavigatorWindow | public  property System.String LayoutDocumentsLabel() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Controls.NavigatorWindow | public  property Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableItem SelectedAnchorable() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Controls.NavigatorWindow | public  property Xceed.Wpf.AvalonDock.Controls.LayoutDocumentItem SelectedDocument() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Controls.NavigatorWindow | public  property Xceed.Wpf.AvalonDock.Controls.LayoutDocumentItem[] Documents() { public get;  }
+Xceed.Wpf.AvalonDock.Controls.NavigatorWindow | public override method System.Void OnApplyTemplate()
+Xceed.Wpf.AvalonDock.Controls.NavigatorWindow | public static field System.Windows.DependencyProperty AnchorablesProperty readonly
+Xceed.Wpf.AvalonDock.Controls.NavigatorWindow | public static field System.Windows.DependencyProperty DocumentsProperty readonly
+Xceed.Wpf.AvalonDock.Controls.NavigatorWindow | public static field System.Windows.DependencyProperty LayoutAnchorablesLabelProperty readonly
+Xceed.Wpf.AvalonDock.Controls.NavigatorWindow | public static field System.Windows.DependencyProperty LayoutDocumentsLabelProperty readonly
+Xceed.Wpf.AvalonDock.Controls.NavigatorWindow | public static field System.Windows.DependencyProperty SelectedAnchorableProperty readonly
+Xceed.Wpf.AvalonDock.Controls.NavigatorWindow | public static field System.Windows.DependencyProperty SelectedDocumentProperty readonly
+Xceed.Wpf.AvalonDock.Controls.OverlayArea | protected  method System.Void SetScreenDetectionArea(System.Windows.Rect rect)
+Xceed.Wpf.AvalonDock.Controls.OverlayArea | public abstract class : System.Object interfaces[Xceed.Wpf.AvalonDock.Controls.IOverlayWindowArea]
+Xceed.Wpf.AvalonDock.Controls.OverlayWindow | protected override method System.Void OnClosing(System.ComponentModel.CancelEventArgs e)
+Xceed.Wpf.AvalonDock.Controls.OverlayWindow | public  class : System.Windows.Window interfaces[Xceed.Wpf.AvalonDock.Controls.IOverlayWindow]
+Xceed.Wpf.AvalonDock.Controls.OverlayWindow | public override method System.Void OnApplyTemplate()
+Xceed.Wpf.AvalonDock.Controls.OverlayWindowDropTarget | public  class : System.Object interfaces[Xceed.Wpf.AvalonDock.Controls.IOverlayWindowDropTarget]
+Xceed.Wpf.AvalonDock.Controls.OverlayWindowDropTargetType | public  constructor System.Void .ctor()
+Xceed.Wpf.AvalonDock.Controls.OverlayWindowDropTargetType | public sealed enum : System.Enum interfaces[]
+Xceed.Wpf.AvalonDock.Controls.OverlayWindowDropTargetType | public static field Xceed.Wpf.AvalonDock.Controls.OverlayWindowDropTargetType AnchorablePaneDockBottom const=12
+Xceed.Wpf.AvalonDock.Controls.OverlayWindowDropTargetType | public static field Xceed.Wpf.AvalonDock.Controls.OverlayWindowDropTargetType AnchorablePaneDockInside const=13
+Xceed.Wpf.AvalonDock.Controls.OverlayWindowDropTargetType | public static field Xceed.Wpf.AvalonDock.Controls.OverlayWindowDropTargetType AnchorablePaneDockLeft const=9
+Xceed.Wpf.AvalonDock.Controls.OverlayWindowDropTargetType | public static field Xceed.Wpf.AvalonDock.Controls.OverlayWindowDropTargetType AnchorablePaneDockRight const=11
+Xceed.Wpf.AvalonDock.Controls.OverlayWindowDropTargetType | public static field Xceed.Wpf.AvalonDock.Controls.OverlayWindowDropTargetType AnchorablePaneDockTop const=10
+Xceed.Wpf.AvalonDock.Controls.OverlayWindowDropTargetType | public static field Xceed.Wpf.AvalonDock.Controls.OverlayWindowDropTargetType DockingManagerDockBottom const=3
+Xceed.Wpf.AvalonDock.Controls.OverlayWindowDropTargetType | public static field Xceed.Wpf.AvalonDock.Controls.OverlayWindowDropTargetType DockingManagerDockLeft const=0
+Xceed.Wpf.AvalonDock.Controls.OverlayWindowDropTargetType | public static field Xceed.Wpf.AvalonDock.Controls.OverlayWindowDropTargetType DockingManagerDockRight const=2
+Xceed.Wpf.AvalonDock.Controls.OverlayWindowDropTargetType | public static field Xceed.Wpf.AvalonDock.Controls.OverlayWindowDropTargetType DockingManagerDockTop const=1
+Xceed.Wpf.AvalonDock.Controls.OverlayWindowDropTargetType | public static field Xceed.Wpf.AvalonDock.Controls.OverlayWindowDropTargetType DocumentPaneDockBottom const=7
+Xceed.Wpf.AvalonDock.Controls.OverlayWindowDropTargetType | public static field Xceed.Wpf.AvalonDock.Controls.OverlayWindowDropTargetType DocumentPaneDockInside const=8
+Xceed.Wpf.AvalonDock.Controls.OverlayWindowDropTargetType | public static field Xceed.Wpf.AvalonDock.Controls.OverlayWindowDropTargetType DocumentPaneDockLeft const=4
+Xceed.Wpf.AvalonDock.Controls.OverlayWindowDropTargetType | public static field Xceed.Wpf.AvalonDock.Controls.OverlayWindowDropTargetType DocumentPaneDockRight const=6
+Xceed.Wpf.AvalonDock.Controls.OverlayWindowDropTargetType | public static field Xceed.Wpf.AvalonDock.Controls.OverlayWindowDropTargetType DocumentPaneDockTop const=5
+Xceed.Wpf.AvalonDock.Converters.ActivateCommandLayoutItemFromLayoutModelConverter | public  class : System.Object interfaces[System.Windows.Data.IValueConverter]
+Xceed.Wpf.AvalonDock.Converters.ActivateCommandLayoutItemFromLayoutModelConverter | public  constructor System.Void .ctor()
+Xceed.Wpf.AvalonDock.Converters.ActivateCommandLayoutItemFromLayoutModelConverter | public  method System.Object Convert(System.Object value,System.Type targetType,System.Object parameter,System.Globalization.CultureInfo culture)
+Xceed.Wpf.AvalonDock.Converters.ActivateCommandLayoutItemFromLayoutModelConverter | public  method System.Object ConvertBack(System.Object value,System.Type targetType,System.Object parameter,System.Globalization.CultureInfo culture)
+Xceed.Wpf.AvalonDock.Converters.AnchorSideToAngleConverter | public  class : System.Object interfaces[System.Windows.Data.IValueConverter]
+Xceed.Wpf.AvalonDock.Converters.AnchorSideToAngleConverter | public  constructor System.Void .ctor()
+Xceed.Wpf.AvalonDock.Converters.AnchorSideToAngleConverter | public  method System.Object Convert(System.Object value,System.Type targetType,System.Object parameter,System.Globalization.CultureInfo culture)
+Xceed.Wpf.AvalonDock.Converters.AnchorSideToAngleConverter | public  method System.Object ConvertBack(System.Object value,System.Type targetType,System.Object parameter,System.Globalization.CultureInfo culture)
+Xceed.Wpf.AvalonDock.Converters.AnchorSideToOrientationConverter | public  class : System.Object interfaces[System.Windows.Data.IValueConverter]
+Xceed.Wpf.AvalonDock.Converters.AnchorSideToOrientationConverter | public  constructor System.Void .ctor()
+Xceed.Wpf.AvalonDock.Converters.AnchorSideToOrientationConverter | public  method System.Object Convert(System.Object value,System.Type targetType,System.Object parameter,System.Globalization.CultureInfo culture)
+Xceed.Wpf.AvalonDock.Converters.AnchorSideToOrientationConverter | public  method System.Object ConvertBack(System.Object value,System.Type targetType,System.Object parameter,System.Globalization.CultureInfo culture)
+Xceed.Wpf.AvalonDock.Converters.AnchorableContextMenuAutoHideHeaderConverter | public  class : System.Object interfaces[System.Windows.Data.IValueConverter]
+Xceed.Wpf.AvalonDock.Converters.AnchorableContextMenuAutoHideHeaderConverter | public  constructor System.Void .ctor()
+Xceed.Wpf.AvalonDock.Converters.AnchorableContextMenuAutoHideHeaderConverter | public  method System.Object Convert(System.Object value,System.Type targetType,System.Object parameter,System.Globalization.CultureInfo culture)
+Xceed.Wpf.AvalonDock.Converters.AnchorableContextMenuAutoHideHeaderConverter | public  method System.Object ConvertBack(System.Object value,System.Type targetType,System.Object parameter,System.Globalization.CultureInfo culture)
+Xceed.Wpf.AvalonDock.Converters.AnchorableContextMenuHideVisibilityConverter | public  class : System.Object interfaces[System.Windows.Data.IMultiValueConverter]
+Xceed.Wpf.AvalonDock.Converters.AnchorableContextMenuHideVisibilityConverter | public  constructor System.Void .ctor()
+Xceed.Wpf.AvalonDock.Converters.AnchorableContextMenuHideVisibilityConverter | public  method System.Object Convert(System.Object[] values,System.Type targetType,System.Object parameter,System.Globalization.CultureInfo culture)
+Xceed.Wpf.AvalonDock.Converters.AnchorableContextMenuHideVisibilityConverter | public  method System.Object[] ConvertBack(System.Object value,System.Type[] targetTypes,System.Object parameter,System.Globalization.CultureInfo culture)
+Xceed.Wpf.AvalonDock.Converters.AutoHideCommandLayoutItemFromLayoutModelConverter | public  class : System.Object interfaces[System.Windows.Data.IValueConverter]
+Xceed.Wpf.AvalonDock.Converters.AutoHideCommandLayoutItemFromLayoutModelConverter | public  constructor System.Void .ctor()
+Xceed.Wpf.AvalonDock.Converters.AutoHideCommandLayoutItemFromLayoutModelConverter | public  method System.Object Convert(System.Object value,System.Type targetType,System.Object parameter,System.Globalization.CultureInfo culture)
+Xceed.Wpf.AvalonDock.Converters.AutoHideCommandLayoutItemFromLayoutModelConverter | public  method System.Object ConvertBack(System.Object value,System.Type targetType,System.Object parameter,System.Globalization.CultureInfo culture)
+Xceed.Wpf.AvalonDock.Converters.BoolToVisibilityConverter | public  class : System.Object interfaces[System.Windows.Data.IValueConverter]
+Xceed.Wpf.AvalonDock.Converters.BoolToVisibilityConverter | public  constructor System.Void .ctor()
+Xceed.Wpf.AvalonDock.Converters.BoolToVisibilityConverter | public  method System.Object Convert(System.Object value,System.Type targetType,System.Object parameter,System.Globalization.CultureInfo culture)
+Xceed.Wpf.AvalonDock.Converters.BoolToVisibilityConverter | public  method System.Object ConvertBack(System.Object value,System.Type targetType,System.Object parameter,System.Globalization.CultureInfo culture)
+Xceed.Wpf.AvalonDock.Converters.HideCommandLayoutItemFromLayoutModelConverter | public  class : System.Object interfaces[System.Windows.Data.IValueConverter]
+Xceed.Wpf.AvalonDock.Converters.HideCommandLayoutItemFromLayoutModelConverter | public  constructor System.Void .ctor()
+Xceed.Wpf.AvalonDock.Converters.HideCommandLayoutItemFromLayoutModelConverter | public  method System.Object Convert(System.Object value,System.Type targetType,System.Object parameter,System.Globalization.CultureInfo culture)
+Xceed.Wpf.AvalonDock.Converters.HideCommandLayoutItemFromLayoutModelConverter | public  method System.Object ConvertBack(System.Object value,System.Type targetType,System.Object parameter,System.Globalization.CultureInfo culture)
+Xceed.Wpf.AvalonDock.Converters.InverseBoolToVisibilityConverter | public  class : System.Object interfaces[System.Windows.Data.IValueConverter]
+Xceed.Wpf.AvalonDock.Converters.InverseBoolToVisibilityConverter | public  constructor System.Void .ctor()
+Xceed.Wpf.AvalonDock.Converters.InverseBoolToVisibilityConverter | public  method System.Object Convert(System.Object value,System.Type targetType,System.Object parameter,System.Globalization.CultureInfo culture)
+Xceed.Wpf.AvalonDock.Converters.InverseBoolToVisibilityConverter | public  method System.Object ConvertBack(System.Object value,System.Type targetType,System.Object parameter,System.Globalization.CultureInfo culture)
+Xceed.Wpf.AvalonDock.Converters.LayoutItemFromLayoutModelConverter | public  class : System.Object interfaces[System.Windows.Data.IValueConverter]
+Xceed.Wpf.AvalonDock.Converters.LayoutItemFromLayoutModelConverter | public  constructor System.Void .ctor()
+Xceed.Wpf.AvalonDock.Converters.LayoutItemFromLayoutModelConverter | public  method System.Object Convert(System.Object value,System.Type targetType,System.Object parameter,System.Globalization.CultureInfo culture)
+Xceed.Wpf.AvalonDock.Converters.LayoutItemFromLayoutModelConverter | public  method System.Object ConvertBack(System.Object value,System.Type targetType,System.Object parameter,System.Globalization.CultureInfo culture)
+Xceed.Wpf.AvalonDock.Converters.NullToDoNothingConverter | public  class : System.Object interfaces[System.Windows.Data.IValueConverter]
+Xceed.Wpf.AvalonDock.Converters.NullToDoNothingConverter | public  constructor System.Void .ctor()
+Xceed.Wpf.AvalonDock.Converters.NullToDoNothingConverter | public  method System.Object Convert(System.Object value,System.Type targetType,System.Object parameter,System.Globalization.CultureInfo culture)
+Xceed.Wpf.AvalonDock.Converters.NullToDoNothingConverter | public  method System.Object ConvertBack(System.Object value,System.Type targetType,System.Object parameter,System.Globalization.CultureInfo culture)
+Xceed.Wpf.AvalonDock.Converters.UriSourceToBitmapImageConverter | public  class : System.Object interfaces[System.Windows.Data.IValueConverter]
+Xceed.Wpf.AvalonDock.Converters.UriSourceToBitmapImageConverter | public  constructor System.Void .ctor()
+Xceed.Wpf.AvalonDock.Converters.UriSourceToBitmapImageConverter | public  method System.Object Convert(System.Object value,System.Type targetType,System.Object parameter,System.Globalization.CultureInfo culture)
+Xceed.Wpf.AvalonDock.Converters.UriSourceToBitmapImageConverter | public  method System.Object ConvertBack(System.Object value,System.Type targetType,System.Object parameter,System.Globalization.CultureInfo culture)
+Xceed.Wpf.AvalonDock.DockingManager | protected  method System.Void SetAutoHideWindow(Xceed.Wpf.AvalonDock.Controls.LayoutAutoHideWindowControl value)
+Xceed.Wpf.AvalonDock.DockingManager | protected internal virtual method System.Void RaiseDockedEvent(Xceed.Wpf.AvalonDock.Layout.LayoutContent layoutContent)
+Xceed.Wpf.AvalonDock.DockingManager | protected internal virtual method System.Void RaisePreviewDockEvent(Xceed.Wpf.AvalonDock.Layout.LayoutContent layoutContent)
+Xceed.Wpf.AvalonDock.DockingManager | protected internal virtual method System.Void ShowNavigatorWindow()
+Xceed.Wpf.AvalonDock.DockingManager | protected override method System.Void OnInitialized(System.EventArgs e)
+Xceed.Wpf.AvalonDock.DockingManager | protected override method System.Void OnKeyDown(System.Windows.Input.KeyEventArgs e)
+Xceed.Wpf.AvalonDock.DockingManager | protected override method System.Void OnPreviewKeyDown(System.Windows.Input.KeyEventArgs e)
+Xceed.Wpf.AvalonDock.DockingManager | protected override method System.Windows.Size ArrangeOverride(System.Windows.Size arrangeBounds)
+Xceed.Wpf.AvalonDock.DockingManager | protected override property System.Collections.IEnumerator LogicalChildren() { protected get;  }
+Xceed.Wpf.AvalonDock.DockingManager | protected virtual method System.Boolean OnReceiveWeakEvent(System.Type managerType,System.Object sender,System.EventArgs e)
+Xceed.Wpf.AvalonDock.DockingManager | protected virtual method System.Void OnActiveContentChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Xceed.Wpf.AvalonDock.DockingManager | protected virtual method System.Void OnAnchorableHeaderTemplateChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Xceed.Wpf.AvalonDock.DockingManager | protected virtual method System.Void OnAnchorableHeaderTemplateSelectorChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Xceed.Wpf.AvalonDock.DockingManager | protected virtual method System.Void OnAnchorablePaneControlStyleChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Xceed.Wpf.AvalonDock.DockingManager | protected virtual method System.Void OnAnchorableTitleTemplateChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Xceed.Wpf.AvalonDock.DockingManager | protected virtual method System.Void OnAnchorableTitleTemplateSelectorChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Xceed.Wpf.AvalonDock.DockingManager | protected virtual method System.Void OnAnchorablesSourceChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Xceed.Wpf.AvalonDock.DockingManager | protected virtual method System.Void OnAutoHideWindowChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Xceed.Wpf.AvalonDock.DockingManager | protected virtual method System.Void OnAutoHideWindowClosingTimerChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Xceed.Wpf.AvalonDock.DockingManager | protected virtual method System.Void OnBottomSidePanelChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Xceed.Wpf.AvalonDock.DockingManager | protected virtual method System.Void OnDocumentHeaderTemplateChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Xceed.Wpf.AvalonDock.DockingManager | protected virtual method System.Void OnDocumentHeaderTemplateSelectorChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Xceed.Wpf.AvalonDock.DockingManager | protected virtual method System.Void OnDocumentPaneControlStyleChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Xceed.Wpf.AvalonDock.DockingManager | protected virtual method System.Void OnDocumentPaneMenuItemHeaderTemplateChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Xceed.Wpf.AvalonDock.DockingManager | protected virtual method System.Void OnDocumentPaneMenuItemHeaderTemplateSelectorChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Xceed.Wpf.AvalonDock.DockingManager | protected virtual method System.Void OnDocumentTitleTemplateChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Xceed.Wpf.AvalonDock.DockingManager | protected virtual method System.Void OnDocumentTitleTemplateSelectorChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Xceed.Wpf.AvalonDock.DockingManager | protected virtual method System.Void OnDocumentsSourceChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Xceed.Wpf.AvalonDock.DockingManager | protected virtual method System.Void OnLayoutChanged(Xceed.Wpf.AvalonDock.Layout.LayoutRoot oldLayout,Xceed.Wpf.AvalonDock.Layout.LayoutRoot newLayout)
+Xceed.Wpf.AvalonDock.DockingManager | protected virtual method System.Void OnLayoutItemContainerStyleChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Xceed.Wpf.AvalonDock.DockingManager | protected virtual method System.Void OnLayoutItemContainerStyleSelectorChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Xceed.Wpf.AvalonDock.DockingManager | protected virtual method System.Void OnLayoutItemTemplateChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Xceed.Wpf.AvalonDock.DockingManager | protected virtual method System.Void OnLayoutItemTemplateSelectorChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Xceed.Wpf.AvalonDock.DockingManager | protected virtual method System.Void OnLayoutRootPanelChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Xceed.Wpf.AvalonDock.DockingManager | protected virtual method System.Void OnLeftSidePanelChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Xceed.Wpf.AvalonDock.DockingManager | protected virtual method System.Void OnRightSidePanelChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Xceed.Wpf.AvalonDock.DockingManager | protected virtual method System.Void OnThemeChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Xceed.Wpf.AvalonDock.DockingManager | protected virtual method System.Void OnTopSidePanelChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Xceed.Wpf.AvalonDock.DockingManager | protected virtual method System.Void RaiseFloatedEvent(Xceed.Wpf.AvalonDock.Layout.LayoutContent layoutContent)
+Xceed.Wpf.AvalonDock.DockingManager | protected virtual method System.Void RaisePreviewFloatEvent(Xceed.Wpf.AvalonDock.Layout.LayoutContent layoutContent)
+Xceed.Wpf.AvalonDock.DockingManager | public  class : System.Windows.Controls.Control interfaces[System.Windows.IWeakEventListener,Xceed.Wpf.AvalonDock.Controls.IOverlayWindowHost]
+Xceed.Wpf.AvalonDock.DockingManager | public  constructor System.Void .ctor()
+Xceed.Wpf.AvalonDock.DockingManager | public  event System.EventHandler ActiveContentChanged
+Xceed.Wpf.AvalonDock.DockingManager | public  event System.EventHandler LayoutChanged
+Xceed.Wpf.AvalonDock.DockingManager | public  event System.EventHandler LayoutChanging
+Xceed.Wpf.AvalonDock.DockingManager | public  event System.EventHandler<Xceed.Wpf.AvalonDock.DocumentClosedEventArgs> DocumentClosed
+Xceed.Wpf.AvalonDock.DockingManager | public  event System.EventHandler<Xceed.Wpf.AvalonDock.DocumentClosingEventArgs> DocumentClosing
+Xceed.Wpf.AvalonDock.DockingManager | public  event System.EventHandler<Xceed.Wpf.AvalonDock.LayoutFloatingWindowControlCollectionChangedEventArgs> LayoutFloatingWindowControlCollectionChanged
+Xceed.Wpf.AvalonDock.DockingManager | public  event System.Windows.RoutedEventHandler Docked
+Xceed.Wpf.AvalonDock.DockingManager | public  event System.Windows.RoutedEventHandler Floated
+Xceed.Wpf.AvalonDock.DockingManager | public  event System.Windows.RoutedEventHandler PreviewDock
+Xceed.Wpf.AvalonDock.DockingManager | public  event System.Windows.RoutedEventHandler PreviewFloat
+Xceed.Wpf.AvalonDock.DockingManager | public  method Xceed.Wpf.AvalonDock.Controls.LayoutFloatingWindowControl CreateFloatingWindow(Xceed.Wpf.AvalonDock.Layout.LayoutContent contentModel,System.Boolean isContentImmutable)
+Xceed.Wpf.AvalonDock.DockingManager | public  method Xceed.Wpf.AvalonDock.Controls.LayoutItem GetLayoutItemFromModel(Xceed.Wpf.AvalonDock.Layout.LayoutContent content)
+Xceed.Wpf.AvalonDock.DockingManager | public  property System.Boolean AllowMixedOrientation() { public get; public set;  }
+Xceed.Wpf.AvalonDock.DockingManager | public  property System.Boolean AllowMovingFloatingWindowWithKeyboard() { public get;  }
+Xceed.Wpf.AvalonDock.DockingManager | public  property System.Boolean ShowSystemMenu() { public get; public set;  }
+Xceed.Wpf.AvalonDock.DockingManager | public  property System.Collections.Generic.IEnumerable<Xceed.Wpf.AvalonDock.Controls.LayoutFloatingWindowControl> FloatingWindows() { public get;  }
+Xceed.Wpf.AvalonDock.DockingManager | public  property System.Collections.IEnumerable AnchorablesSource() { public get; public set;  }
+Xceed.Wpf.AvalonDock.DockingManager | public  property System.Collections.IEnumerable DocumentsSource() { public get; public set;  }
+Xceed.Wpf.AvalonDock.DockingManager | public  property System.Collections.IEnumerator LogicalChildrenPublic() { public get;  }
+Xceed.Wpf.AvalonDock.DockingManager | public  property System.Double GridSplitterHeight() { public get; public set;  }
+Xceed.Wpf.AvalonDock.DockingManager | public  property System.Double GridSplitterWidth() { public get; public set;  }
+Xceed.Wpf.AvalonDock.DockingManager | public  property System.Int32 AutoHideWindowClosingTimer() { public get; public set;  }
+Xceed.Wpf.AvalonDock.DockingManager | public  property System.Object ActiveContent() { public get; public set;  }
+Xceed.Wpf.AvalonDock.DockingManager | public  property System.Windows.Controls.ContextMenu AnchorableContextMenu() { public get; public set;  }
+Xceed.Wpf.AvalonDock.DockingManager | public  property System.Windows.Controls.ContextMenu DocumentContextMenu() { public get; public set;  }
+Xceed.Wpf.AvalonDock.DockingManager | public  property System.Windows.Controls.ControlTemplate AnchorGroupTemplate() { public get; public set;  }
+Xceed.Wpf.AvalonDock.DockingManager | public  property System.Windows.Controls.ControlTemplate AnchorSideTemplate() { public get; public set;  }
+Xceed.Wpf.AvalonDock.DockingManager | public  property System.Windows.Controls.ControlTemplate AnchorTemplate() { public get; public set;  }
+Xceed.Wpf.AvalonDock.DockingManager | public  property System.Windows.Controls.DataTemplateSelector AnchorableHeaderTemplateSelector() { public get; public set;  }
+Xceed.Wpf.AvalonDock.DockingManager | public  property System.Windows.Controls.DataTemplateSelector AnchorableTitleTemplateSelector() { public get; public set;  }
+Xceed.Wpf.AvalonDock.DockingManager | public  property System.Windows.Controls.DataTemplateSelector DocumentHeaderTemplateSelector() { public get; public set;  }
+Xceed.Wpf.AvalonDock.DockingManager | public  property System.Windows.Controls.DataTemplateSelector DocumentPaneMenuItemHeaderTemplateSelector() { public get; public set;  }
+Xceed.Wpf.AvalonDock.DockingManager | public  property System.Windows.Controls.DataTemplateSelector DocumentTitleTemplateSelector() { public get; public set;  }
+Xceed.Wpf.AvalonDock.DockingManager | public  property System.Windows.Controls.DataTemplateSelector IconContentTemplateSelector() { public get; public set;  }
+Xceed.Wpf.AvalonDock.DockingManager | public  property System.Windows.Controls.DataTemplateSelector LayoutItemTemplateSelector() { public get; public set;  }
+Xceed.Wpf.AvalonDock.DockingManager | public  property System.Windows.Controls.StyleSelector LayoutItemContainerStyleSelector() { public get; public set;  }
+Xceed.Wpf.AvalonDock.DockingManager | public  property System.Windows.DataTemplate AnchorableHeaderTemplate() { public get; public set;  }
+Xceed.Wpf.AvalonDock.DockingManager | public  property System.Windows.DataTemplate AnchorableTitleTemplate() { public get; public set;  }
+Xceed.Wpf.AvalonDock.DockingManager | public  property System.Windows.DataTemplate DocumentHeaderTemplate() { public get; public set;  }
+Xceed.Wpf.AvalonDock.DockingManager | public  property System.Windows.DataTemplate DocumentPaneMenuItemHeaderTemplate() { public get; public set;  }
+Xceed.Wpf.AvalonDock.DockingManager | public  property System.Windows.DataTemplate DocumentTitleTemplate() { public get; public set;  }
+Xceed.Wpf.AvalonDock.DockingManager | public  property System.Windows.DataTemplate IconContentTemplate() { public get; public set;  }
+Xceed.Wpf.AvalonDock.DockingManager | public  property System.Windows.DataTemplate LayoutItemTemplate() { public get; public set;  }
+Xceed.Wpf.AvalonDock.DockingManager | public  property System.Windows.Style AnchorablePaneControlStyle() { public get; public set;  }
+Xceed.Wpf.AvalonDock.DockingManager | public  property System.Windows.Style DocumentPaneControlStyle() { public get; public set;  }
+Xceed.Wpf.AvalonDock.DockingManager | public  property System.Windows.Style LayoutItemContainerStyle() { public get; public set;  }
+Xceed.Wpf.AvalonDock.DockingManager | public  property Xceed.Wpf.AvalonDock.Controls.LayoutAnchorSideControl BottomSidePanel() { public get; public set;  }
+Xceed.Wpf.AvalonDock.DockingManager | public  property Xceed.Wpf.AvalonDock.Controls.LayoutAnchorSideControl LeftSidePanel() { public get; public set;  }
+Xceed.Wpf.AvalonDock.DockingManager | public  property Xceed.Wpf.AvalonDock.Controls.LayoutAnchorSideControl RightSidePanel() { public get; public set;  }
+Xceed.Wpf.AvalonDock.DockingManager | public  property Xceed.Wpf.AvalonDock.Controls.LayoutAnchorSideControl TopSidePanel() { public get; public set;  }
+Xceed.Wpf.AvalonDock.DockingManager | public  property Xceed.Wpf.AvalonDock.Controls.LayoutAutoHideWindowControl AutoHideWindow() { public get;  }
+Xceed.Wpf.AvalonDock.DockingManager | public  property Xceed.Wpf.AvalonDock.Controls.LayoutPanelControl LayoutRootPanel() { public get; public set;  }
+Xceed.Wpf.AvalonDock.DockingManager | public  property Xceed.Wpf.AvalonDock.Layout.ILayoutUpdateStrategy LayoutUpdateStrategy() { public get; public set;  }
+Xceed.Wpf.AvalonDock.DockingManager | public  property Xceed.Wpf.AvalonDock.Layout.LayoutRoot Layout() { public get; public set;  }
+Xceed.Wpf.AvalonDock.DockingManager | public  property Xceed.Wpf.AvalonDock.Themes.Theme Theme() { public get; public set;  }
+Xceed.Wpf.AvalonDock.DockingManager | public override method System.Void OnApplyTemplate()
+Xceed.Wpf.AvalonDock.DockingManager | public static field System.Windows.DependencyProperty ActiveContentProperty readonly
+Xceed.Wpf.AvalonDock.DockingManager | public static field System.Windows.DependencyProperty AllowMixedOrientationProperty readonly
+Xceed.Wpf.AvalonDock.DockingManager | public static field System.Windows.DependencyProperty AllowMovingFloatingWindowWithKeyboardProperty readonly
+Xceed.Wpf.AvalonDock.DockingManager | public static field System.Windows.DependencyProperty AnchorGroupTemplateProperty readonly
+Xceed.Wpf.AvalonDock.DockingManager | public static field System.Windows.DependencyProperty AnchorSideTemplateProperty readonly
+Xceed.Wpf.AvalonDock.DockingManager | public static field System.Windows.DependencyProperty AnchorTemplateProperty readonly
+Xceed.Wpf.AvalonDock.DockingManager | public static field System.Windows.DependencyProperty AnchorableContextMenuProperty readonly
+Xceed.Wpf.AvalonDock.DockingManager | public static field System.Windows.DependencyProperty AnchorableHeaderTemplateProperty readonly
+Xceed.Wpf.AvalonDock.DockingManager | public static field System.Windows.DependencyProperty AnchorableHeaderTemplateSelectorProperty readonly
+Xceed.Wpf.AvalonDock.DockingManager | public static field System.Windows.DependencyProperty AnchorablePaneControlStyleProperty readonly
+Xceed.Wpf.AvalonDock.DockingManager | public static field System.Windows.DependencyProperty AnchorableTitleTemplateProperty readonly
+Xceed.Wpf.AvalonDock.DockingManager | public static field System.Windows.DependencyProperty AnchorableTitleTemplateSelectorProperty readonly
+Xceed.Wpf.AvalonDock.DockingManager | public static field System.Windows.DependencyProperty AnchorablesSourceProperty readonly
+Xceed.Wpf.AvalonDock.DockingManager | public static field System.Windows.DependencyProperty AutoHideWindowClosingTimerProperty readonly
+Xceed.Wpf.AvalonDock.DockingManager | public static field System.Windows.DependencyProperty AutoHideWindowProperty readonly
+Xceed.Wpf.AvalonDock.DockingManager | public static field System.Windows.DependencyProperty BottomSidePanelProperty readonly
+Xceed.Wpf.AvalonDock.DockingManager | public static field System.Windows.DependencyProperty DocumentContextMenuProperty readonly
+Xceed.Wpf.AvalonDock.DockingManager | public static field System.Windows.DependencyProperty DocumentHeaderTemplateProperty readonly
+Xceed.Wpf.AvalonDock.DockingManager | public static field System.Windows.DependencyProperty DocumentHeaderTemplateSelectorProperty readonly
+Xceed.Wpf.AvalonDock.DockingManager | public static field System.Windows.DependencyProperty DocumentPaneControlStyleProperty readonly
+Xceed.Wpf.AvalonDock.DockingManager | public static field System.Windows.DependencyProperty DocumentPaneMenuItemHeaderTemplateProperty readonly
+Xceed.Wpf.AvalonDock.DockingManager | public static field System.Windows.DependencyProperty DocumentPaneMenuItemHeaderTemplateSelectorProperty readonly
+Xceed.Wpf.AvalonDock.DockingManager | public static field System.Windows.DependencyProperty DocumentTitleTemplateProperty readonly
+Xceed.Wpf.AvalonDock.DockingManager | public static field System.Windows.DependencyProperty DocumentTitleTemplateSelectorProperty readonly
+Xceed.Wpf.AvalonDock.DockingManager | public static field System.Windows.DependencyProperty DocumentsSourceProperty readonly
+Xceed.Wpf.AvalonDock.DockingManager | public static field System.Windows.DependencyProperty GridSplitterHeightProperty readonly
+Xceed.Wpf.AvalonDock.DockingManager | public static field System.Windows.DependencyProperty GridSplitterWidthProperty readonly
+Xceed.Wpf.AvalonDock.DockingManager | public static field System.Windows.DependencyProperty IconContentTemplateProperty readonly
+Xceed.Wpf.AvalonDock.DockingManager | public static field System.Windows.DependencyProperty IconContentTemplateSelectorProperty readonly
+Xceed.Wpf.AvalonDock.DockingManager | public static field System.Windows.DependencyProperty LayoutItemContainerStyleProperty readonly
+Xceed.Wpf.AvalonDock.DockingManager | public static field System.Windows.DependencyProperty LayoutItemContainerStyleSelectorProperty readonly
+Xceed.Wpf.AvalonDock.DockingManager | public static field System.Windows.DependencyProperty LayoutItemTemplateProperty readonly
+Xceed.Wpf.AvalonDock.DockingManager | public static field System.Windows.DependencyProperty LayoutItemTemplateSelectorProperty readonly
+Xceed.Wpf.AvalonDock.DockingManager | public static field System.Windows.DependencyProperty LayoutProperty readonly
+Xceed.Wpf.AvalonDock.DockingManager | public static field System.Windows.DependencyProperty LayoutRootPanelProperty readonly
+Xceed.Wpf.AvalonDock.DockingManager | public static field System.Windows.DependencyProperty LayoutUpdateStrategyProperty readonly
+Xceed.Wpf.AvalonDock.DockingManager | public static field System.Windows.DependencyProperty LeftSidePanelProperty readonly
+Xceed.Wpf.AvalonDock.DockingManager | public static field System.Windows.DependencyProperty RightSidePanelProperty readonly
+Xceed.Wpf.AvalonDock.DockingManager | public static field System.Windows.DependencyProperty ShowSystemMenuProperty readonly
+Xceed.Wpf.AvalonDock.DockingManager | public static field System.Windows.DependencyProperty ThemeProperty readonly
+Xceed.Wpf.AvalonDock.DockingManager | public static field System.Windows.DependencyProperty TopSidePanelProperty readonly
+Xceed.Wpf.AvalonDock.DockingManager | public static field System.Windows.RoutedEvent DockedEvent readonly
+Xceed.Wpf.AvalonDock.DockingManager | public static field System.Windows.RoutedEvent FloatedEvent readonly
+Xceed.Wpf.AvalonDock.DockingManager | public static field System.Windows.RoutedEvent PreviewDockEvent readonly
+Xceed.Wpf.AvalonDock.DockingManager | public static field System.Windows.RoutedEvent PreviewFloatEvent readonly
+Xceed.Wpf.AvalonDock.DockingManager | public virtual method Xceed.Wpf.AvalonDock.Controls.NavigatorWindow CreateNavigatorWindow()
+Xceed.Wpf.AvalonDock.DocumentClosedEventArgs | public  class : System.EventArgs interfaces[]
+Xceed.Wpf.AvalonDock.DocumentClosedEventArgs | public  constructor System.Void .ctor(Xceed.Wpf.AvalonDock.Layout.LayoutDocument document)
+Xceed.Wpf.AvalonDock.DocumentClosedEventArgs | public  property Xceed.Wpf.AvalonDock.Layout.LayoutDocument Document() { public get;  }
+Xceed.Wpf.AvalonDock.DocumentClosingEventArgs | public  class : System.ComponentModel.CancelEventArgs interfaces[]
+Xceed.Wpf.AvalonDock.DocumentClosingEventArgs | public  constructor System.Void .ctor(Xceed.Wpf.AvalonDock.Layout.LayoutDocument document)
+Xceed.Wpf.AvalonDock.DocumentClosingEventArgs | public  property Xceed.Wpf.AvalonDock.Layout.LayoutDocument Document() { public get;  }
+Xceed.Wpf.AvalonDock.Layout.AnchorSide | public  constructor System.Void .ctor()
+Xceed.Wpf.AvalonDock.Layout.AnchorSide | public sealed enum : System.Enum interfaces[]
+Xceed.Wpf.AvalonDock.Layout.AnchorSide | public static field Xceed.Wpf.AvalonDock.Layout.AnchorSide Bottom const=3
+Xceed.Wpf.AvalonDock.Layout.AnchorSide | public static field Xceed.Wpf.AvalonDock.Layout.AnchorSide Left const=0
+Xceed.Wpf.AvalonDock.Layout.AnchorSide | public static field Xceed.Wpf.AvalonDock.Layout.AnchorSide Right const=2
+Xceed.Wpf.AvalonDock.Layout.AnchorSide | public static field Xceed.Wpf.AvalonDock.Layout.AnchorSide Top const=1
+Xceed.Wpf.AvalonDock.Layout.AnchorableShowStrategy | public  constructor System.Void .ctor()
+Xceed.Wpf.AvalonDock.Layout.AnchorableShowStrategy | public sealed enum : System.Enum interfaces[]
+Xceed.Wpf.AvalonDock.Layout.AnchorableShowStrategy | public static field Xceed.Wpf.AvalonDock.Layout.AnchorableShowStrategy Bottom const=32
+Xceed.Wpf.AvalonDock.Layout.AnchorableShowStrategy | public static field Xceed.Wpf.AvalonDock.Layout.AnchorableShowStrategy Left const=2
+Xceed.Wpf.AvalonDock.Layout.AnchorableShowStrategy | public static field Xceed.Wpf.AvalonDock.Layout.AnchorableShowStrategy Most const=1
+Xceed.Wpf.AvalonDock.Layout.AnchorableShowStrategy | public static field Xceed.Wpf.AvalonDock.Layout.AnchorableShowStrategy Right const=4
+Xceed.Wpf.AvalonDock.Layout.AnchorableShowStrategy | public static field Xceed.Wpf.AvalonDock.Layout.AnchorableShowStrategy Top const=16
+Xceed.Wpf.AvalonDock.Layout.ChildrenTreeChange | public  constructor System.Void .ctor()
+Xceed.Wpf.AvalonDock.Layout.ChildrenTreeChange | public sealed enum : System.Enum interfaces[]
+Xceed.Wpf.AvalonDock.Layout.ChildrenTreeChange | public static field Xceed.Wpf.AvalonDock.Layout.ChildrenTreeChange DirectChildrenChanged const=0
+Xceed.Wpf.AvalonDock.Layout.ChildrenTreeChange | public static field Xceed.Wpf.AvalonDock.Layout.ChildrenTreeChange TreeChanged const=1
+Xceed.Wpf.AvalonDock.Layout.ChildrenTreeChangedEventArgs | public  class : System.EventArgs interfaces[]
+Xceed.Wpf.AvalonDock.Layout.ChildrenTreeChangedEventArgs | public  constructor System.Void .ctor(Xceed.Wpf.AvalonDock.Layout.ChildrenTreeChange change)
+Xceed.Wpf.AvalonDock.Layout.ChildrenTreeChangedEventArgs | public  property Xceed.Wpf.AvalonDock.Layout.ChildrenTreeChange Change() { public get;  }
+Xceed.Wpf.AvalonDock.Layout.Extensions | public static class : System.Object interfaces[]
+Xceed.Wpf.AvalonDock.Layout.Extensions | public static method System.Boolean ContainsChildOfType<T,S>(Xceed.Wpf.AvalonDock.Layout.ILayoutContainer container)
+Xceed.Wpf.AvalonDock.Layout.Extensions | public static method System.Boolean ContainsChildOfType<T>(Xceed.Wpf.AvalonDock.Layout.ILayoutContainer element)
+Xceed.Wpf.AvalonDock.Layout.Extensions | public static method System.Boolean IsOfType<T,S>(Xceed.Wpf.AvalonDock.Layout.ILayoutContainer container)
+Xceed.Wpf.AvalonDock.Layout.Extensions | public static method System.Collections.Generic.IEnumerable<Xceed.Wpf.AvalonDock.Layout.ILayoutElement> Descendents(Xceed.Wpf.AvalonDock.Layout.ILayoutElement element)
+Xceed.Wpf.AvalonDock.Layout.Extensions | public static method T FindParent<T>(Xceed.Wpf.AvalonDock.Layout.ILayoutElement element)
+Xceed.Wpf.AvalonDock.Layout.Extensions | public static method Xceed.Wpf.AvalonDock.Layout.AnchorSide GetSide(Xceed.Wpf.AvalonDock.Layout.ILayoutElement element)
+Xceed.Wpf.AvalonDock.Layout.Extensions | public static method Xceed.Wpf.AvalonDock.Layout.ILayoutRoot GetRoot(Xceed.Wpf.AvalonDock.Layout.ILayoutElement element)
+Xceed.Wpf.AvalonDock.Layout.ILayoutAnchorablePane | public abstract interface :  interfaces[System.ComponentModel.INotifyPropertyChanged,System.ComponentModel.INotifyPropertyChanging,Xceed.Wpf.AvalonDock.Layout.ILayoutContainer,Xceed.Wpf.AvalonDock.Layout.ILayoutElement,Xceed.Wpf.AvalonDock.Layout.ILayoutElementWithVisibility,Xceed.Wpf.AvalonDock.Layout.ILayoutPane,Xceed.Wpf.AvalonDock.Layout.ILayoutPanelElement]
+Xceed.Wpf.AvalonDock.Layout.ILayoutContainer | public abstract interface :  interfaces[System.ComponentModel.INotifyPropertyChanged,System.ComponentModel.INotifyPropertyChanging,Xceed.Wpf.AvalonDock.Layout.ILayoutElement]
+Xceed.Wpf.AvalonDock.Layout.ILayoutContainer | public abstract method System.Void RemoveChild(Xceed.Wpf.AvalonDock.Layout.ILayoutElement element)
+Xceed.Wpf.AvalonDock.Layout.ILayoutContainer | public abstract method System.Void ReplaceChild(Xceed.Wpf.AvalonDock.Layout.ILayoutElement oldElement,Xceed.Wpf.AvalonDock.Layout.ILayoutElement newElement)
+Xceed.Wpf.AvalonDock.Layout.ILayoutContainer | public abstract property System.Collections.Generic.IEnumerable<Xceed.Wpf.AvalonDock.Layout.ILayoutElement> Children() { public get;  }
+Xceed.Wpf.AvalonDock.Layout.ILayoutContainer | public abstract property System.Int32 ChildrenCount() { public get;  }
+Xceed.Wpf.AvalonDock.Layout.ILayoutContentSelector | public abstract interface :  interfaces[]
+Xceed.Wpf.AvalonDock.Layout.ILayoutContentSelector | public abstract method System.Int32 IndexOf(Xceed.Wpf.AvalonDock.Layout.LayoutContent content)
+Xceed.Wpf.AvalonDock.Layout.ILayoutContentSelector | public abstract property System.Int32 SelectedContentIndex() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Layout.ILayoutContentSelector | public abstract property Xceed.Wpf.AvalonDock.Layout.LayoutContent SelectedContent() { public get;  }
+Xceed.Wpf.AvalonDock.Layout.ILayoutControl | public abstract interface :  interfaces[]
+Xceed.Wpf.AvalonDock.Layout.ILayoutControl | public abstract property Xceed.Wpf.AvalonDock.Layout.ILayoutElement Model() { public get;  }
+Xceed.Wpf.AvalonDock.Layout.ILayoutDocumentPane | public abstract interface :  interfaces[System.ComponentModel.INotifyPropertyChanged,System.ComponentModel.INotifyPropertyChanging,Xceed.Wpf.AvalonDock.Layout.ILayoutContainer,Xceed.Wpf.AvalonDock.Layout.ILayoutElement,Xceed.Wpf.AvalonDock.Layout.ILayoutElementWithVisibility,Xceed.Wpf.AvalonDock.Layout.ILayoutPane,Xceed.Wpf.AvalonDock.Layout.ILayoutPanelElement]
+Xceed.Wpf.AvalonDock.Layout.ILayoutElement | public abstract interface :  interfaces[System.ComponentModel.INotifyPropertyChanged,System.ComponentModel.INotifyPropertyChanging]
+Xceed.Wpf.AvalonDock.Layout.ILayoutElement | public abstract property Xceed.Wpf.AvalonDock.Layout.ILayoutContainer Parent() { public get;  }
+Xceed.Wpf.AvalonDock.Layout.ILayoutElement | public abstract property Xceed.Wpf.AvalonDock.Layout.ILayoutRoot Root() { public get;  }
+Xceed.Wpf.AvalonDock.Layout.ILayoutElementWithVisibility | public abstract interface :  interfaces[]
+Xceed.Wpf.AvalonDock.Layout.ILayoutElementWithVisibility | public abstract method System.Void ComputeVisibility()
+Xceed.Wpf.AvalonDock.Layout.ILayoutGroup | public abstract event System.EventHandler ChildrenCollectionChanged
+Xceed.Wpf.AvalonDock.Layout.ILayoutGroup | public abstract interface :  interfaces[System.ComponentModel.INotifyPropertyChanged,System.ComponentModel.INotifyPropertyChanging,Xceed.Wpf.AvalonDock.Layout.ILayoutContainer,Xceed.Wpf.AvalonDock.Layout.ILayoutElement]
+Xceed.Wpf.AvalonDock.Layout.ILayoutGroup | public abstract method System.Int32 IndexOfChild(Xceed.Wpf.AvalonDock.Layout.ILayoutElement element)
+Xceed.Wpf.AvalonDock.Layout.ILayoutGroup | public abstract method System.Void InsertChildAt(System.Int32 index,Xceed.Wpf.AvalonDock.Layout.ILayoutElement element)
+Xceed.Wpf.AvalonDock.Layout.ILayoutGroup | public abstract method System.Void RemoveChildAt(System.Int32 index)
+Xceed.Wpf.AvalonDock.Layout.ILayoutGroup | public abstract method System.Void ReplaceChildAt(System.Int32 index,Xceed.Wpf.AvalonDock.Layout.ILayoutElement element)
+Xceed.Wpf.AvalonDock.Layout.ILayoutOrientableGroup | public abstract interface :  interfaces[System.ComponentModel.INotifyPropertyChanged,System.ComponentModel.INotifyPropertyChanging,Xceed.Wpf.AvalonDock.Layout.ILayoutContainer,Xceed.Wpf.AvalonDock.Layout.ILayoutElement,Xceed.Wpf.AvalonDock.Layout.ILayoutGroup]
+Xceed.Wpf.AvalonDock.Layout.ILayoutOrientableGroup | public abstract property System.Windows.Controls.Orientation Orientation() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Layout.ILayoutPane | public abstract interface :  interfaces[System.ComponentModel.INotifyPropertyChanged,System.ComponentModel.INotifyPropertyChanging,Xceed.Wpf.AvalonDock.Layout.ILayoutContainer,Xceed.Wpf.AvalonDock.Layout.ILayoutElement,Xceed.Wpf.AvalonDock.Layout.ILayoutElementWithVisibility]
+Xceed.Wpf.AvalonDock.Layout.ILayoutPane | public abstract method System.Void MoveChild(System.Int32 oldIndex,System.Int32 newIndex)
+Xceed.Wpf.AvalonDock.Layout.ILayoutPane | public abstract method System.Void RemoveChildAt(System.Int32 childIndex)
+Xceed.Wpf.AvalonDock.Layout.ILayoutPanelElement | public abstract interface :  interfaces[System.ComponentModel.INotifyPropertyChanged,System.ComponentModel.INotifyPropertyChanging,Xceed.Wpf.AvalonDock.Layout.ILayoutElement]
+Xceed.Wpf.AvalonDock.Layout.ILayoutPanelElement | public abstract property System.Boolean IsVisible() { public get;  }
+Xceed.Wpf.AvalonDock.Layout.ILayoutRoot | public abstract interface :  interfaces[]
+Xceed.Wpf.AvalonDock.Layout.ILayoutRoot | public abstract method System.Void CollectGarbage()
+Xceed.Wpf.AvalonDock.Layout.ILayoutRoot | public abstract property System.Collections.ObjectModel.ObservableCollection<Xceed.Wpf.AvalonDock.Layout.LayoutAnchorable> Hidden() { public get;  }
+Xceed.Wpf.AvalonDock.Layout.ILayoutRoot | public abstract property System.Collections.ObjectModel.ObservableCollection<Xceed.Wpf.AvalonDock.Layout.LayoutFloatingWindow> FloatingWindows() { public get;  }
+Xceed.Wpf.AvalonDock.Layout.ILayoutRoot | public abstract property Xceed.Wpf.AvalonDock.DockingManager Manager() { public get;  }
+Xceed.Wpf.AvalonDock.Layout.ILayoutRoot | public abstract property Xceed.Wpf.AvalonDock.Layout.LayoutAnchorSide BottomSide() { public get;  }
+Xceed.Wpf.AvalonDock.Layout.ILayoutRoot | public abstract property Xceed.Wpf.AvalonDock.Layout.LayoutAnchorSide LeftSide() { public get;  }
+Xceed.Wpf.AvalonDock.Layout.ILayoutRoot | public abstract property Xceed.Wpf.AvalonDock.Layout.LayoutAnchorSide RightSide() { public get;  }
+Xceed.Wpf.AvalonDock.Layout.ILayoutRoot | public abstract property Xceed.Wpf.AvalonDock.Layout.LayoutAnchorSide TopSide() { public get;  }
+Xceed.Wpf.AvalonDock.Layout.ILayoutRoot | public abstract property Xceed.Wpf.AvalonDock.Layout.LayoutContent ActiveContent() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Layout.ILayoutRoot | public abstract property Xceed.Wpf.AvalonDock.Layout.LayoutPanel RootPanel() { public get;  }
+Xceed.Wpf.AvalonDock.Layout.ILayoutUpdateStrategy | public abstract interface :  interfaces[]
+Xceed.Wpf.AvalonDock.Layout.ILayoutUpdateStrategy | public abstract method System.Boolean BeforeInsertAnchorable(Xceed.Wpf.AvalonDock.Layout.LayoutRoot layout,Xceed.Wpf.AvalonDock.Layout.LayoutAnchorable anchorableToShow,Xceed.Wpf.AvalonDock.Layout.ILayoutContainer destinationContainer)
+Xceed.Wpf.AvalonDock.Layout.ILayoutUpdateStrategy | public abstract method System.Boolean BeforeInsertDocument(Xceed.Wpf.AvalonDock.Layout.LayoutRoot layout,Xceed.Wpf.AvalonDock.Layout.LayoutDocument documentToShow,Xceed.Wpf.AvalonDock.Layout.ILayoutContainer destinationContainer)
+Xceed.Wpf.AvalonDock.Layout.ILayoutUpdateStrategy | public abstract method System.Void AfterInsertAnchorable(Xceed.Wpf.AvalonDock.Layout.LayoutRoot layout,Xceed.Wpf.AvalonDock.Layout.LayoutAnchorable anchorableShown)
+Xceed.Wpf.AvalonDock.Layout.ILayoutUpdateStrategy | public abstract method System.Void AfterInsertDocument(Xceed.Wpf.AvalonDock.Layout.LayoutRoot layout,Xceed.Wpf.AvalonDock.Layout.LayoutDocument documentShown)
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorGroup | protected override method System.Boolean GetVisibility()
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorGroup | public  class : Xceed.Wpf.AvalonDock.Layout.LayoutGroup<Xceed.Wpf.AvalonDock.Layout.LayoutAnchorable> interfaces[Xceed.Wpf.AvalonDock.Layout.ILayoutPaneSerializable,Xceed.Wpf.AvalonDock.Layout.ILayoutPreviousContainer]
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorGroup | public  constructor System.Void .ctor()
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorGroup | public override method System.Void ReadXml(System.Xml.XmlReader reader)
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorGroup | public override method System.Void WriteXml(System.Xml.XmlWriter writer)
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorSide | protected override method System.Boolean GetVisibility()
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorSide | protected override method System.Void OnParentChanged(Xceed.Wpf.AvalonDock.Layout.ILayoutContainer oldValue,Xceed.Wpf.AvalonDock.Layout.ILayoutContainer newValue)
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorSide | public  class : Xceed.Wpf.AvalonDock.Layout.LayoutGroup<Xceed.Wpf.AvalonDock.Layout.LayoutAnchorGroup> interfaces[]
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorSide | public  constructor System.Void .ctor()
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorSide | public  property Xceed.Wpf.AvalonDock.Layout.AnchorSide Side() { public get;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorable | protected override method System.Void InternalDock()
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorable | protected override method System.Void OnParentChanged(Xceed.Wpf.AvalonDock.Layout.ILayoutContainer oldValue,Xceed.Wpf.AvalonDock.Layout.ILayoutContainer newValue)
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorable | protected virtual method System.Void OnHidden()
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorable | protected virtual method System.Void OnHiding(System.ComponentModel.CancelEventArgs args)
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorable | public  class : Xceed.Wpf.AvalonDock.Layout.LayoutContent interfaces[]
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorable | public  constructor System.Void .ctor()
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorable | public  event System.EventHandler Hidden
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorable | public  event System.EventHandler IsVisibleChanged
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorable | public  event System.EventHandler<System.ComponentModel.CancelEventArgs> Hiding
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorable | public  method System.Void AddToLayout(Xceed.Wpf.AvalonDock.DockingManager manager,Xceed.Wpf.AvalonDock.Layout.AnchorableShowStrategy strategy)
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorable | public  method System.Void Hide(System.Boolean cancelable=true)
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorable | public  method System.Void Show()
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorable | public  method System.Void ToggleAutoHide()
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorable | public  property System.Boolean CanAutoHide() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorable | public  property System.Boolean CanDockAsTabbedDocument() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorable | public  property System.Boolean CanHide() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorable | public  property System.Boolean IsAutoHidden() { public get;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorable | public  property System.Boolean IsHidden() { public get;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorable | public  property System.Boolean IsVisible() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorable | public  property System.Double AutoHideHeight() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorable | public  property System.Double AutoHideMinHeight() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorable | public  property System.Double AutoHideMinWidth() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorable | public  property System.Double AutoHideWidth() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorable | public override method System.Void Close()
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorable | public override method System.Void ConsoleDump(System.Int32 tab)
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorable | public override method System.Void ReadXml(System.Xml.XmlReader reader)
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorable | public override method System.Void WriteXml(System.Xml.XmlWriter writer)
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorableFloatingWindow | public  class : Xceed.Wpf.AvalonDock.Layout.LayoutFloatingWindow interfaces[Xceed.Wpf.AvalonDock.Layout.ILayoutElementWithVisibility]
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorableFloatingWindow | public  constructor System.Void .ctor()
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorableFloatingWindow | public  event System.EventHandler IsVisibleChanged
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorableFloatingWindow | public  property System.Boolean IsSinglePane() { public get;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorableFloatingWindow | public  property System.Boolean IsVisible() { public get;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorableFloatingWindow | public  property Xceed.Wpf.AvalonDock.Layout.ILayoutAnchorablePane SinglePane() { public get;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorableFloatingWindow | public  property Xceed.Wpf.AvalonDock.Layout.LayoutAnchorablePaneGroup RootPanel() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorableFloatingWindow | public override method System.Void ConsoleDump(System.Int32 tab)
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorableFloatingWindow | public override method System.Void ReadXml(System.Xml.XmlReader reader)
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorableFloatingWindow | public override method System.Void RemoveChild(Xceed.Wpf.AvalonDock.Layout.ILayoutElement element)
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorableFloatingWindow | public override method System.Void ReplaceChild(Xceed.Wpf.AvalonDock.Layout.ILayoutElement oldElement,Xceed.Wpf.AvalonDock.Layout.ILayoutElement newElement)
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorableFloatingWindow | public override property System.Boolean IsValid() { public get;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorableFloatingWindow | public override property System.Collections.Generic.IEnumerable<Xceed.Wpf.AvalonDock.Layout.ILayoutElement> Children() { public get;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorableFloatingWindow | public override property System.Int32 ChildrenCount() { public get;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorablePane | protected override method System.Boolean GetVisibility()
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorablePane | protected override method System.Void ChildMoved(System.Int32 oldIndex,System.Int32 newIndex)
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorablePane | protected override method System.Void OnChildrenCollectionChanged()
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorablePane | protected override method System.Void OnParentChanged(Xceed.Wpf.AvalonDock.Layout.ILayoutContainer oldValue,Xceed.Wpf.AvalonDock.Layout.ILayoutContainer newValue)
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorablePane | public  class : Xceed.Wpf.AvalonDock.Layout.LayoutPositionableGroup<Xceed.Wpf.AvalonDock.Layout.LayoutAnchorable> interfaces[System.ComponentModel.INotifyPropertyChanged,System.ComponentModel.INotifyPropertyChanging,Xceed.Wpf.AvalonDock.Layout.ILayoutAnchorablePane,Xceed.Wpf.AvalonDock.Layout.ILayoutContainer,Xceed.Wpf.AvalonDock.Layout.ILayoutContentSelector,Xceed.Wpf.AvalonDock.Layout.ILayoutElement,Xceed.Wpf.AvalonDock.Layout.ILayoutElementForFloatingWindow,Xceed.Wpf.AvalonDock.Layout.ILayoutElementWithVisibility,Xceed.Wpf.AvalonDock.Layout.ILayoutPane,Xceed.Wpf.AvalonDock.Layout.ILayoutPaneSerializable,Xceed.Wpf.AvalonDock.Layout.ILayoutPanelElement,Xceed.Wpf.AvalonDock.Layout.ILayoutPositionableElement]
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorablePane | public  constructor System.Void .ctor()
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorablePane | public  constructor System.Void .ctor(Xceed.Wpf.AvalonDock.Layout.LayoutAnchorable anchorable)
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorablePane | public  method System.Int32 IndexOf(Xceed.Wpf.AvalonDock.Layout.LayoutContent content)
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorablePane | public  property System.Boolean CanClose() { public get;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorablePane | public  property System.Boolean CanHide() { public get;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorablePane | public  property System.Boolean IsDirectlyHostedInFloatingWindow() { public get;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorablePane | public  property System.Boolean IsHostedInFloatingWindow() { public get;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorablePane | public  property System.Int32 SelectedContentIndex() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorablePane | public  property System.String Name() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorablePane | public  property Xceed.Wpf.AvalonDock.Layout.LayoutContent SelectedContent() { public get;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorablePane | public override method System.Void ConsoleDump(System.Int32 tab)
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorablePane | public override method System.Void ReadXml(System.Xml.XmlReader reader)
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorablePane | public override method System.Void WriteXml(System.Xml.XmlWriter writer)
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorablePaneGroup | protected override method System.Boolean GetVisibility()
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorablePaneGroup | protected override method System.Void OnDockHeightChanged()
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorablePaneGroup | protected override method System.Void OnDockWidthChanged()
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorablePaneGroup | protected override method System.Void OnIsVisibleChanged()
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorablePaneGroup | public  class : Xceed.Wpf.AvalonDock.Layout.LayoutPositionableGroup<Xceed.Wpf.AvalonDock.Layout.ILayoutAnchorablePane> interfaces[System.ComponentModel.INotifyPropertyChanged,System.ComponentModel.INotifyPropertyChanging,Xceed.Wpf.AvalonDock.Layout.ILayoutAnchorablePane,Xceed.Wpf.AvalonDock.Layout.ILayoutContainer,Xceed.Wpf.AvalonDock.Layout.ILayoutElement,Xceed.Wpf.AvalonDock.Layout.ILayoutElementWithVisibility,Xceed.Wpf.AvalonDock.Layout.ILayoutGroup,Xceed.Wpf.AvalonDock.Layout.ILayoutOrientableGroup,Xceed.Wpf.AvalonDock.Layout.ILayoutPane,Xceed.Wpf.AvalonDock.Layout.ILayoutPanelElement]
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorablePaneGroup | public  constructor System.Void .ctor()
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorablePaneGroup | public  constructor System.Void .ctor(Xceed.Wpf.AvalonDock.Layout.LayoutAnchorablePane firstChild)
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorablePaneGroup | public  property System.Windows.Controls.Orientation Orientation() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorablePaneGroup | public override method System.Void ConsoleDump(System.Int32 tab)
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorablePaneGroup | public override method System.Void ReadXml(System.Xml.XmlReader reader)
+Xceed.Wpf.AvalonDock.Layout.LayoutAnchorablePaneGroup | public override method System.Void WriteXml(System.Xml.XmlWriter writer)
+Xceed.Wpf.AvalonDock.Layout.LayoutContent | protected override method System.Void OnParentChanged(Xceed.Wpf.AvalonDock.Layout.ILayoutContainer oldValue,Xceed.Wpf.AvalonDock.Layout.ILayoutContainer newValue)
+Xceed.Wpf.AvalonDock.Layout.LayoutContent | protected override method System.Void OnParentChanging(Xceed.Wpf.AvalonDock.Layout.ILayoutContainer oldValue,Xceed.Wpf.AvalonDock.Layout.ILayoutContainer newValue)
+Xceed.Wpf.AvalonDock.Layout.LayoutContent | protected virtual method System.Void InternalDock()
+Xceed.Wpf.AvalonDock.Layout.LayoutContent | protected virtual method System.Void OnClosed()
+Xceed.Wpf.AvalonDock.Layout.LayoutContent | protected virtual method System.Void OnClosing(System.ComponentModel.CancelEventArgs args)
+Xceed.Wpf.AvalonDock.Layout.LayoutContent | protected virtual method System.Void OnIsActiveChanged(System.Boolean oldValue,System.Boolean newValue)
+Xceed.Wpf.AvalonDock.Layout.LayoutContent | protected virtual method System.Void OnIsSelectedChanged(System.Boolean oldValue,System.Boolean newValue)
+Xceed.Wpf.AvalonDock.Layout.LayoutContent | public  event System.EventHandler Closed
+Xceed.Wpf.AvalonDock.Layout.LayoutContent | public  event System.EventHandler IsActiveChanged
+Xceed.Wpf.AvalonDock.Layout.LayoutContent | public  event System.EventHandler IsSelectedChanged
+Xceed.Wpf.AvalonDock.Layout.LayoutContent | public  event System.EventHandler<System.ComponentModel.CancelEventArgs> Closing
+Xceed.Wpf.AvalonDock.Layout.LayoutContent | public  method System.Int32 CompareTo(Xceed.Wpf.AvalonDock.Layout.LayoutContent other)
+Xceed.Wpf.AvalonDock.Layout.LayoutContent | public  method System.Void Dock()
+Xceed.Wpf.AvalonDock.Layout.LayoutContent | public  method System.Void DockAsDocument()
+Xceed.Wpf.AvalonDock.Layout.LayoutContent | public  method System.Void Float()
+Xceed.Wpf.AvalonDock.Layout.LayoutContent | public  method System.Xml.Schema.XmlSchema GetSchema()
+Xceed.Wpf.AvalonDock.Layout.LayoutContent | public  property System.Boolean CanClose() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutContent | public  property System.Boolean CanFloat() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutContent | public  property System.Boolean IsActive() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutContent | public  property System.Boolean IsEnabled() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutContent | public  property System.Boolean IsFloating() { public get;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutContent | public  property System.Boolean IsLastFocusedDocument() { public get;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutContent | public  property System.Boolean IsMaximized() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutContent | public  property System.Boolean IsSelected() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutContent | public  property System.DateTime? LastActivationTimeStamp() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutContent | public  property System.Double FloatingHeight() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutContent | public  property System.Double FloatingLeft() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutContent | public  property System.Double FloatingTop() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutContent | public  property System.Double FloatingWidth() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutContent | public  property System.Int32 PreviousContainerIndex() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutContent | public  property System.Object Content() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutContent | public  property System.Object ToolTip() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutContent | public  property System.String ContentId() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutContent | public  property System.String PreviousContainerId() { public get; protected set;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutContent | public  property System.String Title() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutContent | public  property System.Windows.Media.ImageSource IconSource() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutContent | public  property Xceed.Wpf.AvalonDock.Layout.ILayoutContainer PreviousContainer() { public get; protected set;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutContent | public abstract class : Xceed.Wpf.AvalonDock.Layout.LayoutElement interfaces[System.IComparable<Xceed.Wpf.AvalonDock.Layout.LayoutContent>,System.Xml.Serialization.IXmlSerializable,Xceed.Wpf.AvalonDock.Layout.ILayoutElementForFloatingWindow,Xceed.Wpf.AvalonDock.Layout.ILayoutInitialContainer,Xceed.Wpf.AvalonDock.Layout.ILayoutPreviousContainer]
+Xceed.Wpf.AvalonDock.Layout.LayoutContent | public abstract method System.Void Close()
+Xceed.Wpf.AvalonDock.Layout.LayoutContent | public static field System.Windows.DependencyProperty ContentIdProperty readonly
+Xceed.Wpf.AvalonDock.Layout.LayoutContent | public static field System.Windows.DependencyProperty TitleProperty readonly
+Xceed.Wpf.AvalonDock.Layout.LayoutContent | public virtual method System.Void ReadXml(System.Xml.XmlReader reader)
+Xceed.Wpf.AvalonDock.Layout.LayoutContent | public virtual method System.Void WriteXml(System.Xml.XmlWriter writer)
+Xceed.Wpf.AvalonDock.Layout.LayoutDocument | protected override method System.Void InternalDock()
+Xceed.Wpf.AvalonDock.Layout.LayoutDocument | public  class : Xceed.Wpf.AvalonDock.Layout.LayoutContent interfaces[]
+Xceed.Wpf.AvalonDock.Layout.LayoutDocument | public  constructor System.Void .ctor()
+Xceed.Wpf.AvalonDock.Layout.LayoutDocument | public  property System.Boolean CanMove() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutDocument | public  property System.Boolean IsVisible() { public get;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutDocument | public  property System.String Description() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutDocument | public override method System.Void Close()
+Xceed.Wpf.AvalonDock.Layout.LayoutDocument | public override method System.Void ConsoleDump(System.Int32 tab)
+Xceed.Wpf.AvalonDock.Layout.LayoutDocument | public override method System.Void ReadXml(System.Xml.XmlReader reader)
+Xceed.Wpf.AvalonDock.Layout.LayoutDocument | public override method System.Void WriteXml(System.Xml.XmlWriter writer)
+Xceed.Wpf.AvalonDock.Layout.LayoutDocumentFloatingWindow | public  class : Xceed.Wpf.AvalonDock.Layout.LayoutFloatingWindow interfaces[]
+Xceed.Wpf.AvalonDock.Layout.LayoutDocumentFloatingWindow | public  constructor System.Void .ctor()
+Xceed.Wpf.AvalonDock.Layout.LayoutDocumentFloatingWindow | public  event System.EventHandler RootDocumentChanged
+Xceed.Wpf.AvalonDock.Layout.LayoutDocumentFloatingWindow | public  property Xceed.Wpf.AvalonDock.Layout.LayoutDocument RootDocument() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutDocumentFloatingWindow | public override method System.Void ConsoleDump(System.Int32 tab)
+Xceed.Wpf.AvalonDock.Layout.LayoutDocumentFloatingWindow | public override method System.Void ReadXml(System.Xml.XmlReader reader)
+Xceed.Wpf.AvalonDock.Layout.LayoutDocumentFloatingWindow | public override method System.Void RemoveChild(Xceed.Wpf.AvalonDock.Layout.ILayoutElement element)
+Xceed.Wpf.AvalonDock.Layout.LayoutDocumentFloatingWindow | public override method System.Void ReplaceChild(Xceed.Wpf.AvalonDock.Layout.ILayoutElement oldElement,Xceed.Wpf.AvalonDock.Layout.ILayoutElement newElement)
+Xceed.Wpf.AvalonDock.Layout.LayoutDocumentFloatingWindow | public override property System.Boolean IsValid() { public get;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutDocumentFloatingWindow | public override property System.Collections.Generic.IEnumerable<Xceed.Wpf.AvalonDock.Layout.ILayoutElement> Children() { public get;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutDocumentFloatingWindow | public override property System.Int32 ChildrenCount() { public get;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutDocumentPane | protected override method System.Boolean GetVisibility()
+Xceed.Wpf.AvalonDock.Layout.LayoutDocumentPane | protected override method System.Void ChildMoved(System.Int32 oldIndex,System.Int32 newIndex)
+Xceed.Wpf.AvalonDock.Layout.LayoutDocumentPane | protected override method System.Void OnChildrenCollectionChanged()
+Xceed.Wpf.AvalonDock.Layout.LayoutDocumentPane | protected override method System.Void OnIsVisibleChanged()
+Xceed.Wpf.AvalonDock.Layout.LayoutDocumentPane | public  class : Xceed.Wpf.AvalonDock.Layout.LayoutPositionableGroup<Xceed.Wpf.AvalonDock.Layout.LayoutContent> interfaces[System.ComponentModel.INotifyPropertyChanged,System.ComponentModel.INotifyPropertyChanging,Xceed.Wpf.AvalonDock.Layout.ILayoutContainer,Xceed.Wpf.AvalonDock.Layout.ILayoutContentSelector,Xceed.Wpf.AvalonDock.Layout.ILayoutDocumentPane,Xceed.Wpf.AvalonDock.Layout.ILayoutElement,Xceed.Wpf.AvalonDock.Layout.ILayoutElementForFloatingWindow,Xceed.Wpf.AvalonDock.Layout.ILayoutElementWithVisibility,Xceed.Wpf.AvalonDock.Layout.ILayoutPane,Xceed.Wpf.AvalonDock.Layout.ILayoutPaneSerializable,Xceed.Wpf.AvalonDock.Layout.ILayoutPanelElement,Xceed.Wpf.AvalonDock.Layout.ILayoutPositionableElement]
+Xceed.Wpf.AvalonDock.Layout.LayoutDocumentPane | public  constructor System.Void .ctor()
+Xceed.Wpf.AvalonDock.Layout.LayoutDocumentPane | public  constructor System.Void .ctor(Xceed.Wpf.AvalonDock.Layout.LayoutContent firstChild)
+Xceed.Wpf.AvalonDock.Layout.LayoutDocumentPane | public  method System.Int32 IndexOf(Xceed.Wpf.AvalonDock.Layout.LayoutContent content)
+Xceed.Wpf.AvalonDock.Layout.LayoutDocumentPane | public  property System.Boolean ShowHeader() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutDocumentPane | public  property System.Collections.Generic.IEnumerable<Xceed.Wpf.AvalonDock.Layout.LayoutContent> ChildrenSorted() { public get;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutDocumentPane | public  property System.Int32 SelectedContentIndex() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutDocumentPane | public  property Xceed.Wpf.AvalonDock.Layout.LayoutContent SelectedContent() { public get;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutDocumentPane | public override method System.Void ConsoleDump(System.Int32 tab)
+Xceed.Wpf.AvalonDock.Layout.LayoutDocumentPane | public override method System.Void ReadXml(System.Xml.XmlReader reader)
+Xceed.Wpf.AvalonDock.Layout.LayoutDocumentPane | public override method System.Void WriteXml(System.Xml.XmlWriter writer)
+Xceed.Wpf.AvalonDock.Layout.LayoutDocumentPaneGroup | protected override method System.Boolean GetVisibility()
+Xceed.Wpf.AvalonDock.Layout.LayoutDocumentPaneGroup | public  class : Xceed.Wpf.AvalonDock.Layout.LayoutPositionableGroup<Xceed.Wpf.AvalonDock.Layout.ILayoutDocumentPane> interfaces[System.ComponentModel.INotifyPropertyChanged,System.ComponentModel.INotifyPropertyChanging,Xceed.Wpf.AvalonDock.Layout.ILayoutContainer,Xceed.Wpf.AvalonDock.Layout.ILayoutDocumentPane,Xceed.Wpf.AvalonDock.Layout.ILayoutElement,Xceed.Wpf.AvalonDock.Layout.ILayoutElementWithVisibility,Xceed.Wpf.AvalonDock.Layout.ILayoutGroup,Xceed.Wpf.AvalonDock.Layout.ILayoutOrientableGroup,Xceed.Wpf.AvalonDock.Layout.ILayoutPane,Xceed.Wpf.AvalonDock.Layout.ILayoutPanelElement]
+Xceed.Wpf.AvalonDock.Layout.LayoutDocumentPaneGroup | public  constructor System.Void .ctor()
+Xceed.Wpf.AvalonDock.Layout.LayoutDocumentPaneGroup | public  constructor System.Void .ctor(Xceed.Wpf.AvalonDock.Layout.LayoutDocumentPane documentPane)
+Xceed.Wpf.AvalonDock.Layout.LayoutDocumentPaneGroup | public  property System.Windows.Controls.Orientation Orientation() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutDocumentPaneGroup | public override method System.Void ConsoleDump(System.Int32 tab)
+Xceed.Wpf.AvalonDock.Layout.LayoutDocumentPaneGroup | public override method System.Void ReadXml(System.Xml.XmlReader reader)
+Xceed.Wpf.AvalonDock.Layout.LayoutDocumentPaneGroup | public override method System.Void WriteXml(System.Xml.XmlWriter writer)
+Xceed.Wpf.AvalonDock.Layout.LayoutElement | protected virtual method System.Void OnParentChanged(Xceed.Wpf.AvalonDock.Layout.ILayoutContainer oldValue,Xceed.Wpf.AvalonDock.Layout.ILayoutContainer newValue)
+Xceed.Wpf.AvalonDock.Layout.LayoutElement | protected virtual method System.Void OnParentChanging(Xceed.Wpf.AvalonDock.Layout.ILayoutContainer oldValue,Xceed.Wpf.AvalonDock.Layout.ILayoutContainer newValue)
+Xceed.Wpf.AvalonDock.Layout.LayoutElement | protected virtual method System.Void OnRootChanged(Xceed.Wpf.AvalonDock.Layout.ILayoutRoot oldRoot,Xceed.Wpf.AvalonDock.Layout.ILayoutRoot newRoot)
+Xceed.Wpf.AvalonDock.Layout.LayoutElement | protected virtual method System.Void RaisePropertyChanged(System.String propertyName)
+Xceed.Wpf.AvalonDock.Layout.LayoutElement | protected virtual method System.Void RaisePropertyChanging(System.String propertyName)
+Xceed.Wpf.AvalonDock.Layout.LayoutElement | public  event System.ComponentModel.PropertyChangedEventHandler PropertyChanged
+Xceed.Wpf.AvalonDock.Layout.LayoutElement | public  event System.ComponentModel.PropertyChangingEventHandler PropertyChanging
+Xceed.Wpf.AvalonDock.Layout.LayoutElement | public  property Xceed.Wpf.AvalonDock.Layout.ILayoutContainer Parent() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutElement | public  property Xceed.Wpf.AvalonDock.Layout.ILayoutRoot Root() { public get;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutElement | public abstract class : System.Windows.DependencyObject interfaces[System.ComponentModel.INotifyPropertyChanged,System.ComponentModel.INotifyPropertyChanging,Xceed.Wpf.AvalonDock.Layout.ILayoutElement]
+Xceed.Wpf.AvalonDock.Layout.LayoutElement | public virtual method System.Void ConsoleDump(System.Int32 tab)
+Xceed.Wpf.AvalonDock.Layout.LayoutElementEventArgs | public  class : System.EventArgs interfaces[]
+Xceed.Wpf.AvalonDock.Layout.LayoutElementEventArgs | public  constructor System.Void .ctor(Xceed.Wpf.AvalonDock.Layout.LayoutElement element)
+Xceed.Wpf.AvalonDock.Layout.LayoutElementEventArgs | public  property Xceed.Wpf.AvalonDock.Layout.LayoutElement Element() { public get;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutFloatingWindow | public  constructor System.Void .ctor()
+Xceed.Wpf.AvalonDock.Layout.LayoutFloatingWindow | public  method System.Xml.Schema.XmlSchema GetSchema()
+Xceed.Wpf.AvalonDock.Layout.LayoutFloatingWindow | public abstract class : Xceed.Wpf.AvalonDock.Layout.LayoutElement interfaces[System.ComponentModel.INotifyPropertyChanged,System.ComponentModel.INotifyPropertyChanging,System.Xml.Serialization.IXmlSerializable,Xceed.Wpf.AvalonDock.Layout.ILayoutContainer,Xceed.Wpf.AvalonDock.Layout.ILayoutElement]
+Xceed.Wpf.AvalonDock.Layout.LayoutFloatingWindow | public abstract method System.Void ReadXml(System.Xml.XmlReader reader)
+Xceed.Wpf.AvalonDock.Layout.LayoutFloatingWindow | public abstract method System.Void RemoveChild(Xceed.Wpf.AvalonDock.Layout.ILayoutElement element)
+Xceed.Wpf.AvalonDock.Layout.LayoutFloatingWindow | public abstract method System.Void ReplaceChild(Xceed.Wpf.AvalonDock.Layout.ILayoutElement oldElement,Xceed.Wpf.AvalonDock.Layout.ILayoutElement newElement)
+Xceed.Wpf.AvalonDock.Layout.LayoutFloatingWindow | public abstract property System.Boolean IsValid() { public get;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutFloatingWindow | public abstract property System.Collections.Generic.IEnumerable<Xceed.Wpf.AvalonDock.Layout.ILayoutElement> Children() { public get;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutFloatingWindow | public abstract property System.Int32 ChildrenCount() { public get;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutFloatingWindow | public virtual method System.Void WriteXml(System.Xml.XmlWriter writer)
+Xceed.Wpf.AvalonDock.Layout.LayoutGroupBase | protected  constructor System.Void .ctor()
+Xceed.Wpf.AvalonDock.Layout.LayoutGroupBase | protected  method System.Void NotifyChildrenTreeChanged(Xceed.Wpf.AvalonDock.Layout.ChildrenTreeChange change)
+Xceed.Wpf.AvalonDock.Layout.LayoutGroupBase | protected virtual method System.Void OnChildrenCollectionChanged()
+Xceed.Wpf.AvalonDock.Layout.LayoutGroupBase | protected virtual method System.Void OnChildrenTreeChanged(Xceed.Wpf.AvalonDock.Layout.ChildrenTreeChange change)
+Xceed.Wpf.AvalonDock.Layout.LayoutGroupBase | public  event System.EventHandler ChildrenCollectionChanged
+Xceed.Wpf.AvalonDock.Layout.LayoutGroupBase | public  event System.EventHandler<Xceed.Wpf.AvalonDock.Layout.ChildrenTreeChangedEventArgs> ChildrenTreeChanged
+Xceed.Wpf.AvalonDock.Layout.LayoutGroupBase | public abstract class : Xceed.Wpf.AvalonDock.Layout.LayoutElement interfaces[]
+Xceed.Wpf.AvalonDock.Layout.LayoutGroup`1 | protected abstract method System.Boolean GetVisibility()
+Xceed.Wpf.AvalonDock.Layout.LayoutGroup`1 | protected override method System.Void OnParentChanged(Xceed.Wpf.AvalonDock.Layout.ILayoutContainer oldValue,Xceed.Wpf.AvalonDock.Layout.ILayoutContainer newValue)
+Xceed.Wpf.AvalonDock.Layout.LayoutGroup`1 | protected virtual method System.Void ChildMoved(System.Int32 oldIndex,System.Int32 newIndex)
+Xceed.Wpf.AvalonDock.Layout.LayoutGroup`1 | protected virtual method System.Void OnIsVisibleChanged()
+Xceed.Wpf.AvalonDock.Layout.LayoutGroup`1 | public  method System.Int32 IndexOfChild(Xceed.Wpf.AvalonDock.Layout.ILayoutElement element)
+Xceed.Wpf.AvalonDock.Layout.LayoutGroup`1 | public  method System.Void ComputeVisibility()
+Xceed.Wpf.AvalonDock.Layout.LayoutGroup`1 | public  method System.Void InsertChildAt(System.Int32 index,Xceed.Wpf.AvalonDock.Layout.ILayoutElement element)
+Xceed.Wpf.AvalonDock.Layout.LayoutGroup`1 | public  method System.Void MoveChild(System.Int32 oldIndex,System.Int32 newIndex)
+Xceed.Wpf.AvalonDock.Layout.LayoutGroup`1 | public  method System.Void RemoveChild(Xceed.Wpf.AvalonDock.Layout.ILayoutElement element)
+Xceed.Wpf.AvalonDock.Layout.LayoutGroup`1 | public  method System.Void RemoveChildAt(System.Int32 childIndex)
+Xceed.Wpf.AvalonDock.Layout.LayoutGroup`1 | public  method System.Void ReplaceChild(Xceed.Wpf.AvalonDock.Layout.ILayoutElement oldElement,Xceed.Wpf.AvalonDock.Layout.ILayoutElement newElement)
+Xceed.Wpf.AvalonDock.Layout.LayoutGroup`1 | public  method System.Void ReplaceChildAt(System.Int32 index,Xceed.Wpf.AvalonDock.Layout.ILayoutElement element)
+Xceed.Wpf.AvalonDock.Layout.LayoutGroup`1 | public  method System.Xml.Schema.XmlSchema GetSchema()
+Xceed.Wpf.AvalonDock.Layout.LayoutGroup`1 | public  property System.Boolean IsVisible() { public get; protected set;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutGroup`1 | public  property System.Collections.ObjectModel.ObservableCollection<T> Children() { public get;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutGroup`1 | public  property System.Int32 ChildrenCount() { public get;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutGroup`1 | public abstract class : Xceed.Wpf.AvalonDock.Layout.LayoutGroupBase interfaces[System.ComponentModel.INotifyPropertyChanged,System.ComponentModel.INotifyPropertyChanging,System.Xml.Serialization.IXmlSerializable,Xceed.Wpf.AvalonDock.Layout.ILayoutContainer,Xceed.Wpf.AvalonDock.Layout.ILayoutElement,Xceed.Wpf.AvalonDock.Layout.ILayoutGroup] <T:class&Xceed.Wpf.AvalonDock.Layout.ILayoutElement>
+Xceed.Wpf.AvalonDock.Layout.LayoutGroup`1 | public virtual method System.Void ReadXml(System.Xml.XmlReader reader)
+Xceed.Wpf.AvalonDock.Layout.LayoutGroup`1 | public virtual method System.Void WriteXml(System.Xml.XmlWriter writer)
+Xceed.Wpf.AvalonDock.Layout.LayoutPanel | protected override method System.Boolean GetVisibility()
+Xceed.Wpf.AvalonDock.Layout.LayoutPanel | public  class : Xceed.Wpf.AvalonDock.Layout.LayoutPositionableGroup<Xceed.Wpf.AvalonDock.Layout.ILayoutPanelElement> interfaces[System.ComponentModel.INotifyPropertyChanged,System.ComponentModel.INotifyPropertyChanging,Xceed.Wpf.AvalonDock.Layout.ILayoutContainer,Xceed.Wpf.AvalonDock.Layout.ILayoutElement,Xceed.Wpf.AvalonDock.Layout.ILayoutElementWithVisibility,Xceed.Wpf.AvalonDock.Layout.ILayoutGroup,Xceed.Wpf.AvalonDock.Layout.ILayoutOrientableGroup,Xceed.Wpf.AvalonDock.Layout.ILayoutPanelElement]
+Xceed.Wpf.AvalonDock.Layout.LayoutPanel | public  constructor System.Void .ctor()
+Xceed.Wpf.AvalonDock.Layout.LayoutPanel | public  constructor System.Void .ctor(Xceed.Wpf.AvalonDock.Layout.ILayoutPanelElement firstChild)
+Xceed.Wpf.AvalonDock.Layout.LayoutPanel | public  property System.Windows.Controls.Orientation Orientation() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutPanel | public override method System.Void ConsoleDump(System.Int32 tab)
+Xceed.Wpf.AvalonDock.Layout.LayoutPanel | public override method System.Void ReadXml(System.Xml.XmlReader reader)
+Xceed.Wpf.AvalonDock.Layout.LayoutPanel | public override method System.Void WriteXml(System.Xml.XmlWriter writer)
+Xceed.Wpf.AvalonDock.Layout.LayoutPositionableGroup`1 | protected virtual method System.Void OnDockHeightChanged()
+Xceed.Wpf.AvalonDock.Layout.LayoutPositionableGroup`1 | protected virtual method System.Void OnDockWidthChanged()
+Xceed.Wpf.AvalonDock.Layout.LayoutPositionableGroup`1 | public  constructor System.Void .ctor()
+Xceed.Wpf.AvalonDock.Layout.LayoutPositionableGroup`1 | public  property System.Boolean AllowDuplicateContent() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutPositionableGroup`1 | public  property System.Boolean CanRepositionItems() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutPositionableGroup`1 | public  property System.Boolean IsMaximized() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutPositionableGroup`1 | public  property System.Double DockMinHeight() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutPositionableGroup`1 | public  property System.Double DockMinWidth() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutPositionableGroup`1 | public  property System.Double FloatingHeight() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutPositionableGroup`1 | public  property System.Double FloatingLeft() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutPositionableGroup`1 | public  property System.Double FloatingTop() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutPositionableGroup`1 | public  property System.Double FloatingWidth() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutPositionableGroup`1 | public  property System.Windows.GridLength DockHeight() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutPositionableGroup`1 | public  property System.Windows.GridLength DockWidth() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutPositionableGroup`1 | public abstract class : Xceed.Wpf.AvalonDock.Layout.LayoutGroup<T> interfaces[System.ComponentModel.INotifyPropertyChanged,System.ComponentModel.INotifyPropertyChanging,Xceed.Wpf.AvalonDock.Layout.ILayoutElement,Xceed.Wpf.AvalonDock.Layout.ILayoutElementForFloatingWindow,Xceed.Wpf.AvalonDock.Layout.ILayoutPositionableElement,Xceed.Wpf.AvalonDock.Layout.ILayoutPositionableElementWithActualSize] <T:class&Xceed.Wpf.AvalonDock.Layout.ILayoutElement>
+Xceed.Wpf.AvalonDock.Layout.LayoutPositionableGroup`1 | public override method System.Void ReadXml(System.Xml.XmlReader reader)
+Xceed.Wpf.AvalonDock.Layout.LayoutPositionableGroup`1 | public override method System.Void WriteXml(System.Xml.XmlWriter writer)
+Xceed.Wpf.AvalonDock.Layout.LayoutRoot | public  class : Xceed.Wpf.AvalonDock.Layout.LayoutElement interfaces[System.ComponentModel.INotifyPropertyChanged,System.ComponentModel.INotifyPropertyChanging,System.Xml.Serialization.IXmlSerializable,Xceed.Wpf.AvalonDock.Layout.ILayoutContainer,Xceed.Wpf.AvalonDock.Layout.ILayoutElement,Xceed.Wpf.AvalonDock.Layout.ILayoutRoot]
+Xceed.Wpf.AvalonDock.Layout.LayoutRoot | public  constructor System.Void .ctor()
+Xceed.Wpf.AvalonDock.Layout.LayoutRoot | public  event System.EventHandler Updated
+Xceed.Wpf.AvalonDock.Layout.LayoutRoot | public  event System.EventHandler<Xceed.Wpf.AvalonDock.Layout.LayoutElementEventArgs> ElementAdded
+Xceed.Wpf.AvalonDock.Layout.LayoutRoot | public  event System.EventHandler<Xceed.Wpf.AvalonDock.Layout.LayoutElementEventArgs> ElementRemoved
+Xceed.Wpf.AvalonDock.Layout.LayoutRoot | public  method System.Void CollectGarbage()
+Xceed.Wpf.AvalonDock.Layout.LayoutRoot | public  method System.Void ReadXml(System.Xml.XmlReader reader)
+Xceed.Wpf.AvalonDock.Layout.LayoutRoot | public  method System.Void RemoveChild(Xceed.Wpf.AvalonDock.Layout.ILayoutElement element)
+Xceed.Wpf.AvalonDock.Layout.LayoutRoot | public  method System.Void ReplaceChild(Xceed.Wpf.AvalonDock.Layout.ILayoutElement oldElement,Xceed.Wpf.AvalonDock.Layout.ILayoutElement newElement)
+Xceed.Wpf.AvalonDock.Layout.LayoutRoot | public  method System.Void WriteXml(System.Xml.XmlWriter writer)
+Xceed.Wpf.AvalonDock.Layout.LayoutRoot | public  method System.Xml.Schema.XmlSchema GetSchema()
+Xceed.Wpf.AvalonDock.Layout.LayoutRoot | public  property System.Collections.Generic.IEnumerable<Xceed.Wpf.AvalonDock.Layout.ILayoutElement> Children() { public get;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutRoot | public  property System.Collections.ObjectModel.ObservableCollection<Xceed.Wpf.AvalonDock.Layout.LayoutAnchorable> Hidden() { public get;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutRoot | public  property System.Collections.ObjectModel.ObservableCollection<Xceed.Wpf.AvalonDock.Layout.LayoutFloatingWindow> FloatingWindows() { public get;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutRoot | public  property System.Int32 ChildrenCount() { public get;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutRoot | public  property Xceed.Wpf.AvalonDock.DockingManager Manager() { public get;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutRoot | public  property Xceed.Wpf.AvalonDock.Layout.LayoutAnchorSide BottomSide() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutRoot | public  property Xceed.Wpf.AvalonDock.Layout.LayoutAnchorSide LeftSide() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutRoot | public  property Xceed.Wpf.AvalonDock.Layout.LayoutAnchorSide RightSide() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutRoot | public  property Xceed.Wpf.AvalonDock.Layout.LayoutAnchorSide TopSide() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutRoot | public  property Xceed.Wpf.AvalonDock.Layout.LayoutContent ActiveContent() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutRoot | public  property Xceed.Wpf.AvalonDock.Layout.LayoutContent LastFocusedDocument() { public get;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutRoot | public  property Xceed.Wpf.AvalonDock.Layout.LayoutPanel RootPanel() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Layout.LayoutRoot | public override method System.Void ConsoleDump(System.Int32 tab)
+Xceed.Wpf.AvalonDock.Layout.Serialization.LayoutSerializationCallbackEventArgs | public  class : System.ComponentModel.CancelEventArgs interfaces[]
+Xceed.Wpf.AvalonDock.Layout.Serialization.LayoutSerializationCallbackEventArgs | public  constructor System.Void .ctor(Xceed.Wpf.AvalonDock.Layout.LayoutContent model,System.Object previousContent)
+Xceed.Wpf.AvalonDock.Layout.Serialization.LayoutSerializationCallbackEventArgs | public  property System.Object Content() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Layout.Serialization.LayoutSerializationCallbackEventArgs | public  property Xceed.Wpf.AvalonDock.Layout.LayoutContent Model() { public get;  }
+Xceed.Wpf.AvalonDock.Layout.Serialization.LayoutSerializer | protected  method System.Void EndDeserialization()
+Xceed.Wpf.AvalonDock.Layout.Serialization.LayoutSerializer | protected  method System.Void StartDeserialization()
+Xceed.Wpf.AvalonDock.Layout.Serialization.LayoutSerializer | protected virtual method System.Void FixupLayout(Xceed.Wpf.AvalonDock.Layout.LayoutRoot layout)
+Xceed.Wpf.AvalonDock.Layout.Serialization.LayoutSerializer | public  constructor System.Void .ctor(Xceed.Wpf.AvalonDock.DockingManager manager)
+Xceed.Wpf.AvalonDock.Layout.Serialization.LayoutSerializer | public  event System.EventHandler<Xceed.Wpf.AvalonDock.Layout.Serialization.LayoutSerializationCallbackEventArgs> LayoutSerializationCallback
+Xceed.Wpf.AvalonDock.Layout.Serialization.LayoutSerializer | public  property Xceed.Wpf.AvalonDock.DockingManager Manager() { public get;  }
+Xceed.Wpf.AvalonDock.Layout.Serialization.LayoutSerializer | public abstract class : System.Object interfaces[]
+Xceed.Wpf.AvalonDock.Layout.Serialization.XmlLayoutSerializer | public  class : Xceed.Wpf.AvalonDock.Layout.Serialization.LayoutSerializer interfaces[]
+Xceed.Wpf.AvalonDock.Layout.Serialization.XmlLayoutSerializer | public  constructor System.Void .ctor(Xceed.Wpf.AvalonDock.DockingManager manager)
+Xceed.Wpf.AvalonDock.Layout.Serialization.XmlLayoutSerializer | public  method System.Void Deserialize(System.IO.Stream stream)
+Xceed.Wpf.AvalonDock.Layout.Serialization.XmlLayoutSerializer | public  method System.Void Deserialize(System.IO.TextReader reader)
+Xceed.Wpf.AvalonDock.Layout.Serialization.XmlLayoutSerializer | public  method System.Void Deserialize(System.String filepath)
+Xceed.Wpf.AvalonDock.Layout.Serialization.XmlLayoutSerializer | public  method System.Void Deserialize(System.Xml.XmlReader reader)
+Xceed.Wpf.AvalonDock.Layout.Serialization.XmlLayoutSerializer | public  method System.Void Serialize(System.IO.Stream stream)
+Xceed.Wpf.AvalonDock.Layout.Serialization.XmlLayoutSerializer | public  method System.Void Serialize(System.IO.TextWriter writer)
+Xceed.Wpf.AvalonDock.Layout.Serialization.XmlLayoutSerializer | public  method System.Void Serialize(System.String filepath)
+Xceed.Wpf.AvalonDock.Layout.Serialization.XmlLayoutSerializer | public  method System.Void Serialize(System.Xml.XmlWriter writer)
+Xceed.Wpf.AvalonDock.LayoutFloatingWindowControlCollectionChangedEventArgs | public  class : System.EventArgs interfaces[]
+Xceed.Wpf.AvalonDock.LayoutFloatingWindowControlCollectionChangedEventArgs | public  constructor System.Void .ctor(System.Collections.Specialized.NotifyCollectionChangedEventArgs collectionChangedEventArgs)
+Xceed.Wpf.AvalonDock.LayoutFloatingWindowControlCollectionChangedEventArgs | public  property System.Collections.Specialized.NotifyCollectionChangedEventArgs CollectionChangedEventArgs() { public get;  }
+Xceed.Wpf.AvalonDock.Properties.Resources | public  class : System.Object interfaces[]
+Xceed.Wpf.AvalonDock.Properties.Resources | public static property System.Globalization.CultureInfo Culture() { public get; public set;  }
+Xceed.Wpf.AvalonDock.Properties.Resources | public static property System.Resources.ResourceManager ResourceManager() { public get;  }
+Xceed.Wpf.AvalonDock.Properties.Resources | public static property System.String Anchorable_AutoHide() { public get;  }
+Xceed.Wpf.AvalonDock.Properties.Resources | public static property System.String Anchorable_BtnAutoHide_Hint() { public get;  }
+Xceed.Wpf.AvalonDock.Properties.Resources | public static property System.String Anchorable_BtnClose_Hint() { public get;  }
+Xceed.Wpf.AvalonDock.Properties.Resources | public static property System.String Anchorable_CxMenu_Hint() { public get;  }
+Xceed.Wpf.AvalonDock.Properties.Resources | public static property System.String Anchorable_Dock() { public get;  }
+Xceed.Wpf.AvalonDock.Properties.Resources | public static property System.String Anchorable_DockAsDocument() { public get;  }
+Xceed.Wpf.AvalonDock.Properties.Resources | public static property System.String Anchorable_Float() { public get;  }
+Xceed.Wpf.AvalonDock.Properties.Resources | public static property System.String Anchorable_Hide() { public get;  }
+Xceed.Wpf.AvalonDock.Properties.Resources | public static property System.String Document_BtnPinned_Hint() { public get;  }
+Xceed.Wpf.AvalonDock.Properties.Resources | public static property System.String Document_Close() { public get;  }
+Xceed.Wpf.AvalonDock.Properties.Resources | public static property System.String Document_CloseAll() { public get;  }
+Xceed.Wpf.AvalonDock.Properties.Resources | public static property System.String Document_CloseAllButThis() { public get;  }
+Xceed.Wpf.AvalonDock.Properties.Resources | public static property System.String Document_CxMenu_Hint() { public get;  }
+Xceed.Wpf.AvalonDock.Properties.Resources | public static property System.String Document_DockAsDocument() { public get;  }
+Xceed.Wpf.AvalonDock.Properties.Resources | public static property System.String Document_Float() { public get;  }
+Xceed.Wpf.AvalonDock.Properties.Resources | public static property System.String Document_MoveToNextTabGroup() { public get;  }
+Xceed.Wpf.AvalonDock.Properties.Resources | public static property System.String Document_MoveToPreviousTabGroup() { public get;  }
+Xceed.Wpf.AvalonDock.Properties.Resources | public static property System.String Document_NewHorizontalTabGroup() { public get;  }
+Xceed.Wpf.AvalonDock.Properties.Resources | public static property System.String Document_NewVerticalTabGroup() { public get;  }
+Xceed.Wpf.AvalonDock.Properties.Resources | public static property System.String Window_Maximize() { public get;  }
+Xceed.Wpf.AvalonDock.Properties.Resources | public static property System.String Window_Restore() { public get;  }
+Xceed.Wpf.AvalonDock.Themes.DictionaryTheme | public  constructor System.Void .ctor()
+Xceed.Wpf.AvalonDock.Themes.DictionaryTheme | public  constructor System.Void .ctor(System.Windows.ResourceDictionary themeResourceDictionary)
+Xceed.Wpf.AvalonDock.Themes.DictionaryTheme | public  property System.Windows.ResourceDictionary ThemeResourceDictionary() { public get;  }
+Xceed.Wpf.AvalonDock.Themes.DictionaryTheme | public abstract class : Xceed.Wpf.AvalonDock.Themes.Theme interfaces[]
+Xceed.Wpf.AvalonDock.Themes.DictionaryTheme | public override method System.Uri GetResourceUri()
+Xceed.Wpf.AvalonDock.Themes.GenericTheme | public  class : Xceed.Wpf.AvalonDock.Themes.Theme interfaces[]
+Xceed.Wpf.AvalonDock.Themes.GenericTheme | public  constructor System.Void .ctor()
+Xceed.Wpf.AvalonDock.Themes.GenericTheme | public override method System.Uri GetResourceUri()
+Xceed.Wpf.AvalonDock.Themes.Theme | public  constructor System.Void .ctor()
+Xceed.Wpf.AvalonDock.Themes.Theme | public abstract class : System.Windows.DependencyObject interfaces[]
+Xceed.Wpf.AvalonDock.Themes.Theme | public abstract method System.Uri GetResourceUri()
