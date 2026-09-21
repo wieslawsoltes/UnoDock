@@ -24,7 +24,13 @@ internal static class DockVisuals
     {
         var item = manager.GetLayoutItemFromModel(model);
         var custom = model is LayoutAnchorable ? manager.AnchorableContextMenu : manager.DocumentContextMenu;
-        if (custom != null) { custom.DataContext = item; return custom; }
+        if (custom != null)
+        {
+            // A native WinUI MenuFlyout is not a FrameworkElement. DataContext
+            // belongs to its item tree rather than the flyout itself.
+            SetMenuContext(custom.Items, item);
+            return custom;
+        }
         var menu = new MenuFlyout();
         Add("Activate", item.ActivateCommand); Add("Float", item.FloatCommand); Add("Dock as document", item.DockAsDocumentCommand);
         if (item is LayoutAnchorableItem tool)
@@ -36,6 +42,14 @@ internal static class DockVisuals
         Add("Move to previous group", item.MoveToPreviousTabGroupCommand); Add("Move to next group", item.MoveToNextTabGroupCommand);
         return menu;
         void Add(string text, ICommand? command) { if (command != null) menu.Items.Add(new MenuFlyoutItem { Text = text, Command = command }); }
+    }
+    private static void SetMenuContext(IEnumerable<MenuFlyoutItemBase> items, LayoutItem context)
+    {
+        foreach (var item in items)
+        {
+            item.DataContext = context;
+            if (item is MenuFlyoutSubItem submenu) SetMenuContext(submenu.Items, context);
+        }
     }
     internal static DockRect Bounds(FrameworkElement element, UIElement relative)
     {

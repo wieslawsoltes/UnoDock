@@ -2,6 +2,11 @@ using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Input;
 using Xceed.Wpf.AvalonDock.Internal;
 using Xceed.Wpf.AvalonDock.Layout;
+#if WINDOWS
+using DockPointerDeviceType = Microsoft.UI.Input.PointerDeviceType;
+#else
+using DockPointerDeviceType = Windows.Devices.Input.PointerDeviceType;
+#endif
 
 namespace Xceed.Wpf.AvalonDock.Controls;
 
@@ -138,7 +143,7 @@ public abstract class LayoutTabItemBase : ContentControl
         if (Model == null) return;
         var point = args.GetCurrentPoint(_label);
         if (point.Properties.IsMiddleButtonPressed) { DockVisuals.CloseOrHide(Model); args.Handled = true; return; }
-        if (!point.Properties.IsLeftButtonPressed && point.PointerDevice.PointerDeviceType == Windows.Devices.Input.PointerDeviceType.Mouse) return;
+        if (!point.Properties.IsLeftButtonPressed && args.Pointer.PointerDeviceType == DockPointerDeviceType.Mouse) return;
         Model.IsActive = true; _manager?.BeginDrag(Model, _label, args);
     }
     internal void Update(DockingManager manager)
