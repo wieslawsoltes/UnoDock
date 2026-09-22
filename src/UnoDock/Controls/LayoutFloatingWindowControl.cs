@@ -13,7 +13,9 @@ public abstract class LayoutFloatingWindowControl : ContentControl, ILayoutContr
     public static readonly DependencyProperty IsMaximizedProperty = DependencyProperty.Register(nameof(IsMaximized), typeof(bool), typeof(LayoutFloatingWindowControl), new PropertyMetadata(false, (d, e) => ((LayoutFloatingWindowControl)d).OnStateChanged(EventArgs.Empty)));
     public static readonly DependencyProperty ResizeBorderThicknessProperty = DependencyProperty.Register(nameof(ResizeBorderThickness), typeof(Thickness), typeof(LayoutFloatingWindowControl), new PropertyMetadata(new Thickness(5)));
     private readonly Grid _frame = new();
-    private readonly OverlayWindow _dropPreview = new();
+    private readonly OverlayWindow _dropOverlay = new();
+    private static long _interactionSequence;
+    internal long InteractionOrder { get; private set; } = System.Threading.Interlocked.Increment(ref _interactionSequence);
     private readonly ContentPresenter _body = new() { HorizontalContentAlignment = HorizontalAlignment.Stretch, VerticalContentAlignment = VerticalAlignment.Stretch };
     private readonly TextBlock _caption = new() { Margin = new Thickness(10, 6, 10, 6), VerticalAlignment = VerticalAlignment.Center };
     private readonly Grid _title = new();
@@ -41,7 +43,16 @@ public abstract class LayoutFloatingWindowControl : ContentControl, ILayoutContr
         Grid.SetRow(_body, 1); _frame.Children.Add(_title); _frame.Children.Add(_body);
         var resize = new Thumb { Width = 16, Height = 16, HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Bottom, Opacity = .25 };
         resize.DragDelta += (_, e) => ResizeBy(e.HorizontalChange, e.VerticalChange); Grid.SetRow(resize, 1); _frame.Children.Add(resize);
-        Grid.SetRowSpan(_dropPreview, 2); _frame.Children.Add(_dropPreview);
+        Grid.SetRowSpan(_dropOverlay, 2); _frame.Children.Add(_dropOverlay);
+        // Single-document floating windows have no pane header. Their caption is a
+        // docking drag handle; the remaining title area retains window movement.
+        _caption.HorizontalAlignment = HorizontalAlignment.Left;
+        _caption.PointerPressed += (_, e) =>
+        {
+            if (Model is LayoutDocumentFloatingWindow { RootDocument: { } document })
+                document.Root?.Manager?.BeginDrag(document, _caption, e);
+        };
+        GotFocus += (_, _) => MarkInteraction();
         Content = _frame; BorderThickness = new(1); MinWidth = 160; MinHeight = 100;
         GotFocus += (_, _) => { if ((Contents.FirstOrDefault(c => c.IsSelected) ?? Contents.FirstOrDefault()) is { } selected) selected.IsActive = true; };
     }
@@ -91,7 +102,8 @@ public abstract class LayoutFloatingWindowControl : ContentControl, ILayoutContr
         _closingOperation = true;
         try { DoHide(); } finally { _closingOperation = false; }
     }
-    public void Activate() { if (_window != null) _window.Activate(); else Focus(FocusState.Programmatic); }
+    private void MarkInteraction() { InteractionOrder = System.Threading.Interlocked.Increment(ref _interactionSequence); Model.Root?.Manager?.Surface?.RefreshFloatingOrder(); }
+    public void Activate() { MarkInteraction(); if (_window != null) _window.Activate(); else Focus(FocusState.Programmatic); }
     private void DockAll()
     {
         var root = Model.Root as LayoutRoot;
@@ -100,6 +112,7 @@ public abstract class LayoutFloatingWindowControl : ContentControl, ILayoutContr
     internal virtual void UpdateView()
     {
         var manager = Model.Root?.Manager; if (manager?.Surface == null) return;
+        _caption.IsHitTestVisible = Model is LayoutDocumentFloatingWindow;
         _caption.Text = Contents.FirstOrDefault(c => c.IsActive)?.Title ?? Contents.FirstOrDefault()?.Title ?? "Floating tools";
         if (_window != null) _window.Title = _caption.Text;
         _frame.Background = DockVisuals.Brush(manager, "UnoDock.PaneBrush", "LayerFillColorDefaultBrush");
@@ -115,16 +128,12 @@ public abstract class LayoutFloatingWindowControl : ContentControl, ILayoutContr
         if (body != null) { body.Visibility = Visibility.Visible; if (!ReferenceEquals(_body.Content, body)) { VisualParenting.Detach(body); _body.Content = body; } }
         if (_window == null) { Width = Bounds.Width; Height = Bounds.Height; Canvas.SetLeft(this, Bounds.X); Canvas.SetTop(this, Bounds.Y); }
     }
-    internal void HideDropPreview() => _dropPreview.Hide();
-    internal void ShowDropPreview(DockDropPlan plan, FrameworkElement relativeTo, Brush accent)
+    internal void ShowDropPreview(DockDropPlan plan, FrameworkElement coordinateOwner, Brush accent)
     {
-        var converter = Model.Root?.Manager?.CrossWindowCoordinates;
-        if (converter == null) return;
-        var rect = plan.PreviewRect;
-        var start = converter.Translate(relativeTo, new Point(rect.X, rect.Y), _dropPreview);
-        var end = converter.Translate(relativeTo, new Point(rect.Right, rect.Bottom), _dropPreview);
-        _dropPreview.ShowPreview(plan, accent, new Rect(start, end));
+        try { _dropOverlay.ShowPreview(plan, DockCoordinates.Bounds(coordinateOwner, plan.PreviewRect, _dropOverlay, Model.Root?.Manager?.CrossWindowCoordinates), accent); }
+        catch (Exception e) when (DockCoordinates.IsUnavailable(e)) { _dropOverlay.Hide(); }
     }
+    internal void HideDropPreview() => _dropOverlay.Hide();
     internal void ShowNative()
     {
         if (_hostDisposed) return;
@@ -136,6 +145,7 @@ public abstract class LayoutFloatingWindowControl : ContentControl, ILayoutContr
             _window.AppWindow.Closing += OnNativeClosing;
             _window.AppWindow.Changed += OnNativeChanged;
             _window.Closed += OnNativeClosed;
+            _window.Activated += OnNativeActivated;
             var bounds = Bounds; var scale = DesktopWindowCoordinates.Scale(this);
             _syncBounds = true;
             try { _window.AppWindow.Move(new Windows.Graphics.PointInt32 { X = (int)(bounds.X * scale), Y = (int)(bounds.Y * scale) }); _window.AppWindow.Resize(new Windows.Graphics.SizeInt32 { Width = (int)(bounds.Width * scale), Height = (int)(bounds.Height * scale) }); }
@@ -151,6 +161,11 @@ public abstract class LayoutFloatingWindowControl : ContentControl, ILayoutContr
         // Prevent native destruction until model cancellation has been evaluated.
         e.Cancel = true;
         DispatcherQueue.TryEnqueue(Close);
+    }
+    private void OnNativeActivated(object sender, WindowActivatedEventArgs e)
+    {
+        if (e.WindowActivationState != Windows.UI.Core.CoreWindowActivationState.Deactivated)
+            MarkInteraction();
     }
     private void OnNativeClosed(object sender, WindowEventArgs e) { _window = null; OnClosed(EventArgs.Empty); }
     private void OnNativeChanged(AppWindow sender, AppWindowChangedEventArgs e)
@@ -175,7 +190,8 @@ public abstract class LayoutFloatingWindowControl : ContentControl, ILayoutContr
             {
                 window.AppWindow.Closing -= OnNativeClosing;
                 window.AppWindow.Changed -= OnNativeChanged;
-                window.Closed -= OnNativeClosed;
+                window.Closed -= OnNativeClosed; window.Activated -= OnNativeActivated;
+                DesktopWindowCoordinates.HideNativeClientBeforeClose(window);
                 window.Content = null;
                 window.Close();
                 _window = null;
@@ -190,10 +206,11 @@ public abstract class LayoutFloatingWindowControl : ContentControl, ILayoutContr
         if (_hostDisposed) return; _hostDisposed = true; _closingHost = true;
         if (_window is { } window)
         {
-            window.AppWindow.Closing -= OnNativeClosing; window.AppWindow.Changed -= OnNativeChanged; window.Closed -= OnNativeClosed;
+            window.AppWindow.Closing -= OnNativeClosing; window.AppWindow.Changed -= OnNativeChanged; window.Closed -= OnNativeClosed; window.Activated -= OnNativeActivated;
+            DesktopWindowCoordinates.HideNativeClientBeforeClose(window);
             window.Content = null; window.Close(); _window = null;
         }
-        _body.Content = null; VisualParenting.Detach(this); OnClosed(EventArgs.Empty);
+        _dropOverlay.Hide(); _body.Content = null; VisualParenting.Detach(this); OnClosed(EventArgs.Empty);
     }
     internal void SetBounds(DockRect bounds)
     {
@@ -227,6 +244,7 @@ public abstract class LayoutFloatingWindowControl : ContentControl, ILayoutContr
     protected override void OnKeyDown(KeyRoutedEventArgs e)
     {
         base.OnKeyDown(e);
+        if (e.Key == Windows.System.VirtualKey.Escape) { Model.Root?.Manager?.Surface?.CancelDrag(); e.Handled = true; return; }
         if (Model.Root?.Manager?.AllowMovingFloatingWindowWithKeyboard != true || !InputState.ControlDown) return;
         switch (e.Key)
         {

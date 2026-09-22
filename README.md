@@ -6,7 +6,7 @@
 Independent AvalonDock-style docking for **Uno Platform 6.7**, retaining familiar
 `Xceed.Wpf.AvalonDock` namespaces while using Uno/WinUI controls.
 
-**Status: 0.1.0-preview.2. This is a functional implementation, not a certified 100%
+**Status: 0.1.0-preview.3. This is a functional implementation, not a certified 100%
 AvalonDock replacement.** API shape, behavior, platform support and performance are
 separate claims. The repository records what is implemented, the original public
 contracts used to check it, runnable tests and the remaining boundaries.
@@ -18,8 +18,8 @@ contracts used to check it, runnable tests and the remaining boundaries.
 | `UnoDock.Core` | Framework-independent constrained sizing/resizing, drag state, update batching and bounded XML snapshots |
 | `UnoDock` | Layout models, docking manager, visual controls, content adapters, serializer and independent themes |
 | `UnoDock.Gallery` | Interactive IDE-style sample with editors, tool panes, persistence, MVVM and capability controls |
-| `UnoDock.Core.Tests` | 45 portable tests, including 10,000 randomized allocation/resize cases |
-| `UnoDock.Runtime.Tests` | 36 runtime + 44 interoperability + 40 drop/menu/automation + 33 lifecycle tests, linked into the gallery |
+| `UnoDock.Core.Tests` | 61 portable tests, including 30,000 randomized sizing/coordinate/scroll cases |
+| `UnoDock.Runtime.Tests` | 36 runtime + 44 interoperability + 40 drop/menu/automation + 33 lifecycle + 25 interaction tests, 1,517 converter replay/binding tests and 16 native coordinate tests, linked into the gallery |
 | `tools/ApiScan` | Deterministic public/protected declaration inventory |
 | `tools/ApiMetadata` | Resolved PE metadata inventory, without reading IL bodies or executing the assembly |
 | `tools/ReferenceProbe` | Independently authored black-box public-API probes against the pinned original |
@@ -27,6 +27,24 @@ contracts used to check it, runnable tests and the remaining boundaries.
 Stable NuGet pins resolved on 2026-09-21: **Uno.Sdk 6.7.30**, **Uno.WinUI 6.7.135**,
 **Uno.Templates 6.7.30**. `global.json` selects .NET 10 with latest-feature roll-forward.
 Version upgrades are explicit; product builds consume committed pins.
+
+## Preview 3 additions
+
+Native Linux/X11 client coordinates, server-ordered occlusion checks, captured-pointer
+cross-window tool docking, floating-document caption docking, destination-window
+previews and stationary-pointer tab-edge scrolling are implemented. Header insertion
+now wins over top-edge splitting and retains correct model indices around hidden tabs.
+In-surface activation updates visual stacking without detaching captured controls.
+The gallery parity lab exposes native-host selection and a 40-tab scroll scenario.
+
+The current suites have **1,772 passing C# cases** (61 core, 36 runtime, 44 original XML,
+40 drop/menu/automation, 33 lifecycle, 25 interaction, 1,517 converter and 16 coordinate),
+including six opt-in XTEST
+input scenarios in the Linux/Xvfb CI job. These are regression cases, not a full
+behavioral equivalence certificate. The resolved API gate matches **884/1,031** entries
+with **147 unresolved signatures/type shapes and 18 attribute differences**. The gate
+is still conservative and full parity is not asserted. See
+[interaction implementation and validation](docs/interaction.md).
 
 ## Preview 2 additions
 
@@ -36,10 +54,9 @@ protected dependency-property hooks, lazy retained editors, constrained tab sizi
 selection/invoke automation, shared-context menu controls, model diagnostics,
 XML/XAML metadata and a **Parity lab** in the gallery.
 
-**198 C# tests and 23 metadata-gate tests** are implemented and locally validated.
-The resolved comparison matches **849/1,031** reference entries; **182 signature/type
-entries and 22 attribute differences remain**. CI enforces no newly unresolved entries;
-this is not a passed full-parity gate. See [implementation and evidence](docs/parity-progress.md).
+The preview-2 checkpoint had **198 C# tests and 23 metadata-gate tests**. The current
+preview-3 counts and gate result are reported above. CI enforces no newly unresolved
+entries; this is not a passed full-parity gate. See [implementation and evidence](docs/parity-progress.md).
 
 ## Run the sample
 
@@ -109,8 +126,9 @@ closes an overlay. Editors create presenters on first use and retain them when s
 This is lazy content caching, not full header/tab virtualization.
 
 Desktop floating hosts use native Uno windows; browser floating hosts remain in the
-surface. `FloatingWindowMode.InSurface` forces portable hosting. Native cross-window
-dragging is incomplete on Uno Skia: use docking commands or in-surface hosting.
+surface. `FloatingWindowMode.InSurface` forces portable hosting. Linux/X11 cross-window
+dragging is input-tested. Other Skia desktop hosts still need a coordinate adapter;
+use docking commands or in-surface hosting there.
 Host coordinate integration is exposed through `ICrossWindowCoordinates`.
 
 The gallery includes nested groups, document and tool editors, source-bound items,

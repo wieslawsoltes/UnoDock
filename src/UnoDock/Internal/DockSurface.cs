@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Microsoft.UI.Xaml.Input;
 using Xceed.Wpf.AvalonDock.Controls;
 using Xceed.Wpf.AvalonDock.Layout;
@@ -13,6 +14,9 @@ internal sealed class DockSurface : Grid, IDisposable
     private readonly Dictionary<ILayoutElement, FrameworkElement> _views = new(ReferenceEqualityComparer.Instance);
     private readonly DockDragSession _drag = new();
     private readonly DispatcherTimer _autoHideTimer = new();
+    private readonly DispatcherTimer _dragScrollTimer = new() { Interval = TimeSpan.FromMilliseconds(16) };
+    private long _lastScrollTick;
+    private Point _lastDragPoint;
     private FrameworkElement? _dragSource;
     private LayoutContent? _dragContent;
     private LayoutAutoHideWindowControl? _autoHide;
@@ -22,6 +26,7 @@ internal sealed class DockSurface : Grid, IDisposable
     internal DockSurface(DockingManager manager)
     {
         Manager = manager;
+        _dragScrollTimer.Tick += OnDragScroll;
         _docked.RowDefinitions.Add(new() { Height = GridLength.Auto }); _docked.RowDefinitions.Add(new() { Height = new(1, GridUnitType.Star) }); _docked.RowDefinitions.Add(new() { Height = GridLength.Auto });
         _docked.ColumnDefinitions.Add(new() { Width = GridLength.Auto }); _docked.ColumnDefinitions.Add(new() { Width = new(1, GridUnitType.Star) }); _docked.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
         Children.Add(_docked); Children.Add(_floats); Children.Add(_overlay); Children.Add(_flyouts);
@@ -76,6 +81,13 @@ internal sealed class DockSurface : Grid, IDisposable
     {
         if (!_floats.Children.Contains(control)) { VisualParenting.Detach(control); _floats.Children.Add(control); }
         control.Visibility = Visibility.Visible;
+        RefreshFloatingOrder();
+    }
+    internal void RefreshFloatingOrder()
+    {
+        var z = 0;
+        foreach (var window in _floats.Children.OfType<LayoutFloatingWindowControl>().OrderBy(w => w.InteractionOrder))
+            Canvas.SetZIndex(window, z++);
     }
     internal void OpenAutoHide(LayoutAnchorable model)
     {
@@ -127,18 +139,18 @@ internal sealed class DockSurface : Grid, IDisposable
         source.PointerCanceled += OnDragCancelled; source.PointerCaptureLost += OnCaptureLost; source.Unloaded += OnDragSourceUnloaded;
         if (!source.CapturePointer(args.Pointer)) CancelDrag();
     }
-    private Point GetPoint(PointerRoutedEventArgs args)
-    {
-        if (_dragSource == null || ReferenceEquals(_dragSource.XamlRoot, XamlRoot)) return args.GetCurrentPoint(this).Position;
-        return Manager.CrossWindowCoordinates!.Translate(_dragSource, args.GetCurrentPoint(_dragSource).Position, this);
-    }
     private bool TryGetPoint(PointerRoutedEventArgs args, out Point point)
     {
-        try { point = GetPoint(args); return true; }
-        catch (InvalidOperationException) { point = default; return false; }
-        catch (PlatformNotSupportedException) { point = default; return false; }
+        point = default;
+        if (_dragSource == null) return false;
+        try
+        {
+            point = DockCoordinates.Translate(_dragSource, args.GetCurrentPoint(_dragSource).Position, this, Manager.CrossWindowCoordinates);
+            return true;
+        }
+        catch (Exception e) when (DockCoordinates.IsUnavailable(e)) { return false; }
     }
-    private void OnDragSourceUnloaded(object sender, RoutedEventArgs args) => CancelDrag();
+    private void OnDragSourceUnloaded(object sender, RoutedEventArgs e) => CancelDrag();
     internal IReadOnlyList<IDropArea> GetDropAreas()
     {
         var result = new List<IDropArea>();
@@ -170,13 +182,30 @@ internal sealed class DockSurface : Grid, IDisposable
         if (!double.IsFinite(point.X) || !double.IsFinite(point.Y)) throw new ArgumentOutOfRangeException(nameof(point));
         // Prefer the most specific arranged area. A forbidden pane does not fall
         // through to a different root operation hidden underneath its preview.
+        LayoutFloatingWindowControl? floating;
+        try
+        {
+            if (Manager.CrossWindowCoordinates is DesktopWindowCoordinates coordinates && coordinates.TryGetTopmostRoot(this, point, out var hitRoot))
+            {
+                if (hitRoot == null) return null;
+                floating = ReferenceEquals(hitRoot, XamlRoot) ? FloatingAt(point, inSurfaceOnly: true) :
+                    Manager.FloatingWindows.FirstOrDefault(w => ReferenceEquals(w.XamlRoot, hitRoot));
+                if (!ReferenceEquals(hitRoot, XamlRoot) && floating == null) return null;
+            }
+            else floating = FloatingAt(point);
+        }
+        catch (Exception error) when (DockCoordinates.IsUnavailable(error)) { return null; }
         var area = GetDropAreas().OfType<IModelDropArea>()
+            .Where(a => ReferenceEquals(a.Model?.FindParent<LayoutFloatingWindow>(), floating?.Model))
             .Where(a => a.DetectionRect.Width > 0 && a.DetectionRect.Height > 0 && a.DetectionRect.Contains(point))
             .OrderBy(a => a.Type == DropAreaType.DockingManager ? 1 : 0)
             .ThenBy(a => a.DetectionRect.Width * a.DetectionRect.Height).FirstOrDefault();
         if (area?.Model is not ILayoutGroup target) return null;
         var bounds = area.DetectionRect;
-        var position = DockSplitSolver.HitTest(new(bounds.X, bounds.Y, bounds.Width, bounds.Height), new(point.X, point.Y));
+        var pane = area.Type != DropAreaType.DockingManager ? GetView(target) as LayoutCachePaneControl : null;
+        // A tab strip is an insertion surface, not the pane's top split zone.
+        var position = pane?.IsOverHeader(point, this) == true ? DockPosition.Inside :
+            DockSplitSolver.HitTest(new(bounds.X, bounds.Y, bounds.Width, bounds.Height), new(point.X, point.Y));
         var offset = position switch { DockPosition.Left => 0, DockPosition.Top => 1, DockPosition.Right => 2, DockPosition.Bottom => 3, _ => 4 };
         DropTargetType type;
         switch (area.Type)
@@ -189,7 +218,9 @@ internal sealed class DockSurface : Grid, IDisposable
             case DropAreaType.DocumentPaneGroup: type = DropTargetType.DocumentPaneGroupDockInside; break;
             default: return null;
         }
-        var index = position == DockPosition.Inside && GetView(target) is LayoutCachePaneControl pane ? pane.InsertionIndex(point, this) : -1;
+        int index;
+        try { index = position == DockPosition.Inside && pane != null && pane.IsOverHeader(point, this) ? pane.InsertionIndex(point, this) : -1; }
+        catch (Exception e) when (DockCoordinates.IsUnavailable(e)) { return null; }
         return DockDropPlan.Create(content, target, type, bounds, index);
     }
     private void OnDragMoved(object sender, PointerRoutedEventArgs args)
@@ -197,19 +228,9 @@ internal sealed class DockSurface : Grid, IDisposable
         if (_dragContent == null || !_drag.OwnsPointer(args.Pointer.PointerId)) return;
         if (!TryGetPoint(args, out var point)) { CancelDrag(); return; }
         if (!_drag.Move(args.Pointer.PointerId, new(point.X, point.Y), [])) return;
-        try
-        {
-            var plan = GetDropPlan(_dragContent, point);
-            var accent = DockVisuals.Brush(Manager, "UnoDock.AccentBrush", "AccentFillColorDefaultBrush");
-            foreach (var window in Manager.FloatingWindows) window.HideDropPreview();
-            var floating = plan?.Target.FindParent<LayoutFloatingWindow>();
-            var host = floating == null ? null : Manager.FloatingWindows.FirstOrDefault(w => ReferenceEquals(w.Model, floating));
-            if (host?.NativeWindow != null && plan != null)
-            { _overlay.Hide(); host.ShowDropPreview(plan, this, accent); }
-            else _overlay.ShowPreview(plan, accent);
-        }
-        catch (InvalidOperationException) { CancelDrag(); }
-        catch (PlatformNotSupportedException) { CancelDrag(); }
+        _lastDragPoint = point;
+        ShowDragPreview(GetDropPlan(_dragContent, point));
+        if (!_dragScrollTimer.IsEnabled) { _lastScrollTick = Stopwatch.GetTimestamp(); _dragScrollTimer.Start(); }
         args.Handled = true;
     }
     private void OnDragReleased(object sender, PointerRoutedEventArgs args)
@@ -220,10 +241,7 @@ internal sealed class DockSurface : Grid, IDisposable
         // A final release can arrive after arrange, source changes, or without a
         // matching move event. Never execute the last painted hover snapshot.
         _drag.Move(args.Pointer.PointerId, new(point.X, point.Y), []);
-        DockDropPlan? plan;
-        try { plan = GetDropPlan(content, point); }
-        catch (InvalidOperationException) { CancelDrag(); return; }
-        catch (PlatformNotSupportedException) { CancelDrag(); return; }
+        var plan = GetDropPlan(content, point);
         var committed = _drag.Commit(args.Pointer.PointerId);
         DetachDrag();
         if (!committed) return;
@@ -237,16 +255,57 @@ internal sealed class DockSurface : Grid, IDisposable
     private void OnCaptureLost(object sender, PointerRoutedEventArgs args)
     { if (_dragSource != null && _drag.OwnsPointer(args.Pointer.PointerId)) CancelDrag(); }
     internal void CancelDrag() { _drag.Cancel(); DetachDrag(); }
+    private LayoutFloatingWindowControl? FloatingAt(Point point, bool inSurfaceOnly = false)
+    {
+        foreach (var window in Manager.FloatingWindows.OrderByDescending(w => w.InteractionOrder))
+        {
+            if (inSurfaceOnly && window.NativeWindow != null || !Visible(window) || window.NativeWindow is { } native && !native.AppWindow.IsVisible) continue;
+            try
+            {
+                var local = DockCoordinates.Translate(this, point, window, Manager.CrossWindowCoordinates);
+                if (new Rect(0, 0, window.ActualWidth, window.ActualHeight).Contains(local)) return window;
+            }
+            catch (Exception e) when (DockCoordinates.IsUnavailable(e)) { }
+        }
+        return null;
+    }
+    private void ShowDragPreview(DockDropPlan? plan)
+    {
+        _overlay.Hide(); foreach (var window in Manager.FloatingWindows) window.HideDropPreview();
+        if (plan == null) return;
+        var accent = DockVisuals.Brush(Manager, "UnoDock.AccentBrush", "AccentFillColorDefaultBrush");
+        var floating = plan.Target.FindParent<LayoutFloatingWindow>();
+        var host = floating == null ? null : Manager.FloatingWindows.FirstOrDefault(w => ReferenceEquals(w.Model, floating));
+        if (host?.NativeWindow == null) _overlay.ShowPreview(plan, accent);
+        else host.ShowDropPreview(plan, this, accent);
+    }
+    private void OnDragScroll(object? sender, object e)
+    {
+        if (_disposed || _dragContent == null || _drag.State != DockDragState.Dragging) { _dragScrollTimer.Stop(); return; }
+        var now = Stopwatch.GetTimestamp(); var seconds = Stopwatch.GetElapsedTime(_lastScrollTick, now).TotalSeconds; _lastScrollTick = now;
+        var plan = GetDropPlan(_dragContent, _lastDragPoint);
+        if (plan?.CanExecute != true) { ShowDragPreview(null); return; }
+        if (GetView(plan.Target) is not LayoutCachePaneControl pane) return;
+        try
+        {
+            if (pane.ScrollHeaderAt(_lastDragPoint, this, seconds))
+            {
+                pane.UpdateLayout(); // Insertion indices must use the newly scrolled geometry.
+                if (_dragContent != null) ShowDragPreview(GetDropPlan(_dragContent, _lastDragPoint));
+            }
+        }
+        catch (Exception error) when (DockCoordinates.IsUnavailable(error)) { CancelDrag(); }
+    }
     private void DetachDrag()
     {
+        _dragScrollTimer.Stop();
         var source = _dragSource; _dragSource = null; _dragContent = null;
         if (source != null)
         {
             source.RemoveHandler(PointerMovedEvent, new PointerEventHandler(OnDragMoved)); source.RemoveHandler(PointerReleasedEvent, new PointerEventHandler(OnDragReleased));
             source.PointerCanceled -= OnDragCancelled; source.PointerCaptureLost -= OnCaptureLost; source.Unloaded -= OnDragSourceUnloaded; source.ReleasePointerCaptures();
         }
-        _overlay.Hide();
-        foreach (var window in Manager.FloatingWindows) window.HideDropPreview();
+        ShowDragPreview(null);
     }
     internal void Reset()
     {
@@ -254,5 +313,5 @@ internal sealed class DockSurface : Grid, IDisposable
         foreach (var view in _views.Values) if (view is LayoutCachePaneControl pane) pane.ReleaseViews();
         _views.Clear(); _docked.Children.Clear(); _floats.Children.Clear();
     }
-    public void Dispose() { if (_disposed) return; _disposed = true; Reset(); _autoHideTimer.Stop(); }
+    public void Dispose() { if (_disposed) return; _disposed = true; Reset(); _autoHideTimer.Stop(); _dragScrollTimer.Tick -= OnDragScroll; }
 }

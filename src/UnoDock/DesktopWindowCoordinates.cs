@@ -23,28 +23,38 @@ public sealed class DesktopWindowCoordinates : IScreenWindowCoordinates, IDispos
 #endif
     public Point Translate(FrameworkElement source, Point sourcePoint, FrameworkElement destination)
     {
-        Verify(); Validate(source, sourcePoint); Validate(destination, default);
+        if (!double.IsFinite(sourcePoint.X) || !double.IsFinite(sourcePoint.Y)) throw new ArgumentOutOfRangeException(nameof(sourcePoint));
+        return CreateTranslator(source, destination)(sourcePoint);
+    }
+    internal Func<Point, Point> CreateTranslator(FrameworkElement source, FrameworkElement destination)
+    {
+        Verify(); Validate(source, default); Validate(destination, default);
         if (ReferenceEquals(source.XamlRoot, destination.XamlRoot))
-            return source.TransformToVisual(destination).TransformPoint(sourcePoint);
+        { var transform = source.TransformToVisual(destination); return transform.TransformPoint; }
 #if WINDOWS
-        return FromScreen(ToScreen(source, sourcePoint), destination);
+        return point => FromScreen(ToScreen(source, point), destination);
 #else
         var from = GetNative(source); var to = GetNative(destination);
-        var local = source.TransformToVisual(source.XamlRoot!.Content!).TransformPoint(sourcePoint);
-        Point pixels;
+        Point offset;
         if (OperatingSystem.IsLinux() && from is Uno.UI.NativeElementHosting.X11NativeWindow x && to is Uno.UI.NativeElementHosting.X11NativeWindow y)
-        {
-            var offset = TranslateX11(Id(x.WindowId), Id(y.WindowId));
-            pixels = new(local.X * Scale(source) + offset.X, local.Y * Scale(source) + offset.Y);
-        }
+            offset = TranslateX11(Id(x.WindowId), Id(y.WindowId));
         else if (OperatingSystem.IsWindows() && from is Uno.UI.NativeElementHosting.Win32NativeWindow w && to is Uno.UI.NativeElementHosting.Win32NativeWindow v)
         {
             var a = Win32Origin(w.Hwnd); var b = Win32Origin(v.Hwnd);
-            pixels = new(local.X * Scale(source) + a.X - b.X, local.Y * Scale(source) + a.Y - b.Y);
+            offset = new(a.X - b.X, a.Y - b.Y);
         }
         else throw Unsupported();
-        var target = new Point(pixels.X / Scale(destination), pixels.Y / Scale(destination));
-        return destination.XamlRoot!.Content!.TransformToVisual(destination).TransformPoint(target);
+        var sourceTransform = source.TransformToVisual(source.XamlRoot!.Content!);
+        var destinationTransform = destination.XamlRoot!.Content!.TransformToVisual(destination);
+        var sourceScale = Scale(source); var destinationScale = Scale(destination);
+        // Snapshot one live native origin per bounds query, not four synchronous RPCs.
+        // Never retain across frames, moves or DPI changes.
+        return point =>
+        {
+            var local = sourceTransform.TransformPoint(point);
+            var mapped = DockInteractionGeometry.TranslateClientPoint(new(local.X, local.Y), new(offset.X, offset.Y), sourceScale, destinationScale);
+            return destinationTransform.TransformPoint(new(mapped.X, mapped.Y));
+        };
 #endif
     }
     public Point ToScreen(FrameworkElement source, Point point)
@@ -79,6 +89,105 @@ public sealed class DesktopWindowCoordinates : IScreenWindowCoordinates, IDispos
         point = new((screenPoint.X - origin.X) / Scale(destination), (screenPoint.Y - origin.Y) / Scale(destination));
 #endif
         return destination.XamlRoot!.Content!.TransformToVisual(destination).TransformPoint(point);
+    }
+    /// <summary>Returns false only when this provider has no native z-order query.
+    /// A successful query with a null root means the point is occluded by another
+    /// application or lies outside any registered Uno client window.</summary>
+    internal bool TryGetTopmostRoot(FrameworkElement source, Point point, out XamlRoot? hitRoot)
+    {
+        Verify(); Validate(source, point);
+        hitRoot = null;
+#if WINDOWS
+        return false;
+#else
+        if (!OperatingSystem.IsLinux() || source.XamlRoot is not { } root) return false;
+        var windows = Uno.UI.ApplicationHelper.Windows;
+        var window = windows.FirstOrDefault(w => ReferenceEquals(w.Content?.XamlRoot, root));
+        if (window == null || Uno.UI.Xaml.WindowHelper.GetNativeWindow(window) is not Uno.UI.NativeElementHosting.X11NativeWindow native)
+            return false;
+        var client = source.TransformToVisual(root.Content).TransformPoint(point);
+        var x = Math.Round(client.X * root.RasterizationScale);
+        var y = Math.Round(client.Y * root.RasterizationScale);
+        // Core X11 coordinate requests use signed 16-bit coordinates. Reject, do
+        // not wrap an out-of-range position into a different pane.
+        if (!double.IsFinite(x) || !double.IsFinite(y) || x < short.MinValue || x > short.MaxValue || y < short.MinValue || y > short.MaxValue)
+            throw new InvalidOperationException("The point exceeds the X11 coordinate range.");
+        try
+        {
+            var connection = Connection;
+            if (connection.IsInvalid || Xcb.Error(connection) != 0)
+                throw new InvalidOperationException("The X11 connection is unavailable.");
+            var geometry = Xcb.GeometryReply(connection, Xcb.Geometry(connection, Id(native.WindowId)), out var error);
+            uint current;
+            try
+            {
+                if (error != 0 || geometry == 0) throw new InvalidOperationException("The source window has closed.");
+                current = unchecked((uint)Marshal.ReadInt32(geometry, 8)); // screen root
+            }
+            finally { if (geometry != 0) Xcb.Free(geometry); if (error != 0) Xcb.Free(error); }
+            // Descend the server's actual stacking order at the queried point.
+            // This works with window-manager reparenting and never guesses a
+            // frame-to-client offset or relies on focus order for native windows.
+            for (var depth = 0; depth < 32; depth++)
+            {
+                var reply = Xcb.TranslateReply(connection, Xcb.Translate(connection, Id(native.WindowId), current, (short)x, (short)y), out error);
+                uint child;
+                try
+                {
+                    if (error != 0 || reply == 0 || Marshal.ReadByte(reply, 1) == 0)
+                        throw new InvalidOperationException("The X11 target hierarchy changed during hit testing.");
+                    child = unchecked((uint)Marshal.ReadInt32(reply, 8));
+                }
+                finally { if (reply != 0) Xcb.Free(reply); if (error != 0) Xcb.Free(error); }
+                if (child == 0 || child == current) return true;
+                foreach (var candidate in windows)
+                    if (candidate.Content?.XamlRoot is { } candidateRoot &&
+                        Uno.UI.Xaml.WindowHelper.GetNativeWindow(candidate) is Uno.UI.NativeElementHosting.X11NativeWindow candidateNative &&
+                        Id(candidateNative.WindowId) == child)
+                    { hitRoot = candidateRoot; return true; }
+                current = child;
+            }
+            // An unexpectedly deep foreign hierarchy is not a docking target.
+            return true;
+        }
+        catch (DllNotFoundException e) { throw new InvalidOperationException("X11 hit testing requires libxcb.", e); }
+        catch (EntryPointNotFoundException e) { throw new InvalidOperationException("The XCB coordinate API is unavailable.", e); }
+#endif
+    }
+
+    internal static void HideNativeClientBeforeClose(Window window)
+    {
+#if !WINDOWS
+        if (!OperatingSystem.IsLinux()) return;
+        try
+        {
+            if (Uno.UI.Xaml.WindowHelper.GetNativeWindow(window) is not Uno.UI.NativeElementHosting.X11NativeWindow native) return;
+            using var adapter = new DesktopWindowCoordinates();
+            var connection = adapter.Connection;
+            // Uno's renderer teardown is asynchronous: unmap our own client now,
+            // but leave all renderer-owned resource destruction to the framework.
+            var error = Xcb.RequestCheck(connection, Xcb.Unmap(connection, Id(native.WindowId)));
+            Xcb.Free(error); // An already-destroyed client requires no action.
+        }
+        catch (PlatformNotSupportedException) { }
+        catch (InvalidOperationException) { }
+#endif
+    }
+    internal static bool TryTranslateX11Origins(nint source, nint destination, out Point offset)
+    {
+        offset = default;
+#if !WINDOWS
+        if (!OperatingSystem.IsLinux()) return false;
+        try
+        {
+            using var adapter = new DesktopWindowCoordinates();
+            offset = adapter.TranslateX11(Id(source), Id(destination));
+            return true;
+        }
+        catch (PlatformNotSupportedException) { }
+        catch (InvalidOperationException) { }
+#endif
+        return false;
     }
     internal static double Scale(FrameworkElement element)
     {
@@ -195,6 +304,8 @@ public sealed class DesktopWindowCoordinates : IScreenWindowCoordinates, IDispos
         [DllImport("libxcb.so.1", EntryPoint = "xcb_translate_coordinates_reply", CallingConvention = CallingConvention.Cdecl)] internal static extern IntPtr TranslateReply(XcbConnection connection, uint cookie, out IntPtr error);
         [DllImport("libxcb.so.1", EntryPoint = "xcb_get_geometry", CallingConvention = CallingConvention.Cdecl)] internal static extern uint Geometry(XcbConnection connection, uint drawable);
         [DllImport("libxcb.so.1", EntryPoint = "xcb_get_geometry_reply", CallingConvention = CallingConvention.Cdecl)] internal static extern IntPtr GeometryReply(XcbConnection connection, uint cookie, out IntPtr error);
+        [DllImport("libxcb.so.1", EntryPoint = "xcb_unmap_window_checked", CallingConvention = CallingConvention.Cdecl)] internal static extern uint Unmap(XcbConnection connection, uint window);
+        [DllImport("libxcb.so.1", EntryPoint = "xcb_request_check", CallingConvention = CallingConvention.Cdecl)] internal static extern IntPtr RequestCheck(XcbConnection connection, uint cookie);
         [DllImport("libc", EntryPoint = "free", CallingConvention = CallingConvention.Cdecl)] internal static extern void Free(IntPtr memory);
     }
 #endif

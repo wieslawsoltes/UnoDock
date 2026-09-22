@@ -13,7 +13,7 @@ public static partial class WindowCoordinateTests
 {
     private static void RegisterNativeInput(TestRunner tests, DockingManager host)
     {
-        if (!OperatingSystem.IsLinux()) return;
+        if (!OperatingSystem.IsLinux() || Environment.GetEnvironmentVariable("UNODOCK_NATIVE_INPUT_TESTS") != "1") return;
         tests.Test("X11 pointer drag docks between native windows with visible preview", async () =>
         {
             var original = host.Layout; var mode = host.FloatingWindowMode;

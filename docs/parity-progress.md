@@ -1,3 +1,16 @@
+# Current status — preview 3
+
+The combined preview 3 source preserves the concurrent converter and native-screen API
+work from cb5b68f and adds captured dragging, occlusion-aware targets, client unmapping
+and stationary edge scrolling. Local validation: 1,772 C# test cases (including 1,517
+original-converter replay/binding cases) plus 23 metadata-comparator tests. Native
+input synthesis requires explicit UNODOCK_NATIVE_INPUT_TESTS=1 on a dedicated display.
+Current mapped structural results: 884/1,031, 147 unresolved, 18 attribute differences.
+
+
+See [interaction.md](interaction.md) for capture/coordinate details. Full parity is not
+asserted; these counts supersede the historical preview-2 status below.
+
 # Preview 2: compatibility implementation and evidence
 
 ## Implemented in this continuation
@@ -79,9 +92,9 @@ and direct base/interface shape, rather than hiding these behind a member-name s
 Compiler-generated nullable, state-machine and debugger-browsable attributes are
 separated from the contract. Remaining meaningful attribute differences are reported.
 
-Current local result: **849 / 1,031 reference entries matched**, including 767 declared
+Preview-2 local result: **849 / 1,031 reference entries matched**, including 767 declared
 members, 24 inherited members and 58 type-shape matches. There are **182 unresolved
-signature/type entries** and **22 attribute differences**. `metadata-baseline.json`
+signature/type entries** and **18 attribute differences**. `metadata-baseline.json`
 records those known diagnostics and binds them to reference/mapping hashes. CI fails
 on newly unresolved entries. It is a **no-regression baseline**, not an acceptance of
 full compatibility. `--strict` still fails for the outstanding diagnostics.
@@ -91,7 +104,7 @@ declarations**, compared with 592 in preview 1. Its 303 missing/different declar
 are not interchangeable with the resolved report's 182 entries; the reports use
 different denominators, visibility resolution and inheritance treatment.
 
-## Remaining boundaries
+## Remaining boundaries at the preview-2 checkpoint
 
 Full parity is not complete. Remaining work includes Microsoft.Windows.Shell's
 SystemCommands/SystemParameters2/WindowChrome; WPF native-message/HwndHost contracts;

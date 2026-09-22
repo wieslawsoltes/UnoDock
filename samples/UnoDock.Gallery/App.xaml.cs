@@ -29,6 +29,7 @@ public partial class App : Application
                     exitCode |= await Testing.InteropTests.Run(output);
                     exitCode |= await Testing.ParityTests.Run(gallery.Dock, output);
                     exitCode |= await Testing.LifecycleTests.Run(gallery.Dock, output);
+                    exitCode |= await Testing.InteractionTests.Run(gallery.Dock, output);
                     exitCode |= await Testing.ConverterTests.Run(output);
                     exitCode |= await Testing.WindowCoordinateTests.Run(output, gallery.Dock);
                 }

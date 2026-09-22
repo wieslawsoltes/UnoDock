@@ -113,7 +113,7 @@ public static partial class WindowCoordinateTests
                 });
                 tests.Test("closed destination rejects coordinate transfer", async () =>
                 {
-                    b.Content = null; b.Close(); closed = true;
+                    CloseTestWindow(b); closed = true;
                     await Task.Delay(25);
                     Check.Throws<InvalidOperationException>(() => adapter.Translate(source, default, destination));
                 });
@@ -169,10 +169,18 @@ public static partial class WindowCoordinateTests
                 }
                 return await tests.Run(output, "window-coordinates");
             }
-            finally { if (!closed) { b.Content = null; b.Close(); } a.Content = null; a.Close(); }
+            finally { if (!closed) { CloseTestWindow(b); } CloseTestWindow(a); }
         }
         Console.WriteLine("Native coordinate runtime cases are not executed on this host.");
         return await tests.Run(output, "window-coordinates");
+    }
+    private static void CloseTestWindow(Window window)
+    {
+        // These auxiliary windows are not owned by DockingManager. Invoke the
+        // same unmap-before-teardown path to isolate subsequent native tests.
+        typeof(DesktopWindowCoordinates).GetMethod("HideNativeClientBeforeClose",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!.Invoke(null, [window]);
+        window.Content = null; window.Close();
     }
     private static async Task Until(Func<bool> condition)
     {

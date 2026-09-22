@@ -25,6 +25,34 @@ public sealed partial class GalleryPage
         var execute = new Button { Content = "Execute selected plan" };
         actions.Children.Add(refresh); actions.Children.Add(execute); panel.Children.Add(actions);
         panel.Children.Add(areas);
+        var native = new CheckBox
+        {
+            Content = "Use native floating windows (desktop)",
+            IsChecked = Dock.FloatingWindowMode != FloatingWindowMode.InSurface,
+            IsEnabled = !OperatingSystem.IsBrowser() && !OperatingSystem.IsAndroid() && !OperatingSystem.IsIOS()
+        };
+        native.Checked += (_, _) => { Dock.FloatingWindowMode = FloatingWindowMode.Native; Dock.Refresh(); };
+        native.Unchecked += (_, _) => { Dock.FloatingWindowMode = FloatingWindowMode.InSurface; Dock.Refresh(); };
+        var floatSelected = new Button { Content = "Float selected content" };
+        floatSelected.Click += (_, _) =>
+        {
+            if (contents.SelectedItem is LayoutContent selected && selected.CanFloat) { selected.Float(); Refresh(); }
+        };
+        var overflow = new Button { Content = "Open 40 tabs for drag scrolling" };
+        overflow.Click += (_, _) =>
+        {
+            var pane = Dock.Layout.Descendents().OfType<LayoutDocumentPane>().FirstOrDefault();
+            if (pane == null) return;
+            for (var i = 0; i < 40; i++)
+            {
+                var id = "scroll-lab-" + _nextDocument++;
+                pane.Children.Add(Document(id, "Scroll test " + i.ToString("D2"), new TextBox { Text = "Retained editor " + id, AcceptsReturn = true }));
+            }
+            Refresh();
+        };
+        panel.Children.Add(native);
+        panel.Children.Add(new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Children = { floatSelected, overflow } });
+
         var duplicate = new CheckBox { Content = "Selected pane allows duplicate Title + ContentId", IsChecked = true };
         duplicate.Checked += (_, _) => SetDuplicates(true);
         duplicate.Unchecked += (_, _) => SetDuplicates(false);
@@ -42,7 +70,7 @@ public sealed partial class GalleryPage
         panel.Children.Add(custom);
         panel.Children.Add(new TextBlock
         {
-            Text = "Lazy editors: adding model tabs does not create their content presenters. Visiting a tab realizes it once; revisiting retains its editor. Native Skia cross-window coordinate integration remains outside this preview's validated scope.",
+            Text = "Lazy editors: adding model tabs does not create their content presenters. Visiting a tab realizes it once; revisiting retains its editor. Linux/X11 native cross-window capture, insertion, previews and occlusion have automated input tests. Native WinUI uses content-island coordinates. Other native hosts require an adapter. Hold a dragged tab near a header edge to scroll; Escape cancels. OS title-bar docking is not yet implemented.",
             TextWrapping = TextWrapping.Wrap, Opacity = .7
         });
         refresh.Click += (_, _) => Refresh();

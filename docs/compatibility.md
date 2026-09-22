@@ -5,13 +5,15 @@ compatibility with explicit WPF-to-WinUI mappings, not WPF binary identity. Appl
 must validate their own layouts, commands, custom styles, input, accessibility and
 windowing paths before replacing an existing docking system.
 
-## Preview 2 evidence
+## Preview 3 evidence
 
-The resolved metadata gate matches 849/1,031 reference entries, with 182 unresolved
-signature/type diagnostics and 22 attribute differences. A reference/mapping-bound
-baseline rejects newly unresolved entries; it does not approve full parity. Preview 2
-also adds reentrancy-safe transitions/source reconciliation, lazy editor presenters,
-shared menus, model diagnostics and a gallery parity lab. See parity-progress.md.
+The resolved metadata gate matches 884/1,031 reference entries, with 147 unresolved
+signature/type diagnostics and 18 attribute differences. A reference/mapping-bound
+baseline rejects newly unresolved entries; it does not approve full parity. The prior increment
+added reentrancy-safe transitions/source reconciliation, lazy editor presenters,
+shared menus, model diagnostics and a gallery parity lab. Preview 3 adds input-tested Linux/X11
+native docking, destination-window previews, topmost-window occlusion, hidden-index
+header insertion and stationary-pointer edge scrolling. See interaction.md and parity-progress.md.
 
 ## Implemented independently
 
@@ -58,9 +60,11 @@ Both profiles are scanned twice and compared byte for byte. This addresses limit
 of the initial syntax-only reference inventory; it does not complete the counterpart
 mapping or missing implementation APIs.
 
-The suite contains 45 portable tests, 36 Uno runtime/control tests, 44
+The suite contains 61 portable tests, 36 Uno runtime/control tests, 44
 interoperability/default/policy tests, 40 drop/menu/automation tests and 33 lifecycle
-tests. The metadata gate has 23 additional Python regression tests. The latter consume 13 original public-serializer
+tests, 25 interaction tests, 1,517 converter/binding cases and 16 coordinate tests
+(six cases use opt-in server-generated pointer/keyboard input).
+The metadata gate has 23 additional Python regression tests. Interoperability cases consume 13 original public-serializer
 layouts and defaults for 13 original types. Original random container IDs are normalized
 without breaking PreviousContainerId links. No original algorithm is translated.
 
@@ -78,15 +82,18 @@ still outstanding.
   converter, type-shape and attribute mappings. Drop/overlay contracts and selection/
   invoke peers are implemented in preview 2, but do not imply full WPF infrastructure
   or comprehensive assistive-technology acceptance.
-* Native cross-window docking on Uno Skia. The coordinate-conversion implementation is
-  available only to native WinUI; other hosts need ICrossWindowCoordinates integration.
+* Native cross-window docking on non-X11 Skia hosts. Linux/X11 client transforms, input
+  capture, previews and stacking order are tested; native WinUI has coordinate conversion.
+  Skia Win32 client/screen conversion is implemented but still needs native input
+  acceptance. macOS/custom hosts need ICrossWindowCoordinates integration.
   Native title-bar dragging, OS snapping, monitor/DPI transitions, owner activation and
   every cross-window target are not validated across all hosts.
 * Broader original behavioral fixtures: event ordering/reentrancy, duplicate-content
   policy, custom insertion strategies/source resets, converter edge cases, legacy XML
   versions/custom extensions, and nested docking policy combinations.
 * Full keyboard parity, touch/pen delivery, screen-reader traversal, right-to-left
-  layout, localization breadth, drag auto-scroll and pixel-level visual comparisons.
+  layout, localization breadth and pixel-level visual comparisons. Portable edge scrolling
+  is implemented, but exhaustive gesture/device combinations are not validated.
 * Full tab virtualization and workload-based performance parity. Retained content is
   implemented, but that is not a performance-equivalence certificate.
 * Android/iOS sample heads and device tests, release signing and notarization.

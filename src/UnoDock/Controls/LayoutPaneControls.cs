@@ -90,14 +90,30 @@ public class LayoutCachePaneControl : ContentControl
         var index = 0;
         foreach (var model in Items)
         {
-            if (!_tabs.TryGetValue(model, out var tab)) continue;
-            var local = ReferenceEquals(tab.XamlRoot, surface.XamlRoot)
-                ? surface.TransformToVisual(tab).TransformPoint(surfacePoint)
-                : surface.Manager.CrossWindowCoordinates!.Translate(surface, surfacePoint, tab);
-            if (FlowDirection == FlowDirection.RightToLeft ? local.X > tab.ActualWidth / 2 : local.X < tab.ActualWidth / 2) return index;
+            if (!_tabs.TryGetValue(model, out var tab)) { index++; continue; }
+            var bounds = DockCoordinates.Bounds(tab, new Rect(0, 0, tab.ActualWidth, tab.ActualHeight), surface, surface.Manager.CrossWindowCoordinates);
+            if (FlowDirection == FlowDirection.RightToLeft ? surfacePoint.X > bounds.X + bounds.Width / 2 : surfacePoint.X < bounds.X + bounds.Width / 2) return index;
             index++;
         }
         return index;
+    }
+    internal bool IsOverHeader(Point point, DockSurface surface)
+    {
+        if (_scroll.Visibility != Visibility.Visible || _scroll.ActualWidth <= 0 || _scroll.ActualHeight <= 0) return false;
+        try
+        {
+            var local = DockCoordinates.Translate(surface, point, _scroll, surface.Manager.CrossWindowCoordinates);
+            return new Rect(0, 0, _scroll.ActualWidth, _scroll.ActualHeight).Contains(local);
+        }
+        catch (Exception e) when (DockCoordinates.IsUnavailable(e)) { return false; }
+    }
+    internal bool ScrollHeaderAt(Point point, DockSurface surface, double seconds)
+    {
+        if (!IsOverHeader(point, surface) || _scroll.ScrollableWidth <= 0) return false;
+        var local = DockCoordinates.Translate(surface, point, _scroll, surface.Manager.CrossWindowCoordinates);
+        var delta = DockInteractionGeometry.AutoScrollDelta(local.X, _scroll.ActualWidth, _scroll.HorizontalOffset,
+            _scroll.ScrollableWidth, seconds, FlowDirection == FlowDirection.RightToLeft);
+        return delta != 0 && _scroll.ChangeView(Math.Clamp(_scroll.HorizontalOffset + delta, 0, _scroll.ScrollableWidth), null, null, true);
     }
     internal LayoutTabItemBase? TabFor(LayoutContent model) => _tabs.GetValueOrDefault(model);
     protected override Microsoft.UI.Xaml.Automation.Peers.AutomationPeer OnCreateAutomationPeer() => new LayoutPaneAutomationPeer(this);
