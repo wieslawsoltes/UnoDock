@@ -65,12 +65,12 @@ jobs:
           UNODOCK_NATIVE_INPUT_TESTS: '1'
           UNODOCK_TEST_RESULTS: ${{ github.workspace }}/artifacts/test-results
         run: timeout 300s xvfb-run -a -s "-screen 0 2560x1440x24" dotnet run --project samples/UnoDock.Gallery -c Release -f net10.0-desktop --no-build -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0
-      - name: Run Windows native host lifecycle and HWND filter tests
+      - name: Run Windows lifecycle, HWND filter and input extension tests
         if: runner.os == 'Windows'
         shell: pwsh
         env:
           UNODOCK_SELFTEST: '1'
-          UNODOCK_TEST_SUITE: window-lifecycle
+          UNODOCK_TEST_SUITE: windows-acceptance
           UNODOCK_TEST_RESULTS: ${{ github.workspace }}/artifacts/test-results
         run: |
           $arguments = @('run', '--project', 'samples/UnoDock.Gallery', '-c', 'Release', '-f', 'net10.0-desktop', '--no-build', '-p:UnoDockTargetFrameworks=net10.0-desktop', '-p:UnoDockLibraryFrameworks=net10.0')
@@ -80,7 +80,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always() && runner.os == 'Windows'
         with:
-          name: window-lifecycle-Windows
+          name: windows-runtime-test-results
           path: artifacts/test-results/
       - uses: actions/upload-artifact@v4
         if: always() && runner.os == 'Linux'
