@@ -3,6 +3,7 @@
     <OutputType>Exe</OutputType><TargetFramework>net48</TargetFramework>
     <UseWPF>true</UseWPF><IsPackable>false</IsPackable>
     <ImplicitUsings>disable</ImplicitUsings><Nullable>disable</Nullable>
+    <StartupObject Condition="'$(StartupObject)' == ''">Program</StartupObject>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Xceed.Wpf.AvalonDock"><HintPath>$(ReferenceAssembly)</HintPath><Private>true</Private></Reference>

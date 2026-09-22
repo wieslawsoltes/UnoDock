@@ -1,0 +1,63 @@
+name: Reference converter behavior
+on:
+  workflow_dispatch:
+  push:
+    paths: ['tools/ReferenceProbe/ConverterProbe.cs', '.github/workflows/converter-contract.yml']
+permissions:
+  contents: write
+concurrency:
+  group: reference-converters
+  cancel-in-progress: false
+jobs:
+  observe:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - uses: microsoft/setup-msbuild@v2
+      - name: Build pinned original in isolated temporary directory
+        shell: pwsh
+        run: |
+          $revision = (Get-Content contracts/reference.json | ConvertFrom-Json).revision
+          $stage = Join-Path $env:RUNNER_TEMP 'converter-reference'
+          New-Item -ItemType Directory -Force $stage | Out-Null
+          Invoke-WebRequest "https://codeload.github.com/xceedsoftware/wpftoolkit/tar.gz/$revision" -OutFile "$stage/reference.tar.gz"
+          tar -xzf "$stage/reference.tar.gz" --strip-components=1 -C $stage
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Invoke-WebRequest 'https://api.nuget.org/v3-flatcontainer/microsoft.netframework.referenceassemblies.net40/1.0.3/microsoft.netframework.referenceassemblies.net40.1.0.3.nupkg' -OutFile "$stage/framework.zip"
+          Expand-Archive "$stage/framework.zip" "$stage/framework"
+          $project = "$stage/ExtendedWPFToolkitSolution/Src/Xceed.Wpf.AvalonDock/Xceed.Wpf.AvalonDock.csproj"
+          $copyTargets = Join-Path $env:GITHUB_WORKSPACE 'tools/ReferenceProbe/LegacyCopy.targets'
+          msbuild $project /nologo /v:minimal /p:Configuration=Release /p:TargetFrameworkRootPath="$stage/framework/build/" /p:OutputPath="$stage/bin/" /p:GenerateSerializationAssemblies=Off /p:CustomAfterMicrosoftCommonTargets=$copyTargets
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Exercise public converter contracts twice
+        shell: pwsh
+        run: |
+          $stage = Join-Path $env:RUNNER_TEMP 'converter-reference'
+          dotnet build tools/ReferenceProbe -c Release -p:StartupObject=ConverterProbe -p:ReferenceAssembly="$stage/bin/Xceed.Wpf.AvalonDock.dll"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Copy-Item "$stage/bin/Xceed.Wpf.Toolkit.dll" 'tools/ReferenceProbe/bin/Release/net48/'
+          & tools/ReferenceProbe/bin/Release/net48/ReferenceProbe.exe contracts/converter-fixtures
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & tools/ReferenceProbe/bin/Release/net48/ReferenceProbe.exe "$stage/repeat"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if ((Get-FileHash contracts/converter-fixtures/converters.xml).Hash -ne (Get-FileHash "$stage/repeat/converters.xml").Hash) { throw 'Nondeterministic public converter observations' }
+      - name: Remove original sources and binaries
+        if: always()
+        shell: pwsh
+        run: Remove-Item -Recurse -Force -ErrorAction SilentlyContinue (Join-Path $env:RUNNER_TEMP 'converter-reference')
+      - name: Commit observed public behavior only
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add contracts/converter-fixtures/
+          git diff --cached --quiet || (git commit -m 'test: record original public converter edge cases' && git pull --rebase origin main && git push origin HEAD:main)
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: converter-observations
+          path: contracts/converter-fixtures/
