@@ -120,7 +120,7 @@ public static class InteractionTests
                     var moved=coordinates.Translate(from!,p,to!);
                     Check.Near(q.X-70/to!.XamlRoot.RasterizationScale,moved.X,1);Check.Near(q.Y-40/to!.XamlRoot.RasterizationScale,moved.Y,1);
                 }
-                finally {a.Close();b.Close();await Task.Delay(100);}
+                finally {CloseTestWindow(a);CloseTestWindow(b);await Task.Delay(100);}
             });
             tests.Test("X11 floating tool receives cross-window insertion and returns to main", async () =>
             {
@@ -131,7 +131,7 @@ public static class InteractionTests
                 host.Refresh();host.UpdateLayout();
                 var mainPane=host.FindVisualChildren<LayoutAnchorablePaneControl>().Single(p=>ReferenceEquals(((ILayoutControl)p).Model,keep.Parent));
                 var backPoint=At(Header(mainPane),Surface(host),.5,.5);var back=host.GetDropPlan(source,backPoint);
-                Check.True(back != null);Check.True(back!.Execute());Check.Same(keep.Parent,source.Parent);
+                Check.True(back != null, "No insertion plan in the main tool header after native docking.");Check.True(back!.Execute());Check.Same(keep.Parent,source.Parent);
             });
             tests.Test("X11 native preview is painted in destination window", async () =>
             {
@@ -157,7 +157,7 @@ public static class InteractionTests
                     blocker.AppWindow.Move(new() { X = 2200, Y = 1100 }); await Task.Delay(100);
                     Check.True(host.GetDropPlan(source, point) != null, "Drop target did not recover after the occluding window moved away.");
                 }
-                finally { blocker.Close(); await Task.Delay(100); }
+                finally { CloseTestWindow(blocker); await Task.Delay(100); }
 
             });
             tests.Test("X11 raised main window wins over an overlapping native float", async () =>
@@ -226,7 +226,10 @@ public static class InteractionTests
                 await input.Begin(caption, new(20, caption.ActualHeight / 2));
                 Check.Equal(UnoDock.Core.DockDragState.Dragging, DragState(host));
                 await input.Drop(destination, new(50, destination.ActualHeight / 2));
-                Check.Same(docs[1].Parent, docs[0].Parent);
+                Check.True(ReferenceEquals(docs[1].Parent, docs[0].Parent),
+                    $"Document was not inserted into main pane; drag={DragState(host)}, floating={docs[0].IsFloating}, " +
+                    $"sourceParent={docs[0].Parent?.GetType().Name}, destinationParent={docs[1].Parent?.GetType().Name}, " +
+                    $"lastPoint={Surface(host).GetType().GetField("_lastDragPoint", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(Surface(host))}.");
                 Check.False(docs[0].IsFloating);
             });
             tests.Test("X11 Escape cancels captured drag without reordering", async () =>
@@ -271,6 +274,15 @@ public static class InteractionTests
         }
         try {return await tests.Run(output,"interaction");}
         finally {host.CrossWindowCoordinates=originalCoordinates;host.FloatingWindowMode=originalMode;host.Layout=original;host.Refresh();await Task.Delay(100);}
+    }
+    private static void CloseTestWindow(Window window)
+    {
+        // An auxiliary test window must stop occluding the following scenario
+        // immediately. Uno still owns asynchronous renderer destruction.
+        typeof(DesktopWindowCoordinates).GetMethod("HideNativeClientBeforeClose",
+            BindingFlags.NonPublic | BindingFlags.Static)!.Invoke(null, [window]);
+        window.Content = null;
+        window.Close();
     }
     private static Button Label(LayoutTabItemBase tab) => (Button)typeof(LayoutTabItemBase).GetField("_label", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(tab)!;
     private static UnoDock.Core.DockDragState DragState(DockingManager host) => ((UnoDock.Core.DockDragSession)Surface(host).GetType().GetField("_drag", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(Surface(host))!).State;
