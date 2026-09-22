@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'NuGet semantic version, for example 0.1.0-preview.1'
+        description: 'NuGet semantic version, for example 0.1.0-preview.2'
         required: true
         type: string
 permissions:
@@ -53,6 +53,8 @@ jobs:
         run: dotnet run --project tests/UnoDock.Core.Tests -c Release -- artifacts/test-results
       - name: Check generated adapters
         run: python3 tools/generate-property-adapters.py && git diff --exit-code -- src/
+      - name: Verify resolved API no-regression gate
+        run: bash tools/check-metadata.sh
       - name: Build runtime test host
         run: dotnet build samples/UnoDock.Gallery -c Release -f net10.0-desktop -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0
       - run: sudo apt-get update && sudo apt-get install -y xvfb libx11-6 libxi6 libxrandr2 libxcursor1 libfontconfig1 libgl1 libice6 libsm6
@@ -65,7 +67,7 @@ jobs:
         if: always()
         with:
           name: release-test-results
-          path: artifacts/test-results/
+          path: artifacts/
   publish:
     needs: validate
     runs-on: windows-latest

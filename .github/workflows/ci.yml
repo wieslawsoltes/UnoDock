@@ -2,7 +2,7 @@ name: Build and test
 on:
   push:
     branches: [main]
-    paths-ignore: ['tools/ApiMetadata/**', 'tools/ReferenceProbe/**', '.github/workflows/reference-metadata.yml']
+    paths-ignore: ['tools/ReferenceProbe/**', '.github/workflows/reference-metadata.yml']
   pull_request:
   workflow_dispatch:
 permissions:
@@ -29,6 +29,8 @@ jobs:
         run: |
           dotnet run --project tools/ApiScan -- src/UnoDock artifacts/unodock-api
           python3 tools/audit-api.py artifacts/unodock-api.json
+      - name: Resolve and compare public API metadata
+        run: bash tools/check-metadata.sh
       - name: Archive exact checked-out sources
         run: |
           git archive --format=zip -o artifacts/UnoDock-source.zip HEAD
