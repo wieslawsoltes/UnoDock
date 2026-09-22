@@ -1,0 +1,51 @@
+name: Public reference visual observations
+on:
+  workflow_dispatch:
+  push:
+    paths: ['tools/ReferenceVisualProbe/**', 'tools/VisualScene/**', '.github/workflows/visual-reference.yml']
+permissions:
+  contents: read
+jobs:
+  observe:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - uses: microsoft/setup-msbuild@v2
+      - name: Build pinned reference in isolation, without emitting source bodies
+        shell: pwsh
+        run: |
+          $revision = (Get-Content contracts/reference.json | ConvertFrom-Json).revision
+          $stage = Join-Path $env:RUNNER_TEMP 'visual-reference'
+          New-Item -ItemType Directory -Force $stage | Out-Null
+          Invoke-WebRequest "https://codeload.github.com/xceedsoftware/wpftoolkit/tar.gz/$revision" -OutFile "$stage/reference.tar.gz"
+          tar -xzf "$stage/reference.tar.gz" --strip-components=1 -C $stage
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Invoke-WebRequest 'https://api.nuget.org/v3-flatcontainer/microsoft.netframework.referenceassemblies.net40/1.0.3/microsoft.netframework.referenceassemblies.net40.1.0.3.nupkg' -OutFile "$stage/framework.zip"
+          Expand-Archive "$stage/framework.zip" "$stage/framework"
+          $project = "$stage/ExtendedWPFToolkitSolution/Src/Xceed.Wpf.AvalonDock/Xceed.Wpf.AvalonDock.csproj"
+          msbuild $project /nologo /v:minimal /p:Configuration=Release /p:TargetFrameworkRootPath="$stage/framework/build/" /p:OutputPath="$stage/bin/" /p:GenerateSerializationAssemblies=Off /p:CustomAfterMicrosoftCommonTargets="${{ github.workspace }}/tools/ReferenceProbe/LegacyCopy.targets"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          dotnet build tools/ReferenceVisualProbe -c Release -p:ReferenceAssembly="$stage/bin/Xceed.Wpf.AvalonDock.dll"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Copy-Item "$stage/bin/Xceed.Wpf.Toolkit.dll" tools/ReferenceVisualProbe/bin/Release/net48/
+      - name: Capture public rendering and arranged control bounds
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force artifacts/reference-visuals | Out-Null
+          & tools/ReferenceVisualProbe/bin/Release/net48/ReferenceVisualProbe.exe artifacts/reference-visuals
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          git rev-parse HEAD > artifacts/reference-visuals/probe-revision.txt
+          Copy-Item contracts/reference.json artifacts/reference-visuals/
+      - name: Delete isolated original code and binaries
+        if: always()
+        shell: pwsh
+        run: Remove-Item -Recurse -Force -ErrorAction SilentlyContinue (Join-Path $env:RUNNER_TEMP 'visual-reference')
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: reference-visual-observations
+          path: artifacts/reference-visuals/
