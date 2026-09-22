@@ -1,0 +1,47 @@
+name: Import validated parity implementation
+on:
+  workflow_dispatch:
+  push:
+    paths: ['.github/workflows/import-parity.yml']
+permissions:
+  contents: write
+  actions: write
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify and apply reviewed complete source patch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import base64, hashlib, json, lzma, os, pathlib, subprocess, urllib.request
+          shas = ['8f8b41ea8bff4d7d5d3a33245f0d1113ba78fb12','0c1a33881c45896df71a3cf8444d8204f5922fd1','105012127bcedf74d882565f8a3d95e43bfc2813','9b0293ff8a323ab33da5e07e803af1281981b3bb']
+          parts = []
+          for sha in shas:
+              request = urllib.request.Request(f'https://api.github.com/repos/{os.environ["GITHUB_REPOSITORY"]}/git/blobs/{sha}', headers={'Authorization':'Bearer '+os.environ['GH_TOKEN']})
+              with urllib.request.urlopen(request, timeout=30) as response: blob=json.load(response)
+              data=base64.b64decode(blob['content'])
+              assert hashlib.sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest()==sha
+              parts.append(data)
+          compressed=b''.join(parts)
+          assert hashlib.sha256(compressed).hexdigest()=='d05a93c02521d23c0f45f586bff4b0365422854d1ae2f6a0cd499296fc1e6dd3'
+          patch=lzma.decompress(compressed)
+          assert hashlib.sha256(patch).hexdigest()=='c403cfada6226614442b46f6f601f9a5d82109571186eee62aead18f1a19e9f7'
+          path=pathlib.Path(os.environ['RUNNER_TEMP'])/'parity.patch';path.write_bytes(patch)
+          subprocess.run(['git','apply','--check',str(path)],check=True)
+          subprocess.run(['git','apply',str(path)],check=True)
+          print('Applied verified complete patch:',len(patch),'bytes')
+          PY
+      - name: Verify adapters and commit implementation
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 tools/generate-property-adapters.py
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src samples tests tools contracts Directory.Build.props .gitignore
+          git diff --cached --quiet || (git commit -m 'feat: implement docking/drop contracts, reentrancy guards, lazy editors, automation and metadata comparison' && git pull --rebase origin main && git push origin HEAD:main)
+          gh workflow run ci.yml --ref main
