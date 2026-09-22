@@ -16,6 +16,7 @@ public sealed class DockEventArgs(LayoutContent content) : RoutedEventArgs
 /// <summary>Portable event identity for the four AvalonDock extension events that WinUI cannot register natively.</summary>
 public sealed record DockRoutedEvent(string Name);
 
+[TemplatePart(Name = "PART_AutoHideArea")]
 [ContentProperty(Name = nameof(Layout))]
 public partial class DockingManager : Control, IDisposable
 {
@@ -29,7 +30,8 @@ public partial class DockingManager : Control, IDisposable
     private SourceObserver? _documentObserver, _anchorableObserver;
     private DockSurface? _surface;
     private ContentPresenter? _host;
-    private bool _loaded;
+    private bool _loaded, _changingLayout;
+    private LayoutRoot? _attachedLayout;
     private readonly Dictionary<LayoutContent, bool> _transitions = new(ReferenceEqualityComparer.Instance);
     private bool _renderPending, _disposed, _syncActive, _reconcilingSources;
     private int _suspendSources;
@@ -80,15 +82,57 @@ public partial class DockingManager : Control, IDisposable
     }
     private void ChangeLayout(LayoutRoot? oldLayout, LayoutRoot? newLayout)
     {
-        if (newLayout == null) { SetValue(LayoutProperty, new LayoutRoot()); return; }
-        if (ReferenceEquals(oldLayout, newLayout)) return;
-        LayoutChanging?.Invoke(this, EventArgs.Empty);
-        if (oldLayout != null) { oldLayout.Updated -= OnLayoutModelUpdated; oldLayout.Manager = null; }
-        newLayout.Manager = this; newLayout.Updated += OnLayoutModelUpdated;
-        foreach (var window in _floating.ToArray()) window.CloseHost(); _floating.Clear();
-        foreach (var item in _items.Values) item.Dispose(); _items.Clear();
-        _surface?.Reset(); _documents.Clear(); _anchorables.Clear();
-        OnLayoutChanged(oldLayout!, newLayout); ReconcileSources(); SyncActive(); InvalidateView(); LayoutChanged?.Invoke(this, EventArgs.Empty);
+        if (ReferenceEquals(oldLayout, newLayout) || _changingLayout) return;
+        _changingLayout = true;
+        try
+        {
+            // DP callbacks can replace Layout again. Drain the final value rather
+            // than attaching a stale argument from an outer callback.
+            for (var iteration = 0; iteration < 64; iteration++)
+            {
+                var candidate = GetValue(LayoutProperty) as LayoutRoot;
+                if (candidate == null) { SetValue(LayoutProperty, new LayoutRoot()); continue; }
+                if (candidate.Manager != null && !ReferenceEquals(candidate.Manager, this))
+                    throw new InvalidOperationException("A layout cannot be owned by two docking managers.");
+                if (ReferenceEquals(candidate, _attachedLayout)) return;
+                var previous = _attachedLayout;
+                LayoutChanging?.Invoke(this, EventArgs.Empty);
+                if (!ReferenceEquals(candidate, GetValue(LayoutProperty))) continue;
+                if (candidate.Manager != null && !ReferenceEquals(candidate.Manager, this))
+                    throw new InvalidOperationException("A layout acquired another owner during LayoutChanging.");
+                if (previous != null)
+                {
+                    previous.Updated -= OnLayoutModelUpdated;
+                    if (ReferenceEquals(previous.Manager, this)) previous.Manager = null;
+                }
+                _attachedLayout = null;
+                var windows = _floating.ToArray(); _floating.Clear();
+                var items = _items.Values.ToArray(); _items.Clear();
+                _documents.Clear(); _anchorables.Clear();
+                foreach (var window in windows) window.CloseHost();
+                foreach (var item in items) item.Dispose();
+                _surface?.Reset();
+                if (!ReferenceEquals(candidate, GetValue(LayoutProperty))) continue;
+                _attachedLayout = candidate;
+                candidate.Manager = this; candidate.Updated += OnLayoutModelUpdated;
+                OnLayoutChanged(previous!, candidate);
+                if (!ReferenceEquals(candidate, GetValue(LayoutProperty))) continue;
+                ReconcileSources();
+                if (!ReferenceEquals(candidate, GetValue(LayoutProperty))) continue;
+                SyncActive(); InvalidateView();
+                LayoutChanged?.Invoke(this, EventArgs.Empty);
+                if (ReferenceEquals(candidate, GetValue(LayoutProperty))) return;
+            }
+            throw new InvalidOperationException("Layout callbacks did not converge after 64 replacements.");
+        }
+        catch
+        {
+            // In particular, direct SetValue must not bypass CLR ownership checks.
+            // Revert only the DP value; an already attached root keeps its owner.
+            SetValue(LayoutProperty, _attachedLayout ?? oldLayout ?? new LayoutRoot());
+            throw;
+        }
+        finally { _changingLayout = false; }
     }
     protected virtual void OnLayoutChanged(LayoutRoot oldLayout, LayoutRoot newLayout) { }
     internal void PropertyChanged(string name, DependencyPropertyChangedEventArgs e)

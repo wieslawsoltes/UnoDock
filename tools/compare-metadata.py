@@ -23,6 +23,9 @@ COMPILER_ATTRIBUTES = (
     "System.Runtime.CompilerServices.NullableAttribute(",
     "System.Runtime.CompilerServices.NullableContextAttribute(",
     "System.Runtime.CompilerServices.CompilerGeneratedAttribute(",
+    "System.Runtime.CompilerServices.IteratorStateMachineAttribute(",
+    "System.Runtime.CompilerServices.AsyncStateMachineAttribute(",
+    "System.Runtime.CompilerServices.AsyncIteratorStateMachineAttribute(",
     "System.Diagnostics.DebuggerBrowsableAttribute(",
 )
 
@@ -52,6 +55,10 @@ def load_inventory(path: Path) -> dict:
     names = [t["name"] for t in data["types"]]
     if len(names) != len(set(names)) or len(names) != data["typeCount"]:
         raise ValueError(f"{path}: inconsistent exported type records")
+    records = [t["key"] for t in data["types"]] + [t["name"] + " | " + m["key"]
+        for t in data["types"] for m in t["members"]]
+    if sorted(records) != declarations:
+        raise ValueError(f"{path}: type/member records disagree with hashed declarations")
     return data
 
 

@@ -65,8 +65,10 @@ internal sealed class PaneSelection(ILayoutGroup pane, Action<string> notify)
     }
 }
 
+[ContentProperty(Name = "Children")]
 public class LayoutDocumentPane : LayoutPositionableGroup<LayoutContent>, ILayoutDocumentPane, ILayoutContentSelector
 {
+    public override void ConsoleDump(int tab) => base.ConsoleDump(tab);
     private readonly PaneSelection _selection;
     private bool _showHeader = true;
     public LayoutDocumentPane() => _selection = new(this, Notify);
@@ -84,8 +86,10 @@ public class LayoutDocumentPane : LayoutPositionableGroup<LayoutContent>, ILayou
     public override void WriteXml(XmlWriter writer) => base.WriteXml(writer);
 }
 
+[ContentProperty(Name = "Children")]
 public class LayoutAnchorablePane : LayoutPositionableGroup<LayoutAnchorable>, ILayoutAnchorablePane, ILayoutContentSelector
 {
+    public override void ConsoleDump(int tab) => base.ConsoleDump(tab);
     private readonly PaneSelection _selection;
     private string? _name;
     public LayoutAnchorablePane() => _selection = new(this, Notify);
@@ -107,8 +111,10 @@ public class LayoutAnchorablePane : LayoutPositionableGroup<LayoutAnchorable>, I
     public override void WriteXml(XmlWriter writer) => base.WriteXml(writer);
 }
 
+[ContentProperty(Name = "Children")]
 public class LayoutPanel : LayoutPositionableGroup<ILayoutPanelElement>, ILayoutPanelElement, ILayoutOrientableGroup
 {
+    public override void ConsoleDump(int tab) => base.ConsoleDump(tab);
     private Orientation _orientation = Orientation.Horizontal;
     public LayoutPanel() { }
     public LayoutPanel(ILayoutPanelElement firstChild) => Children.Add(firstChild);
@@ -117,8 +123,10 @@ public class LayoutPanel : LayoutPositionableGroup<ILayoutPanelElement>, ILayout
     public override void ReadXml(XmlReader reader) => base.ReadXml(reader);
     public override void WriteXml(XmlWriter writer) => base.WriteXml(writer);
 }
+[ContentProperty(Name = "Children")]
 public class LayoutDocumentPaneGroup : LayoutPositionableGroup<ILayoutDocumentPane>, ILayoutDocumentPane, ILayoutOrientableGroup
 {
+    public override void ConsoleDump(int tab) => base.ConsoleDump(tab);
     private Orientation _orientation = Orientation.Horizontal;
     public LayoutDocumentPaneGroup() { }
     public LayoutDocumentPaneGroup(LayoutDocumentPane documentPane) => Children.Add(documentPane);
@@ -127,8 +135,10 @@ public class LayoutDocumentPaneGroup : LayoutPositionableGroup<ILayoutDocumentPa
     public override void ReadXml(XmlReader reader) => base.ReadXml(reader);
     public override void WriteXml(XmlWriter writer) => base.WriteXml(writer);
 }
+[ContentProperty(Name = "Children")]
 public class LayoutAnchorablePaneGroup : LayoutPositionableGroup<ILayoutAnchorablePane>, ILayoutAnchorablePane, ILayoutOrientableGroup
 {
+    public override void ConsoleDump(int tab) => base.ConsoleDump(tab);
     private Orientation _orientation = Orientation.Horizontal;
     public LayoutAnchorablePaneGroup() { }
     public LayoutAnchorablePaneGroup(LayoutAnchorablePane firstChild) => Children.Add(firstChild);
@@ -140,6 +150,7 @@ public class LayoutAnchorablePaneGroup : LayoutPositionableGroup<ILayoutAnchorab
     public override void ReadXml(XmlReader reader) => base.ReadXml(reader);
     public override void WriteXml(XmlWriter writer) => base.WriteXml(writer);
 }
+[ContentProperty(Name = "Children")]
 public class LayoutAnchorGroup : LayoutGroup<LayoutAnchorable>, ILayoutPreviousContainer
 {
     public LayoutAnchorGroup() { }
@@ -150,6 +161,7 @@ public class LayoutAnchorGroup : LayoutGroup<LayoutAnchorable>, ILayoutPreviousC
     public override void ReadXml(XmlReader reader) => base.ReadXml(reader);
     public override void WriteXml(XmlWriter writer) => base.WriteXml(writer);
 }
+[ContentProperty(Name = "Children")]
 public class LayoutAnchorSide : LayoutGroup<LayoutAnchorGroup>
 {
     private AnchorSide _side;

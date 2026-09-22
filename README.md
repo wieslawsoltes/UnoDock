@@ -6,7 +6,7 @@
 Independent AvalonDock-style docking for **Uno Platform 6.7**, retaining familiar
 `Xceed.Wpf.AvalonDock` namespaces while using Uno/WinUI controls.
 
-**Status: 0.1.0-preview.1. This is a functional implementation, not a certified 100%
+**Status: 0.1.0-preview.2. This is a functional implementation, not a certified 100%
 AvalonDock replacement.** API shape, behavior, platform support and performance are
 separate claims. The repository records what is implemented, the original public
 contracts used to check it, runnable tests and the remaining boundaries.
@@ -19,7 +19,7 @@ contracts used to check it, runnable tests and the remaining boundaries.
 | `UnoDock` | Layout models, docking manager, visual controls, content adapters, serializer and independent themes |
 | `UnoDock.Gallery` | Interactive IDE-style sample with editors, tool panes, persistence, MVVM and capability controls |
 | `UnoDock.Core.Tests` | 45 portable tests, including 10,000 randomized allocation/resize cases |
-| `UnoDock.Runtime.Tests` | 36 model/control runtime tests plus 44 original-layout/default/interoperability tests, linked into the gallery |
+| `UnoDock.Runtime.Tests` | 36 runtime + 44 interoperability + 40 drop/menu/automation + 33 lifecycle tests, linked into the gallery |
 | `tools/ApiScan` | Deterministic public/protected declaration inventory |
 | `tools/ApiMetadata` | Resolved PE metadata inventory, without reading IL bodies or executing the assembly |
 | `tools/ReferenceProbe` | Independently authored black-box public-API probes against the pinned original |
@@ -27,6 +27,19 @@ contracts used to check it, runnable tests and the remaining boundaries.
 Stable NuGet pins resolved on 2026-09-21: **Uno.Sdk 6.7.30**, **Uno.WinUI 6.7.135**,
 **Uno.Templates 6.7.30**. `global.json` selects .NET 10 with latest-feature roll-forward.
 Version upgrades are explicit; product builds consume committed pins.
+
+## Preview 2 additions
+
+Validated plans for all 19 drop-target kinds, shared overlay/drop policy, duplicate-content
+and immutable-host guards, reentrant close/hide/dock/float and source reconciliation,
+protected dependency-property hooks, lazy retained editors, constrained tab sizing,
+selection/invoke automation, shared-context menu controls, model diagnostics,
+XML/XAML metadata and a **Parity lab** in the gallery.
+
+**198 C# tests and 23 metadata-gate tests** are implemented and locally validated.
+The resolved comparison matches **849/1,031** reference entries; **182 signature/type
+entries and 22 attribute differences remain**. CI enforces no newly unresolved entries;
+this is not a passed full-parity gate. See [implementation and evidence](docs/parity-progress.md).
 
 ## Run the sample
 
@@ -92,8 +105,8 @@ Drag document/tool headers to reorder or dock. Edge previews indicate splits;
 context menus expose close, close others/all, float, dock, auto-hide and tab-group
 commands. Dividers support pointer dragging and arrow-key resizing. Ctrl+Tab opens
 an MRU navigator, Ctrl+F4 closes the active document, and Escape cancels a drag or
-closes an overlay. Editors retain their content presenters when selection changes.
-This is content caching, not full tab virtualization.
+closes an overlay. Editors create presenters on first use and retain them when selection changes.
+This is lazy content caching, not full header/tab virtualization.
 
 Desktop floating hosts use native Uno windows; browser floating hosts remain in the
 surface. `FloatingWindowMode.InSurface` forces portable hosting. Native cross-window
@@ -146,10 +159,11 @@ or copied into this implementation. Generated container GUIDs in behavioral fixt
 are normalized with their reference links; content IDs and behavior data are retained.
 See [provenance](docs/clean-room.md).
 
-The CI declaration comparison reports missing/different members rather than treating
-name matches as parity. Its optional `--strict` gate is not represented as passed.
-Resolved end-to-end counterpart mapping and remaining public/protected APIs still need
-work; the larger metadata baseline does not make the implementation fully compatible.
+CI keeps the conservative syntax comparison and now also builds and scans the actual
+Uno PE metadata with resolved inherited counterparts. Explicit type mappings, reference
+hashes, known diagnostics and 23 comparator regression tests back the no-regression gate.
+Type-shape and attribute differences are separate diagnostics. The full `--strict` gate
+is **not passed**. See [the measured breakdown](docs/parity-progress.md).
 
 ## Validate and package
 

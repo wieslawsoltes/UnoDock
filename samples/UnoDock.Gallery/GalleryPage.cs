@@ -5,7 +5,7 @@ using Windows.Storage;
 
 namespace UnoDock.Gallery;
 
-public sealed class GalleryPage : Page
+public sealed partial class GalleryPage : Page
 {
     public DockingManager Dock { get; } = new();
     private readonly ObservableCollection<string> _events = [];
@@ -24,7 +24,7 @@ public sealed class GalleryPage : Page
         title.Children.Add(new TextBlock { Text = "◈", FontSize = 30, Foreground = new SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(255, 119, 176, 255)) });
         title.Children.Add(new TextBlock { Text = "UnoDock", FontSize = 26, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold });
         title.Children.Add(new TextBlock { Text = "DOCKING WORKBENCH", VerticalAlignment = VerticalAlignment.Center, Opacity = .6, FontSize = 11 }); brand.Children.Add(title);
-        var build = new TextBlock { Text = "UNO 6.7  /  INDEPENDENT IMPLEMENTATION  /  PREVIEW", VerticalAlignment = VerticalAlignment.Center, FontSize = 11, Opacity = .65 }; Grid.SetColumn(build, 1); brand.Children.Add(build); shell.Children.Add(brand);
+        var build = new TextBlock { Text = "UNO 6.7  /  INDEPENDENT IMPLEMENTATION  /  PREVIEW 2", VerticalAlignment = VerticalAlignment.Center, FontSize = 11, Opacity = .65 }; Grid.SetColumn(build, 1); brand.Children.Add(build); shell.Children.Add(brand);
         var commands = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 5, Margin = new(12, 4, 12, 9) };
         Add("＋ Document", () => AddDocument()); Add("Split right", () => Split(DockPosition.Right)); Add("Split below", () => Split(DockPosition.Bottom));
         Add("Float / Dock", () => { if (Dock.Layout.ActiveContent is { } active) { if (active.IsFloating) active.Dock(); else active.Float(); } });
@@ -32,7 +32,7 @@ public sealed class GalleryPage : Page
         Add("Show tools", () => { foreach (var tool in Dock.Layout.Hidden.ToArray()) tool.Show(); });
         Add("Save", () => Run(Save)); Add("Restore", () => Run(Restore)); Add("XML", ShowXml); Add("MVVM", BindingDemo);
         Add("Theme", () => { RequestedTheme = RequestedTheme == ElementTheme.Dark ? ElementTheme.Light : ElementTheme.Dark; Dock.Theme = new FluentTheme(RequestedTheme); });
-        Add("Reset", Reset); Add("1,000 tabs", Stress);
+        Add("Reset", Reset); Add("1,000 tabs", Stress); Add("Parity lab", ShowParityLab);
         var scroll = new ScrollViewer { Content = commands, HorizontalScrollBarVisibility = ScrollBarVisibility.Auto, VerticalScrollBarVisibility = ScrollBarVisibility.Disabled, MaxHeight = 70 }; Grid.SetRow(scroll, 1); shell.Children.Add(scroll);
         Dock.Margin = new(10, 0, 10, 0); Grid.SetRow(Dock, 2); shell.Children.Add(Dock); Grid.SetRow(_status, 3); shell.Children.Add(_status); Content = shell;
         Dock.Theme = new FluentTheme(RequestedTheme);
@@ -97,11 +97,11 @@ public sealed class GalleryPage : Page
         var stack = new StackPanel { Padding = new(16), Spacing = 12 };
         stack.Children.Add(new TextBlock { Text = "WORKSPACE BEHAVIOR", FontSize = 11, Opacity = .65 });
         Check("Protect draft from closing", true, v => _protectDraft = v);
-        Check("Allow mixed orientation", true, v => Dock.AllowMixedOrientation = v);
+        Check("Allow mixed orientation", Dock.AllowMixedOrientation, v => Dock.AllowMixedOrientation = v);
         Check("Use in-surface floating windows", OperatingSystem.IsBrowser(), v => { Dock.FloatingWindowMode = v ? FloatingWindowMode.InSurface : FloatingWindowMode.Auto; Log("Floating host mode applies to newly created windows."); });
         Check("Active content may float", true, v => { if (Dock.Layout.ActiveContent is { } c) c.CanFloat = v; });
         Check("Active content may close", true, v => { if (Dock.Layout.ActiveContent is { } c) c.CanClose = v; });
-        var delay = new Slider { Minimum = 100, Maximum = 2000, Value = 500, Header = "Auto-hide close delay (ms)" }; delay.ValueChanged += (_, e) => Dock.AutoHideWindowClosingTimer = (int)e.NewValue; stack.Children.Add(delay);
+        var delay = new Slider { Minimum = 100, Maximum = 2000, Value = Dock.AutoHideWindowClosingTimer, Header = "Auto-hide close delay (ms)" }; delay.ValueChanged += (_, e) => Dock.AutoHideWindowClosingTimer = (int)e.NewValue; stack.Children.Add(delay);
         var thickness = new Slider { Minimum = 2, Maximum = 14, Value = 6, Header = "Splitter size" }; thickness.ValueChanged += (_, e) => { Dock.GridSplitterWidth = e.NewValue; Dock.GridSplitterHeight = e.NewValue; }; stack.Children.Add(thickness);
         var run = new Button { Content = "Run runtime checks", HorizontalAlignment = HorizontalAlignment.Stretch }; run.Click += async (_, _) => { run.IsEnabled = false; try { var result = await Testing.RuntimeTests.Run(Dock, Path.Combine(ApplicationData.Current.LocalFolder.Path, "test-results")); Log("Runtime tests finished with exit code " + result); } catch (Exception e) { Log(e.Message); } finally { run.IsEnabled = true; } }; stack.Children.Add(run);
         return new ScrollViewer { Content = stack };

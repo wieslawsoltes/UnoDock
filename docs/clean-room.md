@@ -71,3 +71,12 @@ Commercial PLUS documentation may describe APIs absent from the requested reposi
 The pinned public contracts define this implementation's compatibility target. This
 is an engineering provenance record, not a legal opinion or a representation that a
 staffed two-team clean-room process was used. See compatibility.md for open boundaries.
+
+## Preview 2 validation tooling
+
+The scanner enumerates inherited candidates without inspecting method bodies.
+Individual type mappings and a conservative diagnostic baseline are committed. The
+comparison keeps virtual flags, parameter/default values and attributes significant,
+and does not translate type-looking strings inside constants. The original reference
+contract remains unchanged. New behavior and diagnostic code is independently authored,
+not decompiled. See parity-progress.md for evidence and gaps.

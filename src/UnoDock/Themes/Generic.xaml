@@ -7,7 +7,9 @@
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="dock:DockingManager">
-          <ContentPresenter x:Name="PART_LayoutHost" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" />
+          <Grid x:Name="PART_AutoHideArea">
+            <ContentPresenter x:Name="PART_LayoutHost" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" />
+          </Grid>
         </ControlTemplate>
       </Setter.Value>
     </Setter>

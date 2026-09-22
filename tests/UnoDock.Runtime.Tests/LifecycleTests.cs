@@ -116,9 +116,83 @@ public static class LifecycleTests
             using var m=Workspace(out var d);d.Content=new object();var item=m.GetLayoutItemFromModel(d);var view=item.View;
             item.Dispose();Check.True(view.Content==null && view.DataContext==null && view.ContentTemplate==null);Check.False(item.IsViewCreated);
         });
+        tests.Test("LayoutChanging replacement attaches only final root", () =>
+        {
+            using var m = new DockingManager(); var old = m.Layout;
+            var discarded = new LayoutRoot(); var final = new LayoutRoot(); bool replaced = false;
+            m.LayoutChanging += (_, _) => { if (!replaced) { replaced = true; m.Layout = final; } };
+            m.Layout = discarded; Check.Same(final, m.Layout); Check.Same(m, final.Manager);
+            Check.True(old.Manager == null && discarded.Manager == null);
+        });
+        tests.Test("LayoutChanged replacement retains single root owner", () =>
+        {
+            using var m = new DockingManager(); var first = new LayoutRoot(); var final = new LayoutRoot(); bool replaced = false;
+            m.LayoutChanged += (_, _) => { if (!replaced) { replaced = true; m.Layout = final; } };
+            m.Layout = first; Check.Same(final, m.Layout); Check.Same(m, final.Manager); Check.True(first.Manager == null);
+        });
+        tests.Test("direct Layout SetValue cannot steal a root", () =>
+        {
+            using var one = new DockingManager(); using var two = new DockingManager(); var saved = two.Layout;
+            Check.Throws<InvalidOperationException>(() => two.SetValue(DockingManager.LayoutProperty, one.Layout));
+            Check.Same(saved, two.Layout); Check.Same(one, one.Layout.Manager); Check.Same(two, saved.Manager);
+        });
+        tests.Test("throwing LayoutChanging keeps prior ownership", () =>
+        {
+            using var m = new DockingManager(); var saved = m.Layout; var candidate = new LayoutRoot();
+            m.LayoutChanging += (_, _) => throw new InvalidOperationException("callback failed");
+            Check.Throws<InvalidOperationException>(() => m.Layout = candidate);
+            Check.Same(saved, m.Layout); Check.Same(m, saved.Manager); Check.True(candidate.Manager == null);
+        });
+        foreach (var operation in new[] { "restore", "root", "inside", "edge", "empty", "as-document" })
+            tests.Test("root replacement cancels docking path: " + operation, () =>
+            {
+                using var m = Workspace(out var d); d.Float();
+                var target = new LayoutDocumentPane(); m.Layout.RootPanel.Children.Add(target);
+                var empty = new LayoutDocumentPaneGroup(); m.Layout.RootPanel.Children.Add(empty);
+                var previous = d.Parent; m.PreviewDock += (_, _) => m.Layout = new();
+                switch (operation)
+                {
+                    case "restore": d.Dock(); break;
+                    case "root": DockOperations.DockToRoot(d, UnoDock.Core.DockPosition.Left); break;
+                    case "inside": DockOperations.Dock(d, target, UnoDock.Core.DockPosition.Inside); break;
+                    case "edge": DockOperations.Dock(d, target, UnoDock.Core.DockPosition.Right); break;
+                    case "empty": DockOperations.DockIntoEmptyDocumentGroup(d, empty); break;
+                    case "as-document": d.DockAsDocument(); break;
+                }
+                Check.Same(previous, d.Parent);
+            });
+        tests.Test("drop plan reports canceled same-pane reorder as false", () =>
+        {
+            using var m = Workspace(out var d); var pane = (LayoutDocumentPane)d.Parent!; pane.Children.Add(new LayoutDocument());
+            var plan = DockDropPlan.Create(d, pane, DropTargetType.DocumentPaneDockInside, new Windows.Foundation.Rect(0, 0, 200, 200), 2)!;
+            m.PreviewDock += (_, e) => ((DockEventArgs)e).Cancel = true;
+            Check.False(plan.Execute()); Check.Same(d, pane.Children[0]);
+        });
+        tests.Test("ConsoleDump preserves order and escapes titles without evaluating content", () =>
+        {
+            using var m = Workspace(out var d); d.Title = "a\nb"; d.Content = new ThrowingString();
+            var console = Console.Out; using var text = new StringWriter();
+            try { Console.SetOut(text); m.Layout.ConsoleDump(1); }
+            finally { Console.SetOut(console); }
+            Check.True(text.ToString().StartsWith("  LayoutRoot", StringComparison.Ordinal));
+            Check.True(text.ToString().Contains("a\\nb", StringComparison.Ordinal));
+            Check.Throws<ArgumentOutOfRangeException>(() => d.ConsoleDump(-1));
+        });
+        tests.Test("model XML and concrete XAML metadata are retained", () =>
+        {
+            var xml = typeof(System.Xml.Serialization.XmlIgnoreAttribute);
+            Check.True(Attribute.IsDefined(typeof(LayoutContent).GetProperty("Content")!, xml));
+            Check.True(Attribute.IsDefined(typeof(LayoutRoot).GetProperty("Manager")!, xml));
+            foreach (var type in new[] { typeof(LayoutDocumentPane), typeof(LayoutAnchorablePane), typeof(LayoutPanel), typeof(LayoutAnchorSide) })
+            {
+                var attribute = (Microsoft.UI.Xaml.Markup.ContentPropertyAttribute?)Attribute.GetCustomAttribute(type, typeof(Microsoft.UI.Xaml.Markup.ContentPropertyAttribute), false);
+                Check.Equal("Children", attribute!.Name);
+            }
+        });
         var original=host.Layout;
         try{return await tests.Run(output,"lifecycle");}finally{host.Layout=original;host.Refresh();}
     }
+    private sealed class ThrowingString { public override string ToString() => throw new InvalidOperationException("User content must not be evaluated"); }
     private static IEnumerable Broken(){yield return new object();throw new InvalidOperationException("source failure");}
     private static DockingManager Workspace(out LayoutDocument document)
     {document=new(){ContentId="d"};return new(){Layout=new(){RootPanel=new LayoutPanel(new LayoutDocumentPane(document))}};}

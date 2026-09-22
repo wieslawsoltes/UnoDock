@@ -5,6 +5,14 @@ compatibility with explicit WPF-to-WinUI mappings, not WPF binary identity. Appl
 must validate their own layouts, commands, custom styles, input, accessibility and
 windowing paths before replacing an existing docking system.
 
+## Preview 2 evidence
+
+The resolved metadata gate matches 849/1,031 reference entries, with 182 unresolved
+signature/type diagnostics and 22 attribute differences. A reference/mapping-bound
+baseline rejects newly unresolved entries; it does not approve full parity. Preview 2
+also adds reentrancy-safe transitions/source reconciliation, lazy editor presenters,
+shared menus, model diagnostics and a gallery parity lab. See parity-progress.md.
+
 ## Implemented independently
 
 The solution contains an actual layout/model hierarchy, ownership/cycle validation,
@@ -50,8 +58,9 @@ Both profiles are scanned twice and compared byte for byte. This addresses limit
 of the initial syntax-only reference inventory; it does not complete the counterpart
 mapping or missing implementation APIs.
 
-The suite contains 45 portable tests, 36 actual Uno runtime/control tests and 44
-interoperability/default/policy tests. The latter consume 13 original public-serializer
+The suite contains 45 portable tests, 36 Uno runtime/control tests, 44
+interoperability/default/policy tests, 40 drop/menu/automation tests and 33 lifecycle
+tests. The metadata gate has 23 additional Python regression tests. The latter consume 13 original public-serializer
 layouts and defaults for 13 original types. Original random container IDs are normalized
 without breaking PreviousContainerId links. No original algorithm is translated.
 
@@ -64,9 +73,11 @@ still outstanding.
 
 ## Remaining implementation and acceptance work
 
-* Complete resolved implementation-to-reference API comparison, inherited counterpart
-  classification, remaining controls/drop/overlay APIs, protected extension points,
-  attached-property metadata, template-part/state contracts and automation peers.
+* Close the resolved comparison's remaining diagnostics: Windows.Shell/native message
+  contracts, legacy protected input/focus/initialization slots, remaining template,
+  converter, type-shape and attribute mappings. Drop/overlay contracts and selection/
+  invoke peers are implemented in preview 2, but do not imply full WPF infrastructure
+  or comprehensive assistive-technology acceptance.
 * Native cross-window docking on Uno Skia. The coordinate-conversion implementation is
   available only to native WinUI; other hosts need ICrossWindowCoordinates integration.
   Native title-bar dragging, OS snapping, monitor/DPI transitions, owner activation and

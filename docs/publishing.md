@@ -16,7 +16,9 @@ than dotnet MSBuild, because its current XAML task target requires that host.
 
 `Publish NuGet` accepts a published release tag `v<semver>` or a manual version input.
 Release tags must identify the checked-out commit. The validation job runs portable
-tests, adapter reproduction, and the real Linux gallery/runtime/interoperability suite.
+tests, adapter reproduction, the resolved metadata no-regression gate, and the real
+Linux gallery runtime/interoperability/drop/lifecycle suites. The metadata gate also
+runs 23 Python regression tests. Known diagnostics do not imply full parity.
 The gated Windows job packs both libraries and associated .snupkg symbol packages.
 
 Choose one authentication method:

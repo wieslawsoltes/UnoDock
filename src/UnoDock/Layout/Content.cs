@@ -18,6 +18,7 @@ public abstract class LayoutContent : LayoutElement, IComparable<LayoutContent>,
     private int _previousIndex = -1;
     public string? Title { get => (string?)GetValue(TitleProperty); set => SetValue(TitleProperty, value); }
     public string? ContentId { get => (string?)GetValue(ContentIdProperty); set => SetValue(ContentIdProperty, value); }
+    [System.Xml.Serialization.XmlIgnore]
     public object? Content { get => _content; set => Set(ref _content, value); }
     public object? ToolTip { get => _toolTip; set => Set(ref _toolTip, value); }
     public ImageSource? IconSource { get => _icon; set => Set(ref _icon, value); }
@@ -34,6 +35,7 @@ public abstract class LayoutContent : LayoutElement, IComparable<LayoutContent>,
     public double FloatingHeight { get => _height; set => Set(ref _height, LayoutPositionableGroup<LayoutContent>.Dimension(value)); }
     public ILayoutContainer? PreviousContainer { get => _previous; protected set { if (Set(ref _previous, value)) PreviousContainerId = (value as LayoutElement)?.SerializationId; } }
     public string? PreviousContainerId { get; protected set; }
+    [System.Xml.Serialization.XmlIgnore]
     public int PreviousContainerIndex { get => _previousIndex; set => Set(ref _previousIndex, value); }
     internal void SetPrevious(ILayoutContainer? container, int index, string? id = null)
     { PreviousContainer = container; PreviousContainerIndex = index; if (id != null) PreviousContainerId = id; }
@@ -42,6 +44,7 @@ public abstract class LayoutContent : LayoutElement, IComparable<LayoutContent>,
         if (Parent is ILayoutGroup group && !IsFloating && Parent is not LayoutAnchorGroup)
             SetPrevious(group, group.IndexOfChild(this));
     }
+    [System.Xml.Serialization.XmlIgnore]
     public bool IsActive
     {
         get => _active;
@@ -123,6 +126,7 @@ public abstract class LayoutContent : LayoutElement, IComparable<LayoutContent>,
 
 public class LayoutDocument : LayoutContent
 {
+    public override void ConsoleDump(int tab) => base.ConsoleDump(tab);
     private bool _canMove = true, _visible = true;
     private string? _description;
     public bool CanMove { get => _canMove; set => Set(ref _canMove, value); }
@@ -136,6 +140,7 @@ public class LayoutDocument : LayoutContent
 
 public class LayoutAnchorable : LayoutContent
 {
+    public override void ConsoleDump(int tab) => base.ConsoleDump(tab);
     private bool _canHide = true, _canAutoHide = true, _canDocument = true;
     private double _autoWidth, _autoHeight, _autoMinWidth = 100, _autoMinHeight = 100;
     public LayoutAnchorable() => CanClose = false;
@@ -146,8 +151,10 @@ public class LayoutAnchorable : LayoutContent
     public double AutoHideHeight { get => _autoHeight; set => Set(ref _autoHeight, LayoutPositionableGroup<LayoutContent>.Dimension(value)); }
     public double AutoHideMinWidth { get => _autoMinWidth; set => Set(ref _autoMinWidth, LayoutPositionableGroup<LayoutContent>.Dimension(value)); }
     public double AutoHideMinHeight { get => _autoMinHeight; set => Set(ref _autoMinHeight, LayoutPositionableGroup<LayoutContent>.Dimension(value)); }
+    [System.Xml.Serialization.XmlIgnore]
     public bool IsHidden => Parent is LayoutRoot root && root.Hidden.Contains(this);
     public bool IsAutoHidden => Parent is LayoutAnchorGroup;
+    [System.Xml.Serialization.XmlIgnore]
     public bool IsVisible { get => Parent != null && !IsHidden; set { if (value) Show(); else Hide(); } }
     public event EventHandler<CancelEventArgs>? Hiding;
     public event EventHandler? Hidden;

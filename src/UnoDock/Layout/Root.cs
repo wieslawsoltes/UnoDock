@@ -7,6 +7,7 @@ namespace Xceed.Wpf.AvalonDock.Layout;
 [ContentProperty(Name = nameof(RootPanel))]
 public class LayoutRoot : LayoutElement, ILayoutContainer, ILayoutRoot, IXmlSerializable
 {
+    public override void ConsoleDump(int tab) => base.ConsoleDump(tab);
     private readonly UpdateBatch _updates;
     private LayoutPanel? _panel;
     private LayoutAnchorSide? _top, _right, _bottom, _left;
@@ -23,6 +24,7 @@ public class LayoutRoot : LayoutElement, ILayoutContainer, ILayoutRoot, IXmlSeri
         TopSide = new(); RightSide = new(); BottomSide = new(); LeftSide = new();
         _initializing = false;
     }
+    [System.Xml.Serialization.XmlIgnore]
     public DockingManager? Manager { get => _manager; internal set => Set(ref _manager, value); }
     public LayoutPanel RootPanel { get => _panel!; set { ArgumentNullException.ThrowIfNull(value); LayoutTree.ReplaceSlot(this, ref _panel, value, nameof(RootPanel)); } }
     public LayoutAnchorSide TopSide { get => _top!; set { ArgumentNullException.ThrowIfNull(value); LayoutTree.ReplaceSlot(this, ref _top, value, nameof(TopSide)); value.SetSide(AnchorSide.Top); } }
@@ -31,7 +33,9 @@ public class LayoutRoot : LayoutElement, ILayoutContainer, ILayoutRoot, IXmlSeri
     public LayoutAnchorSide LeftSide { get => _left!; set { ArgumentNullException.ThrowIfNull(value); LayoutTree.ReplaceSlot(this, ref _left, value, nameof(LeftSide)); value.SetSide(AnchorSide.Left); } }
     public ObservableCollection<LayoutFloatingWindow> FloatingWindows { get; }
     public ObservableCollection<LayoutAnchorable> Hidden { get; }
+    [System.Xml.Serialization.XmlIgnore]
     public LayoutContent? LastFocusedDocument { get; internal set; }
+    [System.Xml.Serialization.XmlIgnore]
     public LayoutContent? ActiveContent
     {
         get => _active;
@@ -155,6 +159,7 @@ public abstract class LayoutFloatingWindow : LayoutElement, ILayoutContainer, IX
 [ContentProperty(Name = nameof(RootDocument))]
 public class LayoutDocumentFloatingWindow : LayoutFloatingWindow
 {
+    public override void ConsoleDump(int tab) => base.ConsoleDump(tab);
     private LayoutDocument? _document;
     public LayoutDocumentFloatingWindow() { }
     public LayoutDocument? RootDocument
@@ -174,6 +179,7 @@ public class LayoutDocumentFloatingWindow : LayoutFloatingWindow
 [ContentProperty(Name = nameof(RootPanel))]
 public class LayoutAnchorableFloatingWindow : LayoutFloatingWindow, ILayoutElementWithVisibility
 {
+    public override void ConsoleDump(int tab) => base.ConsoleDump(tab);
     private LayoutAnchorablePaneGroup? _panel;
     private bool _visible = true;
     public LayoutAnchorableFloatingWindow() { }
@@ -182,6 +188,7 @@ public class LayoutAnchorableFloatingWindow : LayoutFloatingWindow, ILayoutEleme
         get => _panel;
         set { if (ReferenceEquals(value, _panel)) return; LayoutTree.ReplaceSlot(this, ref _panel, value, nameof(RootPanel)); RefreshVisibility(); }
     }
+    [System.Xml.Serialization.XmlIgnore]
     public bool IsVisible { get => _visible; private set { if (Set(ref _visible, value)) IsVisibleChanged?.Invoke(this, EventArgs.Empty); } }
     public event EventHandler? IsVisibleChanged;
     public bool IsSinglePane => this.Descendents().OfType<LayoutAnchorablePane>().Count(p => p.ChildrenCount > 0) == 1;

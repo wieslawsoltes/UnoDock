@@ -6,8 +6,11 @@ namespace Xceed.Wpf.AvalonDock.Layout;
 
 public abstract partial class LayoutElement : DependencyObject, ILayoutElement
 {
+    /// <summary>Writes a bounded, cycle-safe diagnostic snapshot without evaluating user content.</summary>
+    public virtual void ConsoleDump(int tab) => LayoutDiagnostics.Write(this, Console.Out, tab);
     private ILayoutContainer? _parent;
     internal string SerializationId { get; set; } = "";
+    [System.Xml.Serialization.XmlIgnore]
     public ILayoutContainer? Parent
     {
         get => _parent;
@@ -179,7 +182,6 @@ public abstract class LayoutGroupBase : LayoutElement
     }
 }
 
-[ContentProperty(Name = nameof(Children))]
 public abstract class LayoutGroup<T> : LayoutGroupBase, ILayoutGroup, IXmlSerializable, ILayoutElementWithVisibility where T : class, ILayoutElement
 {
     private bool _visible = true;

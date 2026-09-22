@@ -90,6 +90,7 @@ public class LayoutAnchorSideControl : ContentControl, ILayoutControl
 
 public class LayoutAutoHideWindowControl : ContentControl, ILayoutControl
 {
+    public new static readonly DependencyProperty BackgroundProperty = Control.BackgroundProperty;
     public static readonly DependencyProperty AnchorableStyleProperty = DependencyProperty.Register(nameof(AnchorableStyle), typeof(Style), typeof(LayoutAutoHideWindowControl), new PropertyMetadata(null));
     private readonly Grid _layout = new();
     private readonly ContentPresenter _presenter = new() { HorizontalContentAlignment = HorizontalAlignment.Stretch, VerticalContentAlignment = VerticalAlignment.Stretch };
@@ -124,15 +125,27 @@ public class LayoutAutoHideWindowControl : ContentControl, ILayoutControl
         _resize.Background = BorderBrush; model.IsActive = true; Visibility = Visibility.Visible;
         if (AnchorableStyle != null) item.ApplyContainerStyle(AnchorableStyle);
     }
+    protected virtual bool HasFocusWithinCore()
+    {
+        if (XamlRoot == null) return false;
+        for (var element = FocusManager.GetFocusedElement(XamlRoot) as DependencyObject; element != null; element = VisualTreeHelper.GetParent(element))
+            if (ReferenceEquals(element, this)) return true;
+        return false;
+    }
+    protected virtual IEnumerator LogicalChildren => (_presenter.Content is DependencyObject child ? new[] { child } : Array.Empty<DependencyObject>()).GetEnumerator();
     private void Resize(double x, double y)
     {
-        if (_model == null) return;
+        if (_model == null || !double.IsFinite(x) || !double.IsFinite(y)) return;
+        // Zero means unspecified in the original model. Begin resizing from the
+        // rendered fallback size, not from zero, to avoid a first-drag jump.
+        var width = _model.AutoHideWidth > 0 ? _model.AutoHideWidth : ActualWidth > 0 ? ActualWidth : 300;
+        var height = _model.AutoHideHeight > 0 ? _model.AutoHideHeight : ActualHeight > 0 ? ActualHeight : 240;
         switch (_model.GetSide())
         {
-            case AnchorSide.Left: _model.AutoHideWidth = Math.Max(_model.AutoHideMinWidth, _model.AutoHideWidth + x); break;
-            case AnchorSide.Right: _model.AutoHideWidth = Math.Max(_model.AutoHideMinWidth, _model.AutoHideWidth - x); break;
-            case AnchorSide.Top: _model.AutoHideHeight = Math.Max(_model.AutoHideMinHeight, _model.AutoHideHeight + y); break;
-            case AnchorSide.Bottom: _model.AutoHideHeight = Math.Max(_model.AutoHideMinHeight, _model.AutoHideHeight - y); break;
+            case AnchorSide.Left: _model.AutoHideWidth = Math.Max(_model.AutoHideMinWidth, width + x); break;
+            case AnchorSide.Right: _model.AutoHideWidth = Math.Max(_model.AutoHideMinWidth, width - x); break;
+            case AnchorSide.Top: _model.AutoHideHeight = Math.Max(_model.AutoHideMinHeight, height + y); break;
+            case AnchorSide.Bottom: _model.AutoHideHeight = Math.Max(_model.AutoHideMinHeight, height - y); break;
         }
         _model.Root?.Manager?.Surface?.PositionAutoHide();
     }
