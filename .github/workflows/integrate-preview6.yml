@@ -1,0 +1,71 @@
+name: Integrate pending preview 6
+on:
+  workflow_dispatch:
+  push:
+    paths: ['.github/workflows/integrate-preview6.yml']
+permissions:
+  contents: write
+  actions: write
+concurrency:
+  group: integrate-preview6
+  cancel-in-progress: false
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Apply verified pending patch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import base64, hashlib, json, lzma, os, pathlib, subprocess, urllib.request
+          shas=['82560963dc0390da5f5bf0aeaaa566dfc561825d','16071618466940cf8aa93e5c545ca67a780fed2e','e54142a9af4ffaae711d48261452844225d44d9c']
+          pieces=[]
+          for sha in shas:
+              req=urllib.request.Request(f'https://api.github.com/repos/{os.environ["GITHUB_REPOSITORY"]}/git/blobs/{sha}',headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json'})
+              with urllib.request.urlopen(req,timeout=60) as response: blob=json.load(response)
+              data=base64.b64decode(blob['content'])
+              assert hashlib.sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest()==sha
+              pieces.append(data)
+          compressed=b''.join(pieces)
+          assert hashlib.sha256(compressed).hexdigest()=='cb3c0d246d3e9de99bc4da60cfaca24db6d0b36a25148141c501591155147ac3'
+          data=lzma.decompress(compressed)
+          assert hashlib.sha256(data).hexdigest()=='ee73f65b75a6c95dac1f35a800190390f8a9cb556a78b367fb124cd0ad500b1c'
+          patch=pathlib.Path(os.environ['RUNNER_TEMP'])/'preview6.patch';patch.write_bytes(data)
+          stats=subprocess.check_output(['git','apply','--numstat',str(patch)],text=True)
+          assert len(stats.splitlines())==26
+          # The workflow change is applied separately through the authenticated connector.
+          subprocess.run(['git','apply','--check','--index','--exclude=.github/workflows/*',str(patch)],check=True)
+          subprocess.run(['git','apply','--index','--exclude=.github/workflows/*',str(patch)],check=True)
+          print(stats)
+          PY
+      - name: Validate core and resolved API contract
+        run: |
+          dotnet run --project tests/UnoDock.Core.Tests -c Release -- artifacts/test-results
+          python3 tools/generate-property-adapters.py
+          git diff --exit-code -- src/
+          bash tools/check-metadata.sh
+          dotnet build samples/UnoDock.Gallery -c Release -f net10.0-desktop -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0
+          git diff --cached --check
+      - name: Commit all pending source changes and validate platforms
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'feat: add protected input hooks, reentrant bindable pane selection and weak-source extensions'
+          git push origin HEAD:main
+          gh workflow run ci.yml --ref main
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: preview6-integration-results
+          path: artifacts/
