@@ -1,0 +1,327 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ExtendedConverterObservations>
+  <UriCase Input="null" Target="object" Reverse="false">
+    <DoNothing />
+  </UriCase>
+  <UriCase Input="null" Target="object" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </UriCase>
+  <UriCase Input="null" Target="image-source" Reverse="false">
+    <DoNothing />
+  </UriCase>
+  <UriCase Input="null" Target="image-source" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </UriCase>
+  <UriCase Input="null" Target="bitmap-image" Reverse="false">
+    <DoNothing />
+  </UriCase>
+  <UriCase Input="null" Target="bitmap-image" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </UriCase>
+  <UriCase Input="null" Target="uri" Reverse="false">
+    <DoNothing />
+  </UriCase>
+  <UriCase Input="null" Target="uri" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </UriCase>
+  <UriCase Input="null" Target="string" Reverse="false">
+    <DoNothing />
+  </UriCase>
+  <UriCase Input="null" Target="string" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </UriCase>
+  <UriCase Input="image" Target="object" Reverse="false">
+    <Exception Type="System.InvalidCastException" />
+  </UriCase>
+  <UriCase Input="image" Target="object" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </UriCase>
+  <UriCase Input="image" Target="image-source" Reverse="false">
+    <Exception Type="System.InvalidCastException" />
+  </UriCase>
+  <UriCase Input="image" Target="image-source" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </UriCase>
+  <UriCase Input="image" Target="bitmap-image" Reverse="false">
+    <Exception Type="System.InvalidCastException" />
+  </UriCase>
+  <UriCase Input="image" Target="bitmap-image" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </UriCase>
+  <UriCase Input="image" Target="uri" Reverse="false">
+    <Exception Type="System.InvalidCastException" />
+  </UriCase>
+  <UriCase Input="image" Target="uri" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </UriCase>
+  <UriCase Input="image" Target="string" Reverse="false">
+    <Exception Type="System.InvalidCastException" />
+  </UriCase>
+  <UriCase Input="image" Target="string" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </UriCase>
+  <UriCase Input="relative-uri" Target="object" Reverse="false">
+    <Image SourceType="System.Windows.Media.Imaging.BitmapImage" SameUri="true" Stretch="Uniform" />
+  </UriCase>
+  <UriCase Input="relative-uri" Target="object" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </UriCase>
+  <UriCase Input="relative-uri" Target="image-source" Reverse="false">
+    <Image SourceType="System.Windows.Media.Imaging.BitmapImage" SameUri="true" Stretch="Uniform" />
+  </UriCase>
+  <UriCase Input="relative-uri" Target="image-source" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </UriCase>
+  <UriCase Input="relative-uri" Target="bitmap-image" Reverse="false">
+    <Image SourceType="System.Windows.Media.Imaging.BitmapImage" SameUri="true" Stretch="Uniform" />
+  </UriCase>
+  <UriCase Input="relative-uri" Target="bitmap-image" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </UriCase>
+  <UriCase Input="relative-uri" Target="uri" Reverse="false">
+    <Image SourceType="System.Windows.Media.Imaging.BitmapImage" SameUri="true" Stretch="Uniform" />
+  </UriCase>
+  <UriCase Input="relative-uri" Target="uri" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </UriCase>
+  <UriCase Input="relative-uri" Target="string" Reverse="false">
+    <Image SourceType="System.Windows.Media.Imaging.BitmapImage" SameUri="true" Stretch="Uniform" />
+  </UriCase>
+  <UriCase Input="relative-uri" Target="string" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </UriCase>
+  <UriCase Input="absolute-uri" Target="object" Reverse="false">
+    <Image SourceType="System.Windows.Media.Imaging.BitmapImage" SameUri="true" Stretch="Uniform" />
+  </UriCase>
+  <UriCase Input="absolute-uri" Target="object" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </UriCase>
+  <UriCase Input="absolute-uri" Target="image-source" Reverse="false">
+    <Image SourceType="System.Windows.Media.Imaging.BitmapImage" SameUri="true" Stretch="Uniform" />
+  </UriCase>
+  <UriCase Input="absolute-uri" Target="image-source" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </UriCase>
+  <UriCase Input="absolute-uri" Target="bitmap-image" Reverse="false">
+    <Image SourceType="System.Windows.Media.Imaging.BitmapImage" SameUri="true" Stretch="Uniform" />
+  </UriCase>
+  <UriCase Input="absolute-uri" Target="bitmap-image" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </UriCase>
+  <UriCase Input="absolute-uri" Target="uri" Reverse="false">
+    <Image SourceType="System.Windows.Media.Imaging.BitmapImage" SameUri="true" Stretch="Uniform" />
+  </UriCase>
+  <UriCase Input="absolute-uri" Target="uri" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </UriCase>
+  <UriCase Input="absolute-uri" Target="string" Reverse="false">
+    <Image SourceType="System.Windows.Media.Imaging.BitmapImage" SameUri="true" Stretch="Uniform" />
+  </UriCase>
+  <UriCase Input="absolute-uri" Target="string" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </UriCase>
+  <UriCase Input="string" Target="object" Reverse="false">
+    <Exception Type="System.InvalidCastException" />
+  </UriCase>
+  <UriCase Input="string" Target="object" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </UriCase>
+  <UriCase Input="string" Target="image-source" Reverse="false">
+    <Exception Type="System.InvalidCastException" />
+  </UriCase>
+  <UriCase Input="string" Target="image-source" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </UriCase>
+  <UriCase Input="string" Target="bitmap-image" Reverse="false">
+    <Exception Type="System.InvalidCastException" />
+  </UriCase>
+  <UriCase Input="string" Target="bitmap-image" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </UriCase>
+  <UriCase Input="string" Target="uri" Reverse="false">
+    <Exception Type="System.InvalidCastException" />
+  </UriCase>
+  <UriCase Input="string" Target="uri" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </UriCase>
+  <UriCase Input="string" Target="string" Reverse="false">
+    <Exception Type="System.InvalidCastException" />
+  </UriCase>
+  <UriCase Input="string" Target="string" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </UriCase>
+  <UriCase Input="empty-string" Target="object" Reverse="false">
+    <Exception Type="System.InvalidCastException" />
+  </UriCase>
+  <UriCase Input="empty-string" Target="object" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </UriCase>
+  <UriCase Input="empty-string" Target="image-source" Reverse="false">
+    <Exception Type="System.InvalidCastException" />
+  </UriCase>
+  <UriCase Input="empty-string" Target="image-source" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </UriCase>
+  <UriCase Input="empty-string" Target="bitmap-image" Reverse="false">
+    <Exception Type="System.InvalidCastException" />
+  </UriCase>
+  <UriCase Input="empty-string" Target="bitmap-image" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </UriCase>
+  <UriCase Input="empty-string" Target="uri" Reverse="false">
+    <Exception Type="System.InvalidCastException" />
+  </UriCase>
+  <UriCase Input="empty-string" Target="uri" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </UriCase>
+  <UriCase Input="empty-string" Target="string" Reverse="false">
+    <Exception Type="System.InvalidCastException" />
+  </UriCase>
+  <UriCase Input="empty-string" Target="string" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </UriCase>
+  <UriCase Input="integer" Target="object" Reverse="false">
+    <Exception Type="System.InvalidCastException" />
+  </UriCase>
+  <UriCase Input="integer" Target="object" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </UriCase>
+  <UriCase Input="integer" Target="image-source" Reverse="false">
+    <Exception Type="System.InvalidCastException" />
+  </UriCase>
+  <UriCase Input="integer" Target="image-source" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </UriCase>
+  <UriCase Input="integer" Target="bitmap-image" Reverse="false">
+    <Exception Type="System.InvalidCastException" />
+  </UriCase>
+  <UriCase Input="integer" Target="bitmap-image" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </UriCase>
+  <UriCase Input="integer" Target="uri" Reverse="false">
+    <Exception Type="System.InvalidCastException" />
+  </UriCase>
+  <UriCase Input="integer" Target="uri" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </UriCase>
+  <UriCase Input="integer" Target="string" Reverse="false">
+    <Exception Type="System.InvalidCastException" />
+  </UriCase>
+  <UriCase Input="integer" Target="string" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </UriCase>
+  <UriCase Input="boolean" Target="object" Reverse="false">
+    <Exception Type="System.InvalidCastException" />
+  </UriCase>
+  <UriCase Input="boolean" Target="object" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </UriCase>
+  <UriCase Input="boolean" Target="image-source" Reverse="false">
+    <Exception Type="System.InvalidCastException" />
+  </UriCase>
+  <UriCase Input="boolean" Target="image-source" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </UriCase>
+  <UriCase Input="boolean" Target="bitmap-image" Reverse="false">
+    <Exception Type="System.InvalidCastException" />
+  </UriCase>
+  <UriCase Input="boolean" Target="bitmap-image" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </UriCase>
+  <UriCase Input="boolean" Target="uri" Reverse="false">
+    <Exception Type="System.InvalidCastException" />
+  </UriCase>
+  <UriCase Input="boolean" Target="uri" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </UriCase>
+  <UriCase Input="boolean" Target="string" Reverse="false">
+    <Exception Type="System.InvalidCastException" />
+  </UriCase>
+  <UriCase Input="boolean" Target="string" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </UriCase>
+  <MultiCase Input="null-array" Reverse="false">
+    <Exception Type="System.ArgumentNullException" />
+  </MultiCase>
+  <MultiCase Input="null-array" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </MultiCase>
+  <MultiCase Input="empty" Reverse="false">
+    <Exception Type="System.IndexOutOfRangeException" />
+  </MultiCase>
+  <MultiCase Input="empty" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </MultiCase>
+  <MultiCase Input="visible" Reverse="false">
+    <Scalar Type="System.Windows.Visibility">Visible</Scalar>
+  </MultiCase>
+  <MultiCase Input="visible" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </MultiCase>
+  <MultiCase Input="collapsed" Reverse="false">
+    <Scalar Type="System.Windows.Visibility">Collapsed</Scalar>
+  </MultiCase>
+  <MultiCase Input="collapsed" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </MultiCase>
+  <MultiCase Input="visible,true" Reverse="false">
+    <Scalar Type="System.Windows.Visibility">Collapsed</Scalar>
+  </MultiCase>
+  <MultiCase Input="visible,true" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </MultiCase>
+  <MultiCase Input="visible,false" Reverse="false">
+    <Scalar Type="System.Windows.Visibility">Visible</Scalar>
+  </MultiCase>
+  <MultiCase Input="visible,false" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </MultiCase>
+  <MultiCase Input="collapsed,true" Reverse="false">
+    <Scalar Type="System.Windows.Visibility">Collapsed</Scalar>
+  </MultiCase>
+  <MultiCase Input="collapsed,true" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </MultiCase>
+  <MultiCase Input="collapsed,false" Reverse="false">
+    <Scalar Type="System.Windows.Visibility">Collapsed</Scalar>
+  </MultiCase>
+  <MultiCase Input="collapsed,false" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </MultiCase>
+  <MultiCase Input="visible,null" Reverse="false">
+    <Scalar Type="System.Windows.Visibility">Visible</Scalar>
+  </MultiCase>
+  <MultiCase Input="visible,null" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </MultiCase>
+  <MultiCase Input="visible,one" Reverse="false">
+    <Scalar Type="System.Windows.Visibility">Visible</Scalar>
+  </MultiCase>
+  <MultiCase Input="visible,one" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </MultiCase>
+  <MultiCase Input="visible,string" Reverse="false">
+    <Scalar Type="System.Windows.Visibility">Visible</Scalar>
+  </MultiCase>
+  <MultiCase Input="visible,string" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </MultiCase>
+  <MultiCase Input="visible,true,true" Reverse="false">
+    <Scalar Type="System.Windows.Visibility">Visible</Scalar>
+  </MultiCase>
+  <MultiCase Input="visible,true,true" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </MultiCase>
+  <MultiCase Input="unset,false" Reverse="false">
+    <UnsetValue />
+  </MultiCase>
+  <MultiCase Input="unset,false" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </MultiCase>
+  <MultiCase Input="nothing,false" Reverse="false">
+    <DoNothing />
+  </MultiCase>
+  <MultiCase Input="nothing,false" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </MultiCase>
+</ExtendedConverterObservations>
