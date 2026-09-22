@@ -29,6 +29,7 @@ internal static class Program
             {
                 try
                 {
+                    AutoHideObservations.Run(args[0]);
                     foreach (var scenario in new[] { "docked", "active-tool", "auto-hide", "rtl" })
                     {
                         Populate(manager); manager.FlowDirection = scenario == "rtl" ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
