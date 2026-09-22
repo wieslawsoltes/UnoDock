@@ -2,7 +2,7 @@ name: Reference converter behavior
 on:
   workflow_dispatch:
   push:
-    paths: ['tools/ReferenceProbe/ConverterProbe.cs', '.github/workflows/converter-contract.yml']
+    paths: ['tools/ReferenceProbe/*ConverterProbe.cs', '.github/workflows/converter-contract.yml']
 permissions:
   contents: write
 concurrency:
@@ -45,6 +45,17 @@ jobs:
           & tools/ReferenceProbe/bin/Release/net48/ReferenceProbe.exe "$stage/repeat"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           if ((Get-FileHash contracts/converter-fixtures/converters.xml).Hash -ne (Get-FileHash "$stage/repeat/converters.xml").Hash) { throw 'Nondeterministic public converter observations' }
+      - name: Observe URI and multi-value edge cases twice
+        shell: pwsh
+        run: |
+          $stage = Join-Path $env:RUNNER_TEMP 'converter-reference'
+          dotnet build tools/ReferenceProbe -c Release -p:StartupObject=ExtendedConverterProbe -p:ReferenceAssembly="$stage/bin/Xceed.Wpf.AvalonDock.dll"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & tools/ReferenceProbe/bin/Release/net48/ReferenceProbe.exe contracts/converter-fixtures
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & tools/ReferenceProbe/bin/Release/net48/ReferenceProbe.exe "$stage/repeat"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if ((Get-FileHash contracts/converter-fixtures/converter-details.xml).Hash -ne (Get-FileHash "$stage/repeat/converter-details.xml").Hash) { throw 'Nondeterministic extended converter observations' }
       - name: Remove original sources and binaries
         if: always()
         shell: pwsh
