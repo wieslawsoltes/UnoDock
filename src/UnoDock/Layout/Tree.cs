@@ -161,7 +161,7 @@ internal sealed class OwnedCollection<T>(ILayoutContainer owner, Action changed)
     }
     private void ChildChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(LayoutContent.IsSelected) && sender is LayoutContent { IsSelected: true } selected && owner is ILayoutContentSelector selector)
+        if (e.PropertyName == nameof(LayoutContent.IsSelected) && sender is LayoutContent { IsSelected: true } selected && owner is ILayoutContentSelector selector && !ReferenceEquals(selector.SelectedContent, selected))
             selector.SelectedContentIndex = selector.IndexOf(selected);
         if (e.PropertyName is "IsVisible" or "IsHidden" or "IsAutoHidden") (owner as ILayoutElementWithVisibility)?.ComputeVisibility();
         (owner.Root as LayoutRoot)?.Invalidate();

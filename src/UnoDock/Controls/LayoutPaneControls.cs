@@ -2,12 +2,12 @@ using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Input;
 using Xceed.Wpf.AvalonDock.Internal;
 using Xceed.Wpf.AvalonDock.Layout;
-using DockPointerDeviceType = Microsoft.UI.Input.PointerDeviceType;
+using Xceed.Wpf.AvalonDock.Compatibility;
 
 namespace Xceed.Wpf.AvalonDock.Controls;
 
 /// <summary>Uno tab host. Content presenters are keyed by model identity and survive tab selection and movement.</summary>
-public class LayoutCachePaneControl : ContentControl
+public partial class LayoutCachePaneControl : DockSelectionControl
 {
     private readonly Grid _layout = new();
     private readonly Grid _content = new();
@@ -29,26 +29,29 @@ public class LayoutCachePaneControl : ContentControl
         _layout.Children.Add(_titleRow); _layout.Children.Add(_scroll); _layout.Children.Add(_content); Content = _layout;
         IsTabStop = false;
     }
-    public int SelectedIndex { get => Selector?.SelectedContentIndex ?? -1; set { if (Selector != null) Selector.SelectedContentIndex = value; } }
-    public object? SelectedItem { get => Selector?.SelectedContent; set { if (value is LayoutContent c && Pane != null && Selector != null) Selector.SelectedContentIndex = Pane.IndexOfChild(c); } }
     public IEnumerable<LayoutContent> Items => Pane?.Children.OfType<LayoutContent>() ?? [];
     internal void UpdatePane(ILayoutGroup pane, DockSurface surface)
     {
-        Pane = pane; Selector = (ILayoutContentSelector)pane;
+        BindPane(pane);
         if (pane is LayoutAnchorablePane && _headers is not AnchorablePaneTabPanel)
         {
             _headers.Children.Clear(); _headers = new AnchorablePaneTabPanel(); _scroll.Content = _headers;
             _scroll.HorizontalScrollMode = ScrollMode.Disabled; _scroll.HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled;
         }
         var models = pane.Children.OfType<LayoutContent>().Where(c => c is not LayoutDocument { IsVisible: false }).ToArray();
-        var selected = Selector.SelectedContent;
+        var selected = Selector!.SelectedContent;
         foreach (var stale in _tabs.Keys.Where(k => !models.Contains(k, ReferenceEqualityComparer.Instance)).ToArray())
         { _tabs[stale].DetachModel(); _tabs.Remove(stale); }
         var tabViews = new List<UIElement>(); var contentViews = new List<UIElement>();
         foreach (var model in models)
         {
             if (!_tabs.TryGetValue(model, out var tab))
-            { tab = model is LayoutAnchorable ? new LayoutAnchorableTabItem() : new LayoutDocumentTabItem(); tab.Model = model; _tabs.Add(model, tab); }
+            {
+                tab = CreateTabItem(model) ?? throw new InvalidOperationException("The tab factory returned null.");
+                if (VisualTreeHelper.GetParent(tab) != null || _tabs.Values.Contains(tab) || (tab.Model != null && !ReferenceEquals(tab.Model, model)))
+                    throw new InvalidOperationException("The tab factory must return an unattached, unshared tab for the requested model.");
+                tab.Model = model; _tabs.Add(model, tab);
+            }
             tab.Update(surface.Manager); tabViews.Add(tab);
             var item = surface.Manager.GetLayoutItemFromModel(model); item.UpdateView();
             var presenter = ReferenceEquals(model, selected) ? item.View : item.ExistingView;
@@ -66,7 +69,10 @@ public class LayoutCachePaneControl : ContentControl
         DockVisuals.SetName(this, pane is LayoutDocumentPane ? "Document tab group" : "Tool tab group");
         MenuContext.SetTarget(this, selected);
         ContextFlyout = selected == null ? null : DockVisuals.Menu(surface.Manager, selected);
+        SynchronizeSelection();
     }
+    /// <summary>Creates an unparented tab once per model in this pane. This is an additive Uno composition extension.</summary>
+    protected virtual LayoutTabItemBase CreateTabItem(LayoutContent model) => model is LayoutAnchorable ? new LayoutAnchorableTabItem() : new LayoutDocumentTabItem();
     private LayoutAnchorable? _titleModel;
     private DockingManager? _titleManager;
     private void UpdateTitle(bool visible, LayoutAnchorable? selected, DockingManager manager)
@@ -131,20 +137,32 @@ public class LayoutCachePaneControl : ContentControl
     {
         foreach (var tab in _tabs.Values) tab.DetachModel(); _tabs.Clear();
         _headers.Children.Clear(); _content.Children.Clear(); _titleModel = null; _titleManager = null;
+        _paneObserver?.Dispose(); _paneObserver = null;
     }
 }
-public class LayoutDocumentPaneControl(LayoutDocumentPane model) : LayoutCachePaneControl, ILayoutControl, IRefreshableLayoutControl
+public class LayoutDocumentPaneControl : LayoutCachePaneControl, ILayoutControl, IRefreshableLayoutControl
 {
-    public ILayoutElement Model => model;
-    void IRefreshableLayoutControl.Update(DockSurface surface) { Style = surface.Manager.DocumentPaneControlStyle; UpdatePane(model, surface); }
+    private readonly LayoutDocumentPane _model;
+    public LayoutDocumentPaneControl(LayoutDocumentPane model) { ArgumentNullException.ThrowIfNull(model); _model = model; BindPane(model); }
+    public ILayoutElement Model => _model;
+    void IRefreshableLayoutControl.Update(DockSurface surface) { Style = surface.Manager.DocumentPaneControlStyle; UpdatePane(_model, surface); }
+    protected override void OnMouseLeftButtonDown(DockMouseButtonEventArgs e) { if (!e.Handled) ActivateSelection(); base.OnMouseLeftButtonDown(e); }
+    protected override void OnMouseRightButtonDown(DockMouseButtonEventArgs e) { if (!e.Handled) ActivateSelection(); base.OnMouseRightButtonDown(e); }
+    protected override void OnSelectionChanged(SelectionChangedEventArgs e) => base.OnSelectionChanged(e);
+    protected override IEnumerator LogicalChildren => base.LogicalChildren;
 }
-public class LayoutAnchorablePaneControl(LayoutAnchorablePane model) : LayoutCachePaneControl, ILayoutControl, IRefreshableLayoutControl
+public class LayoutAnchorablePaneControl : LayoutCachePaneControl, ILayoutControl, IRefreshableLayoutControl
 {
-    public ILayoutElement Model => model;
-    void IRefreshableLayoutControl.Update(DockSurface surface) { Style = surface.Manager.AnchorablePaneControlStyle; UpdatePane(model, surface); }
+    private readonly LayoutAnchorablePane _model;
+    public LayoutAnchorablePaneControl(LayoutAnchorablePane model) { ArgumentNullException.ThrowIfNull(model); _model = model; BindPane(model); }
+    public ILayoutElement Model => _model;
+    void IRefreshableLayoutControl.Update(DockSurface surface) { Style = surface.Manager.AnchorablePaneControlStyle; UpdatePane(_model, surface); }
+    protected override void OnMouseLeftButtonDown(DockMouseButtonEventArgs e) { if (!e.Handled) ActivateSelection(); base.OnMouseLeftButtonDown(e); }
+    protected override void OnMouseRightButtonDown(DockMouseButtonEventArgs e) { if (!e.Handled) ActivateSelection(); base.OnMouseRightButtonDown(e); }
+    protected override void OnGotKeyboardFocus(DockKeyboardFocusChangedEventArgs e) { if (!e.Handled) ActivateSelection(); base.OnGotKeyboardFocus(e); }
 }
 
-public abstract class LayoutTabItemBase : ContentControl
+public abstract class LayoutTabItemBase : DockInputControl
 {
     public static readonly DependencyProperty ModelProperty = DependencyProperty.Register(nameof(Model), typeof(LayoutContent), typeof(LayoutTabItemBase), new PropertyMetadata(null, (d, e) => ((LayoutTabItemBase)d).OnModelChanged(e)));
     public static readonly DependencyProperty LayoutItemProperty = DependencyProperty.Register(nameof(LayoutItem), typeof(LayoutItem), typeof(LayoutTabItemBase), new PropertyMetadata(null));
@@ -159,9 +177,8 @@ public abstract class LayoutTabItemBase : ContentControl
     {
         IsTabStop = false; Padding = new(0); Margin = new(0);
         _chrome.ColumnDefinitions.Add(new() { Width = new(1, GridUnitType.Star) }); _chrome.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
-        _label = DockVisuals.Button("", () => { if (Model != null) Model.IsActive = true; }); _label.Content = _header;
+        _label = DockVisuals.Button("", ActivateFromKeyboard); _label.Content = _header;
         _label.MinWidth = 72; _label.MaxWidth = 260; _label.HorizontalContentAlignment = HorizontalAlignment.Left;
-        _label.AddHandler(PointerPressedEvent, new PointerEventHandler(OnLabelPressed), true);
         _label.DoubleTapped += (_, _) => { if (Model?.IsFloating == true) Model.Dock(); else Model?.Float(); };
         _close = DockVisuals.Button("×", () => { if (Model != null) DockVisuals.CloseOrHide(Model); }, "Close tab");
         Grid.SetColumn(_close, 1); _chrome.Children.Add(_label); _chrome.Children.Add(_close); Content = _chrome;
@@ -174,14 +191,39 @@ public abstract class LayoutTabItemBase : ContentControl
     }
     protected void SetLayoutItem(LayoutItem value) => SetValue(LayoutItemProperty, value);
     private void ModelChanged(object? sender, PropertyChangedEventArgs e) { if (_manager != null) Update(_manager); }
-    private void OnLabelPressed(object sender, PointerRoutedEventArgs args)
+    internal override FrameworkElement DockCaptureElement => _label;
+    private void ActivateFromKeyboard()
     {
-        if (Model == null) return;
-        var point = args.GetCurrentPoint(_label);
-        if (point.Properties.IsMiddleButtonPressed) { DockVisuals.CloseOrHide(Model); args.Handled = true; return; }
-        if (!point.Properties.IsLeftButtonPressed && args.Pointer.PointerDeviceType == DockPointerDeviceType.Mouse) return;
-        Model.IsActive = true; _manager?.BeginDrag(Model, _label, args);
+        // Pointer activation occurs in the overrideable press path. A Button.Click
+        // on release must not bypass a subclass that vetoed that path.
+        if (_label.FocusState != FocusState.Pointer && Model is { IsEnabled: true } model) model.IsActive = true;
     }
+    protected override bool AcceptsPointerEvent(PointerRoutedEventArgs e)
+    {
+        for (var current = e.OriginalSource as DependencyObject; current != null && !ReferenceEquals(current, this); current = VisualTreeHelper.GetParent(current))
+            if (ReferenceEquals(current, _close)) return false;
+        return true;
+    }
+    protected override void OnMouseDown(DockMouseButtonEventArgs e)
+    {
+        if (!e.Handled && Model is { IsEnabled: true } model && e.ChangedButton == DockMouseButton.Middle)
+        { DockVisuals.CloseOrHide(model); e.Handled = true; return; }
+        base.OnMouseDown(e);
+    }
+    protected override void OnMouseLeftButtonDown(DockMouseButtonEventArgs e)
+    {
+        if (!e.Handled && Model is { IsEnabled: true } model)
+        { model.IsActive = true; model.Root?.Manager?.BeginDrag(model, this, e.NativeEvent); }
+        base.OnMouseLeftButtonDown(e);
+    }
+    protected override void OnMouseRightButtonDown(DockMouseButtonEventArgs e)
+    { if (!e.Handled && Model is { IsEnabled: true } model) model.IsActive = true; base.OnMouseRightButtonDown(e); }
+    protected override void OnMouseEnter(DockMouseEventArgs e)
+    { if (!e.Handled) VisualStateManager.GoToState(this, "PointerOver", false); base.OnMouseEnter(e); }
+    protected override void OnMouseLeave(DockMouseEventArgs e)
+    { if (!e.Handled) VisualStateManager.GoToState(this, "Normal", false); base.OnMouseLeave(e); }
+    protected override void OnMouseMove(DockMouseEventArgs e) => base.OnMouseMove(e);
+    protected override void OnMouseLeftButtonUp(DockMouseButtonEventArgs e) => base.OnMouseLeftButtonUp(e);
     internal void Update(DockingManager manager)
     {
         _manager = manager; if (Model == null) return;
@@ -212,16 +254,33 @@ public abstract class LayoutTabItemBase : ContentControl
     }
     internal void DetachModel() { MenuContext.SetTarget(this, null); Model = null; _manager = null; ClearValue(LayoutItemProperty); }
 }
-public class LayoutDocumentTabItem : LayoutTabItemBase { public LayoutDocumentTabItem() { } }
-public class LayoutAnchorableTabItem : LayoutTabItemBase { public LayoutAnchorableTabItem() { } }
+public class LayoutDocumentTabItem : LayoutTabItemBase
+{
+    public LayoutDocumentTabItem() { }
+    protected override void OnMouseDown(DockMouseButtonEventArgs e) => base.OnMouseDown(e);
+    protected override void OnMouseEnter(DockMouseEventArgs e) => base.OnMouseEnter(e);
+    protected override void OnMouseLeave(DockMouseEventArgs e) => base.OnMouseLeave(e);
+    protected override void OnMouseLeftButtonDown(DockMouseButtonEventArgs e) => base.OnMouseLeftButtonDown(e);
+    protected override void OnMouseLeftButtonUp(DockMouseButtonEventArgs e) => base.OnMouseLeftButtonUp(e);
+    protected override void OnMouseMove(DockMouseEventArgs e) => base.OnMouseMove(e);
+}
+public class LayoutAnchorableTabItem : LayoutTabItemBase
+{
+    public LayoutAnchorableTabItem() { }
+    protected override void OnMouseEnter(DockMouseEventArgs e) => base.OnMouseEnter(e);
+    protected override void OnMouseLeave(DockMouseEventArgs e) => base.OnMouseLeave(e);
+    protected override void OnMouseLeftButtonDown(DockMouseButtonEventArgs e) => base.OnMouseLeftButtonDown(e);
+    protected override void OnMouseLeftButtonUp(DockMouseButtonEventArgs e) => base.OnMouseLeftButtonUp(e);
+    protected override void OnMouseMove(DockMouseEventArgs e) => base.OnMouseMove(e);
+}
 
-public class LayoutDocumentControl : ContentControl
+public class LayoutDocumentControl : DockInputControl
 {
     public static readonly DependencyProperty ModelProperty = DependencyProperty.Register(nameof(Model), typeof(LayoutContent), typeof(LayoutDocumentControl), new PropertyMetadata(null, (d, e) => ((LayoutDocumentControl)d).OnModelChanged(e)));
     public static readonly DependencyProperty LayoutItemProperty = DependencyProperty.Register(nameof(LayoutItem), typeof(LayoutItem), typeof(LayoutDocumentControl), new PropertyMetadata(null));
     public LayoutContent? Model { get => (LayoutContent?)GetValue(ModelProperty); set => SetValue(ModelProperty, value); }
     public LayoutItem? LayoutItem => (LayoutItem?)GetValue(LayoutItemProperty);
-    public LayoutDocumentControl() { HorizontalContentAlignment = HorizontalAlignment.Stretch; VerticalContentAlignment = VerticalAlignment.Stretch; GotFocus += (_, _) => { if (Model != null) Model.IsActive = true; }; }
+    public LayoutDocumentControl() { HorizontalContentAlignment = HorizontalAlignment.Stretch; VerticalContentAlignment = VerticalAlignment.Stretch; }
     protected virtual void OnModelChanged(DependencyPropertyChangedEventArgs e)
     {
         if (Model?.Root?.Manager is { } manager)
@@ -229,14 +288,28 @@ public class LayoutDocumentControl : ContentControl
         else { ClearValue(LayoutItemProperty); Content = null; }
     }
     protected void SetLayoutItem(LayoutItem value) => SetValue(LayoutItemProperty, value);
+    protected override void OnPreviewMouseLeftButtonDown(DockMouseButtonEventArgs e)
+    { if (!e.Handled) ActivateModel(); base.OnPreviewMouseLeftButtonDown(e); }
+    protected override void OnPreviewMouseRightButtonDown(DockMouseButtonEventArgs e)
+    { if (!e.Handled) ActivateModel(); base.OnPreviewMouseRightButtonDown(e); }
+    protected override void OnPreviewGotKeyboardFocus(DockKeyboardFocusChangedEventArgs e)
+    { base.OnPreviewGotKeyboardFocus(e); }
+    protected override void OnGotKeyboardFocus(DockKeyboardFocusChangedEventArgs e)
+    { if (!e.Handled) ActivateModel(); base.OnGotKeyboardFocus(e); }
+    private void ActivateModel() { if (Model is { IsEnabled: true, Root: not null } model) model.IsActive = true; }
 }
 public class LayoutAnchorableControl : LayoutDocumentControl
 {
     public new LayoutAnchorable? Model { get => base.Model as LayoutAnchorable; set => base.Model = value; }
     public LayoutAnchorableControl() { }
+    protected override void OnGotKeyboardFocus(DockKeyboardFocusChangedEventArgs e) => base.OnGotKeyboardFocus(e);
 }
 public class AnchorablePaneTitle : LayoutAnchorableTabItem
 {
     public new LayoutAnchorable? Model { get => base.Model as LayoutAnchorable; set => base.Model = value; }
     public AnchorablePaneTitle() { }
+    protected override void OnMouseLeave(DockMouseEventArgs e) => base.OnMouseLeave(e);
+    protected override void OnMouseLeftButtonDown(DockMouseButtonEventArgs e) => base.OnMouseLeftButtonDown(e);
+    protected override void OnMouseLeftButtonUp(DockMouseButtonEventArgs e) => base.OnMouseLeftButtonUp(e);
+    protected override void OnMouseMove(DockMouseEventArgs e) => base.OnMouseMove(e);
 }

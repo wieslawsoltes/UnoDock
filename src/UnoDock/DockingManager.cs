@@ -18,7 +18,7 @@ public sealed record DockRoutedEvent(string Name);
 
 [TemplatePart(Name = "PART_AutoHideArea")]
 [ContentProperty(Name = nameof(Layout))]
-public partial class DockingManager : Control, IDisposable
+public partial class DockingManager : Control, IDisposable, Xceed.Wpf.AvalonDock.Compatibility.IWeakEventListener
 {
     public static readonly DependencyProperty LayoutProperty = DependencyProperty.Register(nameof(Layout), typeof(LayoutRoot), typeof(DockingManager), new PropertyMetadata(null, (d, e) => ((DockingManager)d).ChangeLayout((LayoutRoot?)e.OldValue, (LayoutRoot?)e.NewValue)));
     public static readonly DockRoutedEvent PreviewDockEvent = new(nameof(PreviewDock)), DockedEvent = new(nameof(Docked)), PreviewFloatEvent = new(nameof(PreviewFloat)), FloatedEvent = new(nameof(Floated));
@@ -273,6 +273,24 @@ public partial class DockingManager : Control, IDisposable
     internal void CloseAutoHide() => _surface?.CloseAutoHide();
     internal void BeginDrag(LayoutContent content, FrameworkElement source, PointerRoutedEventArgs args) => _surface?.BeginDrag(content, source, args);
     internal DockSurface? Surface => _surface;
+    /// <summary>Creates the document pane view. Override to supply custom input/selection hooks.</summary>
+    protected virtual LayoutDocumentPaneControl CreateDocumentPaneControl(LayoutDocumentPane model) => new(model);
+    /// <summary>Creates the tool pane view. The returned control must own the requested model.</summary>
+    protected virtual LayoutAnchorablePaneControl CreateAnchorablePaneControl(LayoutAnchorablePane model) => new(model);
+    internal LayoutDocumentPaneControl CreateDocumentPaneView(LayoutDocumentPane model)
+    {
+        var view = CreateDocumentPaneControl(model);
+        if (view == null || !ReferenceEquals(view.Model, model) || VisualTreeHelper.GetParent(view) != null)
+            throw new InvalidOperationException("The document pane factory must return an unparented control for the requested model.");
+        return view;
+    }
+    internal LayoutAnchorablePaneControl CreateAnchorablePaneView(LayoutAnchorablePane model)
+    {
+        var view = CreateAnchorablePaneControl(model);
+        if (view == null || !ReferenceEquals(view.Model, model) || VisualTreeHelper.GetParent(view) != null)
+            throw new InvalidOperationException("The tool pane factory must return an unparented control for the requested model.");
+        return view;
+    }
     public virtual NavigatorWindow CreateNavigatorWindow() => new(this);
     protected internal virtual void ShowNavigatorWindow() => _surface?.ShowNavigator(CreateNavigatorWindow());
     protected override void OnPreviewKeyDown(KeyRoutedEventArgs e)

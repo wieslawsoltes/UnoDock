@@ -5,6 +5,31 @@ namespace Xceed.Wpf.AvalonDock;
 
 public partial class DockingManager
 {
+    bool Xceed.Wpf.AvalonDock.Compatibility.IWeakEventListener.ReceiveWeakEvent(Type managerType, object sender, EventArgs e)
+    {
+        ArgumentNullException.ThrowIfNull(managerType); ArgumentNullException.ThrowIfNull(e);
+        if (_disposed || DispatcherQueue?.HasThreadAccess == false) return false;
+        return OnReceiveWeakEvent(managerType, sender, e);
+    }
+    /// <summary>Return false without calling base to suppress default collection reconciliation.</summary>
+    protected virtual bool OnReceiveWeakEvent(Type managerType, object sender, EventArgs e)
+    {
+        if (_disposed || managerType != typeof(INotifyCollectionChanged) || e is not NotifyCollectionChangedEventArgs ||
+            (!ReferenceEquals(sender, DocumentsSource) && !ReferenceEquals(sender, AnchorablesSource))) return false;
+        SourceChanged(); return true;
+    }
+    internal void ReceiveSourceEvent(SourceObserver observer, object sender, NotifyCollectionChangedEventArgs e)
+    {
+        if (_disposed) return;
+        void Deliver()
+        {
+            // Events queued by replaced/disposed subscriptions cannot reach new sources.
+            if (!_disposed && (ReferenceEquals(observer, _documentObserver) || ReferenceEquals(observer, _anchorableObserver)))
+                ((Xceed.Wpf.AvalonDock.Compatibility.IWeakEventListener)this).ReceiveWeakEvent(typeof(INotifyCollectionChanged), sender, e);
+        }
+        if (DispatcherQueue?.HasThreadAccess == false) DispatcherQueue.TryEnqueue(Deliver);
+        else Deliver();
+    }
     private bool _sourcesDirty;
     private int _sourceDispatchPending;
     internal void SourceChanged()

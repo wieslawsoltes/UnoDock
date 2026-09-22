@@ -1,10 +1,11 @@
 using Microsoft.UI.Xaml.Input;
+using Xceed.Wpf.AvalonDock.Compatibility;
 using Xceed.Wpf.AvalonDock.Internal;
 using Xceed.Wpf.AvalonDock.Layout;
 
 namespace Xceed.Wpf.AvalonDock.Controls;
 
-public class LayoutAnchorControl : ContentControl, ILayoutControl
+public class LayoutAnchorControl : DockInputControl, ILayoutControl
 {
     public static readonly DependencyProperty SideProperty = DependencyProperty.Register(nameof(Side), typeof(AnchorSide), typeof(LayoutAnchorControl), new PropertyMetadata(AnchorSide.Left));
     private readonly LayoutAnchorable _model;
@@ -12,10 +13,17 @@ public class LayoutAnchorControl : ContentControl, ILayoutControl
     public LayoutAnchorControl(LayoutAnchorable model)
     {
         _model = model;
-        _button = DockVisuals.Button(model.Title ?? "Tool", () => _model.Root?.Manager?.OpenAutoHide(_model)); Content = _button;
-        _button.PointerEntered += (_, _) => { _model.Root?.Manager?.Surface?.StopAutoHideTimer(); _model.Root?.Manager?.OpenAutoHide(_model); };
-        _button.PointerExited += (_, _) => _model.Root?.Manager?.Surface?.StartAutoHideTimer();
+        _button = DockVisuals.Button(model.Title ?? "Tool", ActivateFromKeyboard); Content = _button;
+
     }
+    private void ActivateFromKeyboard()
+    { if (_button.FocusState != FocusState.Pointer) _model.Root?.Manager?.OpenAutoHide(_model); }
+    protected override void OnMouseDown(DockMouseButtonEventArgs e)
+    { if (!e.Handled && e.ChangedButton == DockMouseButton.Left && _model.IsEnabled) _model.Root?.Manager?.OpenAutoHide(_model); base.OnMouseDown(e); }
+    protected override void OnMouseEnter(DockMouseEventArgs e)
+    { if (!e.Handled && _model.IsEnabled) { _model.Root?.Manager?.Surface?.StopAutoHideTimer(); _model.Root?.Manager?.OpenAutoHide(_model); } base.OnMouseEnter(e); }
+    protected override void OnMouseLeave(DockMouseEventArgs e)
+    { if (!e.Handled) _model.Root?.Manager?.Surface?.StartAutoHideTimer(); base.OnMouseLeave(e); }
     public ILayoutElement Model => _model;
     public AnchorSide Side => (AnchorSide)GetValue(SideProperty);
     protected void SetSide(AnchorSide value) => SetValue(SideProperty, value);

@@ -74,7 +74,8 @@ public abstract class LayoutContent : LayoutElement, IComparable<LayoutContent>,
         {
             var old = _selected;
             if (!Set(ref _selected, value)) return;
-            if (value && Parent is ILayoutContentSelector selector) selector.SelectedContentIndex = selector.IndexOf(this);
+            if (value && Parent is ILayoutContentSelector selector && !ReferenceEquals(selector.SelectedContent, this))
+                selector.SelectedContentIndex = selector.IndexOf(this);
             OnIsSelectedChanged(old, value); IsSelectedChanged?.Invoke(this, EventArgs.Empty);
         }
     }

@@ -77,9 +77,9 @@
     },
     {
       "source": "System.Windows.Controls.TabControl",
-      "target": "Microsoft.UI.Xaml.Controls.ContentControl",
+      "target": "Xceed.Wpf.AvalonDock.Controls.DockSelectionControl",
       "kind": "adapter",
-      "note": "Independent cached pane host provides tab selection."
+      "note": "Independent tab host base with selection-change hooks; derived cached pane supplies model-backed selection dependency properties."
     },
     {
       "source": "System.Windows.Controls.UserControl",
@@ -146,10 +146,34 @@
       "note": "Chrome input exclusions use WinUI UIElement. WPF input interfaces and its tunnel routing are not reproduced."
     },
     {
+      "source": "System.Windows.IWeakEventListener",
+      "target": "Xceed.Wpf.AvalonDock.Compatibility.IWeakEventListener",
+      "kind": "adapter",
+      "note": "Weak source subscriptions dispatch on the owning UI thread; INotifyCollectionChanged identifies collection transport."
+    },
+    {
       "source": "System.Windows.Input.KeyEventArgs",
       "target": "Microsoft.UI.Xaml.Input.KeyRoutedEventArgs",
       "kind": "adapter",
       "note": "WinUI key data for named compatibility hooks. Preview-hook timing differs from WPF tunneling."
+    },
+    {
+      "source": "System.Windows.Input.KeyboardFocusChangedEventArgs",
+      "target": "Xceed.Wpf.AvalonDock.Compatibility.DockKeyboardFocusChangedEventArgs",
+      "kind": "adapter",
+      "note": "GettingFocus/GotFocus observations; cancellation only before focus completes."
+    },
+    {
+      "source": "System.Windows.Input.MouseButtonEventArgs",
+      "target": "Xceed.Wpf.AvalonDock.Compatibility.DockMouseButtonEventArgs",
+      "kind": "adapter",
+      "note": "Changed button comes from native PointerUpdateKind; touch/pen primary input maps to Left."
+    },
+    {
+      "source": "System.Windows.Input.MouseEventArgs",
+      "target": "Xceed.Wpf.AvalonDock.Compatibility.DockMouseEventArgs",
+      "kind": "adapter",
+      "note": "Real native pointer data with a control-local Handled stage; not WPF tunneling."
     },
     {
       "source": "System.Windows.Input.RoutedCommand",

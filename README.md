@@ -6,7 +6,7 @@
 Independent AvalonDock-style docking for **Uno Platform 6.7**, retaining familiar
 `Xceed.Wpf.AvalonDock` namespaces while using Uno/WinUI controls.
 
-**Status: 0.1.0-preview.5. This is a functional implementation, not a certified 100%
+**Status: 0.1.0-preview.6 candidate (not yet pushed or CI-validated). This is a functional implementation, not a certified 100%
 AvalonDock replacement.** API shape, behavior, platform support and performance are
 separate claims. The repository records what is implemented, the original public
 contracts used to check it, runnable tests and the remaining boundaries.
@@ -19,7 +19,7 @@ contracts used to check it, runnable tests and the remaining boundaries.
 | `UnoDock` | Layout models, docking manager, visual controls, content adapters, serializer and independent themes |
 | `UnoDock.Gallery` | Interactive IDE-style sample with editors, tool panes, persistence, MVVM and capability controls |
 | `UnoDock.Core.Tests` | 97 portable tests, including sizing/coordinate/scroll cases and 75,000 caption-region point probes |
-| `UnoDock.Runtime.Tests` | 36 runtime + 44 interoperability + 40 drop/menu/automation + 33 lifecycle + 25 interaction tests, 1,517 converter replay/binding tests and 16 native coordinate tests, 36 shell/chrome cases and 49 Linux window/navigation cases, linked into the gallery |
+| `UnoDock.Runtime.Tests` | 36 runtime + 44 interoperability + 40 drop/menu/automation + 33 lifecycle + 25 interaction tests, 1,517 converter replay/binding tests and 16 native coordinate tests, 36 shell/chrome cases and 49 Linux window/navigation cases and 43 input-extension cases, linked into the gallery |
 | `tools/ApiScan` | Deterministic public/protected declaration inventory |
 | `tools/ApiMetadata` | Resolved PE metadata inventory, without reading IL bodies or executing the assembly |
 | `tools/ReferenceProbe` | Independently authored black-box public-API probes against the pinned original |
@@ -28,7 +28,32 @@ Stable NuGet pins resolved on 2026-09-21: **Uno.Sdk 6.7.30**, **Uno.WinUI 6.7.13
 **Uno.Templates 6.7.30**. `global.json` selects .NET 10 with latest-feature roll-forward.
 Version upgrades are explicit; product builds consume committed pins.
 
-## Preview 5 additions
+## Preview 6 candidate additions
+
+Protected mouse/focus hooks now participate in real tab activation, drag and auto-hide
+paths. Subclasses can veto activation/drop and cancel native preview focus. Captured
+pointer ownership is separate from the composed header that owns its hooks. Panes expose
+bindable SelectedIndex/SelectedItem dependency properties with coherent selection events,
+weak model observation and bounded reentrant selection draining. Observable collection
+notifications reach the protected weak-event override and reject stale queued sources.
+Additive pane/header factories and the **Input extensions** gallery lab make these
+extensions usable without reflection.
+
+Local validation passes **1,936 C# cases** (97 core + 1,839 actual Uno/X11-host cases),
+including **43 new tests** and **20 XTEST input scenarios** across the suites; 23 Python
+comparator tests also pass. Resolved API matches are **977/1,031**, up from 946, with
+54 signature/type entries and 18 attribute differences remaining. The scanner and
+comparison rules were not relaxed; this is not full parity.
+
+**Publication state:** this source candidate is based on remote main
+`de158c452a14b9c9137f3508a230ab779e497b84`. It has not been committed/pushed by this
+session or source-built in GitHub Actions. The badges above report the remote branch,
+not this unpushed candidate. Local validation uses pinned Uno reference assemblies and
+a real native host with existing generated XAML/ICU resources. Updated CI includes
+Windows input-extension execution, but it has not run for this candidate. See
+[input/selection contracts and validation scope](docs/input-extensions.md).
+
+## Preview 5 additions (previous checkpoint)
 
 Floating windows now have a shared composed lifecycle, protected initialization/closing/
 closed/state hooks, cancellation-safe close dispatch and Windows HWND `FilterMessage`
@@ -42,13 +67,13 @@ and switching from a native floating editor back to the main window. Uno hosts t
 route only bubbling key events have a handled-once fallback; left/right Control keys
 are recognized. The **Window lifecycle** gallery lab demonstrates the new contracts.
 
-Local Linux validation passes **1,893 C# cases** (97 core + 1,796 Uno-host cases), including
+The preview-5 Linux checkpoint passed **1,893 C# cases** (97 core + 1,796 Uno-host cases), including
 **49 window/navigation cases** and **12 opt-in XTEST input cases** across all suites.
 There are **23 Python comparator tests**. A dedicated Windows runtime CI step executes
 the window-lifecycle suite including two HWND filter cases; inspect the workflow result
 for the exact consumed revision instead of interpreting test presence as execution.
 
-The resolved API comparison matches **946/1,031 entries**: **85 signature/type differences
+The preview-5 resolved API comparison matched **946/1,031 entries**: **85 signature/type differences
 and 18 attribute differences remain**. The no-regression baseline was tightened by 18
 diagnostic IDs without relaxing comparison rules. The full-parity gate is not passed.
 See [window lifecycle and navigator](docs/window-lifecycle.md).

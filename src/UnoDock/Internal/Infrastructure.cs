@@ -10,15 +10,15 @@ internal sealed class ActionDisposable(Action action) : IDisposable
 internal sealed class SourceObserver : IDisposable
 {
     private readonly WeakReference<DockingManager> _manager;
-    private readonly INotifyCollectionChanged? _source;
+    private INotifyCollectionChanged? _source;
     internal SourceObserver(DockingManager manager, IEnumerable source, bool documents)
     {
         _manager = new(manager); _source = source as INotifyCollectionChanged;
         if (_source != null) _source.CollectionChanged += Changed;
     }
     private void Changed(object? sender, NotifyCollectionChangedEventArgs args)
-    { if (_manager.TryGetTarget(out var manager)) manager.SourceChanged(); else Dispose(); }
-    public void Dispose() { if (_source != null) _source.CollectionChanged -= Changed; }
+    { if (_source is { } source && _manager.TryGetTarget(out var manager)) manager.ReceiveSourceEvent(this, source, args); else Dispose(); }
+    public void Dispose() { if (Interlocked.Exchange(ref _source, null) is { } source) source.CollectionChanged -= Changed; }
 }
 public sealed class DelegateCommand(Action<object?> execute, Predicate<object?>? canExecute = null) : ICommand
 {

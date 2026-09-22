@@ -29,6 +29,13 @@ public partial class App : Application
                     var suite = Environment.GetEnvironmentVariable("UNODOCK_TEST_SUITE");
                     if (suite == "window-lifecycle")
                         exitCode = await Testing.WindowLifecycleTests.Run(gallery.Dock, output);
+                    else if (suite == "input-extensions")
+                        exitCode = await Testing.InputExtensionTests.Run(gallery.Dock, output);
+                    else if (suite == "windows-acceptance")
+                    {
+                        exitCode = await Testing.WindowLifecycleTests.Run(gallery.Dock, output);
+                        exitCode |= await Testing.InputExtensionTests.Run(gallery.Dock, output);
+                    }
                     else if (string.IsNullOrEmpty(suite) || suite == "all")
                     {
                         exitCode = await Testing.RuntimeTests.Run(gallery.Dock, output);
@@ -40,6 +47,7 @@ public partial class App : Application
                         exitCode |= await Testing.WindowCoordinateTests.Run(output, gallery.Dock);
                         exitCode |= await Testing.ShellTests.Run(output, gallery.Dock);
                         exitCode |= await Testing.WindowLifecycleTests.Run(gallery.Dock, output);
+                        exitCode |= await Testing.InputExtensionTests.Run(gallery.Dock, output);
                     }
                     else throw new ArgumentException("Unknown UNODOCK_TEST_SUITE: " + suite);
                 }

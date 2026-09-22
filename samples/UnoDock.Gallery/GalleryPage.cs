@@ -24,7 +24,7 @@ public sealed partial class GalleryPage : Page
         title.Children.Add(new TextBlock { Text = "◈", FontSize = 30, Foreground = new SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(255, 119, 176, 255)) });
         title.Children.Add(new TextBlock { Text = "UnoDock", FontSize = 26, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold });
         title.Children.Add(new TextBlock { Text = "DOCKING WORKBENCH", VerticalAlignment = VerticalAlignment.Center, Opacity = .6, FontSize = 11 }); brand.Children.Add(title);
-        var build = new TextBlock { Text = "UNO 6.7  /  INDEPENDENT IMPLEMENTATION  /  PREVIEW 5", VerticalAlignment = VerticalAlignment.Center, FontSize = 11, Opacity = .65 }; Grid.SetColumn(build, 1); brand.Children.Add(build); shell.Children.Add(brand);
+        var build = new TextBlock { Text = "UNO 6.7  /  INDEPENDENT IMPLEMENTATION  /  PREVIEW 6", VerticalAlignment = VerticalAlignment.Center, FontSize = 11, Opacity = .65 }; Grid.SetColumn(build, 1); brand.Children.Add(build); shell.Children.Add(brand);
         var commands = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 5, Margin = new(12, 4, 12, 9) };
         Add("＋ Document", () => AddDocument()); Add("Split right", () => Split(DockPosition.Right)); Add("Split below", () => Split(DockPosition.Bottom));
         Add("Float / Dock", () => { if (Dock.Layout.ActiveContent is { } active) { if (active.IsFloating) active.Dock(); else active.Float(); } });
@@ -32,7 +32,7 @@ public sealed partial class GalleryPage : Page
         Add("Show tools", () => { foreach (var tool in Dock.Layout.Hidden.ToArray()) tool.Show(); });
         Add("Save", () => Run(Save)); Add("Restore", () => Run(Restore)); Add("XML", ShowXml); Add("MVVM", BindingDemo);
         Add("Theme", () => { RequestedTheme = RequestedTheme == ElementTheme.Dark ? ElementTheme.Light : ElementTheme.Dark; Dock.Theme = new FluentTheme(RequestedTheme); });
-        Add("Reset", Reset); Add("1,000 tabs", Stress); Add("Parity lab", ShowParityLab); Add("Converter lab", ShowConverterLab); Add("Native windows", ShowNativeWindowLab); Add("Window shell", ShowShellLab); Add("Window lifecycle", ShowWindowLifecycleLab);
+        Add("Reset", Reset); Add("1,000 tabs", Stress); Add("Parity lab", ShowParityLab); Add("Converter lab", ShowConverterLab); Add("Native windows", ShowNativeWindowLab); Add("Window shell", ShowShellLab); Add("Window lifecycle", ShowWindowLifecycleLab); Add("Input extensions", ShowInputExtensionsLab);
         var scroll = new ScrollViewer { Content = commands, HorizontalScrollBarVisibility = ScrollBarVisibility.Auto, VerticalScrollBarVisibility = ScrollBarVisibility.Disabled, MaxHeight = 70 }; Grid.SetRow(scroll, 1); shell.Children.Add(scroll);
         Dock.Margin = new(10, 0, 10, 0); Grid.SetRow(Dock, 2); shell.Children.Add(Dock); Grid.SetRow(_status, 3); shell.Children.Add(_status); Content = shell;
         Dock.Theme = new FluentTheme(RequestedTheme);

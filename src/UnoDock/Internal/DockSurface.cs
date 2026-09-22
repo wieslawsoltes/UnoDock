@@ -18,6 +18,7 @@ internal sealed class DockSurface : Grid, IDisposable
     private long _lastScrollTick;
     private Point _lastDragPoint;
     private FrameworkElement? _dragSource;
+    private DockInputControl? _dragInput;
     private LayoutContent? _dragContent;
     private LayoutAutoHideWindowControl? _autoHide;
     private NavigatorWindow? _navigator;
@@ -52,8 +53,8 @@ internal sealed class DockSurface : Grid, IDisposable
         FrameworkElement view = model switch
         {
             LayoutPanel p => new LayoutPanelControl(p), LayoutDocumentPaneGroup p => new LayoutDocumentPaneGroupControl(p),
-            LayoutAnchorablePaneGroup p => new LayoutAnchorablePaneGroupControl(p), LayoutDocumentPane p => new LayoutDocumentPaneControl(p),
-            LayoutAnchorablePane p => new LayoutAnchorablePaneControl(p), LayoutAnchorSide p => new LayoutAnchorSideControl(p),
+            LayoutAnchorablePaneGroup p => new LayoutAnchorablePaneGroupControl(p), LayoutDocumentPane p => Manager.CreateDocumentPaneView(p),
+            LayoutAnchorablePane p => Manager.CreateAnchorablePaneView(p), LayoutAnchorSide p => new LayoutAnchorSideControl(p),
             _ => throw new ArgumentException("No visual representation for " + model.GetType().Name, nameof(model))
         };
         _views.Add(model, view); return view;
@@ -161,11 +162,18 @@ internal sealed class DockSurface : Grid, IDisposable
         // Cross-XamlRoot drags require an explicit platform coordinate adapter rather than guessed window-frame offsets.
         if (!ReferenceEquals(source.XamlRoot, XamlRoot) && Manager.CrossWindowCoordinates == null) return;
         CancelDrag();
+        _dragInput = source as DockInputControl;
+        source = _dragInput?.DockCaptureElement ?? source;
         _dragContent = content; _dragSource = source;
         if (!TryGetPoint(args, out var point)) { CancelDrag(); return; }
         _drag.Arm(args.Pointer.PointerId, new(point.X, point.Y), content is LayoutDocument);
-        source.AddHandler(PointerMovedEvent, new PointerEventHandler(OnDragMoved), true);
-        source.AddHandler(PointerReleasedEvent, new PointerEventHandler(OnDragReleased), true);
+        if (_dragInput is { } input)
+        { input.DockDragMoved += OnDragMoved; input.DockDragReleased += OnDragReleased; input.DockInputCancelled += OnDockInputCancelled; }
+        else
+        {
+            source.AddHandler(PointerMovedEvent, new PointerEventHandler(OnDragMoved), true);
+            source.AddHandler(PointerReleasedEvent, new PointerEventHandler(OnDragReleased), true);
+        }
         source.PointerCanceled += OnDragCancelled; source.PointerCaptureLost += OnCaptureLost; source.Unloaded += OnDragSourceUnloaded;
         if (!source.CapturePointer(args.Pointer)) CancelDrag();
     }
@@ -180,6 +188,7 @@ internal sealed class DockSurface : Grid, IDisposable
         }
         catch (Exception e) when (DockCoordinates.IsUnavailable(e)) { return false; }
     }
+    private void OnDockInputCancelled(object? sender, uint id) { if (ReferenceEquals(sender, _dragInput) && _drag.OwnsPointer(id)) CancelDrag(); }
     private void OnDragSourceUnloaded(object sender, RoutedEventArgs e) => CancelDrag();
     internal IReadOnlyList<IDropArea> GetDropAreas()
     {
@@ -283,7 +292,7 @@ internal sealed class DockSurface : Grid, IDisposable
     private void OnDragCancelled(object sender, PointerRoutedEventArgs args)
     { if (_drag.OwnsPointer(args.Pointer.PointerId)) CancelDrag(); }
     private void OnCaptureLost(object sender, PointerRoutedEventArgs args)
-    { if (_dragSource != null && _drag.OwnsPointer(args.Pointer.PointerId)) CancelDrag(); }
+    { if (_dragSource != null && ReferenceEquals(args.OriginalSource, _dragSource) && _drag.OwnsPointer(args.Pointer.PointerId)) CancelDrag(); }
     internal void CancelDrag() { _drag.Cancel(); DetachDrag(); }
     private LayoutFloatingWindowControl? FloatingAt(Point point, bool inSurfaceOnly = false)
     {
@@ -329,10 +338,13 @@ internal sealed class DockSurface : Grid, IDisposable
     private void DetachDrag()
     {
         _dragScrollTimer.Stop();
-        var source = _dragSource; _dragSource = null; _dragContent = null;
+        var source = _dragSource; var input = _dragInput;
+        _dragSource = null; _dragInput = null; _dragContent = null;
         if (source != null)
         {
-            source.RemoveHandler(PointerMovedEvent, new PointerEventHandler(OnDragMoved)); source.RemoveHandler(PointerReleasedEvent, new PointerEventHandler(OnDragReleased));
+            if (input != null)
+            { input.DockDragMoved -= OnDragMoved; input.DockDragReleased -= OnDragReleased; input.DockInputCancelled -= OnDockInputCancelled; }
+            else { source.RemoveHandler(PointerMovedEvent, new PointerEventHandler(OnDragMoved)); source.RemoveHandler(PointerReleasedEvent, new PointerEventHandler(OnDragReleased)); }
             source.PointerCanceled -= OnDragCancelled; source.PointerCaptureLost -= OnCaptureLost; source.Unloaded -= OnDragSourceUnloaded; source.ReleasePointerCaptures();
         }
         ShowDragPreview(null);

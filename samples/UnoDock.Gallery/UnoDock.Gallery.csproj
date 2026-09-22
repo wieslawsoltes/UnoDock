@@ -9,6 +9,7 @@
     <UnoFeatures>SkiaRenderer;</UnoFeatures>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="../../tests/UnoDock.Runtime.Tests/InputExtensionTests.cs" Link="Testing/InputExtensionTests.cs" />
     <ProjectReference Include="../../src/UnoDock/UnoDock.csproj" />
     <Compile Include="../../tests/UnoDock.Runtime.Tests/ShellTests*.cs" Link="Testing/%(Filename)%(Extension)" />
     <Compile Include="../../tests/UnoDock.Testing/TestRunner.cs" Link="Testing/TestRunner.cs" />

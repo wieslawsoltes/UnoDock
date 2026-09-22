@@ -1,5 +1,10 @@
 # Compatibility contract and remaining boundaries
 
+Preview 6 candidate: [protected input, selection and weak-source contracts](input-extensions.md)
+adds 31 mapped API matches (977/1,031). Those local results do not certify full parity
+or a source-built CI run. The source has not been pushed in the current session.
+
+
 This preview is **not 100% API or feature compatible**. The migration target is source
 compatibility with explicit WPF-to-WinUI mappings, not WPF binary identity. Applications
 must validate their own layouts, commands, custom styles, input, accessibility and

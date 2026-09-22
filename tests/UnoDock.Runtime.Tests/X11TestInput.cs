@@ -9,7 +9,7 @@ namespace UnoDock.Testing;
 internal sealed class X11TestInput : IDisposable
 {
     private nint _display;
-    private bool _pressed;
+    private readonly HashSet<uint> _buttons = [];
     private readonly HashSet<byte> _keys = [];
 
     internal X11TestInput()
@@ -41,19 +41,18 @@ internal sealed class X11TestInput : IDisposable
         Flush(_display);
     }
 
-    internal void Press()
+    internal void Press(uint button = 1)
     {
         ObjectDisposedException.ThrowIf(_display == 0, this);
-        Check.True(FakeButton(_display, 1, 1, 0) != 0);
-        _pressed = true;
+        Check.True(FakeButton(_display, button, 1, 0) != 0);
+        _buttons.Add(button);
         Flush(_display);
     }
 
-    internal void Release()
+    internal void Release(uint button = 1)
     {
-        if (!_pressed || _display == 0) return;
-        FakeButton(_display, 1, 0, 0);
-        _pressed = false;
+        if (!_buttons.Remove(button) || _display == 0) return;
+        FakeButton(_display, button, 0, 0);
         Flush(_display);
     }
 
@@ -96,7 +95,7 @@ internal sealed class X11TestInput : IDisposable
 
     public void Dispose()
     {
-        Release();
+        foreach (var button in _buttons.ToArray()) Release(button);
         if (_display != 0)
         {
             foreach (var key in _keys) FakeKey(_display, key, 0, 0);
