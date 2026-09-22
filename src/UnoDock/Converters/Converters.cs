@@ -1,86 +1,195 @@
 using System.Globalization;
 using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Media.Imaging;
+using Xceed.Wpf.AvalonDock.Compatibility;
 using Xceed.Wpf.AvalonDock.Controls;
 using Xceed.Wpf.AvalonDock.Layout;
 
 namespace Xceed.Wpf.AvalonDock.Converters;
 
-/// <summary>WinUI converter contract plus the CultureInfo overload used by WPF callers.</summary>
+/// <summary>Legacy preview extension base. Concrete compatibility converters use the original
+/// non-virtual member shapes; this base remains available to existing derived converters.</summary>
 public abstract class CompatibilityConverter : IValueConverter
 {
-    public object Convert(object value, Type targetType, object parameter, string language) => Convert(value, targetType, parameter, Culture(language));
-    public object ConvertBack(object value, Type targetType, object parameter, string language) => ConvertBack(value, targetType, parameter, Culture(language));
+    public object Convert(object value, Type targetType, object parameter, string language) =>
+        ConverterInterop.Native(Convert(value, targetType, parameter, ConverterInterop.Culture(language)));
+    public object ConvertBack(object value, Type targetType, object parameter, string language) =>
+        ConverterInterop.Native(ConvertBack(value, targetType, parameter, ConverterInterop.Culture(language)));
     public abstract object Convert(object value, Type targetType, object parameter, CultureInfo culture);
     public virtual object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => DependencyProperty.UnsetValue;
-    private static CultureInfo Culture(string language)
-    { try { return string.IsNullOrEmpty(language) ? CultureInfo.CurrentUICulture : CultureInfo.GetCultureInfo(language); } catch (CultureNotFoundException) { return CultureInfo.CurrentUICulture; } }
 }
-public class BoolToVisibilityConverter : CompatibilityConverter
+
+internal static class ConverterInterop
 {
-    public override object Convert(object value, Type targetType, object parameter, CultureInfo culture) => value is true ? Visibility.Visible : Visibility.Collapsed;
-    public override object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => value is Visibility.Visible;
-}
-public class InverseBoolToVisibilityConverter : CompatibilityConverter
-{
-    public override object Convert(object value, Type targetType, object parameter, CultureInfo culture) => value is true ? Visibility.Collapsed : Visibility.Visible;
-    public override object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => value is not Visibility.Visible;
-}
-public class AnchorSideToOrientationConverter : CompatibilityConverter
-{
-    public override object Convert(object value, Type targetType, object parameter, CultureInfo culture) => value is AnchorSide.Left or AnchorSide.Right ? Orientation.Vertical : Orientation.Horizontal;
-}
-public class AnchorSideToAngleConverter : CompatibilityConverter
-{
-    public override object Convert(object value, Type targetType, object parameter, CultureInfo culture) => value switch { AnchorSide.Left => -90d, AnchorSide.Right => 90d, _ => 0d };
-}
-public class NullToDoNothingConverter : CompatibilityConverter
-{
-    // WinUI has no WPF Binding.DoNothing. UnsetValue deliberately invokes the binding's fallback semantics.
-    public override object Convert(object value, Type targetType, object parameter, CultureInfo culture) => value ?? DependencyProperty.UnsetValue;
-    public override object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => value ?? DependencyProperty.UnsetValue;
-}
-public class UriSourceToBitmapImageConverter : CompatibilityConverter
-{
-    public override object Convert(object value, Type targetType, object parameter, CultureInfo culture) => value switch
+    internal static CultureInfo Culture(string language)
     {
-        ImageSource image => image,
-        Uri uri => new BitmapImage(uri),
-        string text when Uri.TryCreate(text, UriKind.RelativeOrAbsolute, out var uri) => new BitmapImage(uri),
-        _ => DependencyProperty.UnsetValue
-    };
-    public override object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => value is BitmapImage image ? image.UriSource : DependencyProperty.UnsetValue;
-}
-public class LayoutItemFromLayoutModelConverter : CompatibilityConverter
-{
-    public override object Convert(object value, Type targetType, object parameter, CultureInfo culture) => value switch
+        try { return string.IsNullOrEmpty(language) ? CultureInfo.CurrentUICulture : CultureInfo.GetCultureInfo(language); }
+        catch (CultureNotFoundException) { return CultureInfo.CurrentUICulture; }
+    }
+    // Native WinUI uses UnsetValue to invoke FallbackValue. It has no equivalent of WPF
+    // DoNothing. ConverterBinding bypasses this adapter to retain exact no-transfer behavior.
+    internal static object Native(object value) => ReferenceEquals(value, BindingValue.DoNothing) ? DependencyProperty.UnsetValue : value;
+    internal static AnchorSide Side(object value) => value switch
     {
-        LayoutItem item => item,
-        LayoutContent content when content.Root?.Manager is { } manager => manager.GetLayoutItemFromModel(content),
-        _ => DependencyProperty.UnsetValue
+        null => throw new NullReferenceException(),
+        AnchorSide side => side,
+        int side => (AnchorSide)side,
+        _ => throw new InvalidCastException()
     };
-    public override object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => value is LayoutItem item ? item.Model! : DependencyProperty.UnsetValue;
-    internal static LayoutItem? Item(object value) => value as LayoutItem ?? (value is LayoutContent content ? content.Root?.Manager?.GetLayoutItemFromModel(content) : null);
+    internal static LayoutItem? Item(object value) => value is LayoutContent content && content.Root?.Manager is { } manager
+        ? manager.GetLayoutItemFromModel(content) : null;
+    // This is the observed reference contract for unsupported reverse directions, not
+    // an unimplemented forward conversion. See the public-call fixtures and regression suite.
+    internal static object UnsupportedReverse() => throw new NotImplementedException();
 }
-public class ActivateCommandLayoutItemFromLayoutModelConverter : CompatibilityConverter
+
+[ValueConversion(typeof(bool), typeof(Visibility))]
+public class BoolToVisibilityConverter : IValueConverter
 {
-    public override object Convert(object value, Type targetType, object parameter, CultureInfo culture) => (object?)LayoutItemFromLayoutModelConverter.Item(value)?.ActivateCommand ?? DependencyProperty.UnsetValue;
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture) =>
+        value == null || targetType == typeof(Visibility) && value is false ? Visibility.Collapsed : Visibility.Visible;
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>
+        targetType == typeof(bool) && value is Visibility visibility ? visibility == Visibility.Visible : throw new ArgumentException("Expected a Visibility value and Boolean target.");
+    public object Convert(object value, Type targetType, object parameter, string language) =>
+        ConverterInterop.Native(Convert(value, targetType, parameter, ConverterInterop.Culture(language)));
+    public object ConvertBack(object value, Type targetType, object parameter, string language) =>
+        ConverterInterop.Native(ConvertBack(value, targetType, parameter, ConverterInterop.Culture(language)));
 }
-public class AutoHideCommandLayoutItemFromLayoutModelConverter : CompatibilityConverter
+
+[ValueConversion(typeof(bool), typeof(Visibility))]
+public class InverseBoolToVisibilityConverter : IValueConverter
 {
-    public override object Convert(object value, Type targetType, object parameter, CultureInfo culture) => (object?)(LayoutItemFromLayoutModelConverter.Item(value) as LayoutAnchorableItem)?.AutoHideCommand ?? DependencyProperty.UnsetValue;
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture) =>
+        targetType == typeof(Visibility) && value is bool flag ? flag ? Visibility.Collapsed : Visibility.Visible : throw new ArgumentException("Expected a Boolean value and Visibility target.");
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>
+        targetType == typeof(bool) && value is Visibility visibility ? visibility != Visibility.Visible : throw new ArgumentException("Expected a Visibility value and Boolean target.");
+    public object Convert(object value, Type targetType, object parameter, string language) =>
+        ConverterInterop.Native(Convert(value, targetType, parameter, ConverterInterop.Culture(language)));
+    public object ConvertBack(object value, Type targetType, object parameter, string language) =>
+        ConverterInterop.Native(ConvertBack(value, targetType, parameter, ConverterInterop.Culture(language)));
 }
-public class HideCommandLayoutItemFromLayoutModelConverter : CompatibilityConverter
+
+[ValueConversion(typeof(AnchorSide), typeof(Orientation))]
+public class AnchorSideToOrientationConverter : IValueConverter
 {
-    public override object Convert(object value, Type targetType, object parameter, CultureInfo culture) => (object?)(LayoutItemFromLayoutModelConverter.Item(value) as LayoutAnchorableItem)?.HideCommand ?? DependencyProperty.UnsetValue;
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture) =>
+        ConverterInterop.Side(value) is AnchorSide.Left or AnchorSide.Right ? Orientation.Vertical : Orientation.Horizontal;
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => ConverterInterop.UnsupportedReverse();
+    public object Convert(object value, Type targetType, object parameter, string language) =>
+        ConverterInterop.Native(Convert(value, targetType, parameter, ConverterInterop.Culture(language)));
+    public object ConvertBack(object value, Type targetType, object parameter, string language) =>
+        ConverterInterop.Native(ConvertBack(value, targetType, parameter, ConverterInterop.Culture(language)));
 }
-public class AnchorableContextMenuAutoHideHeaderConverter : CompatibilityConverter
+
+[ValueConversion(typeof(AnchorSide), typeof(double))]
+public class AnchorSideToAngleConverter : IValueConverter
 {
-    public override object Convert(object value, Type targetType, object parameter, CultureInfo culture) => (value is true || value is LayoutAnchorable { IsAutoHidden: true }) ? Properties.Resources.Anchorable_Dock : Properties.Resources.Anchorable_AutoHide;
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture) =>
+        ConverterInterop.Side(value) is AnchorSide.Left or AnchorSide.Right ? 90d : BindingValue.DoNothing;
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => ConverterInterop.UnsupportedReverse();
+    public object Convert(object value, Type targetType, object parameter, string language) =>
+        ConverterInterop.Native(Convert(value, targetType, parameter, ConverterInterop.Culture(language)));
+    public object ConvertBack(object value, Type targetType, object parameter, string language) =>
+        ConverterInterop.Native(ConvertBack(value, targetType, parameter, ConverterInterop.Culture(language)));
 }
-/// <summary>Callable multi-value adapter. WinUI does not implement WPF MultiBinding; compose a view-model property for XAML bindings.</summary>
-public class AnchorableContextMenuHideVisibilityConverter
+
+public class NullToDoNothingConverter : IValueConverter
 {
-    public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture) => values.Length > 0 && values.All(v => v is true) ? Visibility.Visible : Visibility.Collapsed;
-    public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture) => targetTypes.Select(_ => DependencyProperty.UnsetValue).ToArray();
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => value ?? BindingValue.DoNothing;
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => ConverterInterop.UnsupportedReverse();
+    public object Convert(object value, Type targetType, object parameter, string language) =>
+        ConverterInterop.Native(Convert(value, targetType, parameter, ConverterInterop.Culture(language)));
+    public object ConvertBack(object value, Type targetType, object parameter, string language) =>
+        ConverterInterop.Native(ConvertBack(value, targetType, parameter, ConverterInterop.Culture(language)));
+}
+
+public class UriSourceToBitmapImageConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value == null) return BindingValue.DoNothing;
+        var uri = (Uri)value;
+        // The original public converter returns an Image CONTROL, despite its name.
+        // Image-source identity passthrough and string-to-URI coercion are not its contract.
+        return new Image { Source = new BitmapImage(uri) };
+    }
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => ConverterInterop.UnsupportedReverse();
+    public object Convert(object value, Type targetType, object parameter, string language) =>
+        ConverterInterop.Native(Convert(value, targetType, parameter, ConverterInterop.Culture(language)));
+    public object ConvertBack(object value, Type targetType, object parameter, string language) =>
+        ConverterInterop.Native(ConvertBack(value, targetType, parameter, ConverterInterop.Culture(language)));
+}
+
+public class LayoutItemFromLayoutModelConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => ConverterInterop.Item(value)!;
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => ConverterInterop.UnsupportedReverse();
+    public object Convert(object value, Type targetType, object parameter, string language) =>
+        ConverterInterop.Native(Convert(value, targetType, parameter, ConverterInterop.Culture(language)));
+    public object ConvertBack(object value, Type targetType, object parameter, string language) =>
+        ConverterInterop.Native(ConvertBack(value, targetType, parameter, ConverterInterop.Culture(language)));
+}
+
+public class ActivateCommandLayoutItemFromLayoutModelConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => ConverterInterop.Item(value)?.ActivateCommand!;
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => ConverterInterop.UnsupportedReverse();
+    public object Convert(object value, Type targetType, object parameter, string language) =>
+        ConverterInterop.Native(Convert(value, targetType, parameter, ConverterInterop.Culture(language)));
+    public object ConvertBack(object value, Type targetType, object parameter, string language) =>
+        ConverterInterop.Native(ConvertBack(value, targetType, parameter, ConverterInterop.Culture(language)));
+}
+
+public class AutoHideCommandLayoutItemFromLayoutModelConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => ConverterInterop.Item(value) switch
+    {
+        LayoutAnchorableItem item => item.AutoHideCommand!,
+        null => null!,
+        _ => BindingValue.DoNothing
+    };
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => ConverterInterop.UnsupportedReverse();
+    public object Convert(object value, Type targetType, object parameter, string language) =>
+        ConverterInterop.Native(Convert(value, targetType, parameter, ConverterInterop.Culture(language)));
+    public object ConvertBack(object value, Type targetType, object parameter, string language) =>
+        ConverterInterop.Native(ConvertBack(value, targetType, parameter, ConverterInterop.Culture(language)));
+}
+
+public class HideCommandLayoutItemFromLayoutModelConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => ConverterInterop.Item(value) switch
+    {
+        LayoutAnchorableItem item => item.HideCommand!,
+        null => null!,
+        _ => BindingValue.DoNothing
+    };
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => ConverterInterop.UnsupportedReverse();
+    public object Convert(object value, Type targetType, object parameter, string language) =>
+        ConverterInterop.Native(Convert(value, targetType, parameter, ConverterInterop.Culture(language)));
+    public object ConvertBack(object value, Type targetType, object parameter, string language) =>
+        ConverterInterop.Native(ConvertBack(value, targetType, parameter, ConverterInterop.Culture(language)));
+}
+
+public class AnchorableContextMenuAutoHideHeaderConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture) =>
+        value is true ? Properties.Resources.Window_Restore : Properties.Resources.Anchorable_AutoHide;
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => ConverterInterop.UnsupportedReverse();
+    public object Convert(object value, Type targetType, object parameter, string language) =>
+        ConverterInterop.Native(Convert(value, targetType, parameter, ConverterInterop.Culture(language)));
+    public object ConvertBack(object value, Type targetType, object parameter, string language) =>
+        ConverterInterop.Native(ConvertBack(value, targetType, parameter, ConverterInterop.Culture(language)));
+}
+
+/// <summary>Returns the first value unless a two-input hide flag suppresses visibility.
+/// Input identity, non-visibility values and invalid-array exceptions follow the observed contract.</summary>
+public class AnchorableContextMenuHideVisibilityConverter : IMultiValueConverter
+{
+    public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
+    {
+        ArgumentNullException.ThrowIfNull(values);
+        return values.Length == 2 && values[1] is true ? Visibility.Collapsed : values[0];
+    }
+    public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture) =>
+        throw new NotImplementedException(); // Reference contract: reverse conversion is unsupported.
 }

@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Data;
+using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Xml.Linq;
@@ -18,7 +19,9 @@ internal static class ExtendedConverterProbe
     {
         if (args.Length != 1) throw new ArgumentException("Usage: ExtendedConverterProbe <output-directory>");
         Directory.CreateDirectory(args[0]);
-        var file = Path.Combine(Path.GetTempPath(), "UnoDock-probe-" + Guid.NewGuid().ToString("N") + ".png");
+        var images = Path.Combine(Environment.GetEnvironmentVariable("RUNNER_TEMP") ?? Path.GetTempPath(), "converter-reference", "probe-images");
+        Directory.CreateDirectory(images);
+        var file = Path.Combine(images, "probe-" + Guid.NewGuid().ToString("N") + ".png");
         try
         {
             var encoder = new PngBitmapEncoder();
@@ -55,7 +58,12 @@ internal static class ExtendedConverterProbe
             Console.WriteLine("Observed " + output.Elements().Count() + " extended converter calls.");
             return 0;
         }
-        finally { if (File.Exists(file)) File.Delete(file); }
+        finally
+        {
+            // WPF's decoder may retain an on-demand file handle until this process
+            // exits. The workflow removes the isolated directory after both probes.
+            try { if (File.Exists(file)) File.Delete(file); } catch (IOException) { }
+        }
     }
     private static object Input(string key)
     {
@@ -74,6 +82,8 @@ internal static class ExtendedConverterProbe
         if (ReferenceEquals(result, Binding.DoNothing)) return new XElement("DoNothing");
         if (ReferenceEquals(result, DependencyProperty.UnsetValue)) return new XElement("UnsetValue");
         if (ReferenceEquals(result, input)) return new XElement("InputIdentity");
+        if (result is Image control) return new XElement("Image", new XAttribute("SourceType", control.Source.GetType().FullName),
+            new XAttribute("SameUri", control.Source is BitmapImage source && Equals(source.UriSource, input)), new XAttribute("Stretch", control.Stretch));
         if (result is BitmapImage image) return new XElement("BitmapImage", new XAttribute("SameUri", Equals(image.UriSource, input)));
         var type = result.GetType();
         if (type.IsEnum || type.IsPrimitive || result is string) return new XElement("Scalar", new XAttribute("Type", type.FullName), Convert.ToString(result, CultureInfo.InvariantCulture));

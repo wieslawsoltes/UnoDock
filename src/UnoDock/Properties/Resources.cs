@@ -9,7 +9,7 @@ public class Resources
     public static IDictionary<string, IDictionary<string, string>> Translations { get; } = new Dictionary<string, IDictionary<string, string>>(StringComparer.OrdinalIgnoreCase);
     private static readonly Dictionary<string, string> English = new()
     {
-        ["Anchorable_AutoHide"] = "Auto-hide",
+        ["Anchorable_AutoHide"] = "Auto Hide",
         ["Anchorable_BtnAutoHide_Hint"] = "Pin or auto-hide this tool",
         ["Anchorable_BtnClose_Hint"] = "Close tool",
         ["Anchorable_CxMenu_Hint"] = "Tool actions",
