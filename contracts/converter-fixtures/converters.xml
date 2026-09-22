@@ -1,0 +1,1083 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ConverterObservations>
+  <Case Converter="BoolToVisibilityConverter" Input="null" Reverse="false">
+    <Scalar Type="System.Windows.Visibility">Collapsed</Scalar>
+  </Case>
+  <Case Converter="BoolToVisibilityConverter" Input="null" Reverse="true">
+    <Exception Type="System.ArgumentException" />
+  </Case>
+  <Case Converter="BoolToVisibilityConverter" Input="true" Reverse="false">
+    <Scalar Type="System.Windows.Visibility">Visible</Scalar>
+  </Case>
+  <Case Converter="BoolToVisibilityConverter" Input="true" Reverse="true">
+    <Exception Type="System.ArgumentException" />
+  </Case>
+  <Case Converter="BoolToVisibilityConverter" Input="false" Reverse="false">
+    <Scalar Type="System.Windows.Visibility">Visible</Scalar>
+  </Case>
+  <Case Converter="BoolToVisibilityConverter" Input="false" Reverse="true">
+    <Exception Type="System.ArgumentException" />
+  </Case>
+  <Case Converter="BoolToVisibilityConverter" Input="zero" Reverse="false">
+    <Scalar Type="System.Windows.Visibility">Visible</Scalar>
+  </Case>
+  <Case Converter="BoolToVisibilityConverter" Input="zero" Reverse="true">
+    <Exception Type="System.ArgumentException" />
+  </Case>
+  <Case Converter="BoolToVisibilityConverter" Input="one" Reverse="false">
+    <Scalar Type="System.Windows.Visibility">Visible</Scalar>
+  </Case>
+  <Case Converter="BoolToVisibilityConverter" Input="one" Reverse="true">
+    <Exception Type="System.ArgumentException" />
+  </Case>
+  <Case Converter="BoolToVisibilityConverter" Input="string" Reverse="false">
+    <Scalar Type="System.Windows.Visibility">Visible</Scalar>
+  </Case>
+  <Case Converter="BoolToVisibilityConverter" Input="string" Reverse="true">
+    <Exception Type="System.ArgumentException" />
+  </Case>
+  <Case Converter="BoolToVisibilityConverter" Input="visible" Reverse="false">
+    <Scalar Type="System.Windows.Visibility">Visible</Scalar>
+  </Case>
+  <Case Converter="BoolToVisibilityConverter" Input="visible" Reverse="true">
+    <Exception Type="System.ArgumentException" />
+  </Case>
+  <Case Converter="BoolToVisibilityConverter" Input="collapsed" Reverse="false">
+    <Scalar Type="System.Windows.Visibility">Visible</Scalar>
+  </Case>
+  <Case Converter="BoolToVisibilityConverter" Input="collapsed" Reverse="true">
+    <Exception Type="System.ArgumentException" />
+  </Case>
+  <Case Converter="BoolToVisibilityConverter" Input="left" Reverse="false">
+    <Scalar Type="System.Windows.Visibility">Visible</Scalar>
+  </Case>
+  <Case Converter="BoolToVisibilityConverter" Input="left" Reverse="true">
+    <Exception Type="System.ArgumentException" />
+  </Case>
+  <Case Converter="BoolToVisibilityConverter" Input="right" Reverse="false">
+    <Scalar Type="System.Windows.Visibility">Visible</Scalar>
+  </Case>
+  <Case Converter="BoolToVisibilityConverter" Input="right" Reverse="true">
+    <Exception Type="System.ArgumentException" />
+  </Case>
+  <Case Converter="BoolToVisibilityConverter" Input="top" Reverse="false">
+    <Scalar Type="System.Windows.Visibility">Visible</Scalar>
+  </Case>
+  <Case Converter="BoolToVisibilityConverter" Input="top" Reverse="true">
+    <Exception Type="System.ArgumentException" />
+  </Case>
+  <Case Converter="BoolToVisibilityConverter" Input="bottom" Reverse="false">
+    <Scalar Type="System.Windows.Visibility">Visible</Scalar>
+  </Case>
+  <Case Converter="BoolToVisibilityConverter" Input="bottom" Reverse="true">
+    <Exception Type="System.ArgumentException" />
+  </Case>
+  <Case Converter="BoolToVisibilityConverter" Input="invalid-side" Reverse="false">
+    <Scalar Type="System.Windows.Visibility">Visible</Scalar>
+  </Case>
+  <Case Converter="BoolToVisibilityConverter" Input="invalid-side" Reverse="true">
+    <Exception Type="System.ArgumentException" />
+  </Case>
+  <Case Converter="BoolToVisibilityConverter" Input="document" Reverse="false">
+    <Scalar Type="System.Windows.Visibility">Visible</Scalar>
+  </Case>
+  <Case Converter="BoolToVisibilityConverter" Input="document" Reverse="true">
+    <Exception Type="System.ArgumentException" />
+  </Case>
+  <Case Converter="BoolToVisibilityConverter" Input="tool" Reverse="false">
+    <Scalar Type="System.Windows.Visibility">Visible</Scalar>
+  </Case>
+  <Case Converter="BoolToVisibilityConverter" Input="tool" Reverse="true">
+    <Exception Type="System.ArgumentException" />
+  </Case>
+  <Case Converter="BoolToVisibilityConverter" Input="attached-document" Reverse="false">
+    <Scalar Type="System.Windows.Visibility">Visible</Scalar>
+  </Case>
+  <Case Converter="BoolToVisibilityConverter" Input="attached-document" Reverse="true">
+    <Exception Type="System.ArgumentException" />
+  </Case>
+  <Case Converter="BoolToVisibilityConverter" Input="attached-tool" Reverse="false">
+    <Scalar Type="System.Windows.Visibility">Visible</Scalar>
+  </Case>
+  <Case Converter="BoolToVisibilityConverter" Input="attached-tool" Reverse="true">
+    <Exception Type="System.ArgumentException" />
+  </Case>
+  <Case Converter="InverseBoolToVisibilityConverter" Input="null" Reverse="false">
+    <Exception Type="System.ArgumentException" />
+  </Case>
+  <Case Converter="InverseBoolToVisibilityConverter" Input="null" Reverse="true">
+    <Exception Type="System.ArgumentException" />
+  </Case>
+  <Case Converter="InverseBoolToVisibilityConverter" Input="true" Reverse="false">
+    <Exception Type="System.ArgumentException" />
+  </Case>
+  <Case Converter="InverseBoolToVisibilityConverter" Input="true" Reverse="true">
+    <Exception Type="System.ArgumentException" />
+  </Case>
+  <Case Converter="InverseBoolToVisibilityConverter" Input="false" Reverse="false">
+    <Exception Type="System.ArgumentException" />
+  </Case>
+  <Case Converter="InverseBoolToVisibilityConverter" Input="false" Reverse="true">
+    <Exception Type="System.ArgumentException" />
+  </Case>
+  <Case Converter="InverseBoolToVisibilityConverter" Input="zero" Reverse="false">
+    <Exception Type="System.ArgumentException" />
+  </Case>
+  <Case Converter="InverseBoolToVisibilityConverter" Input="zero" Reverse="true">
+    <Exception Type="System.ArgumentException" />
+  </Case>
+  <Case Converter="InverseBoolToVisibilityConverter" Input="one" Reverse="false">
+    <Exception Type="System.ArgumentException" />
+  </Case>
+  <Case Converter="InverseBoolToVisibilityConverter" Input="one" Reverse="true">
+    <Exception Type="System.ArgumentException" />
+  </Case>
+  <Case Converter="InverseBoolToVisibilityConverter" Input="string" Reverse="false">
+    <Exception Type="System.ArgumentException" />
+  </Case>
+  <Case Converter="InverseBoolToVisibilityConverter" Input="string" Reverse="true">
+    <Exception Type="System.ArgumentException" />
+  </Case>
+  <Case Converter="InverseBoolToVisibilityConverter" Input="visible" Reverse="false">
+    <Exception Type="System.ArgumentException" />
+  </Case>
+  <Case Converter="InverseBoolToVisibilityConverter" Input="visible" Reverse="true">
+    <Exception Type="System.ArgumentException" />
+  </Case>
+  <Case Converter="InverseBoolToVisibilityConverter" Input="collapsed" Reverse="false">
+    <Exception Type="System.ArgumentException" />
+  </Case>
+  <Case Converter="InverseBoolToVisibilityConverter" Input="collapsed" Reverse="true">
+    <Exception Type="System.ArgumentException" />
+  </Case>
+  <Case Converter="InverseBoolToVisibilityConverter" Input="left" Reverse="false">
+    <Exception Type="System.ArgumentException" />
+  </Case>
+  <Case Converter="InverseBoolToVisibilityConverter" Input="left" Reverse="true">
+    <Exception Type="System.ArgumentException" />
+  </Case>
+  <Case Converter="InverseBoolToVisibilityConverter" Input="right" Reverse="false">
+    <Exception Type="System.ArgumentException" />
+  </Case>
+  <Case Converter="InverseBoolToVisibilityConverter" Input="right" Reverse="true">
+    <Exception Type="System.ArgumentException" />
+  </Case>
+  <Case Converter="InverseBoolToVisibilityConverter" Input="top" Reverse="false">
+    <Exception Type="System.ArgumentException" />
+  </Case>
+  <Case Converter="InverseBoolToVisibilityConverter" Input="top" Reverse="true">
+    <Exception Type="System.ArgumentException" />
+  </Case>
+  <Case Converter="InverseBoolToVisibilityConverter" Input="bottom" Reverse="false">
+    <Exception Type="System.ArgumentException" />
+  </Case>
+  <Case Converter="InverseBoolToVisibilityConverter" Input="bottom" Reverse="true">
+    <Exception Type="System.ArgumentException" />
+  </Case>
+  <Case Converter="InverseBoolToVisibilityConverter" Input="invalid-side" Reverse="false">
+    <Exception Type="System.ArgumentException" />
+  </Case>
+  <Case Converter="InverseBoolToVisibilityConverter" Input="invalid-side" Reverse="true">
+    <Exception Type="System.ArgumentException" />
+  </Case>
+  <Case Converter="InverseBoolToVisibilityConverter" Input="document" Reverse="false">
+    <Exception Type="System.ArgumentException" />
+  </Case>
+  <Case Converter="InverseBoolToVisibilityConverter" Input="document" Reverse="true">
+    <Exception Type="System.ArgumentException" />
+  </Case>
+  <Case Converter="InverseBoolToVisibilityConverter" Input="tool" Reverse="false">
+    <Exception Type="System.ArgumentException" />
+  </Case>
+  <Case Converter="InverseBoolToVisibilityConverter" Input="tool" Reverse="true">
+    <Exception Type="System.ArgumentException" />
+  </Case>
+  <Case Converter="InverseBoolToVisibilityConverter" Input="attached-document" Reverse="false">
+    <Exception Type="System.ArgumentException" />
+  </Case>
+  <Case Converter="InverseBoolToVisibilityConverter" Input="attached-document" Reverse="true">
+    <Exception Type="System.ArgumentException" />
+  </Case>
+  <Case Converter="InverseBoolToVisibilityConverter" Input="attached-tool" Reverse="false">
+    <Exception Type="System.ArgumentException" />
+  </Case>
+  <Case Converter="InverseBoolToVisibilityConverter" Input="attached-tool" Reverse="true">
+    <Exception Type="System.ArgumentException" />
+  </Case>
+  <Case Converter="AnchorSideToAngleConverter" Input="null" Reverse="false">
+    <Exception Type="System.NullReferenceException" />
+  </Case>
+  <Case Converter="AnchorSideToAngleConverter" Input="null" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AnchorSideToAngleConverter" Input="true" Reverse="false">
+    <Exception Type="System.InvalidCastException" />
+  </Case>
+  <Case Converter="AnchorSideToAngleConverter" Input="true" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AnchorSideToAngleConverter" Input="false" Reverse="false">
+    <Exception Type="System.InvalidCastException" />
+  </Case>
+  <Case Converter="AnchorSideToAngleConverter" Input="false" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AnchorSideToAngleConverter" Input="zero" Reverse="false">
+    <Scalar Type="System.Double">90</Scalar>
+  </Case>
+  <Case Converter="AnchorSideToAngleConverter" Input="zero" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AnchorSideToAngleConverter" Input="one" Reverse="false">
+    <DoNothing />
+  </Case>
+  <Case Converter="AnchorSideToAngleConverter" Input="one" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AnchorSideToAngleConverter" Input="string" Reverse="false">
+    <Exception Type="System.InvalidCastException" />
+  </Case>
+  <Case Converter="AnchorSideToAngleConverter" Input="string" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AnchorSideToAngleConverter" Input="visible" Reverse="false">
+    <Exception Type="System.InvalidCastException" />
+  </Case>
+  <Case Converter="AnchorSideToAngleConverter" Input="visible" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AnchorSideToAngleConverter" Input="collapsed" Reverse="false">
+    <Exception Type="System.InvalidCastException" />
+  </Case>
+  <Case Converter="AnchorSideToAngleConverter" Input="collapsed" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AnchorSideToAngleConverter" Input="left" Reverse="false">
+    <Scalar Type="System.Double">90</Scalar>
+  </Case>
+  <Case Converter="AnchorSideToAngleConverter" Input="left" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AnchorSideToAngleConverter" Input="right" Reverse="false">
+    <Scalar Type="System.Double">90</Scalar>
+  </Case>
+  <Case Converter="AnchorSideToAngleConverter" Input="right" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AnchorSideToAngleConverter" Input="top" Reverse="false">
+    <DoNothing />
+  </Case>
+  <Case Converter="AnchorSideToAngleConverter" Input="top" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AnchorSideToAngleConverter" Input="bottom" Reverse="false">
+    <DoNothing />
+  </Case>
+  <Case Converter="AnchorSideToAngleConverter" Input="bottom" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AnchorSideToAngleConverter" Input="invalid-side" Reverse="false">
+    <DoNothing />
+  </Case>
+  <Case Converter="AnchorSideToAngleConverter" Input="invalid-side" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AnchorSideToAngleConverter" Input="document" Reverse="false">
+    <Exception Type="System.InvalidCastException" />
+  </Case>
+  <Case Converter="AnchorSideToAngleConverter" Input="document" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AnchorSideToAngleConverter" Input="tool" Reverse="false">
+    <Exception Type="System.InvalidCastException" />
+  </Case>
+  <Case Converter="AnchorSideToAngleConverter" Input="tool" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AnchorSideToAngleConverter" Input="attached-document" Reverse="false">
+    <Exception Type="System.InvalidCastException" />
+  </Case>
+  <Case Converter="AnchorSideToAngleConverter" Input="attached-document" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AnchorSideToAngleConverter" Input="attached-tool" Reverse="false">
+    <Exception Type="System.InvalidCastException" />
+  </Case>
+  <Case Converter="AnchorSideToAngleConverter" Input="attached-tool" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AnchorSideToOrientationConverter" Input="null" Reverse="false">
+    <Exception Type="System.NullReferenceException" />
+  </Case>
+  <Case Converter="AnchorSideToOrientationConverter" Input="null" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AnchorSideToOrientationConverter" Input="true" Reverse="false">
+    <Exception Type="System.InvalidCastException" />
+  </Case>
+  <Case Converter="AnchorSideToOrientationConverter" Input="true" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AnchorSideToOrientationConverter" Input="false" Reverse="false">
+    <Exception Type="System.InvalidCastException" />
+  </Case>
+  <Case Converter="AnchorSideToOrientationConverter" Input="false" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AnchorSideToOrientationConverter" Input="zero" Reverse="false">
+    <Scalar Type="System.Windows.Controls.Orientation">Vertical</Scalar>
+  </Case>
+  <Case Converter="AnchorSideToOrientationConverter" Input="zero" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AnchorSideToOrientationConverter" Input="one" Reverse="false">
+    <Scalar Type="System.Windows.Controls.Orientation">Horizontal</Scalar>
+  </Case>
+  <Case Converter="AnchorSideToOrientationConverter" Input="one" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AnchorSideToOrientationConverter" Input="string" Reverse="false">
+    <Exception Type="System.InvalidCastException" />
+  </Case>
+  <Case Converter="AnchorSideToOrientationConverter" Input="string" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AnchorSideToOrientationConverter" Input="visible" Reverse="false">
+    <Exception Type="System.InvalidCastException" />
+  </Case>
+  <Case Converter="AnchorSideToOrientationConverter" Input="visible" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AnchorSideToOrientationConverter" Input="collapsed" Reverse="false">
+    <Exception Type="System.InvalidCastException" />
+  </Case>
+  <Case Converter="AnchorSideToOrientationConverter" Input="collapsed" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AnchorSideToOrientationConverter" Input="left" Reverse="false">
+    <Scalar Type="System.Windows.Controls.Orientation">Vertical</Scalar>
+  </Case>
+  <Case Converter="AnchorSideToOrientationConverter" Input="left" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AnchorSideToOrientationConverter" Input="right" Reverse="false">
+    <Scalar Type="System.Windows.Controls.Orientation">Vertical</Scalar>
+  </Case>
+  <Case Converter="AnchorSideToOrientationConverter" Input="right" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AnchorSideToOrientationConverter" Input="top" Reverse="false">
+    <Scalar Type="System.Windows.Controls.Orientation">Horizontal</Scalar>
+  </Case>
+  <Case Converter="AnchorSideToOrientationConverter" Input="top" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AnchorSideToOrientationConverter" Input="bottom" Reverse="false">
+    <Scalar Type="System.Windows.Controls.Orientation">Horizontal</Scalar>
+  </Case>
+  <Case Converter="AnchorSideToOrientationConverter" Input="bottom" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AnchorSideToOrientationConverter" Input="invalid-side" Reverse="false">
+    <Scalar Type="System.Windows.Controls.Orientation">Horizontal</Scalar>
+  </Case>
+  <Case Converter="AnchorSideToOrientationConverter" Input="invalid-side" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AnchorSideToOrientationConverter" Input="document" Reverse="false">
+    <Exception Type="System.InvalidCastException" />
+  </Case>
+  <Case Converter="AnchorSideToOrientationConverter" Input="document" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AnchorSideToOrientationConverter" Input="tool" Reverse="false">
+    <Exception Type="System.InvalidCastException" />
+  </Case>
+  <Case Converter="AnchorSideToOrientationConverter" Input="tool" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AnchorSideToOrientationConverter" Input="attached-document" Reverse="false">
+    <Exception Type="System.InvalidCastException" />
+  </Case>
+  <Case Converter="AnchorSideToOrientationConverter" Input="attached-document" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AnchorSideToOrientationConverter" Input="attached-tool" Reverse="false">
+    <Exception Type="System.InvalidCastException" />
+  </Case>
+  <Case Converter="AnchorSideToOrientationConverter" Input="attached-tool" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="NullToDoNothingConverter" Input="null" Reverse="false">
+    <DoNothing />
+  </Case>
+  <Case Converter="NullToDoNothingConverter" Input="null" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="NullToDoNothingConverter" Input="true" Reverse="false">
+    <InputIdentity />
+  </Case>
+  <Case Converter="NullToDoNothingConverter" Input="true" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="NullToDoNothingConverter" Input="false" Reverse="false">
+    <InputIdentity />
+  </Case>
+  <Case Converter="NullToDoNothingConverter" Input="false" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="NullToDoNothingConverter" Input="zero" Reverse="false">
+    <InputIdentity />
+  </Case>
+  <Case Converter="NullToDoNothingConverter" Input="zero" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="NullToDoNothingConverter" Input="one" Reverse="false">
+    <InputIdentity />
+  </Case>
+  <Case Converter="NullToDoNothingConverter" Input="one" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="NullToDoNothingConverter" Input="string" Reverse="false">
+    <InputIdentity />
+  </Case>
+  <Case Converter="NullToDoNothingConverter" Input="string" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="NullToDoNothingConverter" Input="visible" Reverse="false">
+    <InputIdentity />
+  </Case>
+  <Case Converter="NullToDoNothingConverter" Input="visible" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="NullToDoNothingConverter" Input="collapsed" Reverse="false">
+    <InputIdentity />
+  </Case>
+  <Case Converter="NullToDoNothingConverter" Input="collapsed" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="NullToDoNothingConverter" Input="left" Reverse="false">
+    <InputIdentity />
+  </Case>
+  <Case Converter="NullToDoNothingConverter" Input="left" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="NullToDoNothingConverter" Input="right" Reverse="false">
+    <InputIdentity />
+  </Case>
+  <Case Converter="NullToDoNothingConverter" Input="right" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="NullToDoNothingConverter" Input="top" Reverse="false">
+    <InputIdentity />
+  </Case>
+  <Case Converter="NullToDoNothingConverter" Input="top" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="NullToDoNothingConverter" Input="bottom" Reverse="false">
+    <InputIdentity />
+  </Case>
+  <Case Converter="NullToDoNothingConverter" Input="bottom" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="NullToDoNothingConverter" Input="invalid-side" Reverse="false">
+    <InputIdentity />
+  </Case>
+  <Case Converter="NullToDoNothingConverter" Input="invalid-side" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="NullToDoNothingConverter" Input="document" Reverse="false">
+    <InputIdentity />
+  </Case>
+  <Case Converter="NullToDoNothingConverter" Input="document" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="NullToDoNothingConverter" Input="tool" Reverse="false">
+    <InputIdentity />
+  </Case>
+  <Case Converter="NullToDoNothingConverter" Input="tool" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="NullToDoNothingConverter" Input="attached-document" Reverse="false">
+    <InputIdentity />
+  </Case>
+  <Case Converter="NullToDoNothingConverter" Input="attached-document" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="NullToDoNothingConverter" Input="attached-tool" Reverse="false">
+    <InputIdentity />
+  </Case>
+  <Case Converter="NullToDoNothingConverter" Input="attached-tool" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AnchorableContextMenuAutoHideHeaderConverter" Input="null" Reverse="false">
+    <Scalar Type="System.String">Auto Hide</Scalar>
+  </Case>
+  <Case Converter="AnchorableContextMenuAutoHideHeaderConverter" Input="null" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AnchorableContextMenuAutoHideHeaderConverter" Input="true" Reverse="false">
+    <Scalar Type="System.String">Restore</Scalar>
+  </Case>
+  <Case Converter="AnchorableContextMenuAutoHideHeaderConverter" Input="true" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AnchorableContextMenuAutoHideHeaderConverter" Input="false" Reverse="false">
+    <Scalar Type="System.String">Auto Hide</Scalar>
+  </Case>
+  <Case Converter="AnchorableContextMenuAutoHideHeaderConverter" Input="false" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AnchorableContextMenuAutoHideHeaderConverter" Input="zero" Reverse="false">
+    <Scalar Type="System.String">Auto Hide</Scalar>
+  </Case>
+  <Case Converter="AnchorableContextMenuAutoHideHeaderConverter" Input="zero" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AnchorableContextMenuAutoHideHeaderConverter" Input="one" Reverse="false">
+    <Scalar Type="System.String">Auto Hide</Scalar>
+  </Case>
+  <Case Converter="AnchorableContextMenuAutoHideHeaderConverter" Input="one" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AnchorableContextMenuAutoHideHeaderConverter" Input="string" Reverse="false">
+    <Scalar Type="System.String">Auto Hide</Scalar>
+  </Case>
+  <Case Converter="AnchorableContextMenuAutoHideHeaderConverter" Input="string" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AnchorableContextMenuAutoHideHeaderConverter" Input="visible" Reverse="false">
+    <Scalar Type="System.String">Auto Hide</Scalar>
+  </Case>
+  <Case Converter="AnchorableContextMenuAutoHideHeaderConverter" Input="visible" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AnchorableContextMenuAutoHideHeaderConverter" Input="collapsed" Reverse="false">
+    <Scalar Type="System.String">Auto Hide</Scalar>
+  </Case>
+  <Case Converter="AnchorableContextMenuAutoHideHeaderConverter" Input="collapsed" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AnchorableContextMenuAutoHideHeaderConverter" Input="left" Reverse="false">
+    <Scalar Type="System.String">Auto Hide</Scalar>
+  </Case>
+  <Case Converter="AnchorableContextMenuAutoHideHeaderConverter" Input="left" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AnchorableContextMenuAutoHideHeaderConverter" Input="right" Reverse="false">
+    <Scalar Type="System.String">Auto Hide</Scalar>
+  </Case>
+  <Case Converter="AnchorableContextMenuAutoHideHeaderConverter" Input="right" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AnchorableContextMenuAutoHideHeaderConverter" Input="top" Reverse="false">
+    <Scalar Type="System.String">Auto Hide</Scalar>
+  </Case>
+  <Case Converter="AnchorableContextMenuAutoHideHeaderConverter" Input="top" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AnchorableContextMenuAutoHideHeaderConverter" Input="bottom" Reverse="false">
+    <Scalar Type="System.String">Auto Hide</Scalar>
+  </Case>
+  <Case Converter="AnchorableContextMenuAutoHideHeaderConverter" Input="bottom" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AnchorableContextMenuAutoHideHeaderConverter" Input="invalid-side" Reverse="false">
+    <Scalar Type="System.String">Auto Hide</Scalar>
+  </Case>
+  <Case Converter="AnchorableContextMenuAutoHideHeaderConverter" Input="invalid-side" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AnchorableContextMenuAutoHideHeaderConverter" Input="document" Reverse="false">
+    <Scalar Type="System.String">Auto Hide</Scalar>
+  </Case>
+  <Case Converter="AnchorableContextMenuAutoHideHeaderConverter" Input="document" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AnchorableContextMenuAutoHideHeaderConverter" Input="tool" Reverse="false">
+    <Scalar Type="System.String">Auto Hide</Scalar>
+  </Case>
+  <Case Converter="AnchorableContextMenuAutoHideHeaderConverter" Input="tool" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AnchorableContextMenuAutoHideHeaderConverter" Input="attached-document" Reverse="false">
+    <Scalar Type="System.String">Auto Hide</Scalar>
+  </Case>
+  <Case Converter="AnchorableContextMenuAutoHideHeaderConverter" Input="attached-document" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AnchorableContextMenuAutoHideHeaderConverter" Input="attached-tool" Reverse="false">
+    <Scalar Type="System.String">Auto Hide</Scalar>
+  </Case>
+  <Case Converter="AnchorableContextMenuAutoHideHeaderConverter" Input="attached-tool" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="LayoutItemFromLayoutModelConverter" Input="null" Reverse="false">
+    <Null />
+  </Case>
+  <Case Converter="LayoutItemFromLayoutModelConverter" Input="null" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="LayoutItemFromLayoutModelConverter" Input="true" Reverse="false">
+    <Null />
+  </Case>
+  <Case Converter="LayoutItemFromLayoutModelConverter" Input="true" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="LayoutItemFromLayoutModelConverter" Input="false" Reverse="false">
+    <Null />
+  </Case>
+  <Case Converter="LayoutItemFromLayoutModelConverter" Input="false" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="LayoutItemFromLayoutModelConverter" Input="zero" Reverse="false">
+    <Null />
+  </Case>
+  <Case Converter="LayoutItemFromLayoutModelConverter" Input="zero" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="LayoutItemFromLayoutModelConverter" Input="one" Reverse="false">
+    <Null />
+  </Case>
+  <Case Converter="LayoutItemFromLayoutModelConverter" Input="one" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="LayoutItemFromLayoutModelConverter" Input="string" Reverse="false">
+    <Null />
+  </Case>
+  <Case Converter="LayoutItemFromLayoutModelConverter" Input="string" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="LayoutItemFromLayoutModelConverter" Input="visible" Reverse="false">
+    <Null />
+  </Case>
+  <Case Converter="LayoutItemFromLayoutModelConverter" Input="visible" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="LayoutItemFromLayoutModelConverter" Input="collapsed" Reverse="false">
+    <Null />
+  </Case>
+  <Case Converter="LayoutItemFromLayoutModelConverter" Input="collapsed" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="LayoutItemFromLayoutModelConverter" Input="left" Reverse="false">
+    <Null />
+  </Case>
+  <Case Converter="LayoutItemFromLayoutModelConverter" Input="left" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="LayoutItemFromLayoutModelConverter" Input="right" Reverse="false">
+    <Null />
+  </Case>
+  <Case Converter="LayoutItemFromLayoutModelConverter" Input="right" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="LayoutItemFromLayoutModelConverter" Input="top" Reverse="false">
+    <Null />
+  </Case>
+  <Case Converter="LayoutItemFromLayoutModelConverter" Input="top" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="LayoutItemFromLayoutModelConverter" Input="bottom" Reverse="false">
+    <Null />
+  </Case>
+  <Case Converter="LayoutItemFromLayoutModelConverter" Input="bottom" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="LayoutItemFromLayoutModelConverter" Input="invalid-side" Reverse="false">
+    <Null />
+  </Case>
+  <Case Converter="LayoutItemFromLayoutModelConverter" Input="invalid-side" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="LayoutItemFromLayoutModelConverter" Input="document" Reverse="false">
+    <Null />
+  </Case>
+  <Case Converter="LayoutItemFromLayoutModelConverter" Input="document" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="LayoutItemFromLayoutModelConverter" Input="tool" Reverse="false">
+    <Null />
+  </Case>
+  <Case Converter="LayoutItemFromLayoutModelConverter" Input="tool" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="LayoutItemFromLayoutModelConverter" Input="attached-document" Reverse="false">
+    <DocumentItem />
+  </Case>
+  <Case Converter="LayoutItemFromLayoutModelConverter" Input="attached-document" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="LayoutItemFromLayoutModelConverter" Input="attached-tool" Reverse="false">
+    <ToolItem />
+  </Case>
+  <Case Converter="LayoutItemFromLayoutModelConverter" Input="attached-tool" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="ActivateCommandLayoutItemFromLayoutModelConverter" Input="null" Reverse="false">
+    <Null />
+  </Case>
+  <Case Converter="ActivateCommandLayoutItemFromLayoutModelConverter" Input="null" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="ActivateCommandLayoutItemFromLayoutModelConverter" Input="true" Reverse="false">
+    <Null />
+  </Case>
+  <Case Converter="ActivateCommandLayoutItemFromLayoutModelConverter" Input="true" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="ActivateCommandLayoutItemFromLayoutModelConverter" Input="false" Reverse="false">
+    <Null />
+  </Case>
+  <Case Converter="ActivateCommandLayoutItemFromLayoutModelConverter" Input="false" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="ActivateCommandLayoutItemFromLayoutModelConverter" Input="zero" Reverse="false">
+    <Null />
+  </Case>
+  <Case Converter="ActivateCommandLayoutItemFromLayoutModelConverter" Input="zero" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="ActivateCommandLayoutItemFromLayoutModelConverter" Input="one" Reverse="false">
+    <Null />
+  </Case>
+  <Case Converter="ActivateCommandLayoutItemFromLayoutModelConverter" Input="one" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="ActivateCommandLayoutItemFromLayoutModelConverter" Input="string" Reverse="false">
+    <Null />
+  </Case>
+  <Case Converter="ActivateCommandLayoutItemFromLayoutModelConverter" Input="string" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="ActivateCommandLayoutItemFromLayoutModelConverter" Input="visible" Reverse="false">
+    <Null />
+  </Case>
+  <Case Converter="ActivateCommandLayoutItemFromLayoutModelConverter" Input="visible" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="ActivateCommandLayoutItemFromLayoutModelConverter" Input="collapsed" Reverse="false">
+    <Null />
+  </Case>
+  <Case Converter="ActivateCommandLayoutItemFromLayoutModelConverter" Input="collapsed" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="ActivateCommandLayoutItemFromLayoutModelConverter" Input="left" Reverse="false">
+    <Null />
+  </Case>
+  <Case Converter="ActivateCommandLayoutItemFromLayoutModelConverter" Input="left" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="ActivateCommandLayoutItemFromLayoutModelConverter" Input="right" Reverse="false">
+    <Null />
+  </Case>
+  <Case Converter="ActivateCommandLayoutItemFromLayoutModelConverter" Input="right" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="ActivateCommandLayoutItemFromLayoutModelConverter" Input="top" Reverse="false">
+    <Null />
+  </Case>
+  <Case Converter="ActivateCommandLayoutItemFromLayoutModelConverter" Input="top" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="ActivateCommandLayoutItemFromLayoutModelConverter" Input="bottom" Reverse="false">
+    <Null />
+  </Case>
+  <Case Converter="ActivateCommandLayoutItemFromLayoutModelConverter" Input="bottom" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="ActivateCommandLayoutItemFromLayoutModelConverter" Input="invalid-side" Reverse="false">
+    <Null />
+  </Case>
+  <Case Converter="ActivateCommandLayoutItemFromLayoutModelConverter" Input="invalid-side" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="ActivateCommandLayoutItemFromLayoutModelConverter" Input="document" Reverse="false">
+    <Null />
+  </Case>
+  <Case Converter="ActivateCommandLayoutItemFromLayoutModelConverter" Input="document" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="ActivateCommandLayoutItemFromLayoutModelConverter" Input="tool" Reverse="false">
+    <Null />
+  </Case>
+  <Case Converter="ActivateCommandLayoutItemFromLayoutModelConverter" Input="tool" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="ActivateCommandLayoutItemFromLayoutModelConverter" Input="attached-document" Reverse="false">
+    <ActivateCommand />
+  </Case>
+  <Case Converter="ActivateCommandLayoutItemFromLayoutModelConverter" Input="attached-document" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="ActivateCommandLayoutItemFromLayoutModelConverter" Input="attached-tool" Reverse="false">
+    <ActivateCommand />
+  </Case>
+  <Case Converter="ActivateCommandLayoutItemFromLayoutModelConverter" Input="attached-tool" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AutoHideCommandLayoutItemFromLayoutModelConverter" Input="null" Reverse="false">
+    <Null />
+  </Case>
+  <Case Converter="AutoHideCommandLayoutItemFromLayoutModelConverter" Input="null" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AutoHideCommandLayoutItemFromLayoutModelConverter" Input="true" Reverse="false">
+    <Null />
+  </Case>
+  <Case Converter="AutoHideCommandLayoutItemFromLayoutModelConverter" Input="true" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AutoHideCommandLayoutItemFromLayoutModelConverter" Input="false" Reverse="false">
+    <Null />
+  </Case>
+  <Case Converter="AutoHideCommandLayoutItemFromLayoutModelConverter" Input="false" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AutoHideCommandLayoutItemFromLayoutModelConverter" Input="zero" Reverse="false">
+    <Null />
+  </Case>
+  <Case Converter="AutoHideCommandLayoutItemFromLayoutModelConverter" Input="zero" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AutoHideCommandLayoutItemFromLayoutModelConverter" Input="one" Reverse="false">
+    <Null />
+  </Case>
+  <Case Converter="AutoHideCommandLayoutItemFromLayoutModelConverter" Input="one" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AutoHideCommandLayoutItemFromLayoutModelConverter" Input="string" Reverse="false">
+    <Null />
+  </Case>
+  <Case Converter="AutoHideCommandLayoutItemFromLayoutModelConverter" Input="string" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AutoHideCommandLayoutItemFromLayoutModelConverter" Input="visible" Reverse="false">
+    <Null />
+  </Case>
+  <Case Converter="AutoHideCommandLayoutItemFromLayoutModelConverter" Input="visible" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AutoHideCommandLayoutItemFromLayoutModelConverter" Input="collapsed" Reverse="false">
+    <Null />
+  </Case>
+  <Case Converter="AutoHideCommandLayoutItemFromLayoutModelConverter" Input="collapsed" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AutoHideCommandLayoutItemFromLayoutModelConverter" Input="left" Reverse="false">
+    <Null />
+  </Case>
+  <Case Converter="AutoHideCommandLayoutItemFromLayoutModelConverter" Input="left" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AutoHideCommandLayoutItemFromLayoutModelConverter" Input="right" Reverse="false">
+    <Null />
+  </Case>
+  <Case Converter="AutoHideCommandLayoutItemFromLayoutModelConverter" Input="right" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AutoHideCommandLayoutItemFromLayoutModelConverter" Input="top" Reverse="false">
+    <Null />
+  </Case>
+  <Case Converter="AutoHideCommandLayoutItemFromLayoutModelConverter" Input="top" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AutoHideCommandLayoutItemFromLayoutModelConverter" Input="bottom" Reverse="false">
+    <Null />
+  </Case>
+  <Case Converter="AutoHideCommandLayoutItemFromLayoutModelConverter" Input="bottom" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AutoHideCommandLayoutItemFromLayoutModelConverter" Input="invalid-side" Reverse="false">
+    <Null />
+  </Case>
+  <Case Converter="AutoHideCommandLayoutItemFromLayoutModelConverter" Input="invalid-side" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AutoHideCommandLayoutItemFromLayoutModelConverter" Input="document" Reverse="false">
+    <Null />
+  </Case>
+  <Case Converter="AutoHideCommandLayoutItemFromLayoutModelConverter" Input="document" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AutoHideCommandLayoutItemFromLayoutModelConverter" Input="tool" Reverse="false">
+    <Null />
+  </Case>
+  <Case Converter="AutoHideCommandLayoutItemFromLayoutModelConverter" Input="tool" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AutoHideCommandLayoutItemFromLayoutModelConverter" Input="attached-document" Reverse="false">
+    <DoNothing />
+  </Case>
+  <Case Converter="AutoHideCommandLayoutItemFromLayoutModelConverter" Input="attached-document" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="AutoHideCommandLayoutItemFromLayoutModelConverter" Input="attached-tool" Reverse="false">
+    <Command />
+  </Case>
+  <Case Converter="AutoHideCommandLayoutItemFromLayoutModelConverter" Input="attached-tool" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="HideCommandLayoutItemFromLayoutModelConverter" Input="null" Reverse="false">
+    <Null />
+  </Case>
+  <Case Converter="HideCommandLayoutItemFromLayoutModelConverter" Input="null" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="HideCommandLayoutItemFromLayoutModelConverter" Input="true" Reverse="false">
+    <Null />
+  </Case>
+  <Case Converter="HideCommandLayoutItemFromLayoutModelConverter" Input="true" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="HideCommandLayoutItemFromLayoutModelConverter" Input="false" Reverse="false">
+    <Null />
+  </Case>
+  <Case Converter="HideCommandLayoutItemFromLayoutModelConverter" Input="false" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="HideCommandLayoutItemFromLayoutModelConverter" Input="zero" Reverse="false">
+    <Null />
+  </Case>
+  <Case Converter="HideCommandLayoutItemFromLayoutModelConverter" Input="zero" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="HideCommandLayoutItemFromLayoutModelConverter" Input="one" Reverse="false">
+    <Null />
+  </Case>
+  <Case Converter="HideCommandLayoutItemFromLayoutModelConverter" Input="one" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="HideCommandLayoutItemFromLayoutModelConverter" Input="string" Reverse="false">
+    <Null />
+  </Case>
+  <Case Converter="HideCommandLayoutItemFromLayoutModelConverter" Input="string" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="HideCommandLayoutItemFromLayoutModelConverter" Input="visible" Reverse="false">
+    <Null />
+  </Case>
+  <Case Converter="HideCommandLayoutItemFromLayoutModelConverter" Input="visible" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="HideCommandLayoutItemFromLayoutModelConverter" Input="collapsed" Reverse="false">
+    <Null />
+  </Case>
+  <Case Converter="HideCommandLayoutItemFromLayoutModelConverter" Input="collapsed" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="HideCommandLayoutItemFromLayoutModelConverter" Input="left" Reverse="false">
+    <Null />
+  </Case>
+  <Case Converter="HideCommandLayoutItemFromLayoutModelConverter" Input="left" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="HideCommandLayoutItemFromLayoutModelConverter" Input="right" Reverse="false">
+    <Null />
+  </Case>
+  <Case Converter="HideCommandLayoutItemFromLayoutModelConverter" Input="right" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="HideCommandLayoutItemFromLayoutModelConverter" Input="top" Reverse="false">
+    <Null />
+  </Case>
+  <Case Converter="HideCommandLayoutItemFromLayoutModelConverter" Input="top" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="HideCommandLayoutItemFromLayoutModelConverter" Input="bottom" Reverse="false">
+    <Null />
+  </Case>
+  <Case Converter="HideCommandLayoutItemFromLayoutModelConverter" Input="bottom" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="HideCommandLayoutItemFromLayoutModelConverter" Input="invalid-side" Reverse="false">
+    <Null />
+  </Case>
+  <Case Converter="HideCommandLayoutItemFromLayoutModelConverter" Input="invalid-side" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="HideCommandLayoutItemFromLayoutModelConverter" Input="document" Reverse="false">
+    <Null />
+  </Case>
+  <Case Converter="HideCommandLayoutItemFromLayoutModelConverter" Input="document" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="HideCommandLayoutItemFromLayoutModelConverter" Input="tool" Reverse="false">
+    <Null />
+  </Case>
+  <Case Converter="HideCommandLayoutItemFromLayoutModelConverter" Input="tool" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="HideCommandLayoutItemFromLayoutModelConverter" Input="attached-document" Reverse="false">
+    <DoNothing />
+  </Case>
+  <Case Converter="HideCommandLayoutItemFromLayoutModelConverter" Input="attached-document" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <Case Converter="HideCommandLayoutItemFromLayoutModelConverter" Input="attached-tool" Reverse="false">
+    <Command />
+  </Case>
+  <Case Converter="HideCommandLayoutItemFromLayoutModelConverter" Input="attached-tool" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </Case>
+  <MultiCase Input="empty" Reverse="false">
+    <Exception Type="System.IndexOutOfRangeException" />
+  </MultiCase>
+  <MultiCase Input="empty" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </MultiCase>
+  <MultiCase Input="true" Reverse="false">
+    <Scalar Type="System.Boolean">True</Scalar>
+  </MultiCase>
+  <MultiCase Input="true" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </MultiCase>
+  <MultiCase Input="false" Reverse="false">
+    <Scalar Type="System.Boolean">False</Scalar>
+  </MultiCase>
+  <MultiCase Input="false" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </MultiCase>
+  <MultiCase Input="true,true" Reverse="false">
+    <Scalar Type="System.Windows.Visibility">Collapsed</Scalar>
+  </MultiCase>
+  <MultiCase Input="true,true" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </MultiCase>
+  <MultiCase Input="true,false" Reverse="false">
+    <Scalar Type="System.Boolean">True</Scalar>
+  </MultiCase>
+  <MultiCase Input="true,false" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </MultiCase>
+  <MultiCase Input="false,true" Reverse="false">
+    <Scalar Type="System.Windows.Visibility">Collapsed</Scalar>
+  </MultiCase>
+  <MultiCase Input="false,true" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </MultiCase>
+  <MultiCase Input="false,false" Reverse="false">
+    <Scalar Type="System.Boolean">False</Scalar>
+  </MultiCase>
+  <MultiCase Input="false,false" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </MultiCase>
+  <MultiCase Input="null" Reverse="false">
+    <Null />
+  </MultiCase>
+  <MultiCase Input="null" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </MultiCase>
+  <MultiCase Input="true,null" Reverse="false">
+    <Scalar Type="System.Boolean">True</Scalar>
+  </MultiCase>
+  <MultiCase Input="true,null" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </MultiCase>
+  <MultiCase Input="true,true,true" Reverse="false">
+    <Scalar Type="System.Boolean">True</Scalar>
+  </MultiCase>
+  <MultiCase Input="true,true,true" Reverse="true">
+    <Exception Type="System.NotImplementedException" />
+  </MultiCase>
+</ConverterObservations>
