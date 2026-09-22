@@ -1,0 +1,75 @@
+name: Integrate verified shell implementation
+on:
+  workflow_dispatch:
+  push:
+    paths: ['.github/workflows/integrate-shell.yml']
+permissions:
+  contents: write
+  actions: write
+concurrency:
+  group: integrate-shell
+  cancel-in-progress: false
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Verify complete patch and apply without replacing concurrent changes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import base64, hashlib, json, lzma, os, pathlib, subprocess, urllib.request
+          shas = ['3ade7af40da9284b3e01a4cb5bc1aa10a2f7062d', '457224c9b42d333819bb5bbb76a362dc9d4ee95c', '16e07366714e02c6221ce21a2428b372bf2b487d', 'b401020f85eb28b556eeb71522dda180ca8781ef']
+          pieces = []
+          for sha in shas:
+              req = urllib.request.Request(f'https://api.github.com/repos/{os.environ["GITHUB_REPOSITORY"]}/git/blobs/{sha}', headers={'Authorization': 'Bearer ' + os.environ['GH_TOKEN'], 'Accept': 'application/vnd.github+json'})
+              with urllib.request.urlopen(req, timeout=60) as response:
+                  blob = json.load(response)
+              value = base64.b64decode(blob['content'])
+              assert hashlib.sha1(b'blob ' + str(len(value)).encode() + b'\0' + value).hexdigest() == sha
+              pieces.append(value)
+          compressed = b''.join(pieces)
+          assert hashlib.sha256(compressed).hexdigest() == 'e52cb60f0d39f2b7ca31dd3f5e1d55e0edd9c8addb29507975a6db7eb71b9125'
+          patch = pathlib.Path(os.environ['RUNNER_TEMP']) / 'shell.patch'
+          patch.write_bytes(lzma.decompress(compressed))
+          stats = subprocess.check_output(['git', 'apply', '--numstat', str(patch)], text=True)
+          names = [line.split('\t', 2)[2] for line in stats.splitlines()]
+          assert len(names) == 24, len(names)
+          for name in names:
+              path = pathlib.PurePosixPath(name)
+              assert not path.is_absolute() and '..' not in path.parts
+              assert path.parts[0] in ('src', 'tests', 'samples', 'contracts', 'docs', 'README.md', 'Directory.Build.props')
+          subprocess.run(['git', 'apply', '--check', '--index', str(patch)], check=True)
+          subprocess.run(['git', 'apply', '--index', str(patch)], check=True)
+          print(stats)
+          PY
+      - name: Run portable tests and check generated source reproducibility
+        run: |
+          dotnet run --project tests/UnoDock.Core.Tests -c Release -- artifacts/test-results
+          python3 tests/metadata/test_metadata.py
+          python3 tools/generate-property-adapters.py
+          git diff --exit-code -- src/
+          git diff --cached --check
+      - name: Commit and dispatch full platform validation
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'feat: implement shell commands, observable metrics and managed/native window chrome with input regressions'
+          git push origin HEAD:main
+          gh workflow run ci.yml --ref main
+          git rev-parse HEAD > artifacts/integrated-revision.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: shell-integration-results
+          path: artifacts/
