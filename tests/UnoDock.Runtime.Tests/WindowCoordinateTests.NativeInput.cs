@@ -31,8 +31,9 @@ public static partial class WindowCoordinateTests
                 await Task.Delay(80);
                 var sourceHost = host.FloatingWindows.Single(w => ReferenceEquals(w.Model, content.FindParent<LayoutFloatingWindow>()));
                 var targetHost = host.FloatingWindows.Single(w => ReferenceEquals(w.Model, target.FindParent<LayoutFloatingWindow>()));
-                var tab = Visuals(sourceHost).OfType<LayoutAnchorableTabItem>().Single(t => ReferenceEquals(t.Model, content));
-                var button = Visuals(tab).OfType<Button>().First();
+                // A single-tool pane has no tab strip. Drag its real caption instead.
+                var button = Visuals(sourceHost).OfType<ContentPresenter>().Single(p => p.Name == "PART_ToolCaption");
+                sourceHost.NativeWindow!.Activate(); await Task.Delay(60);
                 var area = host.GetDropAreas().OfType<DropArea<FrameworkElement>>().Single(a => a.AreaElement is ILayoutControl c && ReferenceEquals(c.Model, target.Parent));
                 var converter = (IScreenWindowCoordinates)host.CrossWindowCoordinates!;
                 var start = converter.ToScreen(button, new(button.ActualWidth / 2, button.ActualHeight / 2));

@@ -1,0 +1,6 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<AutoHide scenario="two">
+  <Docked>third</Docked>
+  <Group>first</Group>
+  <Group>second</Group>
+</AutoHide>

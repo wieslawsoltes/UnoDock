@@ -44,8 +44,10 @@ public sealed class DesktopWindowCoordinates : IScreenWindowCoordinates, IDispos
             offset = new(a.X - b.X, a.Y - b.Y);
         }
         else throw Unsupported();
-        var sourceTransform = source.TransformToVisual(source.XamlRoot!.Content!);
-        var destinationTransform = destination.XamlRoot!.Content!.TransformToVisual(destination);
+        // TransformToVisual(root.Content) cancels the root's own RTL/scale transform.
+        // Native origins refer to physical client axes, so include that last transform.
+        var sourceTransform = source.TransformToVisual(null);
+        var destinationTransform = (destination.TransformToVisual(null).Inverse ?? throw new InvalidOperationException("Destination transform is not invertible."));
         var sourceScale = Scale(source); var destinationScale = Scale(destination);
         // Snapshot one live native origin per bounds query, not four synchronous RPCs.
         // Never retain across frames, moves or DPI changes.
@@ -60,7 +62,7 @@ public sealed class DesktopWindowCoordinates : IScreenWindowCoordinates, IDispos
     public Point ToScreen(FrameworkElement source, Point point)
     {
         Verify(); Validate(source, point);
-        var local = source.TransformToVisual(source.XamlRoot!.Content!).TransformPoint(point);
+        var local = source.TransformToVisual(null).TransformPoint(point);
 #if WINDOWS
         var screen = Microsoft.UI.Content.ContentCoordinateConverter.CreateForWindowId(source.XamlRoot!.ContentIslandEnvironment.AppWindowId).ConvertLocalToScreen(local);
         return new Point(screen.X, screen.Y);
@@ -85,10 +87,16 @@ public sealed class DesktopWindowCoordinates : IScreenWindowCoordinates, IDispos
         point = Microsoft.UI.Content.ContentCoordinateConverter.CreateForWindowId(destination.XamlRoot!.ContentIslandEnvironment.AppWindowId)
             .ConvertScreenToLocal(new Windows.Graphics.PointInt32 { X = checked((int)Math.Round(screenPoint.X)), Y = checked((int)Math.Round(screenPoint.Y)) });
 #else
-        var origin = ToScreen((FrameworkElement)destination.XamlRoot!.Content!, default);
+        var native = GetNative(destination);
+        var origin = native switch
+        {
+            Uno.UI.NativeElementHosting.X11NativeWindow window when OperatingSystem.IsLinux() => TranslateX11(Id(window.WindowId), RootX11(Id(window.WindowId))),
+            Uno.UI.NativeElementHosting.Win32NativeWindow window when OperatingSystem.IsWindows() => Win32Origin(window.Hwnd),
+            _ => throw Unsupported()
+        };
         point = new((screenPoint.X - origin.X) / Scale(destination), (screenPoint.Y - origin.Y) / Scale(destination));
 #endif
-        return destination.XamlRoot!.Content!.TransformToVisual(destination).TransformPoint(point);
+        return (destination.TransformToVisual(null).Inverse ?? throw new InvalidOperationException("Destination transform is not invertible.")).TransformPoint(point);
     }
     /// <summary>Returns false only when this provider has no native z-order query.
     /// A successful query with a null root means the point is occluded by another
@@ -105,7 +113,7 @@ public sealed class DesktopWindowCoordinates : IScreenWindowCoordinates, IDispos
         var window = windows.FirstOrDefault(w => ReferenceEquals(w.Content?.XamlRoot, root));
         if (window == null || Uno.UI.Xaml.WindowHelper.GetNativeWindow(window) is not Uno.UI.NativeElementHosting.X11NativeWindow native)
             return false;
-        var client = source.TransformToVisual(root.Content).TransformPoint(point);
+        var client = source.TransformToVisual(null).TransformPoint(point);
         var x = Math.Round(client.X * root.RasterizationScale);
         var y = Math.Round(client.Y * root.RasterizationScale);
         // Core X11 coordinate requests use signed 16-bit coordinates. Reject, do

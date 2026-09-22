@@ -42,6 +42,7 @@ public partial class DockingManager : Control, IDisposable, Xceed.Wpf.AvalonDock
     {
         DefaultStyleKey = typeof(DockingManager); IsTabStop = false;
         _updates = new(ScheduleRender);
+        ActualThemeChanged += (_, _) => InvalidateView();
         CrossWindowCoordinates = _ownedCoordinates;
         _floating.CollectionChanged += (_, args) => LayoutFloatingWindowControlCollectionChanged?.Invoke(this, new(args));
         SetValue(LayoutProperty, new LayoutRoot());

@@ -9,11 +9,16 @@ public class LayoutAnchorControl : DockInputControl, ILayoutControl
 {
     public static readonly DependencyProperty SideProperty = DependencyProperty.Register(nameof(Side), typeof(AnchorSide), typeof(LayoutAnchorControl), new PropertyMetadata(AnchorSide.Left));
     private readonly LayoutAnchorable _model;
-    private readonly Button _button;
+    private readonly DockChromeButton _button;
+    private readonly DockRotatedLabel _rotator;
     public LayoutAnchorControl(LayoutAnchorable model)
     {
         _model = model;
-        _button = DockVisuals.Button(model.Title ?? "Tool", ActivateFromKeyboard); Content = _button;
+        _button = DockChrome.Button(model.Title ?? "Tool", ActivateFromKeyboard);
+        _button.Padding = new(2, 1, 2, 1);
+        _rotator = new(_button); Content = _rotator;
+        HorizontalContentAlignment = HorizontalAlignment.Stretch; VerticalContentAlignment = VerticalAlignment.Top;
+        Margin = new(2);
 
     }
     private void ActivateFromKeyboard()
@@ -30,6 +35,9 @@ public class LayoutAnchorControl : DockInputControl, ILayoutControl
     internal void Update(DockingManager manager)
     {
         SetSide(_model.GetSide()); _button.Content = _model.Title; _button.IsEnabled = _model.IsEnabled;
+        var palette = DockChrome.Palette(manager); _button.Configure(palette);
+        _button.BorderBrush = palette.Border; _button.Height = palette.RailThickness - 4;
+        _rotator.Vertical = Side is AnchorSide.Left or AnchorSide.Right;
         ToolTipService.SetToolTip(_button, _model.ToolTip ?? _model.Title);
         ContextFlyout = DockVisuals.Menu(manager, _model);
         DockVisuals.SetName(_button, "Auto-hidden tool: " + _model.Title);
@@ -67,7 +75,7 @@ public class LayoutAnchorSideControl : ContentControl, ILayoutControl
     public static readonly DependencyProperty IsBottomSideProperty = DependencyProperty.Register(nameof(IsBottomSide), typeof(bool), typeof(LayoutAnchorSideControl), new PropertyMetadata(false));
     private readonly LayoutAnchorSide _model;
     private readonly StackPanel _panel = new() { Spacing = 6 };
-    public LayoutAnchorSideControl(LayoutAnchorSide model) { _model = model; Content = _panel; }
+    public LayoutAnchorSideControl(LayoutAnchorSide model) { _model = model; Content = _panel; HorizontalContentAlignment = HorizontalAlignment.Stretch; VerticalContentAlignment = VerticalAlignment.Top; }
     public ILayoutElement Model => _model;
     public ObservableCollection<LayoutAnchorGroupControl> Children { get; } = [];
     public bool IsLeftSide => (bool)GetValue(IsLeftSideProperty);
@@ -90,6 +98,9 @@ public class LayoutAnchorSideControl : ContentControl, ILayoutControl
             if (child == null) Children.Add(child = new(model)); child.Update(manager);
         }
         _panel.Orientation = IsLeftSide || IsRightSide ? Orientation.Vertical : Orientation.Horizontal;
+        var palette = DockChrome.Palette(manager); Background = palette.Header;
+        Width = IsLeftSide || IsRightSide ? palette.RailThickness : double.NaN;
+        Height = IsTopSide || IsBottomSide ? palette.RailThickness : double.NaN;
         Visibility = models.Length == 0 ? Visibility.Collapsed : Visibility.Visible;
         VisualParenting.ReconcilePanel(_panel, Children.Cast<UIElement>().ToArray());
         if (manager.AnchorSideTemplate != null) Template = manager.AnchorSideTemplate;
@@ -102,17 +113,21 @@ public class LayoutAutoHideWindowControl : ContentControl, ILayoutControl
     public static readonly DependencyProperty AnchorableStyleProperty = DependencyProperty.Register(nameof(AnchorableStyle), typeof(Style), typeof(LayoutAutoHideWindowControl), new PropertyMetadata(null));
     private readonly Grid _layout = new();
     private readonly ContentPresenter _presenter = new() { HorizontalContentAlignment = HorizontalAlignment.Stretch, VerticalContentAlignment = VerticalAlignment.Stretch };
-    private readonly TextBlock _title = new() { Margin = new Thickness(10, 8, 10, 8) };
+    private readonly TextBlock _title = new() { Margin = new Thickness(2, 0, 2, 0), VerticalAlignment = VerticalAlignment.Center };
+    private readonly ContentPresenter _titleView = new();
+    private readonly DockChromeButton _pinButton, _hideButton;
     private readonly Thumb _resize = new();
     private LayoutAnchorable? _model;
     public LayoutAutoHideWindowControl()
     {
         HorizontalContentAlignment = HorizontalAlignment.Stretch; VerticalContentAlignment = VerticalAlignment.Stretch;
         _layout.RowDefinitions.Add(new() { Height = GridLength.Auto }); _layout.RowDefinitions.Add(new() { Height = new(1, GridUnitType.Star) });
-        var title = new Grid(); title.ColumnDefinitions.Add(new() { Width = new(1, GridUnitType.Star) }); title.ColumnDefinitions.Add(new() { Width = GridLength.Auto }); title.Children.Add(_title);
+        var title = new Grid(); title.ColumnDefinitions.Add(new() { Width = new(1, GridUnitType.Star) }); title.ColumnDefinitions.Add(new() { Width = GridLength.Auto }); _titleView.Content = _title; title.Children.Add(_titleView);
         var buttons = new StackPanel { Orientation = Orientation.Horizontal };
-        buttons.Children.Add(DockVisuals.Button("◇", () => { var model = _model; model?.Root?.Manager?.CloseAutoHide(); model?.ToggleAutoHide(); }, "Pin tool"));
-        buttons.Children.Add(DockVisuals.Button("×", () => _model?.Root?.Manager?.CloseAutoHide(), "Close auto-hide flyout")); Grid.SetColumn(buttons, 1); title.Children.Add(buttons);
+        _pinButton = DockChrome.Icon(DockGlyph.Pin, () => { var model = _model; model?.Root?.Manager?.CloseAutoHide(); model?.ToggleAutoHide(); }, "Pin tool");
+        buttons.Children.Add(_pinButton);
+        _hideButton = DockChrome.Icon(DockGlyph.Close, () => { if (_model != null) DockVisuals.CloseOrHide(_model); }, "Hide or close auto-hidden tool");
+        buttons.Children.Add(_hideButton); Grid.SetColumn(buttons, 1); title.Children.Add(buttons);
         _layout.Children.Add(title); Grid.SetRow(_presenter, 1); _layout.Children.Add(_presenter);
         _resize.DragDelta += (_, e) => Resize(e.HorizontalChange, e.VerticalChange); Grid.SetRowSpan(_resize, 2); _layout.Children.Add(_resize);
         Content = _layout; BorderThickness = new(1);
@@ -125,13 +140,27 @@ public class LayoutAutoHideWindowControl : ContentControl, ILayoutControl
     {
         _model = model; var manager = model.Root?.Manager ?? throw new InvalidOperationException("Auto-hidden content must be attached.");
         var item = manager.GetLayoutItemFromModel(model); item.UpdateView(); VisualParenting.Detach(item.View); item.View.Visibility = Visibility.Visible; _presenter.Content = item.View;
-        _title.Text = model.Title; Background = DockVisuals.Brush(manager, "UnoDock.PaneBrush", "LayerFillColorDefaultBrush"); BorderBrush = DockVisuals.Brush(manager, "UnoDock.AccentBrush", "AccentFillColorDefaultBrush");
+        UpdateChrome();
         var side = model.GetSide(); var horizontal = side is AnchorSide.Left or AnchorSide.Right;
         _resize.Width = horizontal ? 6 : double.NaN; _resize.Height = horizontal ? double.NaN : 6;
         _resize.HorizontalAlignment = side == AnchorSide.Left ? HorizontalAlignment.Right : side == AnchorSide.Right ? HorizontalAlignment.Left : HorizontalAlignment.Stretch;
         _resize.VerticalAlignment = side == AnchorSide.Top ? VerticalAlignment.Bottom : side == AnchorSide.Bottom ? VerticalAlignment.Top : VerticalAlignment.Stretch;
         _resize.Background = BorderBrush; model.IsActive = true; Visibility = Visibility.Visible;
         if (AnchorableStyle != null) item.ApplyContainerStyle(AnchorableStyle);
+    }
+    internal void UpdateChrome()
+    {
+        if (_model?.Root?.Manager is not { } manager) return;
+        var p = DockChrome.Palette(manager);
+        _title.Text = _model.Title; _title.FontSize = p.FontSize; _title.Foreground = p.Foreground;
+        _layout.RowDefinitions[0].Height = new(p.TitleHeight);
+        Background = p.Surface; BorderBrush = p.Border;
+        _pinButton.Configure(p); _hideButton.Configure(p);
+        _pinButton.Visibility = _model.CanAutoHide ? Visibility.Visible : Visibility.Collapsed;
+        _hideButton.Visibility = _model.CanHide || _model.CanClose ? Visibility.Visible : Visibility.Collapsed;
+        _pinButton.IsEnabled = _hideButton.IsEnabled = _model.IsEnabled;
+        var template = manager.HeaderTemplate(_model, _titleView, title: true);
+        _titleView.ContentTemplate = template; _titleView.Content = template == null ? _title : _model;
     }
     protected virtual bool HasFocusWithinCore()
     {

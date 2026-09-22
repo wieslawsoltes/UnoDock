@@ -139,3 +139,13 @@ this document describe those checkpoints, not the current gate.
 See window-lifecycle.md for implemented contracts, real-input coverage, template migration
 and remaining platform acceptance. Windows native-message cases run in their own CI
 runtime step; native WinUI package compilation remains a distinct validation boundary.
+
+## Preview 7 visual/behavior increment
+
+See [visual parity](visual-parity.md) for four original-geometry scenes, four independently
+captured single-tool auto-hide observations, 27 new runtime cases and remaining visual
+acceptance boundaries. Whole-pane auto-hide behavior stated by early prototypes is not
+the pinned original's behavior: one requested tool moves at a time, without an ineligible
+sibling veto. Compact tool tabs now sit below their content. Native RTL coordinate
+conversion includes the root transform. API difference counts are not changed by these
+behavioral/rendering corrections.

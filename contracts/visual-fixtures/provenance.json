@@ -1,0 +1,8 @@
+{
+  "referenceRevision": "2c71faba5eecc1b6ae6cd3d269408e0df37715d8",
+  "probeRevision": "09b16fa838f0176bf26b083b47fbea8e68662b9e",
+  "run": 35778896158,
+  "artifact": 10717706710,
+  "artifactSha256": "9a8ad154304f52c29f3631e5a942b6ec42418528339acdeefccfe3c633b40368",
+  "method": "Unmodified isolated reference observed through public APIs and visual geometry; only numeric XML/behavior output checked in, no templates, artwork or font binaries."
+}

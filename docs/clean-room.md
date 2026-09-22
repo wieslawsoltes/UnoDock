@@ -80,3 +80,12 @@ comparison keeps virtual flags, parameter/default values and attributes signific
 and does not translate type-looking strings inside constants. The original reference
 contract remains unchanged. New behavior and diagnostic code is independently authored,
 not decompiled. See parity-progress.md for evidence and gaps.
+
+## Visual observations
+
+Preview 7 uses independently captured public control geometry and auto-hide outputs from
+the pinned original. The original program's screenshots were observed but are not bundled
+as product resources. Our vectors, templates and layouts are independently authored.
+See contracts/visual-fixtures/provenance.json and docs/visual-parity.md. Only application-
+owned shared scene text, numeric observations and behavior XML are committed; no font
+files are added.

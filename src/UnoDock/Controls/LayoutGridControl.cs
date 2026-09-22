@@ -42,6 +42,9 @@ public abstract class LayoutGridControl<T> : Grid, ILayoutControl, IRefreshableL
                 }
             }
         }
+        Background = DockChrome.Palette(surface.Manager).Header;
+        foreach (var splitter in Children.OfType<LayoutGridResizerControl>())
+            splitter.Background = DockChrome.Palette(surface.Manager).Header;
         for (var i = 0; i < models.Length; i++)
         {
             var pos = models[i] as ILayoutPositionableElement;
@@ -92,7 +95,7 @@ public class LayoutGridResizerControl : ContentControl
     public LayoutGridResizerControl()
     {
         IsTabStop = true; AutomationProperties.SetName(this, "Resize docked panes");
-        var thumb = new Thumb { HorizontalAlignment = HorizontalAlignment.Stretch, VerticalAlignment = VerticalAlignment.Stretch };
+        var thumb = new Thumb { HorizontalAlignment = HorizontalAlignment.Stretch, VerticalAlignment = VerticalAlignment.Stretch, Template = DockChrome.ThumbTemplate, Background = DockChrome.Transparent };
         HorizontalContentAlignment = HorizontalAlignment.Stretch; VerticalContentAlignment = VerticalAlignment.Stretch; Content = thumb;
         // An overlay avoids replacing application-owned Background/Opacity bindings.
         var feedback = new Border { Visibility = Visibility.Collapsed, IsHitTestVisible = false };

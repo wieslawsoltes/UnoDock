@@ -118,25 +118,25 @@ public static class InteractionTests
                     Check.Near(p.X,back.X,1e-4);Check.Near(p.Y,back.Y,1e-4);
                     var before=b.AppWindow.Position;b.AppWindow.Move(new() { X=before.X+70, Y=before.Y+40 });await Task.Delay(100);
                     var moved=coordinates.Translate(from!,p,to!);
-                    Check.Near(q.X-70/to!.XamlRoot.RasterizationScale,moved.X,1);Check.Near(q.Y-40/to!.XamlRoot.RasterizationScale,moved.Y,1);
+                    Check.Near(q.X-70/to!.XamlRoot!.RasterizationScale,moved.X,1);Check.Near(q.Y-40/to!.XamlRoot!.RasterizationScale,moved.Y,1);
                 }
                 finally {CloseTestWindow(a);CloseTestWindow(b);await Task.Delay(100);}
             });
             tests.Test("X11 floating tool receives cross-window insertion and returns to main", async () =>
             {
                 var (source,keep,target)=await NativeWorkspace(host);var floating=host.FloatingWindows.Single();
-                var pane=floating.FindVisualChildren<LayoutAnchorablePaneControl>().Single();var point=new DesktopWindowCoordinates().Translate(Header(pane),new(40,15),Surface(host));
+                var pane=floating.FindVisualChildren<LayoutAnchorablePaneControl>().Single();var point=new DesktopWindowCoordinates().Translate(ToolHeader(pane),new(40,15),Surface(host));
                 var plan=host.GetDropPlan(source,point);Check.True(plan != null,"No native-window insertion plan.");
                 Check.Equal(DropTargetType.AnchorablePaneDockInside,plan!.Type);Check.True(plan.Execute());Check.Same(target.Parent,source.Parent);
                 host.Refresh();host.UpdateLayout();
                 var mainPane=host.FindVisualChildren<LayoutAnchorablePaneControl>().Single(p=>ReferenceEquals(((ILayoutControl)p).Model,keep.Parent));
-                var backPoint=At(Header(mainPane),Surface(host),.5,.5);var back=host.GetDropPlan(source,backPoint);
+                var backPoint=At(ToolHeader(mainPane),Surface(host),.5,.5);var back=host.GetDropPlan(source,backPoint);
                 Check.True(back != null, "No insertion plan in the main tool header after native docking.");Check.True(back!.Execute());Check.Same(keep.Parent,source.Parent);
             });
             tests.Test("X11 native preview is painted in destination window", async () =>
             {
                 var (source,_,target)=await NativeWorkspace(host);var floating=host.FloatingWindows.Single();var pane=floating.FindVisualChildren<LayoutAnchorablePaneControl>().Single();
-                var coordinates=new DesktopWindowCoordinates();var point=coordinates.Translate(Header(pane),new(40,15),Surface(host));var plan=host.GetDropPlan(source,point)!;
+                var coordinates=new DesktopWindowCoordinates();var point=coordinates.Translate(ToolHeader(pane),new(40,15),Surface(host));var plan=host.GetDropPlan(source,point)!;
                 Check.True(plan != null);Call(floating,"ShowDropPreview",plan,Surface(host),new SolidColorBrush(Microsoft.UI.Colors.Blue));
                 var overlay=floating.FindVisualChildren<OverlayWindow>().Single();Check.True(overlay.IsOpen);Check.Same(plan,overlay.CurrentPlan);
                 Call(floating,"HideDropPreview");Check.False(overlay.IsOpen);
@@ -146,7 +146,7 @@ public static class InteractionTests
                 var (source, _, target) = await NativeWorkspace(host);
                 var floating = host.FloatingWindows.Single();
                 var pane = floating.FindVisualChildren<LayoutAnchorablePaneControl>().Single();
-                var point = new DesktopWindowCoordinates().Translate(Header(pane), new(40, 15), Surface(host));
+                var point = new DesktopWindowCoordinates().Translate(ToolHeader(pane), new(40, 15), Surface(host));
                 var blocker = new Window { Content = new Grid(), Title = "Drop occlusion test" };
                 try
                 {
@@ -167,7 +167,7 @@ public static class InteractionTests
                 floating.NativeWindow!.AppWindow.Move(new() { X = 300, Y = 100 });
                 await Task.Delay(100);
                 var pane = floating.FindVisualChildren<LayoutAnchorablePaneControl>().Single();
-                var point = new DesktopWindowCoordinates().Translate(Header(pane), new(40, 15), Surface(host));
+                var point = new DesktopWindowCoordinates().Translate(ToolHeader(pane), new(40, 15), Surface(host));
                 var before = host.GetDropPlan(source, point);
                 Check.True(before != null); Check.Same(target.Parent, before!.Target);
                 var mainWindow = Uno.UI.ApplicationHelper.Windows.Single(w => ReferenceEquals(w.Content?.XamlRoot, host.XamlRoot));
@@ -204,7 +204,7 @@ public static class InteractionTests
                 var tab = pane.FindVisualChildren<LayoutAnchorableTabItem>().First(t => ReferenceEquals(t.Model, source));
                 var label = Label(tab);
                 var floating = host.FloatingWindows.Single();
-                var destination = Header(floating.FindVisualChildren<LayoutAnchorablePaneControl>().Single());
+                var destination = ToolHeader(floating.FindVisualChildren<LayoutAnchorablePaneControl>().Single());
                 using var input = new X11TestInput();
                 await input.Begin(label, new(20, label.ActualHeight / 2));
                 Check.Equal(UnoDock.Core.DockDragState.Dragging, DragState(host));
@@ -303,6 +303,7 @@ public static class InteractionTests
     }
     private sealed class UnavailableCoordinates:ICrossWindowCoordinates {public Point Translate(FrameworkElement source,Point p,FrameworkElement destination)=>throw new PlatformNotSupportedException("Test unsupported host");}
     private static LayoutDocumentPaneControl Pane(DockingManager host)=>host.FindVisualChildren<LayoutDocumentPaneControl>().Single();
+    private static FrameworkElement ToolHeader(LayoutCachePaneControl pane) => pane.FindVisualChildren<ContentPresenter>().Single(p => p.Name == "PART_ToolCaption");
     private static ScrollViewer Header(LayoutCachePaneControl pane)=>(ScrollViewer)typeof(LayoutCachePaneControl).GetField("_scroll",BindingFlags.NonPublic|BindingFlags.Instance)!.GetValue(pane)!;
     private static FrameworkElement Surface(DockingManager host)=>(FrameworkElement)typeof(DockingManager).GetField("_surface",BindingFlags.NonPublic|BindingFlags.Instance)!.GetValue(host)!;
     private static Point At(FrameworkElement from,FrameworkElement to,double x,double y)=>from.TransformToVisual(to).TransformPoint(new(from.ActualWidth*x,from.ActualHeight*y));

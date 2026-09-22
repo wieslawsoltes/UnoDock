@@ -6,7 +6,7 @@
 Independent AvalonDock-style docking for **Uno Platform 6.7**, retaining familiar
 `Xceed.Wpf.AvalonDock` namespaces while using Uno/WinUI controls.
 
-**Status: 0.1.0-preview.6 candidate (not yet pushed or CI-validated). This is a functional implementation, not a certified 100%
+**Status: 0.1.0-preview.7. This is a functional implementation, not a certified 100%
 AvalonDock replacement.** API shape, behavior, platform support and performance are
 separate claims. The repository records what is implemented, the original public
 contracts used to check it, runnable tests and the remaining boundaries.
@@ -20,6 +20,7 @@ contracts used to check it, runnable tests and the remaining boundaries.
 | `UnoDock.Gallery` | Interactive IDE-style sample with editors, tool panes, persistence, MVVM and capability controls |
 | `UnoDock.Core.Tests` | 97 portable tests, including sizing/coordinate/scroll cases and 75,000 caption-region point probes |
 | `UnoDock.Runtime.Tests` | 36 runtime + 44 interoperability + 40 drop/menu/automation + 33 lifecycle + 25 interaction tests, 1,517 converter replay/binding tests and 16 native coordinate tests, 36 shell/chrome cases and 49 Linux window/navigation cases and 43 input-extension cases, linked into the gallery |
+| `UnoDock.VisualTests` | Original-geometry replay, compact control behavior, live PNG/XML captures |
 | `tools/ApiScan` | Deterministic public/protected declaration inventory |
 | `tools/ApiMetadata` | Resolved PE metadata inventory, without reading IL bodies or executing the assembly |
 | `tools/ReferenceProbe` | Independently authored black-box public-API probes against the pinned original |
@@ -28,7 +29,29 @@ Stable NuGet pins resolved on 2026-09-21: **Uno.Sdk 6.7.30**, **Uno.WinUI 6.7.13
 **Uno.Templates 6.7.30**. `global.json` selects .NET 10 with latest-feature roll-forward.
 Version upgrades are explicit; product builds consume committed pins.
 
-## Preview 6 candidate additions
+## Preview 7: compact chrome and reference visual conformance
+
+Default docking controls now follow the pinned original stock layout: compact captions,
+document tabs above content, tool tabs below content, hidden single-tool strips,
+selected-document close controls, vector caption buttons, document overflow, thin
+separators and vertical auto-hide labels. Headers reveal the selected overflow item;
+custom title/header templates, icons and retained editor identity remain supported.
+The **Visual parity** lab demonstrates classic/dark palettes, RTL and density overrides.
+
+Four original public-geometry scenes and four original per-item auto-hide observations
+are replayed in the actual Uno runtime. There are **27 new regression cases**, including
+live palettes, caption capabilities, cancellation, overflow, icons/templates and native
+RTL coordinates. Screenshots and measured XML are CI artifacts, not original graphics
+embedded in the package. The initial Linux captures match pane/editor/rail bounds within
+0.08 DIP; the checked tolerance is 1 DIP. This is scene-specific layout evidence, not
+pixel-identical or whole-product visual parity.
+
+The combined core/Linux suites contain **1,963 C# cases** and 23 Python comparator cases.
+The resolved gate remains **977/1,031** matched entries, with 54 signature/type and 18
+attribute differences unresolved. API matching rules and regression baselines are
+unchanged. See [visual implementation, evidence and limits](docs/visual-parity.md).
+
+## Preview 6 additions (previous checkpoint)
 
 Protected mouse/focus hooks now participate in real tab activation, drag and auto-hide
 paths. Subclasses can veto activation/drop and cancel native preview focus. Captured
@@ -45,13 +68,10 @@ comparator tests also pass. Resolved API matches are **977/1,031**, up from 946,
 54 signature/type entries and 18 attribute differences remaining. The scanner and
 comparison rules were not relaxed; this is not full parity.
 
-**Publication state:** this source candidate is based on remote main
-`de158c452a14b9c9137f3508a230ab779e497b84`. It has not been committed/pushed by this
-session or source-built in GitHub Actions. The badges above report the remote branch,
-not this unpushed candidate. Local validation uses pinned Uno reference assemblies and
-a real native host with existing generated XAML/ICU resources. Updated CI includes
-Windows input-extension execution, but it has not run for this candidate. See
-[input/selection contracts and validation scope](docs/input-extensions.md).
+Preview 6 is now in repository history. Its original local validation note is retained
+in [input/selection contracts](docs/input-extensions.md); current validation is the
+preview-7 workflow for the consumed commit. The previously failing Linux release-veto
+input test is corrected without removing its assertion.
 
 ## Preview 5 additions (previous checkpoint)
 

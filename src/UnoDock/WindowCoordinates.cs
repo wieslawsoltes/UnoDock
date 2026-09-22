@@ -16,10 +16,10 @@ public sealed class ContentIslandCoordinates : ICrossWindowCoordinates
 #if WINDOWS
         var from = Microsoft.UI.Content.ContentCoordinateConverter.CreateForWindowId(source.XamlRoot.ContentIslandEnvironment.AppWindowId);
         var to = Microsoft.UI.Content.ContentCoordinateConverter.CreateForWindowId(destination.XamlRoot.ContentIslandEnvironment.AppWindowId);
-        var rootPoint = source.TransformToVisual(source.XamlRoot.Content).TransformPoint(sourcePoint);
+        var rootPoint = source.TransformToVisual(null).TransformPoint(sourcePoint);
         var screen = from.ConvertLocalToScreen(rootPoint);
         var targetRootPoint = to.ConvertScreenToLocal(screen);
-        return destination.XamlRoot.Content.TransformToVisual(destination).TransformPoint(targetRootPoint);
+        return (destination.TransformToVisual(null).Inverse ?? throw new InvalidOperationException("Destination transform is not invertible.")).TransformPoint(targetRootPoint);
 #else
         throw new PlatformNotSupportedException("This host requires an ICrossWindowCoordinates implementation. ContentCoordinateConverter is unavailable on Uno Skia.");
 #endif

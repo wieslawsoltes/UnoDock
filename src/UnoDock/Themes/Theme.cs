@@ -25,6 +25,14 @@ public sealed class FluentTheme : DictionaryTheme
     public FluentTheme(ElementTheme theme)
     {
         var dark = theme == ElementTheme.Dark;
+        var palette = Internal.DockChrome.Default(dark);
+        ThemeResourceDictionary["UnoDock.InactiveTabBrush"] = palette.Tab;
+        ThemeResourceDictionary["UnoDock.BorderBrush"] = palette.Border;
+        ThemeResourceDictionary["UnoDock.ForegroundBrush"] = palette.Foreground;
+        ThemeResourceDictionary["UnoDock.HoverBrush"] = palette.Hover;
+        ThemeResourceDictionary["UnoDock.PressedBrush"] = palette.Pressed;
+        ThemeResourceDictionary["UnoDock.AccentBrush"] = palette.Accent;
+        ThemeResourceDictionary["UnoDock.ActiveTitleBrush"] = palette.ActiveTitle;
         ThemeResourceDictionary["UnoDock.PaneBrush"] = new SolidColorBrush(dark ? Microsoft.UI.ColorHelper.FromArgb(255, 30, 34, 43) : Microsoft.UI.ColorHelper.FromArgb(255, 250, 251, 253));
         ThemeResourceDictionary["UnoDock.HeaderBrush"] = new SolidColorBrush(dark ? Microsoft.UI.ColorHelper.FromArgb(255, 39, 45, 57) : Microsoft.UI.ColorHelper.FromArgb(255, 232, 237, 245));
     }

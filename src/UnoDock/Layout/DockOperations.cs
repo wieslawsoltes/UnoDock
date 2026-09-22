@@ -88,17 +88,17 @@ public static class DockOperations
             {
                 destination = new(); AddAtRoot(root, destination, group.GetSide());
             }
-            foreach (var tool in group.Children.ToArray()) destination.Children.Add(tool);
-            group.Parent?.RemoveChild(group); content.IsActive = true;
+            destination.Children.Add(content);
+            if (group.Children.Count == 0) group.Parent?.RemoveChild(group);
+            content.IsActive = true;
         }
         else if (content.Parent is LayoutAnchorablePane pane)
         {
-            if (pane.Children.Any(c => !c.CanAutoHide)) return;
             var side = pane.GetSide();
             var anchorGroup = new LayoutAnchorGroup { PreviousContainer = pane, PreviousContainerIndex = (pane.Parent as ILayoutGroup)?.IndexOfChild(pane) ?? 0 };
             root.GetSide(side).Children.Add(anchorGroup);
-            var children = pane.Children.ToArray();
-            for (var i = 0; i < children.Length; i++) { children[i].SetPrevious(pane, i); anchorGroup.Children.Add(children[i]); }
+            content.SetPrevious(pane, pane.Children.IndexOf(content));
+            anchorGroup.Children.Add(content);
         }
         root.CollectGarbage();
     }

@@ -35,7 +35,7 @@ internal sealed class X11TestInput : IDisposable
         // Independently use Xlib for input positioning; the production converter uses XCB.
         if (TranslateCoordinates(_display, native.WindowId, DefaultRootWindow(_display), 0, 0, out var x, out var y, out _) == 0)
             throw new InvalidOperationException("The native window is on another screen.");
-        var client = element.TransformToVisual(root.Content).TransformPoint(point);
+        var client = element.TransformToVisual(null).TransformPoint(point);
         Check.True(FakeMotion(_display, -1, checked(x + (int)Math.Round(client.X * root.RasterizationScale)),
             checked(y + (int)Math.Round(client.Y * root.RasterizationScale)), 0) != 0);
         Flush(_display);

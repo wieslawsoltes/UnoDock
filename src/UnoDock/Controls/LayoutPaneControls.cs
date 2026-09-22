@@ -28,6 +28,7 @@ public partial class LayoutCachePaneControl : DockSelectionControl
         Grid.SetRow(_scroll, 1); Grid.SetRow(_content, 2);
         _layout.Children.Add(_titleRow); _layout.Children.Add(_scroll); _layout.Children.Add(_content); Content = _layout;
         IsTabStop = false;
+        InitializeChrome();
     }
     public IEnumerable<LayoutContent> Items => Pane?.Children.OfType<LayoutContent>() ?? [];
     internal void UpdatePane(ILayoutGroup pane, DockSurface surface)
@@ -62,37 +63,21 @@ public partial class LayoutCachePaneControl : DockSelectionControl
             }
         }
         VisualParenting.ReconcilePanel(_headers, tabViews); VisualParenting.ReconcilePanel(_content, contentViews);
-        _scroll.Visibility = pane is LayoutDocumentPane { ShowHeader: false } || models.Length == 0 ? Visibility.Collapsed : Visibility.Visible;
-        _layout.Background = DockVisuals.Brush(surface.Manager, "UnoDock.PaneBrush", "LayerFillColorDefaultBrush");
-        _headers.Background = DockVisuals.Brush(surface.Manager, "UnoDock.HeaderBrush", "ControlFillColorSecondaryBrush");
+        UpdatePaneChrome(pane, models, surface.Manager);
         UpdateTitle(pane is LayoutAnchorablePane, selected as LayoutAnchorable, surface.Manager);
         DockVisuals.SetName(this, pane is LayoutDocumentPane ? "Document tab group" : "Tool tab group");
         MenuContext.SetTarget(this, selected);
         ContextFlyout = selected == null ? null : DockVisuals.Menu(surface.Manager, selected);
         SynchronizeSelection();
+        RevealSelectedHeader(selected);
     }
     /// <summary>Creates an unparented tab once per model in this pane. This is an additive Uno composition extension.</summary>
     protected virtual LayoutTabItemBase CreateTabItem(LayoutContent model) => model is LayoutAnchorable ? new LayoutAnchorableTabItem() : new LayoutDocumentTabItem();
     private LayoutAnchorable? _titleModel;
     private DockingManager? _titleManager;
-    private void UpdateTitle(bool visible, LayoutAnchorable? selected, DockingManager manager)
-    {
-        _titleRow.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
-        _title.Text = selected?.Title ?? "Tools";
-        _titleModel = selected; _titleManager = manager;
-        if (_titleRow.Children.Count != 0) return;
-        _titleRow.ColumnDefinitions.Add(new() { Width = new(1, GridUnitType.Star) }); _titleRow.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
-        _titleRow.Children.Add(_title);
-        var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 2 };
-        actions.Children.Add(DockVisuals.Button("↗", () => _titleModel?.Float(), "Float tool"));
-        actions.Children.Add(DockVisuals.Button("◇", () => _titleModel?.ToggleAutoHide(), "Toggle tool auto-hide"));
-        actions.Children.Add(DockVisuals.Button("×", () => { if (_titleModel != null) DockVisuals.CloseOrHide(_titleModel); }, "Hide or close tool"));
-        Grid.SetColumn(actions, 1); _titleRow.Children.Add(actions);
-        _title.PointerPressed += (_, e) => { if (_titleModel != null) _titleManager?.BeginDrag(_titleModel, _title, e); };
-        _title.DoubleTapped += (_, _) => { if (_titleModel?.IsFloating == true) _titleModel.Dock(); else _titleModel?.Float(); };
-    }
     internal int InsertionIndex(Point surfacePoint, DockSurface surface)
     {
+        if (IsOverHeaderElement(_titlePresenter, surfacePoint, surface)) return Pane?.ChildrenCount ?? 0;
         var index = 0;
         foreach (var model in Items)
         {
@@ -103,19 +88,22 @@ public partial class LayoutCachePaneControl : DockSelectionControl
         }
         return index;
     }
-    internal bool IsOverHeader(Point point, DockSurface surface)
+    internal bool IsOverHeader(Point point, DockSurface surface) => IsOverHeaderElement(_scroll, point, surface) || IsOverHeaderElement(_titlePresenter, point, surface);
+    private static bool IsOverHeaderElement(FrameworkElement header, Point point, DockSurface surface)
     {
-        if (_scroll.Visibility != Visibility.Visible || _scroll.ActualWidth <= 0 || _scroll.ActualHeight <= 0) return false;
+        if (header.ActualWidth <= 0 || header.ActualHeight <= 0) return false;
+        for (DependencyObject? element = header; element != null; element = VisualTreeHelper.GetParent(element))
+            if (element is UIElement { Visibility: Visibility.Collapsed }) return false;
         try
         {
-            var local = DockCoordinates.Translate(surface, point, _scroll, surface.Manager.CrossWindowCoordinates);
-            return new Rect(0, 0, _scroll.ActualWidth, _scroll.ActualHeight).Contains(local);
+            var local = DockCoordinates.Translate(surface, point, header, surface.Manager.CrossWindowCoordinates);
+            return new Rect(0, 0, header.ActualWidth, header.ActualHeight).Contains(local);
         }
         catch (Exception e) when (DockCoordinates.IsUnavailable(e)) { return false; }
     }
     internal bool ScrollHeaderAt(Point point, DockSurface surface, double seconds)
     {
-        if (!IsOverHeader(point, surface) || _scroll.ScrollableWidth <= 0) return false;
+        if (!IsOverHeaderElement(_scroll, point, surface) || _scroll.ScrollableWidth <= 0) return false;
         var local = DockCoordinates.Translate(surface, point, _scroll, surface.Manager.CrossWindowCoordinates);
         var delta = DockInteractionGeometry.AutoScrollDelta(local.X, _scroll.ActualWidth, _scroll.HorizontalOffset,
             _scroll.ScrollableWidth, seconds, FlowDirection == FlowDirection.RightToLeft);
@@ -138,6 +126,7 @@ public partial class LayoutCachePaneControl : DockSelectionControl
         foreach (var tab in _tabs.Values) tab.DetachModel(); _tabs.Clear();
         _headers.Children.Clear(); _content.Children.Clear(); _titleModel = null; _titleManager = null;
         _paneObserver?.Dispose(); _paneObserver = null;
+        _headerGeneration++; _lastHeaderSelection = null; _lastHeaderIndex = -1;
     }
 }
 public class LayoutDocumentPaneControl : LayoutCachePaneControl, ILayoutControl, IRefreshableLayoutControl
@@ -167,20 +156,23 @@ public abstract class LayoutTabItemBase : DockInputControl
     public static readonly DependencyProperty ModelProperty = DependencyProperty.Register(nameof(Model), typeof(LayoutContent), typeof(LayoutTabItemBase), new PropertyMetadata(null, (d, e) => ((LayoutTabItemBase)d).OnModelChanged(e)));
     public static readonly DependencyProperty LayoutItemProperty = DependencyProperty.Register(nameof(LayoutItem), typeof(LayoutItem), typeof(LayoutTabItemBase), new PropertyMetadata(null));
     private readonly Grid _chrome = new();
-    private readonly Button _label;
+    private readonly DockChromeButton _label;
+    private readonly Image _icon = new() { Width = 16, Height = 16, Margin = new Thickness(0, 0, 3, 0), Visibility = Visibility.Collapsed };
     private readonly ContentPresenter _header = new() { VerticalAlignment = VerticalAlignment.Center };
-    private readonly Button _close;
+    private readonly DockChromeButton _close;
     private DockingManager? _manager;
     public LayoutContent? Model { get => (LayoutContent?)GetValue(ModelProperty); set => SetValue(ModelProperty, value); }
     public LayoutItem? LayoutItem => (LayoutItem?)GetValue(LayoutItemProperty);
     protected LayoutTabItemBase()
     {
-        IsTabStop = false; Padding = new(0); Margin = new(0);
+        IsTabStop = false; Padding = new(0); Margin = new(0); Height = 20;
+        HorizontalContentAlignment = HorizontalAlignment.Stretch; VerticalContentAlignment = VerticalAlignment.Stretch;
         _chrome.ColumnDefinitions.Add(new() { Width = new(1, GridUnitType.Star) }); _chrome.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
-        _label = DockVisuals.Button("", ActivateFromKeyboard); _label.Content = _header;
-        _label.MinWidth = 72; _label.MaxWidth = 260; _label.HorizontalContentAlignment = HorizontalAlignment.Left;
+        _label = DockChrome.Button("", ActivateFromKeyboard); var header = new Grid(); header.ColumnDefinitions.Add(new() { Width = GridLength.Auto }); header.ColumnDefinitions.Add(new() { Width = new(1, GridUnitType.Star) });
+        header.Children.Add(_icon); Grid.SetColumn(_header, 1); header.Children.Add(_header); _label.Content = header;
+        _label.MinWidth = 44; _label.MaxWidth = 260; _label.Padding = new Thickness(1, 0, 1, 0); _label.HorizontalContentAlignment = HorizontalAlignment.Left; _label.HorizontalAlignment = HorizontalAlignment.Stretch; _label.VerticalAlignment = VerticalAlignment.Stretch;
         _label.DoubleTapped += (_, _) => { if (Model?.IsFloating == true) Model.Dock(); else Model?.Float(); };
-        _close = DockVisuals.Button("×", () => { if (Model != null) DockVisuals.CloseOrHide(Model); }, "Close tab");
+        _close = DockChrome.Icon(DockGlyph.Close, () => { if (Model != null) DockVisuals.CloseOrHide(Model); }, "Close tab");
         Grid.SetColumn(_close, 1); _chrome.Children.Add(_label); _chrome.Children.Add(_close); Content = _chrome;
     }
     protected virtual void OnModelChanged(DependencyPropertyChangedEventArgs e)
@@ -230,11 +222,19 @@ public abstract class LayoutTabItemBase : DockInputControl
         SetLayoutItem(manager.GetLayoutItemFromModel(Model));
         var template = manager.HeaderTemplate(Model, this);
         _header.ContentTemplate = template; _header.Content = template == null ? Model.Title : Model;
+        _icon.Source = template == null ? Model.IconSource as ImageSource : null;
+        _icon.Visibility = _icon.Source == null ? Visibility.Collapsed : Visibility.Visible;
         _label.IsEnabled = Model.IsEnabled;
-        _close.Visibility = Model.CanClose || Model is LayoutAnchorable { CanHide: true } ? Visibility.Visible : Visibility.Collapsed;
-        _label.FontWeight = Model.IsSelected ? Microsoft.UI.Text.FontWeights.SemiBold : Microsoft.UI.Text.FontWeights.Normal;
-        _chrome.BorderThickness = new(0, 0, 0, Model.IsSelected ? 3 : 0);
-        _chrome.BorderBrush = DockVisuals.Brush(manager, "UnoDock.AccentBrush", "AccentFillColorDefaultBrush");
+        var palette = DockChrome.Palette(manager);
+        var tool = Model is LayoutAnchorable && Model.Parent is not LayoutDocumentPane;
+        _label.Configure(palette); _close.Configure(palette);
+        _label.FontWeight = Microsoft.UI.Text.FontWeights.Normal;
+        _close.Visibility = !tool && Model.CanClose && Model.IsSelected ? Visibility.Visible : Visibility.Collapsed;
+        _chrome.Background = Model.IsSelected ? palette.Surface : palette.Tab;
+        _chrome.BorderBrush = palette.Border;
+        _chrome.BorderThickness = tool ? new(0, 0, 1, 0) : new(0, 0, 1, 0);
+        _chrome.Padding = new(tool ? 3 : 0, 0, tool ? 3 : 0, 0);
+        MinHeight = 0; Height = tool ? palette.ToolTabHeight - 2 : palette.TabHeight - 1;
         DockVisuals.SetName(_label, Model.Title ?? "Document");
         ToolTipService.SetToolTip(_label, Model.ToolTip ?? Model.Title);
         MenuContext.SetTarget(this, Model);

@@ -9,6 +9,9 @@
     <UnoFeatures>SkiaRenderer;</UnoFeatures>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="../../tests/UnoDock.VisualTests/*.cs" Link="Testing/%(Filename)%(Extension)" />
+    <Compile Include="../../tools/VisualScene/SceneContent.cs" Link="Testing/SceneContent.cs" />
+    <EmbeddedResource Include="../../contracts/visual-fixtures/*.xml" LogicalName="VisualFixtures.%(Filename)%(Extension)" />
     <Compile Include="../../tests/UnoDock.Runtime.Tests/InputExtensionTests.cs" Link="Testing/InputExtensionTests.cs" />
     <ProjectReference Include="../../src/UnoDock/UnoDock.csproj" />
     <Compile Include="../../tests/UnoDock.Runtime.Tests/ShellTests*.cs" Link="Testing/%(Filename)%(Extension)" />

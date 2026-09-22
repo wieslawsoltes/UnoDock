@@ -105,12 +105,17 @@ internal sealed class DockSurface : Grid, IDisposable
     internal void PositionAutoHide()
     {
         if (_autoHide?.Model is not LayoutAnchorable model) return;
+        _autoHide.UpdateChrome();
         var side = model.GetSide(); var horizontal = side is AnchorSide.Left or AnchorSide.Right;
-        _autoHide.Width = horizontal ? Math.Min(Math.Max(model.AutoHideWidth > 0 ? model.AutoHideWidth : 300, model.AutoHideMinWidth), Math.Max(0, ActualWidth - 40)) : double.NaN;
-        _autoHide.Height = horizontal ? double.NaN : Math.Min(Math.Max(model.AutoHideHeight > 0 ? model.AutoHideHeight : 240, model.AutoHideMinHeight), Math.Max(0, ActualHeight - 40));
+        var left = Manager.LeftSidePanel is { Visibility: Visibility.Visible } l ? l.ActualWidth : 0;
+        var right = Manager.RightSidePanel is { Visibility: Visibility.Visible } r ? r.ActualWidth : 0;
+        var top = Manager.TopSidePanel is { Visibility: Visibility.Visible } t ? t.ActualHeight : 0;
+        var bottom = Manager.BottomSidePanel is { Visibility: Visibility.Visible } b ? b.ActualHeight : 0;
+        _autoHide.Width = horizontal ? Math.Min(Math.Max(model.AutoHideWidth > 0 ? model.AutoHideWidth : 300, model.AutoHideMinWidth), Math.Max(0, ActualWidth - left - right)) : double.NaN;
+        _autoHide.Height = horizontal ? double.NaN : Math.Min(Math.Max(model.AutoHideHeight > 0 ? model.AutoHideHeight : 240, model.AutoHideMinHeight), Math.Max(0, ActualHeight - top - bottom));
         _autoHide.HorizontalAlignment = side == AnchorSide.Left ? HorizontalAlignment.Left : side == AnchorSide.Right ? HorizontalAlignment.Right : HorizontalAlignment.Stretch;
         _autoHide.VerticalAlignment = side == AnchorSide.Top ? VerticalAlignment.Top : side == AnchorSide.Bottom ? VerticalAlignment.Bottom : VerticalAlignment.Stretch;
-        _autoHide.Margin = new Thickness(34, 32, 34, 32);
+        _autoHide.Margin = new Thickness(left, top, right, bottom);
     }
     internal void CloseAutoHide()
     {

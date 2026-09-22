@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Scene name="active-tool" width="1000" height="640">
+  <Element type="LayoutPanelControl" content="" x="0" y="0" width="1000" height="640" />
+  <Element type="LayoutAnchorablePaneControl" content="explorer,toolbox" x="0" y="0" width="200" height="640" />
+  <Element type="LayoutPanelControl" content="" x="206" y="0" width="558" height="640" />
+  <Element type="LayoutDocumentPaneControl" content="editor,readme,notes" x="206" y="0" width="558" height="479" />
+  <Element type="TextBox" content="" x="209" y="21.96" width="552" height="454.04" />
+  <Element type="LayoutAnchorablePaneControl" content="output,errors" x="206" y="485" width="558" height="155" />
+  <Element type="TextBox" content="" x="209" y="503.96" width="552" height="110.07999999999998" />
+  <Element type="LayoutAnchorablePaneControl" content="properties" x="770" y="0" width="230" height="640" />
+  <Element type="LayoutAnchorSideControl" content="" x="1000" y="0" width="0" height="640" />
+  <Element type="LayoutAnchorSideControl" content="" x="0" y="0" width="0" height="640" />
+  <Element type="LayoutAnchorSideControl" content="" x="0" y="0" width="1000" height="0" />
+  <Element type="LayoutAnchorSideControl" content="" x="0" y="640" width="1000" height="0" />
+</Scene>
