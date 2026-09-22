@@ -1,0 +1,51 @@
+name: Prepare docking parity integration
+on:
+  workflow_dispatch:
+  push:
+    paths: ['.github/workflows/integrate-docking.yml']
+permissions:
+  contents: read
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Verify complete patch and prepare three-way integration for review
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import base64, hashlib, json, lzma, os, pathlib, subprocess, tarfile, urllib.request
+          shas = ['63a5ac66367e028797324bad53d9fdab065aaf31','ac4485653b4033724d944335616ecffa6679a518','20cccf4cf440dcb0ce7b8d934f4faf3def7b7e1c','6da6984d9debecbdbaedacc89b81193e1a30220a','45551064faaf8453477ccec281cc184a1f8149ea','d5b85ea64ddf4044c4bec966d1a331647af92bf2','8fdf33902c226cb18317be2d541e1083a05f548a','f043beb716674ac8f3cd491db028af8aef422c19','cdf7cbf99c21c7a33a25bfd8267a882a06dd2d30']
+          parts = []
+          for sha in shas:
+              request = urllib.request.Request(f'https://api.github.com/repos/{os.environ["GITHUB_REPOSITORY"]}/git/blobs/{sha}', headers={'Authorization':'Bearer '+os.environ['GH_TOKEN']})
+              with urllib.request.urlopen(request, timeout=30) as response: blob=json.load(response)
+              data=base64.b64decode(blob['content'])
+              assert hashlib.sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest()==sha
+              parts.append(data)
+          compressed=b''.join(parts)
+          assert hashlib.sha256(compressed).hexdigest()=='4f190534d555914bd5df96fc935ed2a673c0d724ffcdb6606dda704202453761'
+          patch=lzma.decompress(compressed)
+          out=pathlib.Path(os.environ['RUNNER_TEMP'])/'integration';out.mkdir()
+          (out/'changes.patch').write_bytes(patch)
+          subprocess.run(['git','archive','HEAD','-o',str(out/'remote.tar')],check=True)
+          (out/'remote-revision.txt').write_bytes(subprocess.check_output(['git','rev-parse','HEAD']))
+          result=subprocess.run(['git','apply','--3way',str(out/'changes.patch')],capture_output=True,text=True)
+          (out/'merge.log').write_text(result.stdout+result.stderr)
+          (out/'conflicts.txt').write_bytes(subprocess.check_output(['git','diff','--name-only','--diff-filter=U']))
+          with tarfile.open(out/'merged.tar','w') as tar:
+              for path in sorted(pathlib.Path('.').rglob('*')):
+                  if path.is_file() and '.git' not in path.parts: tar.add(path,arcname=str(path))
+          print('Three-way integration exit code:',result.returncode)
+          print((out/'conflicts.txt').read_text())
+          print('No source commit or push was performed by this preparation job.')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: docking-parity-integration
+          path: ${{ runner.temp }}/integration/
+          retention-days: 3
