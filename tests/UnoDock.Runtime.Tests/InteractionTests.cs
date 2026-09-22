@@ -255,10 +255,8 @@ public static class InteractionTests
                 await Task.Delay(100); var before = scroll.HorizontalOffset;
                 await Task.Delay(250);
                 Check.True(scroll.HorizontalOffset > before + 5, "Scrolling did not continue while the pointer was stationary.");
-                input.Release(); await Task.Delay(100);
-                Check.False(DragTimer(host).IsEnabled);
-                var final = scroll.HorizontalOffset; await Task.Delay(100);
-                Check.Near(final, scroll.HorizontalOffset);
+                input.Release();
+                await AssertReleasedScrollSettles(host, scroll);
             });
             tests.Test("X11 source removal cancels capture and timer", async () =>
             {
@@ -274,6 +272,49 @@ public static class InteractionTests
         }
         try {return await tests.Run(output,"interaction");}
         finally {host.CrossWindowCoordinates=originalCoordinates;host.FloatingWindowMode=originalMode;host.Layout=original;host.Refresh();await Task.Delay(100);}
+    }
+    private static async Task AssertReleasedScrollSettles(DockingManager host, ScrollViewer scroll)
+    {
+        // XTEST release delivery and ScrollViewer.ChangeView are asynchronous. A
+        // committed reorder can also legitimately reveal the newly selected tab.
+        // Observe completion; do not confuse that final view change with an active
+        // drag timer merely because it arrived after an arbitrary 100 ms sleep.
+        var deadline = System.Diagnostics.Stopwatch.StartNew();
+        while (DragState(host) == UnoDock.Core.DockDragState.Dragging && deadline.Elapsed < TimeSpan.FromSeconds(3))
+            await Task.Delay(16);
+        Check.Equal(UnoDock.Core.DockDragState.Committed, DragState(host));
+        var timer = DragTimer(host);
+        Check.False(timer.IsEnabled);
+        var surface = Surface(host);
+        var tickField = surface.GetType().GetField("_lastScrollTick", BindingFlags.Instance | BindingFlags.NonPublic)!;
+        var lastTick = (long)tickField.GetValue(surface)!;
+        var lastChange = System.Diagnostics.Stopwatch.StartNew();
+        var offset = scroll.HorizontalOffset;
+        var intermediate = false;
+        void OnViewChanged(object? sender, ScrollViewerViewChangedEventArgs e)
+        { intermediate = e.IsIntermediate; lastChange.Restart(); }
+        scroll.ViewChanged += OnViewChanged;
+        try
+        {
+            deadline.Restart();
+            while (deadline.Elapsed < TimeSpan.FromSeconds(3))
+            {
+                await Task.Delay(16);
+                Check.True(!timer.IsEnabled, "Drag scrolling restarted after release.");
+                Check.Equal(lastTick, (long)tickField.GetValue(surface)!);
+                if (Math.Abs(offset - scroll.HorizontalOffset) > 1e-6)
+                { offset = scroll.HorizontalOffset; lastChange.Restart(); }
+                if (!intermediate && lastChange.Elapsed >= TimeSpan.FromMilliseconds(250)) break;
+            }
+            Check.True(!intermediate && lastChange.Elapsed >= TimeSpan.FromMilliseconds(250),
+                "The final selected-tab reveal did not settle within three seconds.");
+            var final = scroll.HorizontalOffset;
+            await Task.Delay(100);
+            Check.False(timer.IsEnabled);
+            Check.Equal(lastTick, (long)tickField.GetValue(surface)!);
+            Check.Near(final, scroll.HorizontalOffset);
+        }
+        finally { scroll.ViewChanged -= OnViewChanged; }
     }
     private static void CloseTestWindow(Window window)
     {
