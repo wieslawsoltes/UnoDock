@@ -42,6 +42,8 @@ public partial class WindowChrome : DependencyObject, INotifyPropertyChanged
     { ArgumentNullException.ThrowIfNull(inputElement); return (bool)inputElement.GetValue(IsHitTestVisibleInChromeProperty); }
     public static void SetIsHitTestVisibleInChrome(UIElement inputElement, bool hitTestVisible)
     { ArgumentNullException.ThrowIfNull(inputElement); inputElement.SetValue(IsHitTestVisibleInChromeProperty, hitTestVisible); }
+    public static WindowChrome? GetWindowChrome(DockWindowControl window) => GetWindowChrome((ContentControl)window);
+    public static void SetWindowChrome(DockWindowControl window, WindowChrome? chrome) => SetWindowChrome((ContentControl)window, chrome);
     public static WindowChrome? GetWindowChrome(ContentControl window)
     { ArgumentNullException.ThrowIfNull(window); return (WindowChrome?)window.GetValue(WindowChromeProperty); }
     public static void SetWindowChrome(ContentControl window, WindowChrome? chrome)

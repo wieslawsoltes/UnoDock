@@ -10,6 +10,7 @@ internal sealed class X11TestInput : IDisposable
 {
     private nint _display;
     private bool _pressed;
+    private readonly HashSet<byte> _keys = [];
 
     internal X11TestInput()
     {
@@ -56,15 +57,24 @@ internal sealed class X11TestInput : IDisposable
         Flush(_display);
     }
 
-    internal void Escape()
+    internal void KeyDown(nuint keysym)
     {
         ObjectDisposedException.ThrowIf(_display == 0, this);
-        var key = KeysymToKeycode(_display, 0xff1b);
+        var key = KeysymToKeycode(_display, keysym);
         Check.True(key != 0);
         Check.True(FakeKey(_display, key, 1, 0) != 0);
-        Check.True(FakeKey(_display, key, 0, 0) != 0);
-        Flush(_display);
+        _keys.Add(key); Flush(_display);
     }
+    internal void KeyUp(nuint keysym)
+    {
+        ObjectDisposedException.ThrowIf(_display == 0, this);
+        var key = KeysymToKeycode(_display, keysym);
+        Check.True(key != 0);
+        Check.True(FakeKey(_display, key, 0, 0) != 0);
+        _keys.Remove(key); Flush(_display);
+    }
+    internal void KeyPress(nuint keysym) { KeyDown(keysym); KeyUp(keysym); }
+    internal void Escape() => KeyPress(0xff1b);
 
     internal async Task Begin(FrameworkElement source, Point point)
     {
@@ -89,6 +99,8 @@ internal sealed class X11TestInput : IDisposable
         Release();
         if (_display != 0)
         {
+            foreach (var key in _keys) FakeKey(_display, key, 0, 0);
+            _keys.Clear(); Flush(_display);
             CloseDisplay(_display);
             _display = 0;
         }

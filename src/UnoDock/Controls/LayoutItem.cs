@@ -15,6 +15,26 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
     public LayoutContent LayoutElement { get; private set; } = null!;
     public object? Model { get; private set; }
     private ContentPresenter? _view;
+    private WeakReference<DependencyObject>? _lastFocused;
+    private void RememberFocus(object sender, RoutedEventArgs e)
+    {
+        var focused = e.OriginalSource as DependencyObject;
+        if (focused == null && _view?.XamlRoot != null)
+            focused = Microsoft.UI.Xaml.Input.FocusManager.GetFocusedElement(_view.XamlRoot) as DependencyObject;
+        if (focused != null && IsInView(focused)) _lastFocused = new(focused);
+    }
+    private bool IsInView(DependencyObject element)
+    {
+        for (DependencyObject? current = element; current != null; current = VisualTreeHelper.GetParent(current))
+            if (ReferenceEquals(current, _view)) return true;
+        return false;
+    }
+    internal bool RestoreEditorFocus()
+    {
+        if (_disposed || _view?.XamlRoot == null || !LayoutElement.IsEnabled) return false;
+        if (_lastFocused?.TryGetTarget(out var previous) == true && IsInView(previous) && previous is Control control && control.IsEnabled && control.Visibility == Visibility.Visible && control.Focus(FocusState.Programmatic)) return true;
+        return Microsoft.UI.Xaml.Input.FocusManager.FindFirstFocusableElement(_view) is Control first && first.Focus(FocusState.Programmatic);
+    }
     public bool IsViewCreated => _view != null;
     internal ContentPresenter? ExistingView => _view;
     public ContentPresenter View
@@ -25,6 +45,7 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
             if (_view == null)
             {
                 _view = new() { HorizontalContentAlignment = HorizontalAlignment.Stretch, VerticalContentAlignment = VerticalAlignment.Stretch };
+                _view.GotFocus += RememberFocus;
                 UpdateView();
             }
             return _view;
@@ -148,6 +169,7 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
         ClearDefaultBindings(); ClearDefaultCommands();
         if (_view is { } view)
         {
+            view.GotFocus -= RememberFocus; _lastFocused = null;
             VisualParenting.Detach(view); view.Content = null; view.ContentTemplate = null; view.DataContext = null; _view = null;
         }
         _manager = null; Model = null; DataContext = null;

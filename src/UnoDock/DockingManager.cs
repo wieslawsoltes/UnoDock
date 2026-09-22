@@ -275,14 +275,27 @@ public partial class DockingManager : Control, IDisposable
     internal DockSurface? Surface => _surface;
     public virtual NavigatorWindow CreateNavigatorWindow() => new(this);
     protected internal virtual void ShowNavigatorWindow() => _surface?.ShowNavigator(CreateNavigatorWindow());
+    protected override void OnPreviewKeyDown(KeyRoutedEventArgs e)
+    {
+        base.OnPreviewKeyDown(e);
+        if (!e.Handled) HandleDockingKey(e);
+    }
     protected override void OnKeyDown(KeyRoutedEventArgs e)
     {
         base.OnKeyDown(e);
+        if (!e.Handled) HandleDockingKey(e);
+    }
+    private void HandleDockingKey(KeyRoutedEventArgs e)
+    {
         var ctrl = InputState.ControlDown;
         if (e.Key == Windows.System.VirtualKey.Escape) { _surface?.CancelDrag(); CloseAutoHide(); _surface?.CloseNavigator(false); e.Handled = true; }
         else if (ctrl && e.Key == Windows.System.VirtualKey.Tab) { ShowNavigatorWindow(); e.Handled = true; }
         else if (ctrl && e.Key == Windows.System.VirtualKey.F4 && Layout.ActiveContent is { } active)
-        { GetLayoutItemFromModel(active).CloseCommand?.Execute(null); e.Handled = true; }
+        {
+            var command = GetLayoutItemFromModel(active).CloseCommand;
+            if (command?.CanExecute(null) == true) command.Execute(null);
+            e.Handled = true;
+        }
     }
     public void Dispose()
     {

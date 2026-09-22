@@ -114,3 +114,23 @@ still outstanding.
 NuGet publishing supports previews. Stable 1.0+ requires an owner-maintained explicit
 compatibility attestation bound to the source-tree fingerprint. No attestation claiming
 these boundaries are closed is included.
+
+
+## Preview 5 window/navigation increment
+
+The shared DockWindowControl supplies actual virtual lifecycle dispatch for floating
+windows, navigator and overlay composition. Protected initialization/closed/state hooks,
+Windows FilterMessage and two-list navigator template contracts now have implementations
+and regression coverage. Normal serialized bounds are independent of maximized/minimized
+presentation; delayed native snapshots and close callbacks are tied to the same live host.
+
+Current resolved metadata: 946/1,031 matched, 85 unresolved signature/type entries,
+18 separately reported attribute differences. The 33 remaining type-shape differences
+include deliberate framework composition differences, not missing type names. This
+increment does not supply WPF binary identity, complete routed input/command infrastructure,
+Freezable semantics or every original protected signature. Earlier checkpoint counts in
+this document describe those checkpoints, not the current gate.
+
+See window-lifecycle.md for implemented contracts, real-input coverage, template migration
+and remaining platform acceptance. Windows native-message cases run in their own CI
+runtime step; native WinUI package compilation remains a distinct validation boundary.

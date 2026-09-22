@@ -110,8 +110,9 @@ still require platform-specific acceptance. `ShowSystemMenu` controls the manage
 menu; it does not remove every OS-provided non-client system-menu gesture.
 
 WindowChrome is a DependencyObject with Clone, not Freezable. Freezing, full animation,
-thread transfer, WPF dependency-property inheritance, HWND-hosting and FilterMessage
-extension contracts remain separate unfinished work. Native non-client integration is
+thread transfer, WPF dependency-property inheritance and HWND-hosting remain unfinished.
+Preview 5 adds floating-window FilterMessage subscriptions on Windows; see
+[window lifecycle](window-lifecycle.md) for native callback safety and validation. Native non-client integration is
 not advertised on platforms lacking title-bar customization. Mac/mobile/browser OS menus
 and native metrics are not emulated by claiming unsupported capabilities.
 

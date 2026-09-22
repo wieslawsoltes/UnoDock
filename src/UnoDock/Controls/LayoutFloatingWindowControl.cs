@@ -11,11 +11,11 @@ using Xceed.Wpf.AvalonDock.Layout;
 namespace Xceed.Wpf.AvalonDock.Controls;
 
 /// <summary>Compositional replacement for the WPF Window base. Native desktop and in-surface hosts share the same layout.</summary>
-public abstract class LayoutFloatingWindowControl : ContentControl, ILayoutControl
+public abstract class LayoutFloatingWindowControl : DockWindowControl, ILayoutControl
 {
     public static readonly DependencyProperty IsContentImmutableProperty = DependencyProperty.Register(nameof(IsContentImmutable), typeof(bool), typeof(LayoutFloatingWindowControl), new PropertyMetadata(false));
     public static readonly DependencyProperty IsDraggingProperty = DependencyProperty.Register(nameof(IsDragging), typeof(bool), typeof(LayoutFloatingWindowControl), new PropertyMetadata(false, (d, e) => ((LayoutFloatingWindowControl)d).OnIsDraggingChanged(e)));
-    public static readonly DependencyProperty IsMaximizedProperty = DependencyProperty.Register(nameof(IsMaximized), typeof(bool), typeof(LayoutFloatingWindowControl), new PropertyMetadata(false, (d, e) => ((LayoutFloatingWindowControl)d).OnStateChanged(EventArgs.Empty)));
+    public static readonly DependencyProperty IsMaximizedProperty = DependencyProperty.Register(nameof(IsMaximized), typeof(bool), typeof(LayoutFloatingWindowControl), new PropertyMetadata(false, (d, e) => ((LayoutFloatingWindowControl)d).MaximizedChanged()));
     public static readonly DependencyProperty ResizeBorderThicknessProperty = DependencyProperty.Register(nameof(ResizeBorderThickness), typeof(Thickness), typeof(LayoutFloatingWindowControl), new PropertyMetadata(new Thickness(5)));
     private readonly Grid _frame = new();
     private readonly OverlayWindow _dropOverlay = new();
@@ -28,6 +28,11 @@ public abstract class LayoutFloatingWindowControl : ContentControl, ILayoutContr
     private Window? _window;
     private IDisposable? _systemRegistration;
     private bool _closingOperation, _minimized;
+    private Window? _pendingNativeSync;
+    private NativeWindowMessageHook? _messageHook;
+    private DockRect? _displayBounds;
+    internal bool IsMinimized => _minimized;
+    public event EventHandler<Exception>? MessageFilterFailed;
     internal double ChromeCaptionHeight { get => _title.MinHeight; set => _title.MinHeight = value; }
     internal bool CanPerformSystemAction(Microsoft.Windows.Shell.WindowAction action)
     {
@@ -54,15 +59,14 @@ public abstract class LayoutFloatingWindowControl : ContentControl, ILayoutContr
             else if (action == Microsoft.Windows.Shell.WindowAction.Restore) presenter.Restore();
             return;
         }
-        if (action == Microsoft.Windows.Shell.WindowAction.Minimize) { _minimized = true; Visibility = Visibility.Collapsed; }
+        if (action == Microsoft.Windows.Shell.WindowAction.Minimize) SetMinimized(true);
         else
         {
-            _minimized = false; Visibility = Visibility.Visible;
+            SetMinimized(false); Visibility = Visibility.Visible;
             if (action == Microsoft.Windows.Shell.WindowAction.Maximize || IsMaximized) ToggleMaximize();
         }
     }
     protected bool CloseInitiatedByUser { get; private set; }
-    private DockRect? _restoreBounds;
     protected LayoutFloatingWindowControl(ILayoutElement model) : this(model, false) { }
     protected LayoutFloatingWindowControl(ILayoutElement model, bool isContentImmutable)
     {
@@ -104,15 +108,49 @@ public abstract class LayoutFloatingWindowControl : ContentControl, ILayoutContr
     public Window? NativeWindow => _window;
     internal IEnumerable<LayoutContent> Contents => Model.Descendents().OfType<LayoutContent>();
     private LayoutContent? PositionModel => Contents.FirstOrDefault();
-    internal DockRect Bounds => PositionModel is { } p ? new(p.FloatingLeft, p.FloatingTop, p.FloatingWidth > 0 ? Math.Max(160, p.FloatingWidth) : 640, p.FloatingHeight > 0 ? Math.Max(100, p.FloatingHeight) : 480) : new(80, 80, 640, 480);
+    internal DockRect RestoredBounds => PositionModel is { } p ? new(p.FloatingLeft, p.FloatingTop, p.FloatingWidth > 0 ? Math.Max(160, p.FloatingWidth) : 640, p.FloatingHeight > 0 ? Math.Max(100, p.FloatingHeight) : 480) : new(80, 80, 640, 480);
+    internal DockRect Bounds => IsMaximized && _displayBounds is { } bounds ? bounds : RestoredBounds;
     protected virtual bool CanClose(object? parameter = null) => Contents.Any() && Contents.All(c => c.CanClose || c is LayoutAnchorable { CanHide: true });
     protected virtual bool CanHide(object? parameter = null) => Contents.Any() && Contents.All(c => c is LayoutAnchorable { CanHide: true });
     protected virtual void DoHide() { foreach (var tool in Contents.OfType<LayoutAnchorable>().ToArray()) tool.Hide(); }
-    protected virtual void OnClosed(EventArgs e) { }
-    protected virtual void OnClosing(CancelEventArgs e) { }
-    protected virtual void OnStateChanged(EventArgs e)
+    protected override void OnInitialized(EventArgs e)
     {
-        foreach (var content in Contents) content.IsMaximized = IsMaximized;
+        SetValue(IsMaximizedProperty, PositionModel?.IsMaximized == true);
+        base.OnInitialized(e);
+    }
+    protected override void OnClosed(EventArgs e)
+    {
+        SetIsDragging(false);
+        Microsoft.Windows.Shell.SystemCommands.InvalidateCommands();
+        base.OnClosed(e);
+    }
+    protected override void OnClosing(CancelEventArgs e) => base.OnClosing(e);
+    protected override void OnStateChanged(EventArgs e) => base.OnStateChanged(e);
+    protected virtual nint FilterMessage(nint hwnd, int msg, nint wParam, nint lParam, ref bool handled) => 0;
+    private void MaximizedChanged()
+    {
+        using ((Model.Root as LayoutRoot)?.BeginUpdate())
+            foreach (var content in Contents.ToArray()) content.IsMaximized = IsMaximized;
+        if (!IsMaximized) _displayBounds = null;
+        ApplyManagedBounds();
+        Microsoft.Windows.Shell.SystemCommands.InvalidateCommands();
+        OnStateChanged(EventArgs.Empty);
+    }
+    private void SetMinimized(bool minimized)
+    {
+        if (_minimized == minimized) return;
+        _minimized = minimized;
+        if (_window == null) Visibility = minimized ? Visibility.Collapsed : Visibility.Visible;
+        Microsoft.Windows.Shell.SystemCommands.InvalidateCommands();
+        OnStateChanged(EventArgs.Empty);
+    }
+    private void ApplyManagedBounds()
+    {
+        if (_window != null || _hostDisposed) return;
+        if (IsMaximized && Model.Root?.Manager?.Surface is { } surface)
+            _displayBounds = new(0, 0, Math.Max(160, surface.ActualWidth), Math.Max(100, surface.ActualHeight));
+        var bounds = Bounds;
+        Width = bounds.Width; Height = bounds.Height; Canvas.SetLeft(this, bounds.X); Canvas.SetTop(this, bounds.Y);
     }
     protected virtual void OnIsDraggingChanged(DependencyPropertyChangedEventArgs e) { }
     protected void SetIsDragging(bool value) => SetValue(IsDraggingProperty, value);
@@ -152,7 +190,7 @@ public abstract class LayoutFloatingWindowControl : ContentControl, ILayoutContr
             if (_window.AppWindow.Presenter is OverlappedPresenter { State: OverlappedPresenterState.Minimized } p) p.Restore();
             _window.Activate();
         }
-        else { _minimized = false; Visibility = Visibility.Visible; Focus(FocusState.Programmatic); }
+        else { SetMinimized(false); Visibility = Visibility.Visible; Focus(FocusState.Programmatic); }
         Microsoft.Windows.Shell.SystemCommands.InvalidateCommands();
     }
     internal void SetChromeBounds(DockRect bounds) { if (!_hostDisposed) SetBounds(bounds); }
@@ -163,6 +201,8 @@ public abstract class LayoutFloatingWindowControl : ContentControl, ILayoutContr
     }
     internal virtual void UpdateView()
     {
+        EnsureInitialized();
+        if (_hostDisposed) return;
         var manager = Model.Root?.Manager; if (manager?.Surface == null) return;
         _caption.IsHitTestVisible = Model is LayoutDocumentFloatingWindow;
         // Document captions are docking drag handles, not native window-move
@@ -181,7 +221,7 @@ public abstract class LayoutFloatingWindowControl : ContentControl, ILayoutContr
         };
         if (Model is LayoutAnchorableFloatingWindow { RootPanel: { } panel }) manager.Surface.UpdateView(panel);
         if (body != null) { body.Visibility = Visibility.Visible; if (!ReferenceEquals(_body.Content, body)) { VisualParenting.Detach(body); _body.Content = body; } }
-        if (_window == null) { Width = Bounds.Width; Height = Bounds.Height; Canvas.SetLeft(this, Bounds.X); Canvas.SetTop(this, Bounds.Y); }
+        ApplyManagedBounds();
         Microsoft.Windows.Shell.SystemCommands.InvalidateCommands();
     }
     internal void ShowDropPreview(DockDropPlan plan, FrameworkElement coordinateOwner, Brush accent)
@@ -192,6 +232,7 @@ public abstract class LayoutFloatingWindowControl : ContentControl, ILayoutContr
     internal void HideDropPreview() => _dropOverlay.Hide();
     internal void ShowNative()
     {
+        EnsureInitialized();
         if (_hostDisposed) return;
         Visibility = Visibility.Visible;
         if (_window == null)
@@ -203,37 +244,84 @@ public abstract class LayoutFloatingWindowControl : ContentControl, ILayoutContr
             _window.AppWindow.Changed += OnNativeChanged;
             _window.Closed += OnNativeClosed;
             _window.Activated += OnNativeActivated;
-            var bounds = Bounds; var scale = DesktopWindowCoordinates.Scale(this);
+            var bounds = RestoredBounds; var scale = DesktopWindowCoordinates.Scale(this);
             _syncBounds = true;
             try { _window.AppWindow.Move(new Windows.Graphics.PointInt32 { X = (int)(bounds.X * scale), Y = (int)(bounds.Y * scale) }); _window.AppWindow.Resize(new Windows.Graphics.SizeInt32 { Width = (int)(bounds.Width * scale), Height = (int)(bounds.Height * scale) }); }
             finally { _syncBounds = false; }
             if (PositionModel?.IsMaximized == true && _window.AppWindow.Presenter is OverlappedPresenter presenter) presenter.Maximize();
+            try { _messageHook = NativeWindowMessageHook.Attach(_window, FilterMessage, ReportFilterFailure); }
+            catch (Exception error) { ReportFilterFailure(error); }
             _window.Activate();
         }
-        else if (!_window.AppWindow.IsVisible) _window.Activate();
+        else if (!_window.AppWindow.IsVisible && !_minimized) _window.Activate();
     }
     private void OnNativeClosing(AppWindow sender, AppWindowClosingEventArgs e)
     {
         if (_closingHost) return;
         // Prevent native destruction until model cancellation has been evaluated.
         e.Cancel = true;
-        DispatcherQueue.TryEnqueue(Close);
+        var window = _window;
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            if (!_hostDisposed && ReferenceEquals(_window, window)) Close();
+        });
     }
     private void OnNativeActivated(object sender, WindowActivatedEventArgs e)
     {
         if (e.WindowActivationState != DockWindowActivationState.Deactivated)
             MarkInteraction();
     }
-    private void OnNativeClosed(object sender, WindowEventArgs e) { _systemRegistration?.Dispose(); _systemRegistration = null; _window = null; OnClosed(EventArgs.Empty); }
+    private void ReportFilterFailure(Exception error)
+    {
+        // Schedule user diagnostics outside the native procedure, and never retain
+        // a dead host merely because an observer was queued.
+        var weak = new WeakReference<LayoutFloatingWindowControl>(this);
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            if (weak.TryGetTarget(out var owner) && !owner._hostDisposed)
+                owner.MessageFilterFailed?.Invoke(owner, error);
+        });
+    }
+    private void OnNativeClosed(object sender, WindowEventArgs e)
+    {
+        if (!ReferenceEquals(sender, _window)) return;
+        _messageHook?.Dispose(); _messageHook = null;
+        _systemRegistration?.Dispose(); _systemRegistration = null;
+        if (_window is { } window)
+        {
+            window.AppWindow.Closing -= OnNativeClosing; window.AppWindow.Changed -= OnNativeChanged;
+            window.Closed -= OnNativeClosed; window.Activated -= OnNativeActivated; window.Content = null;
+        }
+        _window = null;
+        CloseHost();
+    }
     private void OnNativeChanged(AppWindow sender, AppWindowChangedEventArgs e)
     {
-        if (_syncBounds || _closingHost) return;
-        var scale = DesktopWindowCoordinates.Scale(this);
-        if (e.DidPositionChange || e.DidSizeChange) SetBounds(new(sender.Position.X / scale, sender.Position.Y / scale, sender.Size.Width / scale, sender.Size.Height / scale));
-        var maximized = sender.Presenter is OverlappedPresenter p && p.State == OverlappedPresenterState.Maximized;
+        if (_syncBounds || _closingHost || _window is not { } window || ReferenceEquals(_pendingNativeSync, window)) return;
+        // Presenter, bounds and activation notifications can arrive separately.
+        // Observe one coherent live snapshot after the native transition settles.
+        _pendingNativeSync = window;
+        if (!DispatcherQueue.TryEnqueue(() =>
+        {
+            if (ReferenceEquals(_pendingNativeSync, window)) _pendingNativeSync = null;
+            if (_hostDisposed || _closingHost || !ReferenceEquals(_window, window)) return;
+            var scale = DesktopWindowCoordinates.Scale(this);
+            var native = window.AppWindow;
+            var state = (native.Presenter as OverlappedPresenter)?.State ?? OverlappedPresenterState.Restored;
+            SynchronizeNativeState(new(native.Position.X / scale, native.Position.Y / scale,
+                native.Size.Width / scale, native.Size.Height / scale), state);
+        })) _pendingNativeSync = null;
+    }
+    internal void SynchronizeNativeState(DockRect bounds, OverlappedPresenterState state)
+    {
+        if (_hostDisposed) return;
+        if (state == OverlappedPresenterState.Minimized) { SetMinimized(true); return; }
+        SetMinimized(false);
+        var maximized = state == OverlappedPresenterState.Maximized;
+        if (maximized) _displayBounds = bounds;
         IsMaximized = maximized;
-        Microsoft.Windows.Shell.SystemCommands.InvalidateCommands();
-        foreach (var content in Contents) content.IsMaximized = maximized;
+        // Maximized/minimized host geometry is presentation, never persistence.
+        if (!maximized) SetBounds(bounds);
     }
     internal void HideHost()
     {
@@ -246,6 +334,7 @@ public abstract class LayoutFloatingWindowControl : ContentControl, ILayoutContr
             _closingHost = true;
             try
             {
+                _messageHook?.Dispose(); _messageHook = null;
                 window.AppWindow.Closing -= OnNativeClosing;
                 window.AppWindow.Changed -= OnNativeChanged;
                 window.Closed -= OnNativeClosed; window.Activated -= OnNativeActivated;
@@ -266,15 +355,17 @@ public abstract class LayoutFloatingWindowControl : ContentControl, ILayoutContr
         Microsoft.Windows.Shell.WindowChrome.SetWindowChrome(this, null);
         if (_window is { } window)
         {
+            _messageHook?.Dispose(); _messageHook = null;
             window.AppWindow.Closing -= OnNativeClosing; window.AppWindow.Changed -= OnNativeChanged; window.Closed -= OnNativeClosed; window.Activated -= OnNativeActivated;
             DesktopWindowCoordinates.HideNativeClientBeforeClose(window);
             window.Content = null; window.Close(); _systemRegistration?.Dispose(); _systemRegistration = null; _window = null;
         }
-        _dropOverlay.Hide(); _body.Content = null; VisualParenting.Detach(this); OnClosed(EventArgs.Empty);
+        _dropOverlay.Hide(); _body.Content = null; VisualParenting.Detach(this); CompleteWindowClose();
     }
     internal void SetBounds(DockRect bounds)
     {
-        if (!double.IsFinite(bounds.X + bounds.Y + bounds.Width + bounds.Height)) return;
+        if (_hostDisposed || IsMaximized || _minimized || !double.IsFinite(bounds.X) || !double.IsFinite(bounds.Y) ||
+            !double.IsFinite(bounds.Width) || !double.IsFinite(bounds.Height) || bounds.Width <= 0 || bounds.Height <= 0) return;
         using var batch = (Model.Root as LayoutRoot)?.BeginUpdate();
         foreach (var content in Contents)
         { content.FloatingLeft = bounds.X; content.FloatingTop = bounds.Y; content.FloatingWidth = Math.Max(160, bounds.Width); content.FloatingHeight = Math.Max(100, bounds.Height); }
@@ -282,6 +373,7 @@ public abstract class LayoutFloatingWindowControl : ContentControl, ILayoutContr
     }
     private void MoveBy(double x, double y)
     {
+        if (_hostDisposed || IsMaximized || _minimized) return;
         if (_window != null) { _window.AppWindow.Move(new Windows.Graphics.PointInt32 { X = _window.AppWindow.Position.X + (int)Math.Round(x * (XamlRoot?.RasterizationScale ?? 1)), Y = _window.AppWindow.Position.Y + (int)Math.Round(y * (XamlRoot?.RasterizationScale ?? 1)) }); return; }
         var bounds = Bounds; var surface = Model.Root?.Manager?.Surface;
         bounds = bounds with { X = bounds.X + x, Y = bounds.Y + y };
@@ -290,6 +382,7 @@ public abstract class LayoutFloatingWindowControl : ContentControl, ILayoutContr
     }
     private void ResizeBy(double x, double y)
     {
+        if (_hostDisposed || IsMaximized || _minimized) return;
         if (_window != null) { _window.AppWindow.Resize(new Windows.Graphics.SizeInt32 { Width = Math.Max(160, _window.AppWindow.Size.Width + (int)Math.Round(x * (XamlRoot?.RasterizationScale ?? 1))), Height = Math.Max(100, _window.AppWindow.Size.Height + (int)Math.Round(y * (XamlRoot?.RasterizationScale ?? 1))) }); return; }
         var bounds = Bounds; SetBounds(bounds with { Width = Math.Max(160, bounds.Width + x), Height = Math.Max(100, bounds.Height + y) });
     }
@@ -298,14 +391,33 @@ public abstract class LayoutFloatingWindowControl : ContentControl, ILayoutContr
         if (_window?.AppWindow.Presenter is OverlappedPresenter presenter)
         { if (presenter.State == OverlappedPresenterState.Maximized) presenter.Restore(); else presenter.Maximize(); return; }
         if (Model.Root?.Manager?.Surface is not { } surface) return;
-        if (_restoreBounds is { } restore) { _restoreBounds = null; IsMaximized = false; SetBounds(restore); }
-        else { _restoreBounds = Bounds; IsMaximized = true; SetBounds(new(0, 0, surface.ActualWidth, surface.ActualHeight)); }
+        IsMaximized = !IsMaximized;
+        ApplyManagedBounds();
+    }
+    protected override void OnPreviewKeyDown(KeyRoutedEventArgs e)
+    {
+        base.OnPreviewKeyDown(e);
+        if (!e.Handled) HandleWindowKey(e);
     }
     protected override void OnKeyDown(KeyRoutedEventArgs e)
     {
         base.OnKeyDown(e);
+        if (!e.Handled) HandleWindowKey(e);
+    }
+    private void HandleWindowKey(KeyRoutedEventArgs e)
+    {
+        if (_hostDisposed) return;
         if (e.Key == Windows.System.VirtualKey.Escape) { Model.Root?.Manager?.Surface?.CancelDrag(); e.Handled = true; return; }
-        if (Model.Root?.Manager?.AllowMovingFloatingWindowWithKeyboard != true || !InputState.ControlDown) return;
+        var manager = Model.Root?.Manager;
+        if (InputState.ControlDown && e.Key == Windows.System.VirtualKey.Tab)
+        { manager?.ShowNavigatorWindow(); e.Handled = true; return; }
+        if (InputState.ControlDown && e.Key == Windows.System.VirtualKey.F4 && manager?.Layout.ActiveContent is { } active)
+        {
+            var command = manager.GetLayoutItemFromModel(active).CloseCommand;
+            if (command?.CanExecute(null) == true) command.Execute(null);
+            e.Handled = true; return;
+        }
+        if (manager?.AllowMovingFloatingWindowWithKeyboard != true || !InputState.ControlDown) return;
         switch (e.Key)
         {
             case Windows.System.VirtualKey.Left: MoveBy(-10, 0); break;
@@ -323,7 +435,21 @@ public class LayoutDocumentFloatingWindowControl : LayoutFloatingWindowControl
     public LayoutDocumentFloatingWindowControl(LayoutDocumentFloatingWindow model) : this(model, false) { }
     public LayoutDocumentFloatingWindowControl(LayoutDocumentFloatingWindow model, bool isContentImmutable) : base(model, isContentImmutable) => _model = model;
     public override ILayoutElement Model => _model;
-    public LayoutItem? RootDocumentLayoutItem => _model.RootDocument is { } doc ? _model.Root?.Manager?.GetLayoutItemFromModel(doc) : null;
+    public LayoutItem? RootDocumentLayoutItem => !IsWindowClosed && _model.RootDocument is { } doc ? _model.Root?.Manager?.GetLayoutItemFromModel(doc) : null;
+    protected override bool CanClose(object? parameter = null) => _model.RootDocument is { CanClose: true } && base.CanClose(parameter);
+    protected override void OnInitialized(EventArgs e)
+    {
+        // Materialize the public document adapter, not its editor presenter.
+        _ = RootDocumentLayoutItem;
+        base.OnInitialized(e);
+    }
+    protected override void OnClosed(EventArgs e)
+    {
+        ClearValue(DataContextProperty);
+        base.OnClosed(e);
+    }
+    protected override nint FilterMessage(nint hwnd, int msg, nint wParam, nint lParam, ref bool handled)
+        => base.FilterMessage(hwnd, msg, wParam, lParam, ref handled);
 }
 public class LayoutAnchorableFloatingWindowControl : LayoutFloatingWindowControl
 {
@@ -337,6 +463,32 @@ public class LayoutAnchorableFloatingWindowControl : LayoutFloatingWindowControl
     public ICommand CloseWindowCommand { get; private set; }
     public ICommand HideWindowCommand { get; private set; }
     protected virtual void OnSingleContentLayoutItemChanged(DependencyPropertyChangedEventArgs e) { }
+    protected override bool CanClose(object? parameter = null) => !IsWindowClosed && base.CanClose(parameter);
+    protected override bool CanHide(object? parameter = null) => !IsWindowClosed && base.CanHide(parameter);
+    protected override void DoHide()
+    {
+        var root = _model.Root; var manager = root?.Manager;
+        foreach (var tool in Contents.OfType<LayoutAnchorable>().ToArray())
+        {
+            if (!ReferenceEquals(_model.Root, root) || manager != null && !ReferenceEquals(manager.Layout, root)) break;
+            if (ReferenceEquals(tool.FindParent<LayoutFloatingWindow>(), _model)) tool.Hide();
+        }
+    }
+    protected override void OnInitialized(EventArgs e)
+    {
+        SingleContentLayoutItem = _model.IsSinglePane && (_model.SinglePane as ILayoutContentSelector)?.SelectedContent is { } selected
+            ? _model.Root?.Manager?.GetLayoutItemFromModel(selected) : null;
+        base.OnInitialized(e);
+    }
+    protected override void OnClosed(EventArgs e)
+    {
+        SingleContentLayoutItem = null;
+        ((DelegateCommand)CloseWindowCommand).RaiseCanExecuteChanged();
+        ((DelegateCommand)HideWindowCommand).RaiseCanExecuteChanged();
+        base.OnClosed(e);
+    }
+    protected override nint FilterMessage(nint hwnd, int msg, nint wParam, nint lParam, ref bool handled)
+        => base.FilterMessage(hwnd, msg, wParam, lParam, ref handled);
     internal override void UpdateView()
     {
         base.UpdateView(); SingleContentLayoutItem = _model.IsSinglePane && (_model.SinglePane as ILayoutContentSelector)?.SelectedContent is { } selected ? _model.Root?.Manager?.GetLayoutItemFromModel(selected) : null;

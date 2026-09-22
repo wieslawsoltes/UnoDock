@@ -34,6 +34,11 @@
       "kind": "framework"
     },
     {
+      "source": "System.Windows.Controls.ListBox",
+      "target": "Microsoft.UI.Xaml.Controls.ListBox",
+      "kind": "framework"
+    },
+    {
       "source": "System.Windows.Controls.MenuItem",
       "target": "Microsoft.UI.Xaml.Controls.MenuFlyoutItem",
       "kind": "adapter",
@@ -215,6 +220,11 @@
       "kind": "framework"
     },
     {
+      "source": "System.Windows.TemplatePartAttribute",
+      "target": "Microsoft.UI.Xaml.TemplatePartAttribute",
+      "kind": "framework"
+    },
+    {
       "source": "System.Windows.Thickness",
       "target": "Microsoft.UI.Xaml.Thickness",
       "kind": "framework"
@@ -227,9 +237,9 @@
     },
     {
       "source": "System.Windows.Window",
-      "target": "Microsoft.UI.Xaml.Controls.ContentControl",
+      "target": "Xceed.Wpf.AvalonDock.Controls.DockWindowControl",
       "kind": "adapter",
-      "note": "Floating and overlay windows use ContentControl plus native-host composition, not Window inheritance."
+      "note": "Composed docking window with one-time initialization, closing/closed and state lifecycle; native HWND ownership remains explicit."
     }
   ]
 }

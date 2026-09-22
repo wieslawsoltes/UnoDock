@@ -17,6 +17,11 @@ public static class SystemCommands
     public static RoutedCommand RestoreWindowCommand { get; } = Create(nameof(RestoreWindow), WindowAction.Restore);
     public static RoutedCommand ShowSystemMenuCommand { get; } = Create(nameof(ShowSystemMenu), WindowAction.Menu);
 
+    public static void CloseWindow(DockWindowControl window) => Execute(window, WindowAction.Close);
+    public static void MaximizeWindow(DockWindowControl window) => Execute(window, WindowAction.Maximize);
+    public static void MinimizeWindow(DockWindowControl window) => Execute(window, WindowAction.Minimize);
+    public static void RestoreWindow(DockWindowControl window) => Execute(window, WindowAction.Restore);
+    public static void ShowSystemMenu(DockWindowControl window, Point screenLocation) => ShowMenu(window, screenLocation);
     public static void CloseWindow(ContentControl window) => Execute(window, WindowAction.Close);
     public static void MaximizeWindow(ContentControl window) => Execute(window, WindowAction.Maximize);
     public static void MinimizeWindow(ContentControl window) => Execute(window, WindowAction.Minimize);

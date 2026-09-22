@@ -173,7 +173,7 @@ public class OverlayWindowDropTarget
 }
 /// <summary>Non-activating, hit-test-transparent overlay hosted in the application's visual tree.
 /// No WPF Window identity or HWND ownership is implied by this portable implementation.</summary>
-public class OverlayWindow : ContentControl
+public class OverlayWindow : DockWindowControl
 {
     private readonly Canvas _canvas = new();
     private readonly Border _preview = new() { BorderThickness = new(2), Opacity = .35 };
@@ -198,5 +198,5 @@ public class OverlayWindow : ContentControl
     }
     public void Hide() { CurrentPlan = null; Visibility = Visibility.Collapsed; }
     public void Close() { var args = new CancelEventArgs(); OnClosing(args); if (!args.Cancel) Hide(); }
-    protected virtual void OnClosing(CancelEventArgs e) { }
+    protected override void OnClosing(CancelEventArgs e) => base.OnClosing(e);
 }
