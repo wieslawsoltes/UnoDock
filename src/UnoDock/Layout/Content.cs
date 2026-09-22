@@ -87,18 +87,30 @@ public abstract class LayoutContent : LayoutElement, IComparable<LayoutContent>,
     protected override void OnParentChanged(ILayoutContainer? oldValue, ILayoutContainer? newValue) => base.OnParentChanged(oldValue, newValue);
     internal virtual void RefreshPlacement() => IsFloating = this.FindParent<LayoutFloatingWindow>() != null;
     public abstract void Close();
+    private bool _operationInProgress;
+    protected bool TryBeginOperation() { if (_operationInProgress) return false; _operationInProgress = true; return true; }
+    protected void EndOperation() => _operationInProgress = false;
     protected bool CloseCore()
     {
-        if (!CanClose || Parent == null) return false;
-        var root = Root as LayoutRoot; var manager = root?.Manager;
-        var args = new CancelEventArgs(); OnClosing(args); if (args.Cancel) return false;
-        if (this is LayoutDocument document && manager?.RaiseDocumentClosing(document) == true) return false;
-        using var batch = root?.BeginUpdate();
-        Parent?.RemoveChild(this); IsSelected = false; SetActive(false);
-        root?.CollectGarbage(); OnClosed();
-        if (this is LayoutDocument closed) manager?.RaiseDocumentClosed(closed);
-        return true;
+        if (!CanClose || Parent == null || !TryBeginOperation()) return false;
+        try
+        {
+            var parent = Parent; var root = Root as LayoutRoot; var manager = root?.Manager;
+            bool Valid() => CanClose && ReferenceEquals(Parent, parent) && ReferenceEquals(Root, root) &&
+                (manager == null || ReferenceEquals(manager.Layout, root));
+            var args = new CancelEventArgs(); OnClosing(args);
+            if (args.Cancel || !Valid()) return false;
+            if (this is LayoutDocument document && manager?.RaiseDocumentClosing(document) == true) return false;
+            if (!Valid()) return false;
+            using var batch = root?.BeginUpdate();
+            parent.RemoveChild(this); IsSelected = false; SetActive(false);
+            root?.CollectGarbage(); OnClosed();
+            if (this is LayoutDocument closed) manager?.RaiseDocumentClosed(closed);
+            return true;
+        }
+        finally { EndOperation(); }
     }
+
     public void Float() => DockOperations.Float(this);
     public void Dock() => InternalDock();
     protected virtual void InternalDock() => DockOperations.Restore(this);
@@ -144,12 +156,20 @@ public class LayoutAnchorable : LayoutContent
     protected virtual void OnHidden() => Hidden?.Invoke(this, EventArgs.Empty);
     public void Hide(bool cancelable = true)
     {
-        if (!CanHide || IsHidden || Root is not LayoutRoot root) return;
-        var args = new CancelEventArgs(); OnHiding(args); if (cancelable && args.Cancel) return;
-        using var batch = root.BeginUpdate();
-        if (Parent is ILayoutGroup group) SetPrevious(group, group.IndexOfChild(this));
-        root.Hidden.Add(this); SetActive(false); OnHidden();
+        if (!CanHide || IsHidden || Root is not LayoutRoot root || !TryBeginOperation()) return;
+        try
+        {
+            var parent = Parent; var manager = root.Manager;
+            var args = new CancelEventArgs(); OnHiding(args);
+            if (cancelable && args.Cancel || !CanHide || !ReferenceEquals(Parent, parent) ||
+                !ReferenceEquals(Root, root) || manager != null && !ReferenceEquals(manager.Layout, root)) return;
+            using var batch = root.BeginUpdate();
+            if (parent is ILayoutGroup group) SetPrevious(group, group.IndexOfChild(this));
+            root.Hidden.Add(this); SetActive(false); OnHidden();
+        }
+        finally { EndOperation(); }
     }
+
     public void Show()
     {
         if (!IsHidden) { if (Parent != null) IsSelected = true; return; }

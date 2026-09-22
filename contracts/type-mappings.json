@@ -1,0 +1,199 @@
+{
+  "schema": 1,
+  "scope": "Explicit source-migration mappings only; never WPF binary identity or behavioral equivalence",
+  "types": [
+    {
+      "source": "System.Windows.Controls.ContentPresenter",
+      "target": "Microsoft.UI.Xaml.Controls.ContentPresenter",
+      "kind": "framework"
+    },
+    {
+      "source": "System.Windows.Controls.ContextMenu",
+      "target": "Microsoft.UI.Xaml.Controls.MenuFlyout",
+      "kind": "adapter",
+      "note": "Flyout composition and item DataContexts differ from WPF."
+    },
+    {
+      "source": "System.Windows.Controls.Control",
+      "target": "Microsoft.UI.Xaml.Controls.Control",
+      "kind": "framework"
+    },
+    {
+      "source": "System.Windows.Controls.ControlTemplate",
+      "target": "Microsoft.UI.Xaml.Controls.ControlTemplate",
+      "kind": "framework"
+    },
+    {
+      "source": "System.Windows.Controls.DataTemplateSelector",
+      "target": "Microsoft.UI.Xaml.Controls.DataTemplateSelector",
+      "kind": "framework"
+    },
+    {
+      "source": "System.Windows.Controls.Grid",
+      "target": "Microsoft.UI.Xaml.Controls.Grid",
+      "kind": "framework"
+    },
+    {
+      "source": "System.Windows.Controls.MenuItem",
+      "target": "Microsoft.UI.Xaml.Controls.MenuFlyoutItem",
+      "kind": "adapter",
+      "note": "Menu icons require IconElement."
+    },
+    {
+      "source": "System.Windows.Controls.Orientation",
+      "target": "Microsoft.UI.Xaml.Controls.Orientation",
+      "kind": "framework"
+    },
+    {
+      "source": "System.Windows.Controls.Panel",
+      "target": "Microsoft.UI.Xaml.Controls.Panel",
+      "kind": "framework"
+    },
+    {
+      "source": "System.Windows.Controls.Primitives.Thumb",
+      "target": "Microsoft.UI.Xaml.Controls.ContentControl",
+      "kind": "adapter",
+      "note": "WinUI Thumb is sealed; the resizer composes a Thumb."
+    },
+    {
+      "source": "System.Windows.Controls.Primitives.ToggleButton",
+      "target": "Microsoft.UI.Xaml.Controls.Primitives.ToggleButton",
+      "kind": "framework"
+    },
+    {
+      "source": "System.Windows.Controls.SelectionChangedEventArgs",
+      "target": "Microsoft.UI.Xaml.Controls.SelectionChangedEventArgs",
+      "kind": "framework"
+    },
+    {
+      "source": "System.Windows.Controls.StyleSelector",
+      "target": "Microsoft.UI.Xaml.Controls.StyleSelector",
+      "kind": "framework"
+    },
+    {
+      "source": "System.Windows.Controls.TabControl",
+      "target": "Microsoft.UI.Xaml.Controls.ContentControl",
+      "kind": "adapter",
+      "note": "Independent cached pane host provides tab selection."
+    },
+    {
+      "source": "System.Windows.Controls.UserControl",
+      "target": "Microsoft.UI.Xaml.Controls.UserControl",
+      "kind": "framework"
+    },
+    {
+      "source": "System.Windows.CornerRadius",
+      "target": "Microsoft.UI.Xaml.CornerRadius",
+      "kind": "framework"
+    },
+    {
+      "source": "System.Windows.Data.IValueConverter",
+      "target": "Microsoft.UI.Xaml.Data.IValueConverter",
+      "kind": "adapter",
+      "note": "WinUI uses language strings; CultureInfo overloads are implemented separately."
+    },
+    {
+      "source": "System.Windows.DataTemplate",
+      "target": "Microsoft.UI.Xaml.DataTemplate",
+      "kind": "framework"
+    },
+    {
+      "source": "System.Windows.DependencyObject",
+      "target": "Microsoft.UI.Xaml.DependencyObject",
+      "kind": "framework"
+    },
+    {
+      "source": "System.Windows.DependencyProperty",
+      "target": "Microsoft.UI.Xaml.DependencyProperty",
+      "kind": "framework"
+    },
+    {
+      "source": "System.Windows.DependencyPropertyChangedEventArgs",
+      "target": "Microsoft.UI.Xaml.DependencyPropertyChangedEventArgs",
+      "kind": "framework"
+    },
+    {
+      "source": "System.Windows.FrameworkElement",
+      "target": "Microsoft.UI.Xaml.FrameworkElement",
+      "kind": "framework"
+    },
+    {
+      "source": "System.Windows.GridLength",
+      "target": "Microsoft.UI.Xaml.GridLength",
+      "kind": "framework"
+    },
+    {
+      "source": "System.Windows.Media.Brush",
+      "target": "Microsoft.UI.Xaml.Media.Brush",
+      "kind": "framework"
+    },
+    {
+      "source": "System.Windows.Media.Color",
+      "target": "Windows.UI.Color",
+      "kind": "adapter",
+      "note": "WinUI color value type."
+    },
+    {
+      "source": "System.Windows.Media.ImageSource",
+      "target": "Microsoft.UI.Xaml.Media.ImageSource",
+      "kind": "framework"
+    },
+    {
+      "source": "System.Windows.Media.SolidColorBrush",
+      "target": "Microsoft.UI.Xaml.Media.SolidColorBrush",
+      "kind": "framework"
+    },
+    {
+      "source": "System.Windows.Point",
+      "target": "Windows.Foundation.Point",
+      "kind": "framework"
+    },
+    {
+      "source": "System.Windows.Rect",
+      "target": "Windows.Foundation.Rect",
+      "kind": "framework"
+    },
+    {
+      "source": "System.Windows.ResourceDictionary",
+      "target": "Microsoft.UI.Xaml.ResourceDictionary",
+      "kind": "framework"
+    },
+    {
+      "source": "System.Windows.RoutedEvent",
+      "target": "Xceed.Wpf.AvalonDock.DockRoutedEvent",
+      "kind": "adapter",
+      "note": "Explicit docking event identifier, not WPF routed-event infrastructure."
+    },
+    {
+      "source": "System.Windows.RoutedEventArgs",
+      "target": "Microsoft.UI.Xaml.RoutedEventArgs",
+      "kind": "framework"
+    },
+    {
+      "source": "System.Windows.RoutedEventHandler",
+      "target": "Microsoft.UI.Xaml.RoutedEventHandler",
+      "kind": "framework"
+    },
+    {
+      "source": "System.Windows.Size",
+      "target": "Windows.Foundation.Size",
+      "kind": "framework"
+    },
+    {
+      "source": "System.Windows.Style",
+      "target": "Microsoft.UI.Xaml.Style",
+      "kind": "framework"
+    },
+    {
+      "source": "System.Windows.Thickness",
+      "target": "Microsoft.UI.Xaml.Thickness",
+      "kind": "framework"
+    },
+    {
+      "source": "System.Windows.Window",
+      "target": "Microsoft.UI.Xaml.Controls.ContentControl",
+      "kind": "adapter",
+      "note": "Floating and overlay windows use ContentControl plus native-host composition, not Window inheritance."
+    }
+  ]
+}

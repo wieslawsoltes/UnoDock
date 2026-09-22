@@ -9,8 +9,8 @@ namespace Xceed.Wpf.AvalonDock.Controls;
 public abstract class LayoutFloatingWindowControl : ContentControl, ILayoutControl
 {
     public static readonly DependencyProperty IsContentImmutableProperty = DependencyProperty.Register(nameof(IsContentImmutable), typeof(bool), typeof(LayoutFloatingWindowControl), new PropertyMetadata(false));
-    public static readonly DependencyProperty IsDraggingProperty = DependencyProperty.Register(nameof(IsDragging), typeof(bool), typeof(LayoutFloatingWindowControl), new PropertyMetadata(false));
-    public static readonly DependencyProperty IsMaximizedProperty = DependencyProperty.Register(nameof(IsMaximized), typeof(bool), typeof(LayoutFloatingWindowControl), new PropertyMetadata(false));
+    public static readonly DependencyProperty IsDraggingProperty = DependencyProperty.Register(nameof(IsDragging), typeof(bool), typeof(LayoutFloatingWindowControl), new PropertyMetadata(false, (d, e) => ((LayoutFloatingWindowControl)d).OnIsDraggingChanged(e)));
+    public static readonly DependencyProperty IsMaximizedProperty = DependencyProperty.Register(nameof(IsMaximized), typeof(bool), typeof(LayoutFloatingWindowControl), new PropertyMetadata(false, (d, e) => ((LayoutFloatingWindowControl)d).OnStateChanged(EventArgs.Empty)));
     public static readonly DependencyProperty ResizeBorderThicknessProperty = DependencyProperty.Register(nameof(ResizeBorderThickness), typeof(Thickness), typeof(LayoutFloatingWindowControl), new PropertyMetadata(new Thickness(5)));
     private readonly Grid _frame = new();
     private readonly ContentPresenter _body = new() { HorizontalContentAlignment = HorizontalAlignment.Stretch, VerticalContentAlignment = VerticalAlignment.Stretch };
@@ -18,6 +18,8 @@ public abstract class LayoutFloatingWindowControl : ContentControl, ILayoutContr
     private readonly Grid _title = new();
     private bool _closingHost, _syncBounds, _hostDisposed;
     private Window? _window;
+    private bool _closingOperation;
+    protected bool CloseInitiatedByUser { get; private set; }
     private DockRect? _restoreBounds;
     protected LayoutFloatingWindowControl(ILayoutElement model) : this(model, false) { }
     protected LayoutFloatingWindowControl(ILayoutElement model, bool isContentImmutable)
@@ -27,9 +29,9 @@ public abstract class LayoutFloatingWindowControl : ContentControl, ILayoutContr
         _frame.RowDefinitions.Add(new() { Height = GridLength.Auto }); _frame.RowDefinitions.Add(new() { Height = new(1, GridUnitType.Star) });
         _title.ColumnDefinitions.Add(new() { Width = new(1, GridUnitType.Star) }); _title.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
         var drag = new Thumb { HorizontalAlignment = HorizontalAlignment.Stretch, VerticalAlignment = VerticalAlignment.Stretch, Opacity = .01 };
-        drag.DragStarted += (_, _) => SetValue(IsDraggingProperty, true);
+        drag.DragStarted += (_, _) => SetIsDragging(true);
         drag.DragDelta += (_, e) => MoveBy(e.HorizontalChange, e.VerticalChange);
-        drag.DragCompleted += (_, _) => SetValue(IsDraggingProperty, false);
+        drag.DragCompleted += (_, _) => SetIsDragging(false);
         _caption.IsHitTestVisible = false; _title.Children.Add(drag); _title.Children.Add(_caption);
         var actions = new StackPanel { Orientation = Orientation.Horizontal };
         actions.Children.Add(DockVisuals.Button("↙", DockAll, "Dock floating content"));
@@ -50,19 +52,43 @@ public abstract class LayoutFloatingWindowControl : ContentControl, ILayoutContr
     internal IEnumerable<LayoutContent> Contents => Model.Descendents().OfType<LayoutContent>();
     private LayoutContent? PositionModel => Contents.FirstOrDefault();
     internal DockRect Bounds => PositionModel is { } p ? new(p.FloatingLeft, p.FloatingTop, p.FloatingWidth > 0 ? Math.Max(160, p.FloatingWidth) : 640, p.FloatingHeight > 0 ? Math.Max(100, p.FloatingHeight) : 480) : new(80, 80, 640, 480);
-    protected virtual bool CanClose() => Contents.Any() && Contents.All(c => c.CanClose || c is LayoutAnchorable { CanHide: true });
-    protected virtual bool CanHide() => Contents.Any() && Contents.All(c => c is LayoutAnchorable { CanHide: true });
+    protected virtual bool CanClose(object? parameter = null) => Contents.Any() && Contents.All(c => c.CanClose || c is LayoutAnchorable { CanHide: true });
+    protected virtual bool CanHide(object? parameter = null) => Contents.Any() && Contents.All(c => c is LayoutAnchorable { CanHide: true });
     protected virtual void DoHide() { foreach (var tool in Contents.OfType<LayoutAnchorable>().ToArray()) tool.Hide(); }
     protected virtual void OnClosed(EventArgs e) { }
+    protected virtual void OnClosing(CancelEventArgs e) { }
+    protected virtual void OnStateChanged(EventArgs e)
+    {
+        foreach (var content in Contents) content.IsMaximized = IsMaximized;
+    }
+    protected virtual void OnIsDraggingChanged(DependencyPropertyChangedEventArgs e) { }
+    protected void SetIsDragging(bool value) => SetValue(IsDraggingProperty, value);
     public void Close()
     {
-        if (!CanClose()) return;
-        var root = Model.Root as LayoutRoot;
-        using (root?.BeginUpdate()) foreach (var content in Contents.ToArray()) DockVisuals.CloseOrHide(content);
-        root?.CollectGarbage();
-        if (Model is LayoutFloatingWindow { IsValid: false } || Model.Root == null) CloseHost();
+        if (_hostDisposed || _closingOperation || !CanClose()) return;
+        _closingOperation = true; CloseInitiatedByUser = true;
+        try
+        {
+            var root = Model.Root as LayoutRoot; var manager = root?.Manager;
+            var args = new CancelEventArgs(); OnClosing(args);
+            if (args.Cancel || !CanClose() || !ReferenceEquals(Model.Root, root) || manager != null && !ReferenceEquals(manager.Layout, root)) return;
+            using (root?.BeginUpdate())
+                foreach (var content in Contents.ToArray())
+                {
+                    if (!ReferenceEquals(Model.Root, root) || manager != null && !ReferenceEquals(manager.Layout, root)) break;
+                    if (ReferenceEquals(content.FindParent<LayoutFloatingWindow>(), Model)) DockVisuals.CloseOrHide(content);
+                }
+            root?.CollectGarbage();
+            if (Model is LayoutFloatingWindow { IsValid: false } || Model.Root == null) CloseHost();
+        }
+        finally { _closingOperation = false; CloseInitiatedByUser = false; }
     }
-    public void Hide() { if (CanHide()) DoHide(); }
+    public void Hide()
+    {
+        if (_hostDisposed || _closingOperation || !CanHide()) return;
+        _closingOperation = true;
+        try { DoHide(); } finally { _closingOperation = false; }
+    }
     public void Activate() { if (_window != null) _window.Activate(); else Focus(FocusState.Programmatic); }
     private void DockAll()
     {
@@ -167,7 +193,7 @@ public abstract class LayoutFloatingWindowControl : ContentControl, ILayoutContr
     }
     private void MoveBy(double x, double y)
     {
-        if (_window != null) { _window.AppWindow.Move(new Windows.Graphics.PointInt32 { X = _window.AppWindow.Position.X + (int)x, Y = _window.AppWindow.Position.Y + (int)y }); return; }
+        if (_window != null) { _window.AppWindow.Move(new Windows.Graphics.PointInt32 { X = _window.AppWindow.Position.X + (int)Math.Round(x * (XamlRoot?.RasterizationScale ?? 1)), Y = _window.AppWindow.Position.Y + (int)Math.Round(y * (XamlRoot?.RasterizationScale ?? 1)) }); return; }
         var bounds = Bounds; var surface = Model.Root?.Manager?.Surface;
         bounds = bounds with { X = bounds.X + x, Y = bounds.Y + y };
         if (surface != null && surface.ActualWidth > 0 && surface.ActualHeight > 0) bounds = bounds.ClampTo(new(0, 0, surface.ActualWidth, surface.ActualHeight));
@@ -175,7 +201,7 @@ public abstract class LayoutFloatingWindowControl : ContentControl, ILayoutContr
     }
     private void ResizeBy(double x, double y)
     {
-        if (_window != null) { _window.AppWindow.Resize(new Windows.Graphics.SizeInt32 { Width = Math.Max(160, _window.AppWindow.Size.Width + (int)x), Height = Math.Max(100, _window.AppWindow.Size.Height + (int)y) }); return; }
+        if (_window != null) { _window.AppWindow.Resize(new Windows.Graphics.SizeInt32 { Width = Math.Max(160, _window.AppWindow.Size.Width + (int)Math.Round(x * (XamlRoot?.RasterizationScale ?? 1))), Height = Math.Max(100, _window.AppWindow.Size.Height + (int)Math.Round(y * (XamlRoot?.RasterizationScale ?? 1))) }); return; }
         var bounds = Bounds; SetBounds(bounds with { Width = Math.Max(160, bounds.Width + x), Height = Math.Max(100, bounds.Height + y) });
     }
     private void ToggleMaximize()
@@ -215,7 +241,7 @@ public class LayoutAnchorableFloatingWindowControl : LayoutFloatingWindowControl
     private readonly LayoutAnchorableFloatingWindow _model;
     public LayoutAnchorableFloatingWindowControl(LayoutAnchorableFloatingWindow model) : this(model, false) { }
     public LayoutAnchorableFloatingWindowControl(LayoutAnchorableFloatingWindow model, bool isContentImmutable) : base(model, isContentImmutable)
-    { _model = model; CloseWindowCommand = new DelegateCommand(Close, CanClose); HideWindowCommand = new DelegateCommand(Hide, CanHide); }
+    { _model = model; CloseWindowCommand = new DelegateCommand(_ => Close(), parameter => CanClose(parameter)); HideWindowCommand = new DelegateCommand(_ => Hide(), parameter => CanHide(parameter)); }
     public override ILayoutElement Model => _model;
     public LayoutItem? SingleContentLayoutItem { get => (LayoutItem?)GetValue(SingleContentLayoutItemProperty); private set => SetValue(SingleContentLayoutItemProperty, value); }
     public ICommand CloseWindowCommand { get; private set; }

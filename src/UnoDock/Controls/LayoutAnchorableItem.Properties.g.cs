@@ -6,12 +6,16 @@ using Xceed.Wpf.AvalonDock.Themes;
 namespace Xceed.Wpf.AvalonDock.Controls;
 public partial class LayoutAnchorableItem
 {
-    public static readonly DependencyProperty AutoHideCommandProperty = DependencyProperty.Register(nameof(AutoHideCommand), typeof(ICommand), typeof(LayoutAnchorableItem), new PropertyMetadata(null, (d, e) => ((LayoutAnchorableItem)d).OnAdapterPropertyChanged(nameof(AutoHideCommand), e)));
+    public static readonly DependencyProperty AutoHideCommandProperty = DependencyProperty.Register(nameof(AutoHideCommand), typeof(ICommand), typeof(LayoutAnchorableItem), new PropertyMetadata(null, (d, e) => ((LayoutAnchorableItem)d).OnAutoHideCommandChanged(e)));
     public ICommand? AutoHideCommand { get => (ICommand?)GetValue(AutoHideCommandProperty); set => SetValue(AutoHideCommandProperty, value); }
-    public static readonly DependencyProperty DockCommandProperty = DependencyProperty.Register(nameof(DockCommand), typeof(ICommand), typeof(LayoutAnchorableItem), new PropertyMetadata(null, (d, e) => ((LayoutAnchorableItem)d).OnAdapterPropertyChanged(nameof(DockCommand), e)));
+    protected virtual void OnAutoHideCommandChanged(DependencyPropertyChangedEventArgs e) => OnAdapterPropertyChanged(nameof(AutoHideCommand), e);
+    public static readonly DependencyProperty DockCommandProperty = DependencyProperty.Register(nameof(DockCommand), typeof(ICommand), typeof(LayoutAnchorableItem), new PropertyMetadata(null, (d, e) => ((LayoutAnchorableItem)d).OnDockCommandChanged(e)));
     public ICommand? DockCommand { get => (ICommand?)GetValue(DockCommandProperty); set => SetValue(DockCommandProperty, value); }
-    public static readonly DependencyProperty HideCommandProperty = DependencyProperty.Register(nameof(HideCommand), typeof(ICommand), typeof(LayoutAnchorableItem), new PropertyMetadata(null, (d, e) => ((LayoutAnchorableItem)d).OnAdapterPropertyChanged(nameof(HideCommand), e)));
+    protected virtual void OnDockCommandChanged(DependencyPropertyChangedEventArgs e) => OnAdapterPropertyChanged(nameof(DockCommand), e);
+    public static readonly DependencyProperty HideCommandProperty = DependencyProperty.Register(nameof(HideCommand), typeof(ICommand), typeof(LayoutAnchorableItem), new PropertyMetadata(null, (d, e) => ((LayoutAnchorableItem)d).OnHideCommandChanged(e)));
     public ICommand? HideCommand { get => (ICommand?)GetValue(HideCommandProperty); set => SetValue(HideCommandProperty, value); }
-    public static readonly DependencyProperty CanHideProperty = DependencyProperty.Register(nameof(CanHide), typeof(bool), typeof(LayoutAnchorableItem), new PropertyMetadata(true, (d, e) => ((LayoutAnchorableItem)d).OnAdapterPropertyChanged(nameof(CanHide), e)));
+    protected virtual void OnHideCommandChanged(DependencyPropertyChangedEventArgs e) => OnAdapterPropertyChanged(nameof(HideCommand), e);
+    public static readonly DependencyProperty CanHideProperty = DependencyProperty.Register(nameof(CanHide), typeof(bool), typeof(LayoutAnchorableItem), new PropertyMetadata(true, (d, e) => ((LayoutAnchorableItem)d).OnCanHideChanged(e)));
     public bool CanHide { get => (bool)GetValue(CanHideProperty); set => SetValue(CanHideProperty, value); }
+    protected virtual void OnCanHideChanged(DependencyPropertyChangedEventArgs e) => OnAdapterPropertyChanged(nameof(CanHide), e);
 }

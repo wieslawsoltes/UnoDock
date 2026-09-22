@@ -62,7 +62,10 @@ public partial class DockingManager : Control, IDisposable
     internal void SetAutoHideHost(LayoutAutoHideWindowControl value) => SetAutoHideWindow(value);
     public FloatingWindowMode FloatingWindowMode { get; set; } = FloatingWindowMode.Auto;
     public IEnumerable<LayoutFloatingWindowControl> FloatingWindows => _floating;
-    public IEnumerator LogicalChildrenPublic => _items.Values.Select(i => (object)i.View).Concat(_floating).GetEnumerator();
+    public int RealizedContentCount => _items.Values.Count(i => i.IsViewCreated);
+    public IEnumerator LogicalChildrenPublic => _items.Values.Select(i => i.ExistingView).OfType<object>().Concat(_floating).GetEnumerator();
+    public IReadOnlyList<IDropArea> GetDropAreas() => _surface?.GetDropAreas() ?? [];
+    public DockDropPlan? GetDropPlan(LayoutContent content, Point surfacePoint) => _surface?.GetDropPlan(content, surfacePoint);
     public event EventHandler? ActiveContentChanged, LayoutChanged, LayoutChanging;
     public event EventHandler<DocumentClosingEventArgs>? DocumentClosing;
     public event EventHandler<DocumentClosedEventArgs>? DocumentClosed;
@@ -183,12 +186,14 @@ public partial class DockingManager : Control, IDisposable
     }
     internal IDisposable? BeginTransition(LayoutContent content, bool floating)
     {
-        if (_transitions.ContainsKey(content)) return new ActionDisposable(() => { });
-        _transitions.Add(content, true); var before = content.Parent;
+        if (_transitions.ContainsKey(content)) return null;
+        _transitions.Add(content, true); var before = content.Parent; var root = content.Root;
         try
         {
             if (floating) RaisePreviewFloatEvent(content); else RaisePreviewDockEvent(content);
-            if (!_transitions[content]) { _transitions.Remove(content); return null; }
+            if (!_transitions[content] || !ReferenceEquals(root, Layout) || !ReferenceEquals(content.Root, root) ||
+                !ReferenceEquals(content.Parent, before) || !DockOperations.CanMove(content) || floating && !content.CanFloat)
+            { _transitions.Remove(content); return null; }
         }
         catch { _transitions.Remove(content); throw; }
         return new ActionDisposable(() =>
@@ -237,44 +242,6 @@ public partial class DockingManager : Control, IDisposable
         else if (ctrl && e.Key == Windows.System.VirtualKey.Tab) { ShowNavigatorWindow(); e.Handled = true; }
         else if (ctrl && e.Key == Windows.System.VirtualKey.F4 && Layout.ActiveContent is { } active)
         { GetLayoutItemFromModel(active).CloseCommand?.Execute(null); e.Handled = true; }
-    }
-    internal void SourceChanged() { if (DispatcherQueue?.HasThreadAccess == false) { DispatcherQueue.TryEnqueue(ReconcileSources); return; } ReconcileSources(); }
-    private void ReconcileSources()
-    {
-        if (_suspendSources > 0 || _reconcilingSources || _disposed) return;
-        _reconcilingSources = true;
-        try { using var batch = Layout.BeginUpdate(); Reconcile(DocumentsSource, _documents, true); Reconcile(AnchorablesSource, _anchorables, false); }
-        finally { _reconcilingSources = false; }
-    }
-    private void Reconcile(IEnumerable? source, List<SourceEntry> entries, bool documents)
-    {
-        var values = source?.Cast<object>().Where(o => o != null).Distinct(ReferenceEqualityComparer.Instance).ToArray() ?? [];
-        var wanted = new HashSet<object>(values, ReferenceEqualityComparer.Instance);
-        foreach (var entry in entries.Where(e => !wanted.Contains(e.Value)).ToArray()) { entry.Model.Parent?.RemoveChild(entry.Model); entries.Remove(entry); }
-        foreach (var value in values)
-        {
-            if (entries.Any(e => ReferenceEquals(e.Value, value))) continue;
-            var existing = Layout.Descendents().OfType<LayoutContent>().FirstOrDefault(c => ReferenceEquals(c.Content, value) && (documents ? c is LayoutDocument : c is LayoutAnchorable));
-            var descriptor = value as IDockContent;
-            LayoutContent model = existing ?? (documents ? value as LayoutDocument ?? new LayoutDocument() : value as LayoutAnchorable ?? new LayoutAnchorable());
-            if (existing == null)
-            {
-                if (!ReferenceEquals(model, value)) model.Content = value;
-                if (!ReferenceEquals(model, value)) model.Title = descriptor?.Title ?? value.ToString() ?? (documents ? "Document" : "Tool"); model.ContentId ??= descriptor?.ContentId;
-                if (model.Parent == null)
-                {
-                    if (model is LayoutAnchorable a) DockOperations.AddAnchorable(Layout, a, AnchorableShowStrategy.Right);
-                    else
-                    {
-                        var pane = Layout.RootPanel.Descendents().OfType<LayoutDocumentPane>().FirstOrDefault();
-                        if (pane == null) { pane = new(); Layout.RootPanel.Children.Add(pane); }
-                        if (LayoutUpdateStrategy?.BeforeInsertDocument(Layout, (LayoutDocument)model, pane) != true) pane.Children.Add(model);
-                        LayoutUpdateStrategy?.AfterInsertDocument(Layout, (LayoutDocument)model);
-                    }
-                }
-            }
-            entries.Add(new(value, model));
-        }
     }
     public void Dispose()
     {

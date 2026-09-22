@@ -66,21 +66,7 @@ foreach (var type in types)
     {
         var line = MemberKey(member);
         declarations.Add(MetadataName(type) + " | " + line);
-        memberRecords.Add(new
-        {
-            key = line,
-            kind = member.Kind.ToString(),
-            metadataName = member.MetadataName,
-            documentationId = member.GetDocumentationCommentId(),
-            attributes = Attributes(member.GetAttributes()),
-            returnAttributes = member is IMethodSymbol method ? Attributes(method.GetReturnTypeAttributes()) : [],
-            parameters = member switch
-            {
-                IMethodSymbol m => ParameterRecords(m.Parameters),
-                IPropertySymbol p => ParameterRecords(p.Parameters),
-                _ => Array.Empty<object>()
-            }
-        });
+        memberRecords.Add(MemberRecord(member));
     }
     records.Add(new
     {
@@ -90,7 +76,12 @@ foreach (var type in types)
         attributes = Attributes(type.GetAttributes()),
         baseClasses,
         interfaces = type.AllInterfaces.Select(TypeName).Order(StringComparer.Ordinal).ToArray(),
-        members = memberRecords
+        members = memberRecords,
+        // Candidates retain their declaring owner. The comparison tool checks
+        // intervening hiding declarations; it never treats constructors as inherited.
+        declaredNames = type.GetMembers().Where(m => !m.IsImplicitlyDeclared && m is not IMethodSymbol { AssociatedSymbol: not null })
+            .Select(m => m.MetadataName).Distinct().Order(StringComparer.Ordinal).ToArray(),
+        inheritedMembers = InheritedMembers(type).ToArray()
     });
 }
 // A resolved signature is essential: matching unresolved names would give false evidence.
@@ -100,8 +91,8 @@ Directory.CreateDirectory(Path.GetDirectoryName(output)!);
 File.WriteAllText(output + ".txt", canonical, new UTF8Encoding(false));
 File.WriteAllText(output + ".json", JsonSerializer.Serialize(new
 {
-    schema = 2,
-    scanner = "UnoDock.ApiMetadata/v1",
+    schema = 3,
+    scanner = "UnoDock.ApiMetadata/v2",
     method = "Roslyn symbols imported from PE metadata; no IL bodies, resources or assembly execution",
     profile,
     assembly = assembly.Identity.ToString(),
@@ -114,6 +105,40 @@ File.WriteAllText(output + ".json", JsonSerializer.Serialize(new
     types = records
 }, new JsonSerializerOptions { WriteIndented = true }) + "\n", new UTF8Encoding(false));
 Console.WriteLine($"Metadata: {types.Length} exported types; {declarations.Count} declared API entries; SHA256 {Hash(Encoding.UTF8.GetBytes(canonical))}");
+
+object MemberRecord(ISymbol member) => new
+{
+    key = MemberKey(member),
+    kind = member.Kind.ToString(),
+    metadataName = member.MetadataName,
+    declaringType = MetadataName(member.ContainingType),
+    declaringAssembly = member.ContainingAssembly.Identity.Name,
+    documentationId = member.GetDocumentationCommentId(),
+    attributes = Attributes(member.GetAttributes()),
+    returnAttributes = member is IMethodSymbol method ? Attributes(method.GetReturnTypeAttributes()) : [],
+    parameters = member switch
+    {
+        IMethodSymbol m => ParameterRecords(m.Parameters),
+        IPropertySymbol p => ParameterRecords(p.Parameters),
+        _ => Array.Empty<object>()
+    },
+    nullableSignature = member.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat
+        .WithMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier))
+};
+IEnumerable<object> InheritedMembers(INamedTypeSymbol type)
+{
+    var hidden = type.GetMembers().Where(m => m is not IMethodSymbol { AssociatedSymbol: not null })
+        .Select(m => m.MetadataName).ToHashSet(StringComparer.Ordinal);
+    for (var parent = type.BaseType; parent != null; parent = parent.BaseType)
+    {
+        foreach (var member in parent.GetMembers().Where(VisibleMember).OrderBy(MemberKey, StringComparer.Ordinal))
+        {
+            if (member is IMethodSymbol { MethodKind: MethodKind.Constructor or MethodKind.StaticConstructor or MethodKind.Destructor } || hidden.Contains(member.MetadataName)) continue;
+            yield return MemberRecord(member);
+        }
+        foreach (var member in parent.GetMembers().Where(m => m is not IMethodSymbol { AssociatedSymbol: not null })) hidden.Add(member.MetadataName);
+    }
+}
 
 string MemberKey(ISymbol member)
 {
@@ -190,7 +215,7 @@ static string TypeName(ITypeSymbol? type) => type?.ToDisplayString(new SymbolDis
     globalNamespaceStyle: SymbolDisplayGlobalNamespaceStyle.Omitted,
     typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
     genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters,
-    miscellaneousOptions: SymbolDisplayMiscellaneousOptions.EscapeKeywordIdentifiers | SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier)) ?? "";
+    miscellaneousOptions: SymbolDisplayMiscellaneousOptions.EscapeKeywordIdentifiers)) ?? "";
 static string Constant(object? value) => value switch
 {
     null => "null",

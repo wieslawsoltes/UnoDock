@@ -6,38 +6,55 @@ using Xceed.Wpf.AvalonDock.Themes;
 namespace Xceed.Wpf.AvalonDock.Controls;
 public abstract partial class LayoutItem
 {
-    public static readonly DependencyProperty ActivateCommandProperty = DependencyProperty.Register(nameof(ActivateCommand), typeof(ICommand), typeof(LayoutItem), new PropertyMetadata(null, (d, e) => ((LayoutItem)d).OnAdapterPropertyChanged(nameof(ActivateCommand), e)));
+    public static readonly DependencyProperty ActivateCommandProperty = DependencyProperty.Register(nameof(ActivateCommand), typeof(ICommand), typeof(LayoutItem), new PropertyMetadata(null, (d, e) => ((LayoutItem)d).OnActivateCommandChanged(e)));
     public ICommand? ActivateCommand { get => (ICommand?)GetValue(ActivateCommandProperty); set => SetValue(ActivateCommandProperty, value); }
-    public static readonly DependencyProperty CloseAllButThisCommandProperty = DependencyProperty.Register(nameof(CloseAllButThisCommand), typeof(ICommand), typeof(LayoutItem), new PropertyMetadata(null, (d, e) => ((LayoutItem)d).OnAdapterPropertyChanged(nameof(CloseAllButThisCommand), e)));
+    protected virtual void OnActivateCommandChanged(DependencyPropertyChangedEventArgs e) => OnAdapterPropertyChanged(nameof(ActivateCommand), e);
+    public static readonly DependencyProperty CloseAllButThisCommandProperty = DependencyProperty.Register(nameof(CloseAllButThisCommand), typeof(ICommand), typeof(LayoutItem), new PropertyMetadata(null, (d, e) => ((LayoutItem)d).OnCloseAllButThisCommandChanged(e)));
     public ICommand? CloseAllButThisCommand { get => (ICommand?)GetValue(CloseAllButThisCommandProperty); set => SetValue(CloseAllButThisCommandProperty, value); }
-    public static readonly DependencyProperty CloseAllCommandProperty = DependencyProperty.Register(nameof(CloseAllCommand), typeof(ICommand), typeof(LayoutItem), new PropertyMetadata(null, (d, e) => ((LayoutItem)d).OnAdapterPropertyChanged(nameof(CloseAllCommand), e)));
+    protected virtual void OnCloseAllButThisCommandChanged(DependencyPropertyChangedEventArgs e) => OnAdapterPropertyChanged(nameof(CloseAllButThisCommand), e);
+    public static readonly DependencyProperty CloseAllCommandProperty = DependencyProperty.Register(nameof(CloseAllCommand), typeof(ICommand), typeof(LayoutItem), new PropertyMetadata(null, (d, e) => ((LayoutItem)d).OnCloseAllCommandChanged(e)));
     public ICommand? CloseAllCommand { get => (ICommand?)GetValue(CloseAllCommandProperty); set => SetValue(CloseAllCommandProperty, value); }
-    public static readonly DependencyProperty CloseCommandProperty = DependencyProperty.Register(nameof(CloseCommand), typeof(ICommand), typeof(LayoutItem), new PropertyMetadata(null, (d, e) => ((LayoutItem)d).OnAdapterPropertyChanged(nameof(CloseCommand), e)));
+    protected virtual void OnCloseAllCommandChanged(DependencyPropertyChangedEventArgs e) => OnAdapterPropertyChanged(nameof(CloseAllCommand), e);
+    public static readonly DependencyProperty CloseCommandProperty = DependencyProperty.Register(nameof(CloseCommand), typeof(ICommand), typeof(LayoutItem), new PropertyMetadata(null, (d, e) => ((LayoutItem)d).OnCloseCommandChanged(e)));
     public ICommand? CloseCommand { get => (ICommand?)GetValue(CloseCommandProperty); set => SetValue(CloseCommandProperty, value); }
-    public static readonly DependencyProperty DockAsDocumentCommandProperty = DependencyProperty.Register(nameof(DockAsDocumentCommand), typeof(ICommand), typeof(LayoutItem), new PropertyMetadata(null, (d, e) => ((LayoutItem)d).OnAdapterPropertyChanged(nameof(DockAsDocumentCommand), e)));
+    protected virtual void OnCloseCommandChanged(DependencyPropertyChangedEventArgs e) => OnAdapterPropertyChanged(nameof(CloseCommand), e);
+    public static readonly DependencyProperty DockAsDocumentCommandProperty = DependencyProperty.Register(nameof(DockAsDocumentCommand), typeof(ICommand), typeof(LayoutItem), new PropertyMetadata(null, (d, e) => ((LayoutItem)d).OnDockAsDocumentCommandChanged(e)));
     public ICommand? DockAsDocumentCommand { get => (ICommand?)GetValue(DockAsDocumentCommandProperty); set => SetValue(DockAsDocumentCommandProperty, value); }
-    public static readonly DependencyProperty FloatCommandProperty = DependencyProperty.Register(nameof(FloatCommand), typeof(ICommand), typeof(LayoutItem), new PropertyMetadata(null, (d, e) => ((LayoutItem)d).OnAdapterPropertyChanged(nameof(FloatCommand), e)));
+    protected virtual void OnDockAsDocumentCommandChanged(DependencyPropertyChangedEventArgs e) => OnAdapterPropertyChanged(nameof(DockAsDocumentCommand), e);
+    public static readonly DependencyProperty FloatCommandProperty = DependencyProperty.Register(nameof(FloatCommand), typeof(ICommand), typeof(LayoutItem), new PropertyMetadata(null, (d, e) => ((LayoutItem)d).OnFloatCommandChanged(e)));
     public ICommand? FloatCommand { get => (ICommand?)GetValue(FloatCommandProperty); set => SetValue(FloatCommandProperty, value); }
-    public static readonly DependencyProperty MoveToNextTabGroupCommandProperty = DependencyProperty.Register(nameof(MoveToNextTabGroupCommand), typeof(ICommand), typeof(LayoutItem), new PropertyMetadata(null, (d, e) => ((LayoutItem)d).OnAdapterPropertyChanged(nameof(MoveToNextTabGroupCommand), e)));
+    protected virtual void OnFloatCommandChanged(DependencyPropertyChangedEventArgs e) => OnAdapterPropertyChanged(nameof(FloatCommand), e);
+    public static readonly DependencyProperty MoveToNextTabGroupCommandProperty = DependencyProperty.Register(nameof(MoveToNextTabGroupCommand), typeof(ICommand), typeof(LayoutItem), new PropertyMetadata(null, (d, e) => ((LayoutItem)d).OnMoveToNextTabGroupCommandChanged(e)));
     public ICommand? MoveToNextTabGroupCommand { get => (ICommand?)GetValue(MoveToNextTabGroupCommandProperty); set => SetValue(MoveToNextTabGroupCommandProperty, value); }
-    public static readonly DependencyProperty MoveToPreviousTabGroupCommandProperty = DependencyProperty.Register(nameof(MoveToPreviousTabGroupCommand), typeof(ICommand), typeof(LayoutItem), new PropertyMetadata(null, (d, e) => ((LayoutItem)d).OnAdapterPropertyChanged(nameof(MoveToPreviousTabGroupCommand), e)));
+    protected virtual void OnMoveToNextTabGroupCommandChanged(DependencyPropertyChangedEventArgs e) => OnAdapterPropertyChanged(nameof(MoveToNextTabGroupCommand), e);
+    public static readonly DependencyProperty MoveToPreviousTabGroupCommandProperty = DependencyProperty.Register(nameof(MoveToPreviousTabGroupCommand), typeof(ICommand), typeof(LayoutItem), new PropertyMetadata(null, (d, e) => ((LayoutItem)d).OnMoveToPreviousTabGroupCommandChanged(e)));
     public ICommand? MoveToPreviousTabGroupCommand { get => (ICommand?)GetValue(MoveToPreviousTabGroupCommandProperty); set => SetValue(MoveToPreviousTabGroupCommandProperty, value); }
-    public static readonly DependencyProperty NewHorizontalTabGroupCommandProperty = DependencyProperty.Register(nameof(NewHorizontalTabGroupCommand), typeof(ICommand), typeof(LayoutItem), new PropertyMetadata(null, (d, e) => ((LayoutItem)d).OnAdapterPropertyChanged(nameof(NewHorizontalTabGroupCommand), e)));
+    protected virtual void OnMoveToPreviousTabGroupCommandChanged(DependencyPropertyChangedEventArgs e) => OnAdapterPropertyChanged(nameof(MoveToPreviousTabGroupCommand), e);
+    public static readonly DependencyProperty NewHorizontalTabGroupCommandProperty = DependencyProperty.Register(nameof(NewHorizontalTabGroupCommand), typeof(ICommand), typeof(LayoutItem), new PropertyMetadata(null, (d, e) => ((LayoutItem)d).OnNewHorizontalTabGroupCommandChanged(e)));
     public ICommand? NewHorizontalTabGroupCommand { get => (ICommand?)GetValue(NewHorizontalTabGroupCommandProperty); set => SetValue(NewHorizontalTabGroupCommandProperty, value); }
-    public static readonly DependencyProperty NewVerticalTabGroupCommandProperty = DependencyProperty.Register(nameof(NewVerticalTabGroupCommand), typeof(ICommand), typeof(LayoutItem), new PropertyMetadata(null, (d, e) => ((LayoutItem)d).OnAdapterPropertyChanged(nameof(NewVerticalTabGroupCommand), e)));
+    protected virtual void OnNewHorizontalTabGroupCommandChanged(DependencyPropertyChangedEventArgs e) => OnAdapterPropertyChanged(nameof(NewHorizontalTabGroupCommand), e);
+    public static readonly DependencyProperty NewVerticalTabGroupCommandProperty = DependencyProperty.Register(nameof(NewVerticalTabGroupCommand), typeof(ICommand), typeof(LayoutItem), new PropertyMetadata(null, (d, e) => ((LayoutItem)d).OnNewVerticalTabGroupCommandChanged(e)));
     public ICommand? NewVerticalTabGroupCommand { get => (ICommand?)GetValue(NewVerticalTabGroupCommandProperty); set => SetValue(NewVerticalTabGroupCommandProperty, value); }
-    public static readonly DependencyProperty IconSourceProperty = DependencyProperty.Register(nameof(IconSource), typeof(ImageSource), typeof(LayoutItem), new PropertyMetadata(null, (d, e) => ((LayoutItem)d).OnAdapterPropertyChanged(nameof(IconSource), e)));
+    protected virtual void OnNewVerticalTabGroupCommandChanged(DependencyPropertyChangedEventArgs e) => OnAdapterPropertyChanged(nameof(NewVerticalTabGroupCommand), e);
+    public static readonly DependencyProperty IconSourceProperty = DependencyProperty.Register(nameof(IconSource), typeof(ImageSource), typeof(LayoutItem), new PropertyMetadata(null, (d, e) => ((LayoutItem)d).OnIconSourceChanged(e)));
     public ImageSource? IconSource { get => (ImageSource?)GetValue(IconSourceProperty); set => SetValue(IconSourceProperty, value); }
-    public static readonly DependencyProperty CanCloseProperty = DependencyProperty.Register(nameof(CanClose), typeof(bool), typeof(LayoutItem), new PropertyMetadata(true, (d, e) => ((LayoutItem)d).OnAdapterPropertyChanged(nameof(CanClose), e)));
+    protected virtual void OnIconSourceChanged(DependencyPropertyChangedEventArgs e) => OnAdapterPropertyChanged(nameof(IconSource), e);
+    public static readonly DependencyProperty CanCloseProperty = DependencyProperty.Register(nameof(CanClose), typeof(bool), typeof(LayoutItem), new PropertyMetadata(true, (d, e) => ((LayoutItem)d).OnCanCloseChanged(e)));
     public bool CanClose { get => (bool)GetValue(CanCloseProperty); set => SetValue(CanCloseProperty, value); }
-    public static readonly DependencyProperty CanFloatProperty = DependencyProperty.Register(nameof(CanFloat), typeof(bool), typeof(LayoutItem), new PropertyMetadata(true, (d, e) => ((LayoutItem)d).OnAdapterPropertyChanged(nameof(CanFloat), e)));
+    protected virtual void OnCanCloseChanged(DependencyPropertyChangedEventArgs e) => OnAdapterPropertyChanged(nameof(CanClose), e);
+    public static readonly DependencyProperty CanFloatProperty = DependencyProperty.Register(nameof(CanFloat), typeof(bool), typeof(LayoutItem), new PropertyMetadata(true, (d, e) => ((LayoutItem)d).OnCanFloatChanged(e)));
     public bool CanFloat { get => (bool)GetValue(CanFloatProperty); set => SetValue(CanFloatProperty, value); }
-    public static readonly DependencyProperty IsActiveProperty = DependencyProperty.Register(nameof(IsActive), typeof(bool), typeof(LayoutItem), new PropertyMetadata(false, (d, e) => ((LayoutItem)d).OnAdapterPropertyChanged(nameof(IsActive), e)));
+    protected virtual void OnCanFloatChanged(DependencyPropertyChangedEventArgs e) => OnAdapterPropertyChanged(nameof(CanFloat), e);
+    public static readonly DependencyProperty IsActiveProperty = DependencyProperty.Register(nameof(IsActive), typeof(bool), typeof(LayoutItem), new PropertyMetadata(false, (d, e) => ((LayoutItem)d).OnIsActiveChanged(e)));
     public bool IsActive { get => (bool)GetValue(IsActiveProperty); set => SetValue(IsActiveProperty, value); }
-    public static readonly DependencyProperty IsSelectedProperty = DependencyProperty.Register(nameof(IsSelected), typeof(bool), typeof(LayoutItem), new PropertyMetadata(false, (d, e) => ((LayoutItem)d).OnAdapterPropertyChanged(nameof(IsSelected), e)));
+    protected virtual void OnIsActiveChanged(DependencyPropertyChangedEventArgs e) => OnAdapterPropertyChanged(nameof(IsActive), e);
+    public static readonly DependencyProperty IsSelectedProperty = DependencyProperty.Register(nameof(IsSelected), typeof(bool), typeof(LayoutItem), new PropertyMetadata(false, (d, e) => ((LayoutItem)d).OnIsSelectedChanged(e)));
     public bool IsSelected { get => (bool)GetValue(IsSelectedProperty); set => SetValue(IsSelectedProperty, value); }
-    public static readonly DependencyProperty ContentIdProperty = DependencyProperty.Register(nameof(ContentId), typeof(string), typeof(LayoutItem), new PropertyMetadata(null, (d, e) => ((LayoutItem)d).OnAdapterPropertyChanged(nameof(ContentId), e)));
+    protected virtual void OnIsSelectedChanged(DependencyPropertyChangedEventArgs e) => OnAdapterPropertyChanged(nameof(IsSelected), e);
+    public static readonly DependencyProperty ContentIdProperty = DependencyProperty.Register(nameof(ContentId), typeof(string), typeof(LayoutItem), new PropertyMetadata(null, (d, e) => ((LayoutItem)d).OnContentIdChanged(e)));
     public string? ContentId { get => (string?)GetValue(ContentIdProperty); set => SetValue(ContentIdProperty, value); }
-    public static readonly DependencyProperty TitleProperty = DependencyProperty.Register(nameof(Title), typeof(string), typeof(LayoutItem), new PropertyMetadata(null, (d, e) => ((LayoutItem)d).OnAdapterPropertyChanged(nameof(Title), e)));
+    protected virtual void OnContentIdChanged(DependencyPropertyChangedEventArgs e) => OnAdapterPropertyChanged(nameof(ContentId), e);
+    public static readonly DependencyProperty TitleProperty = DependencyProperty.Register(nameof(Title), typeof(string), typeof(LayoutItem), new PropertyMetadata(null, (d, e) => ((LayoutItem)d).OnTitleChanged(e)));
     public string? Title { get => (string?)GetValue(TitleProperty); set => SetValue(TitleProperty, value); }
+    protected virtual void OnTitleChanged(DependencyPropertyChangedEventArgs e) => OnAdapterPropertyChanged(nameof(Title), e);
 }

@@ -83,6 +83,10 @@ public class LayoutAnchorablePaneGroupControl(LayoutAnchorablePaneGroup model) :
 
 public class LayoutGridResizerControl : ContentControl
 {
+    public static readonly DependencyProperty BackgroundWhileDraggingProperty = DependencyProperty.Register(nameof(BackgroundWhileDragging), typeof(Brush), typeof(LayoutGridResizerControl), new PropertyMetadata(null));
+    public static readonly DependencyProperty OpacityWhileDraggingProperty = DependencyProperty.Register(nameof(OpacityWhileDragging), typeof(double), typeof(LayoutGridResizerControl), new PropertyMetadata(1d));
+    public Brush? BackgroundWhileDragging { get => (Brush?)GetValue(BackgroundWhileDraggingProperty); set => SetValue(BackgroundWhileDraggingProperty, value); }
+    public double OpacityWhileDragging { get => (double)GetValue(OpacityWhileDraggingProperty); set => SetValue(OpacityWhileDraggingProperty, value); }
     internal bool Horizontal { get; set; }
     internal event EventHandler<double>? ResizeBy;
     public LayoutGridResizerControl()
@@ -90,6 +94,12 @@ public class LayoutGridResizerControl : ContentControl
         IsTabStop = true; AutomationProperties.SetName(this, "Resize docked panes");
         var thumb = new Thumb { HorizontalAlignment = HorizontalAlignment.Stretch, VerticalAlignment = VerticalAlignment.Stretch };
         HorizontalContentAlignment = HorizontalAlignment.Stretch; VerticalContentAlignment = VerticalAlignment.Stretch; Content = thumb;
+        // An overlay avoids replacing application-owned Background/Opacity bindings.
+        var feedback = new Border { Visibility = Visibility.Collapsed, IsHitTestVisible = false };
+        var chrome = new Grid(); chrome.Children.Add(thumb); chrome.Children.Add(feedback); Content = chrome;
+        thumb.DragStarted += (_, _) => { feedback.Background = BackgroundWhileDragging; feedback.Opacity = Math.Clamp(OpacityWhileDragging, 0, 1); feedback.Visibility = Visibility.Visible; };
+        thumb.DragCompleted += (_, _) => feedback.Visibility = Visibility.Collapsed;
+        Unloaded += (_, _) => feedback.Visibility = Visibility.Collapsed;
         thumb.DragDelta += (_, e) => ResizeBy?.Invoke(this, Horizontal ? e.HorizontalChange : e.VerticalChange);
     }
     protected override void OnKeyDown(KeyRoutedEventArgs e)
@@ -116,4 +126,18 @@ public class DocumentPaneTabPanel : Panel
         return finalSize;
     }
 }
-public class AnchorablePaneTabPanel : DocumentPaneTabPanel { }
+public class AnchorablePaneTabPanel : DocumentPaneTabPanel
+{
+    protected override Size MeasureOverride(Size availableSize)
+    {
+        var natural = base.MeasureOverride(availableSize);
+        return new(Math.Min(natural.Width, availableSize.Width), natural.Height);
+    }
+    protected override Size ArrangeOverride(Size finalSize)
+    {
+        var widths = TabStripSolver.Allocate(finalSize.Width, Children.Select(c => c.DesiredSize.Width).ToArray());
+        double x = 0;
+        for (var i = 0; i < Children.Count; i++) { Children[i].Arrange(new Rect(x, 0, widths[i], finalSize.Height)); x += widths[i]; }
+        return finalSize;
+    }
+}

@@ -14,7 +14,22 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
     protected LayoutItem() => _visibilityToken = RegisterPropertyChangedCallback(VisibilityProperty, (_, _) => OnVisibilityChanged());
     public LayoutContent LayoutElement { get; private set; } = null!;
     public object? Model { get; private set; }
-    public ContentPresenter View { get; } = new() { HorizontalContentAlignment = HorizontalAlignment.Stretch, VerticalContentAlignment = VerticalAlignment.Stretch };
+    private ContentPresenter? _view;
+    public bool IsViewCreated => _view != null;
+    internal ContentPresenter? ExistingView => _view;
+    public ContentPresenter View
+    {
+        get
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            if (_view == null)
+            {
+                _view = new() { HorizontalContentAlignment = HorizontalAlignment.Stretch, VerticalContentAlignment = VerticalAlignment.Stretch };
+                UpdateView();
+            }
+            return _view;
+        }
+    }
     internal void Attach(LayoutContent model, DockingManager manager)
     {
         LayoutElement = model; _manager = manager; Model = model.Content; DataContext = Model;
@@ -77,7 +92,7 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
     }
     protected abstract void Close();
     protected virtual void Float() => LayoutElement.Float();
-    protected virtual bool CanExecuteDockAsDocumentCommand() => LayoutElement.Parent is not LayoutDocumentPane && LayoutElement.Root != null;
+    protected virtual bool CanExecuteDockAsDocumentCommand() => LayoutElement.Parent is not LayoutDocumentPane && LayoutElement.Root != null && DockOperations.CanMove(LayoutElement);
     protected virtual void OnVisibilityChanged() { }
     protected void OnAdapterPropertyChanged(string name, DependencyPropertyChangedEventArgs args)
     {
@@ -104,7 +119,7 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
     }
     internal void UpdateView()
     {
-        if (_manager == null) return;
+        if (_manager == null || _view == null) return;
         if (!ReferenceEquals(View.Content, LayoutElement.Content))
         {
             if (LayoutElement.Content is UIElement element) VisualParenting.Detach(element);
@@ -130,7 +145,11 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
         if (_disposed) return; _disposed = true;
         if (LayoutElement != null) LayoutElement.PropertyChanged -= ModelChanged;
         UnregisterPropertyChangedCallback(VisibilityProperty, _visibilityToken);
-        ClearDefaultBindings(); ClearDefaultCommands(); VisualParenting.Detach(View); View.Content = null;
+        ClearDefaultBindings(); ClearDefaultCommands();
+        if (_view is { } view)
+        {
+            VisualParenting.Detach(view); view.Content = null; view.ContentTemplate = null; view.DataContext = null; _view = null;
+        }
         _manager = null; Model = null; DataContext = null;
     }
 }

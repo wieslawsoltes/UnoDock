@@ -13,6 +13,8 @@
     <Compile Include="../../tests/UnoDock.Testing/TestRunner.cs" Link="Testing/TestRunner.cs" />
     <Compile Include="../../tests/UnoDock.Runtime.Tests/RuntimeTests.cs" Link="Testing/RuntimeTests.cs" />
     <Compile Include="../../tests/UnoDock.Runtime.Tests/InteropTests.cs" Link="Testing/InteropTests.cs" />
+    <Compile Include="../../tests/UnoDock.Runtime.Tests/ParityTests.cs" Link="Testing/ParityTests.cs" />
+    <Compile Include="../../tests/UnoDock.Runtime.Tests/LifecycleTests.cs" Link="Testing/LifecycleTests.cs" />
     <EmbeddedResource Include="../../contracts/reference-fixtures/*.xml" LogicalName="ReferenceFixtures.%(Filename)%(Extension)" />
   </ItemGroup>
 </Project>

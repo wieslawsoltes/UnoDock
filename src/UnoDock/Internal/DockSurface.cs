@@ -8,11 +8,9 @@ internal sealed class DockSurface : Grid, IDisposable
 {
     private readonly Grid _docked = new();
     private readonly Canvas _floats = new();
-    private readonly Canvas _overlay = new() { IsHitTestVisible = false };
-    private readonly Border _preview = new() { BorderThickness = new Thickness(2), Opacity = .35, Visibility = Visibility.Collapsed };
+    private readonly OverlayWindow _overlay = new();
     private readonly Grid _flyouts = new() { IsHitTestVisible = false };
     private readonly Dictionary<ILayoutElement, FrameworkElement> _views = new(ReferenceEqualityComparer.Instance);
-    private readonly Dictionary<string, ILayoutGroup> _dropGroups = [];
     private readonly DockDragSession _drag = new();
     private readonly DispatcherTimer _autoHideTimer = new();
     private FrameworkElement? _dragSource;
@@ -26,7 +24,7 @@ internal sealed class DockSurface : Grid, IDisposable
         Manager = manager;
         _docked.RowDefinitions.Add(new() { Height = GridLength.Auto }); _docked.RowDefinitions.Add(new() { Height = new(1, GridUnitType.Star) }); _docked.RowDefinitions.Add(new() { Height = GridLength.Auto });
         _docked.ColumnDefinitions.Add(new() { Width = GridLength.Auto }); _docked.ColumnDefinitions.Add(new() { Width = new(1, GridUnitType.Star) }); _docked.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
-        Children.Add(_docked); Children.Add(_floats); Children.Add(_overlay); Children.Add(_flyouts); _overlay.Children.Add(_preview);
+        Children.Add(_docked); Children.Add(_floats); Children.Add(_overlay); Children.Add(_flyouts);
         _autoHideTimer.Tick += (_, _) =>
         {
             _autoHideTimer.Stop();
@@ -133,51 +131,88 @@ internal sealed class DockSurface : Grid, IDisposable
         if (_dragSource == null || ReferenceEquals(_dragSource.XamlRoot, XamlRoot)) return args.GetCurrentPoint(this).Position;
         return Manager.CrossWindowCoordinates!.Translate(_dragSource, args.GetCurrentPoint(_dragSource).Position, this);
     }
-    private DockDropTarget[] DropTargets()
+    internal IReadOnlyList<IDropArea> GetDropAreas()
     {
-        var targets = new List<DockDropTarget>(); _dropGroups.Clear(); var i = 0;
-        foreach (var entry in _views)
+        var result = new List<IDropArea>();
+        foreach (var (model, view) in _views)
         {
-            if (entry.Key is not ILayoutGroup pane || entry.Value is not LayoutCachePaneControl || !ReferenceEquals(entry.Value.XamlRoot, XamlRoot) || entry.Value.ActualWidth <= 0 || entry.Value.ActualHeight <= 0 || pane.Root != Manager.Layout) continue;
-            var id = (++i).ToString(System.Globalization.CultureInfo.InvariantCulture); _dropGroups[id] = pane;
-            targets.Add(new(id, DockVisuals.Bounds(entry.Value, this), pane is LayoutDocumentPane, true, 10));
+            if (!ReferenceEquals(model.Root, Manager.Layout) || !Visible(view)) continue;
+            var type = model switch
+            {
+                LayoutDocumentPane => DropAreaType.DocumentPane,
+                LayoutAnchorablePane => DropAreaType.AnchorablePane,
+                LayoutDocumentPaneGroup { ChildrenCount: 0 } => DropAreaType.DocumentPaneGroup,
+                _ => (DropAreaType?)null
+            };
+            if (type != null) result.Add(new DropArea<FrameworkElement>(view, type.Value, this));
         }
-        targets.Add(new("root", new(0, 0, ActualWidth, ActualHeight), true, true, 0)); return targets.ToArray();
+        result.Add(new DropArea<DockingManager>(Manager, DropAreaType.DockingManager, this));
+        return result;
+    }
+    private static bool Visible(FrameworkElement view)
+    {
+        if (view.XamlRoot == null || view.ActualWidth <= 0 || view.ActualHeight <= 0) return false;
+        for (DependencyObject? current = view; current != null; current = VisualTreeHelper.GetParent(current))
+            if (current is UIElement { Visibility: Visibility.Collapsed }) return false;
+        return true;
+    }
+    internal DockDropPlan? GetDropPlan(LayoutContent content, Point point)
+    {
+        ArgumentNullException.ThrowIfNull(content);
+        if (!double.IsFinite(point.X) || !double.IsFinite(point.Y)) throw new ArgumentOutOfRangeException(nameof(point));
+        // Prefer the most specific arranged area. A forbidden pane does not fall
+        // through to a different root operation hidden underneath its preview.
+        var area = GetDropAreas().OfType<IModelDropArea>()
+            .Where(a => a.DetectionRect.Width > 0 && a.DetectionRect.Height > 0 && a.DetectionRect.Contains(point))
+            .OrderBy(a => a.Type == DropAreaType.DockingManager ? 1 : 0)
+            .ThenBy(a => a.DetectionRect.Width * a.DetectionRect.Height).FirstOrDefault();
+        if (area?.Model is not ILayoutGroup target) return null;
+        var bounds = area.DetectionRect;
+        var position = DockSplitSolver.HitTest(new(bounds.X, bounds.Y, bounds.Width, bounds.Height), new(point.X, point.Y));
+        var offset = position switch { DockPosition.Left => 0, DockPosition.Top => 1, DockPosition.Right => 2, DockPosition.Bottom => 3, _ => 4 };
+        DropTargetType type;
+        switch (area.Type)
+        {
+            case DropAreaType.DockingManager:
+                if (offset == 4) return null;
+                type = (DropTargetType)offset; break;
+            case DropAreaType.DocumentPane: type = (DropTargetType)(4 + offset); break;
+            case DropAreaType.AnchorablePane: type = (DropTargetType)(10 + offset); break;
+            case DropAreaType.DocumentPaneGroup: type = DropTargetType.DocumentPaneGroupDockInside; break;
+            default: return null;
+        }
+        var index = position == DockPosition.Inside && GetView(target) is LayoutCachePaneControl pane ? pane.InsertionIndex(point, this) : -1;
+        return DockDropPlan.Create(content, target, type, bounds, index);
     }
     private void OnDragMoved(object sender, PointerRoutedEventArgs args)
     {
-        if (_dragContent == null) return;
-        var point = GetPoint(args); _drag.Move(args.Pointer.PointerId, new(point.X, point.Y), DropTargets());
-        if (_drag.State != DockDragState.Dragging) return;
-        var target = _drag.Target;
-        var allowed = target is { } drop && (drop.Id == "root" ? _drag.Position != DockPosition.Inside :
-            _dropGroups.TryGetValue(drop.Id, out var group) && DockOperations.CanDock(_dragContent, group, _drag.Position));
-        _preview.Visibility = allowed ? Visibility.Visible : Visibility.Collapsed;
-        if (allowed && target != null)
-        {
-            var bounds = DockSplitSolver.Preview(target.Value.Bounds, _drag.Position);
-            Canvas.SetLeft(_preview, bounds.X); Canvas.SetTop(_preview, bounds.Y); _preview.Width = bounds.Width; _preview.Height = bounds.Height;
-            _preview.BorderBrush = DockVisuals.Brush(Manager, "UnoDock.AccentBrush", "AccentFillColorDefaultBrush"); _preview.Background = _preview.BorderBrush;
-        }
+        if (_dragContent == null || !_drag.OwnsPointer(args.Pointer.PointerId)) return;
+        var point = GetPoint(args);
+        if (!_drag.Move(args.Pointer.PointerId, new(point.X, point.Y), [])) return;
+        _overlay.ShowPreview(GetDropPlan(_dragContent, point), DockVisuals.Brush(Manager, "UnoDock.AccentBrush", "AccentFillColorDefaultBrush"));
         args.Handled = true;
     }
     private void OnDragReleased(object sender, PointerRoutedEventArgs args)
     {
-        var content = _dragContent; if (content == null) return;
-        var point = GetPoint(args); var committed = _drag.Commit(args.Pointer.PointerId);
-        var target = _drag.Target; var position = _drag.Position;
+        var content = _dragContent;
+        if (content == null || !_drag.OwnsPointer(args.Pointer.PointerId)) return;
+        var point = GetPoint(args);
+        // A final release can arrive after arrange, source changes, or without a
+        // matching move event. Never execute the last painted hover snapshot.
+        _drag.Move(args.Pointer.PointerId, new(point.X, point.Y), []);
+        var plan = GetDropPlan(content, point);
+        var committed = _drag.Commit(args.Pointer.PointerId);
         DetachDrag();
         if (!committed) return;
-        if (target?.Id == "root")
-        { if (position != DockPosition.Inside) DockOperations.DockToRoot(content, position); }
-        else if (target != null && _dropGroups.TryGetValue(target.Value.Id, out var pane))
-        { var index = position == DockPosition.Inside && GetView(pane) is LayoutCachePaneControl view ? view.InsertionIndex(point, this) : -1; DockOperations.Dock(content, pane, position, index); }
-        else if (content.CanFloat)
+        if (plan != null) plan.Execute();
+        else if (!new DockRect(0, 0, ActualWidth, ActualHeight).Contains(new(point.X, point.Y)) && content.CanFloat)
         { content.FloatingLeft = point.X; content.FloatingTop = point.Y; content.Float(); }
         args.Handled = true;
     }
-    private void OnDragCancelled(object sender, PointerRoutedEventArgs args) => CancelDrag();
-    private void OnCaptureLost(object sender, PointerRoutedEventArgs args) { if (_dragSource != null) CancelDrag(); }
+    private void OnDragCancelled(object sender, PointerRoutedEventArgs args)
+    { if (_drag.OwnsPointer(args.Pointer.PointerId)) CancelDrag(); }
+    private void OnCaptureLost(object sender, PointerRoutedEventArgs args)
+    { if (_dragSource != null && _drag.OwnsPointer(args.Pointer.PointerId)) CancelDrag(); }
     internal void CancelDrag() { _drag.Cancel(); DetachDrag(); }
     private void DetachDrag()
     {
@@ -187,7 +222,7 @@ internal sealed class DockSurface : Grid, IDisposable
             source.RemoveHandler(PointerMovedEvent, new PointerEventHandler(OnDragMoved)); source.RemoveHandler(PointerReleasedEvent, new PointerEventHandler(OnDragReleased));
             source.PointerCanceled -= OnDragCancelled; source.PointerCaptureLost -= OnCaptureLost; source.ReleasePointerCaptures();
         }
-        _preview.Visibility = Visibility.Collapsed;
+        _overlay.Hide();
     }
     internal void Reset()
     {

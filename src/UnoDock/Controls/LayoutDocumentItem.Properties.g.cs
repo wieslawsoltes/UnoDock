@@ -6,6 +6,7 @@ using Xceed.Wpf.AvalonDock.Themes;
 namespace Xceed.Wpf.AvalonDock.Controls;
 public partial class LayoutDocumentItem
 {
-    public static readonly DependencyProperty DescriptionProperty = DependencyProperty.Register(nameof(Description), typeof(string), typeof(LayoutDocumentItem), new PropertyMetadata(null, (d, e) => ((LayoutDocumentItem)d).OnAdapterPropertyChanged(nameof(Description), e)));
+    public static readonly DependencyProperty DescriptionProperty = DependencyProperty.Register(nameof(Description), typeof(string), typeof(LayoutDocumentItem), new PropertyMetadata(null, (d, e) => ((LayoutDocumentItem)d).OnDescriptionChanged(e)));
     public string? Description { get => (string?)GetValue(DescriptionProperty); set => SetValue(DescriptionProperty, value); }
+    protected virtual void OnDescriptionChanged(DependencyPropertyChangedEventArgs e) => OnAdapterPropertyChanged(nameof(Description), e);
 }

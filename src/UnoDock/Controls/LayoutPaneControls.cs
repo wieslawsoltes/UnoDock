@@ -11,7 +11,7 @@ public class LayoutCachePaneControl : ContentControl
 {
     private readonly Grid _layout = new();
     private readonly Grid _content = new();
-    private readonly StackPanel _headers = new() { Orientation = Orientation.Horizontal, Spacing = 1 };
+    private Panel _headers = new DocumentPaneTabPanel();
     private readonly ScrollViewer _scroll;
     private readonly Grid _titleRow = new();
     private readonly TextBlock _title = new() { Margin = new Thickness(10, 5, 4, 5), VerticalAlignment = VerticalAlignment.Center };
@@ -35,6 +35,11 @@ public class LayoutCachePaneControl : ContentControl
     internal void UpdatePane(ILayoutGroup pane, DockSurface surface)
     {
         Pane = pane; Selector = (ILayoutContentSelector)pane;
+        if (pane is LayoutAnchorablePane && _headers is not AnchorablePaneTabPanel)
+        {
+            _headers.Children.Clear(); _headers = new AnchorablePaneTabPanel(); _scroll.Content = _headers;
+            _scroll.HorizontalScrollMode = ScrollMode.Disabled; _scroll.HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled;
+        }
         var models = pane.Children.OfType<LayoutContent>().Where(c => c is not LayoutDocument { IsVisible: false }).ToArray();
         var selected = Selector.SelectedContent;
         foreach (var stale in _tabs.Keys.Where(k => !models.Contains(k, ReferenceEqualityComparer.Instance)).ToArray())
@@ -46,8 +51,12 @@ public class LayoutCachePaneControl : ContentControl
             { tab = model is LayoutAnchorable ? new LayoutAnchorableTabItem() : new LayoutDocumentTabItem(); tab.Model = model; _tabs.Add(model, tab); }
             tab.Update(surface.Manager); tabViews.Add(tab);
             var item = surface.Manager.GetLayoutItemFromModel(model); item.UpdateView();
-            item.View.Visibility = ReferenceEquals(model, selected) ? Visibility.Visible : Visibility.Collapsed;
-            contentViews.Add(item.View);
+            var presenter = ReferenceEquals(model, selected) ? item.View : item.ExistingView;
+            if (presenter != null)
+            {
+                presenter.Visibility = ReferenceEquals(model, selected) ? Visibility.Visible : Visibility.Collapsed;
+                contentViews.Add(presenter);
+            }
         }
         VisualParenting.ReconcilePanel(_headers, tabViews); VisualParenting.ReconcilePanel(_content, contentViews);
         _scroll.Visibility = pane is LayoutDocumentPane { ShowHeader: false } || models.Length == 0 ? Visibility.Collapsed : Visibility.Visible;
@@ -55,6 +64,7 @@ public class LayoutCachePaneControl : ContentControl
         _headers.Background = DockVisuals.Brush(surface.Manager, "UnoDock.HeaderBrush", "ControlFillColorSecondaryBrush");
         UpdateTitle(pane is LayoutAnchorablePane, selected as LayoutAnchorable, surface.Manager);
         DockVisuals.SetName(this, pane is LayoutDocumentPane ? "Document tab group" : "Tool tab group");
+        MenuContext.SetTarget(this, selected);
         ContextFlyout = selected == null ? null : DockVisuals.Menu(surface.Manager, selected);
     }
     private LayoutAnchorable? _titleModel;
@@ -82,10 +92,22 @@ public class LayoutCachePaneControl : ContentControl
         {
             if (!_tabs.TryGetValue(model, out var tab)) continue;
             var bounds = DockVisuals.Bounds(tab, surface);
-            if (surfacePoint.X < bounds.X + bounds.Width / 2) return index;
+            if (FlowDirection == FlowDirection.RightToLeft ? surfacePoint.X > bounds.X + bounds.Width / 2 : surfacePoint.X < bounds.X + bounds.Width / 2) return index;
             index++;
         }
         return index;
+    }
+    internal LayoutTabItemBase? TabFor(LayoutContent model) => _tabs.GetValueOrDefault(model);
+    protected override Microsoft.UI.Xaml.Automation.Peers.AutomationPeer OnCreateAutomationPeer() => new LayoutPaneAutomationPeer(this);
+    internal void NavigateHeader(LayoutContent from, Windows.System.VirtualKey key)
+    {
+        var items = Items.Where(m => m.IsEnabled && m is not LayoutDocument { IsVisible: false }).ToArray();
+        if (items.Length == 0) return;
+        var index = Array.IndexOf(items, from);
+        var direction = key == Windows.System.VirtualKey.Left ? -1 : 1;
+        if (FlowDirection == FlowDirection.RightToLeft) direction = -direction;
+        index = key == Windows.System.VirtualKey.Home ? 0 : key == Windows.System.VirtualKey.End ? items.Length - 1 : (index + direction + items.Length) % items.Length;
+        items[index].IsActive = true; TabFor(items[index])?.FocusLabel();
     }
     internal void ReleaseViews()
     {
@@ -155,9 +177,22 @@ public abstract class LayoutTabItemBase : ContentControl
         _chrome.BorderBrush = DockVisuals.Brush(manager, "UnoDock.AccentBrush", "AccentFillColorDefaultBrush");
         DockVisuals.SetName(_label, Model.Title ?? "Document");
         ToolTipService.SetToolTip(_label, Model.ToolTip ?? Model.Title);
+        MenuContext.SetTarget(this, Model);
         ContextFlyout = DockVisuals.Menu(manager, Model);
     }
-    internal void DetachModel() { Model = null; _manager = null; ClearValue(LayoutItemProperty); }
+    internal void FocusLabel() => _label.Focus(FocusState.Keyboard);
+    protected override Microsoft.UI.Xaml.Automation.Peers.AutomationPeer OnCreateAutomationPeer() => new LayoutTabAutomationPeer(this);
+    protected override void OnKeyDown(KeyRoutedEventArgs e)
+    {
+        base.OnKeyDown(e);
+        if (e.Handled || InputState.ControlDown || Model == null) return;
+        if (e.Key is Windows.System.VirtualKey.Left or Windows.System.VirtualKey.Right or Windows.System.VirtualKey.Home or Windows.System.VirtualKey.End)
+        {
+            this.FindVisualAncestor<LayoutCachePaneControl>()?.NavigateHeader(Model, e.Key);
+            e.Handled = true;
+        }
+    }
+    internal void DetachModel() { MenuContext.SetTarget(this, null); Model = null; _manager = null; ClearValue(LayoutItemProperty); }
 }
 public class LayoutDocumentTabItem : LayoutTabItemBase { public LayoutDocumentTabItem() { } }
 public class LayoutAnchorableTabItem : LayoutTabItemBase { public LayoutAnchorableTabItem() { } }

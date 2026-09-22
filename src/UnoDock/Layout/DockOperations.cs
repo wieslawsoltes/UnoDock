@@ -8,7 +8,8 @@ public static class DockOperations
     {
         ArgumentNullException.ThrowIfNull(content);
         if (!content.CanFloat || !CanMove(content) || content.IsFloating || content.Root is not LayoutRoot root) return;
-        using var transition = root.Manager?.BeginTransition(content, true); if (root.Manager != null && transition == null) return;
+        var manager = root.Manager;
+        using var transition = manager?.BeginTransition(content, true); if (manager != null && transition == null) return;
         using var batch = root.BeginUpdate();
         content.RememberDockPosition();
         LayoutFloatingWindow floating;
@@ -21,7 +22,8 @@ public static class DockOperations
     {
         ArgumentNullException.ThrowIfNull(content);
         if (!CanMove(content) || content.Root is not LayoutRoot root) return;
-        using var transition = root.Manager?.BeginTransition(content, false); if (root.Manager != null && transition == null) return;
+        var manager = root.Manager;
+        using var transition = manager?.BeginTransition(content, false); if (manager != null && transition == null) return;
         using var batch = root.BeginUpdate();
         var previous = content.PreviousContainer as ILayoutGroup;
         if (previous != null && ReferenceEquals(previous.Root, root) && CanContain(previous, content))
@@ -29,27 +31,35 @@ public static class DockOperations
             if (!ReferenceEquals(content.Parent, previous)) previous.InsertChildAt(Math.Clamp(content.PreviousContainerIndex, 0, previous.ChildrenCount), content);
         }
         else if (content is LayoutAnchorable anchorable) AddAnchorable(root, anchorable, AnchorableShowStrategy.Right);
-        else AsDocument(content);
+        else InsertDocument(root, content);
         content.IsActive = true; root.CollectGarbage();
     }
     public static void AsDocument(LayoutContent content)
     {
         if (!CanMove(content) || content.Root is not LayoutRoot root || content is LayoutAnchorable { CanDockAsTabbedDocument: false }) return;
-        using var transition = root.Manager?.BeginTransition(content, false); if (root.Manager != null && transition == null) return;
+        var manager = root.Manager;
+        using var transition = manager?.BeginTransition(content, false); if (manager != null && transition == null) return;
         using var batch = root.BeginUpdate();
         if (content.Parent is LayoutDocumentPane) { content.IsActive = true; return; }
-        content.RememberDockPosition();
+        content.RememberDockPosition(); InsertDocument(root, content);
+        if (ReferenceEquals(content.Root, root)) content.IsActive = true;
+        root.CollectGarbage();
+    }
+    private static void InsertDocument(LayoutRoot root, LayoutContent content)
+    {
+        var manager = root.Manager;
         var pane = root.LastFocusedDocument?.Parent as LayoutDocumentPane ?? root.RootPanel.Descendents().OfType<LayoutDocumentPane>().FirstOrDefault();
         if (pane == null) { pane = new(); root.RootPanel.Children.Add(pane); }
         if (content is LayoutDocument doc)
         {
-            if (root.Manager?.LayoutUpdateStrategy?.BeforeInsertDocument(root, doc, pane) != true) pane.Children.Add(doc);
-            root.Manager?.LayoutUpdateStrategy?.AfterInsertDocument(root, doc);
+            var handled = manager?.LayoutUpdateStrategy?.BeforeInsertDocument(root, doc, pane) == true;
+            if (manager != null && !ReferenceEquals(manager.Layout, root) || !ReferenceEquals(pane.Root, root)) return;
+            if (!handled && !ReferenceEquals(doc.Parent, pane)) pane.Children.Add(doc);
+            if (ReferenceEquals(doc.Root, root)) manager?.LayoutUpdateStrategy?.AfterInsertDocument(root, doc);
         }
-        else pane.Children.Add(content);
-        if (ReferenceEquals(content.Root, root)) content.IsActive = true;
-        root.CollectGarbage();
+        else if (AllowsDrop(pane, content)) pane.Children.Add(content);
     }
+
     public static void AddAnchorable(LayoutRoot root, LayoutAnchorable content, AnchorableShowStrategy strategy)
     {
         using var batch = root.BeginUpdate();
@@ -60,9 +70,11 @@ public static class DockOperations
             existing = new();
             AddAtRoot(root, existing, side);
         }
-        if (root.Manager?.LayoutUpdateStrategy?.BeforeInsertAnchorable(root, content, existing) != true)
-            existing.Children.Add(content);
-        root.Manager?.LayoutUpdateStrategy?.AfterInsertAnchorable(root, content);
+        var manager = root.Manager;
+        var handled = manager?.LayoutUpdateStrategy?.BeforeInsertAnchorable(root, content, existing) == true;
+        if (manager != null && !ReferenceEquals(manager.Layout, root) || !ReferenceEquals(existing.Root, root)) return;
+        if (!handled && !ReferenceEquals(content.Parent, existing)) existing.Children.Add(content);
+        if (ReferenceEquals(content.Root, root)) manager?.LayoutUpdateStrategy?.AfterInsertAnchorable(root, content);
         if (ReferenceEquals(content.Root, root)) content.IsSelected = true;
     }
     public static void ToggleAutoHide(LayoutAnchorable content)
@@ -93,25 +105,31 @@ public static class DockOperations
     public static bool CanContain(ILayoutGroup target, LayoutContent content) => target is LayoutDocumentPane && (content is LayoutDocument || content is LayoutAnchorable { CanDockAsTabbedDocument: true })
         || target is LayoutAnchorablePane or LayoutAnchorGroup && content is LayoutAnchorable;
     /// <summary>Checks shared docking policy without mutating either tree.</summary>
-    public static bool CanDock(LayoutContent content, ILayoutGroup target, DockPosition position)
+    public static bool CanDock(LayoutContent content, ILayoutGroup target, DockPosition position) => CanDock(content, target, position, content is LayoutDocument);
+    public static bool CanDock(LayoutContent content, ILayoutGroup target, DockPosition position, bool asDocument)
     {
         ArgumentNullException.ThrowIfNull(content); ArgumentNullException.ThrowIfNull(target);
         if (!CanMove(content) || target.Root is not LayoutRoot root || !ReferenceEquals(content.Root, root)) return false;
-        if (position == DockPosition.Inside) return CanContain(target, content);
+        if (content.FindParent<LayoutFloatingWindow>() is { } floating && root.Manager?.FloatingWindows.Any(w => ReferenceEquals(w.Model, floating) && w.IsContentImmutable) == true) return false;
+        if (asDocument && content is LayoutAnchorable { CanDockAsTabbedDocument: false }) return false;
+        if (position == DockPosition.Inside) return CanContain(target, content) && AllowsDrop(target, content);
         if (position is not (DockPosition.Left or DockPosition.Right or DockPosition.Top or DockPosition.Bottom)) return false;
         if (target is not ILayoutPanelElement || target.Parent is not ILayoutGroup) return false;
         var orientation = position is DockPosition.Left or DockPosition.Right ? Orientation.Horizontal : Orientation.Vertical;
-        return content is not LayoutDocument || root.Manager?.AllowMixedOrientation != false ||
+        return !asDocument || root.Manager?.AllowMixedOrientation != false ||
             target.Parent is not LayoutDocumentPaneGroup group || group.ChildrenCount <= 1 || group.Orientation == orientation;
     }
-    public static void Dock(LayoutContent content, ILayoutGroup target, DockPosition position, int insertionIndex = -1)
+    public static void Dock(LayoutContent content, ILayoutGroup target, DockPosition position, int insertionIndex = -1) => Dock(content, target, position, insertionIndex, content is LayoutDocument);
+    public static void Dock(LayoutContent content, ILayoutGroup target, DockPosition position, int insertionIndex, bool asDocument)
     {
         ArgumentNullException.ThrowIfNull(content); ArgumentNullException.ThrowIfNull(target);
-        if (!CanDock(content, target, position) || target.Root is not LayoutRoot root) return;
+        if (!CanDock(content, target, position, asDocument) || target.Root is not LayoutRoot root) return;
         if (position == DockPosition.Inside)
         {
             if (!CanContain(target, content)) return;
-            using var transition = root.Manager?.BeginTransition(content, false); if (root.Manager != null && transition == null) return;
+            var initiatingManager = root.Manager;
+            using var transition = initiatingManager?.BeginTransition(content, false); if (initiatingManager != null && transition == null) return;
+            if (!CanDock(content, target, position, asDocument)) return;
             using var batch = root.BeginUpdate();
             if (ReferenceEquals(content.Parent, target))
             {
@@ -128,21 +146,23 @@ public static class DockOperations
         }
         if (target is not ILayoutPanelElement targetElement || target.Parent is not ILayoutGroup parent) return;
         // Lift mixed-kind splits out of homogeneous groups before changing ownership.
-        var documentKind = content is LayoutDocument;
+        var documentKind = asDocument || content is LayoutDocument;
         while ((parent is LayoutDocumentPaneGroup && !documentKind) || (parent is LayoutAnchorablePaneGroup && documentKind))
         {
             if (parent is not ILayoutPanelElement outer || parent.Parent is not ILayoutGroup outerParent) return;
             targetElement = outer; parent = outerParent;
         }
         if (parent is not LayoutPanel && parent is not LayoutDocumentPaneGroup && parent is not LayoutAnchorablePaneGroup) return;
-        using var edgeTransition = root.Manager?.BeginTransition(content, false); if (root.Manager != null && edgeTransition == null) return;
+        var manager = root.Manager;
+        using var edgeTransition = manager?.BeginTransition(content, false); if (manager != null && edgeTransition == null) return;
+        if (!CanDock(content, target, position, asDocument) || !ReferenceEquals(targetElement.Parent, parent)) return;
         using (root.BeginUpdate())
         {
             var horizontal = position is DockPosition.Left or DockPosition.Right;
             var orientation = horizontal ? Orientation.Horizontal : Orientation.Vertical;
             var before = position is DockPosition.Left or DockPosition.Top;
             ILayoutPanelElement newPane;
-            if (content is LayoutDocument doc) newPane = new LayoutDocumentPane(doc);
+            if (documentKind) { var documents = new LayoutDocumentPane(); documents.Children.Add(content); newPane = documents; }
             else newPane = new LayoutAnchorablePane((LayoutAnchorable)content);
             if (parent is ILayoutOrientableGroup oriented && oriented.Orientation == orientation && AcceptsPanel(parent, newPane))
                 parent.InsertChildAt(parent.IndexOfChild(targetElement) + (before ? 0 : 1), newPane);
@@ -163,11 +183,29 @@ public static class DockOperations
             content.SetPrevious(null, 0); content.IsActive = true; root.CollectGarbage();
         }
     }
+    // Public documentation defines duplicate content by the Title/ContentId pair.
+    private static bool AllowsDrop(ILayoutGroup target, LayoutContent content) =>
+        ReferenceEquals(content.Parent, target) || target is not ILayoutPositionableElement { AllowDuplicateContent: false } ||
+        !target.Children.OfType<LayoutContent>().Any(other => !ReferenceEquals(other, content) &&
+            string.Equals(other.Title, content.Title, StringComparison.Ordinal) && string.Equals(other.ContentId, content.ContentId, StringComparison.Ordinal));
+    public static void DockIntoEmptyDocumentGroup(LayoutContent content, LayoutDocumentPaneGroup group)
+    {
+        ArgumentNullException.ThrowIfNull(content); ArgumentNullException.ThrowIfNull(group);
+        if (group.ChildrenCount != 0 || !CanMove(content) || content.Root is not LayoutRoot root ||
+            !ReferenceEquals(group.Root, root) || content is LayoutAnchorable { CanDockAsTabbedDocument: false }) return;
+        var manager = root.Manager;
+        using var transition = manager?.BeginTransition(content, false);
+        if (manager != null && transition == null || group.ChildrenCount != 0 || !ReferenceEquals(group.Root, root)) return;
+        using var batch = root.BeginUpdate();
+        var pane = new LayoutDocumentPane(); group.Children.Add(pane); pane.Children.Add(content);
+        content.SetPrevious(null, -1); content.IsActive = true; root.CollectGarbage();
+    }
     private static bool AcceptsPanel(ILayoutGroup parent, ILayoutPanelElement item) => parent is LayoutPanel || parent is LayoutDocumentPaneGroup && item is ILayoutDocumentPane || parent is LayoutAnchorablePaneGroup && item is ILayoutAnchorablePane;
     public static void DockToRoot(LayoutContent content, DockPosition position)
     {
-        if (!CanMove(content) || content.Root is not LayoutRoot root || position == DockPosition.Inside) return;
-        using var transition = root.Manager?.BeginTransition(content, false); if (root.Manager != null && transition == null) return;
+        if (!CanMove(content) || content.Root is not LayoutRoot root || position is not (DockPosition.Left or DockPosition.Right or DockPosition.Top or DockPosition.Bottom)) return;
+        var manager = root.Manager;
+        using var transition = manager?.BeginTransition(content, false); if (manager != null && transition == null) return;
         using var batch = root.BeginUpdate();
         ILayoutPanelElement pane = content is LayoutDocument d ? new LayoutDocumentPane(d) : new LayoutAnchorablePane((LayoutAnchorable)content);
         AddAtRoot(root, pane, position switch { DockPosition.Left => AnchorSide.Left, DockPosition.Top => AnchorSide.Top, DockPosition.Bottom => AnchorSide.Bottom, _ => AnchorSide.Right });

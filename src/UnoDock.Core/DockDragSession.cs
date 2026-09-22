@@ -44,6 +44,7 @@ public sealed class DockDragSession
         Position = Target is { } selected ? DockSplitSolver.HitTest(selected.Bounds, point) : DockPosition.Inside;
         return true;
     }
+    public bool OwnsPointer(uint pointerId) => pointerId == _pointer && State is DockDragState.Armed or DockDragState.Dragging;
     public bool Commit(uint pointerId)
     {
         if (pointerId != _pointer || State is not (DockDragState.Armed or DockDragState.Dragging)) return false;
