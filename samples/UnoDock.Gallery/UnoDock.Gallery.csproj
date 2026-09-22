@@ -15,6 +15,9 @@
     <Compile Include="../../tests/UnoDock.Runtime.Tests/InteropTests.cs" Link="Testing/InteropTests.cs" />
     <Compile Include="../../tests/UnoDock.Runtime.Tests/ParityTests.cs" Link="Testing/ParityTests.cs" />
     <Compile Include="../../tests/UnoDock.Runtime.Tests/LifecycleTests.cs" Link="Testing/LifecycleTests.cs" />
+    <Compile Include="../../tests/UnoDock.Runtime.Tests/WindowCoordinateTests*.cs" Link="Testing/%(Filename)%(Extension)" />
+    <Compile Include="../../tests/UnoDock.Runtime.Tests/ConverterTests*.cs" Link="Testing/%(Filename)%(Extension)" />
+    <EmbeddedResource Include="../../contracts/converter-fixtures/*.xml" LogicalName="ConverterFixtures.%(Filename)%(Extension)" />
     <EmbeddedResource Include="../../contracts/reference-fixtures/*.xml" LogicalName="ReferenceFixtures.%(Filename)%(Extension)" />
   </ItemGroup>
 </Project>

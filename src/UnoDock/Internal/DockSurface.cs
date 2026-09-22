@@ -120,10 +120,11 @@ internal sealed class DockSurface : Grid, IDisposable
         if (!ReferenceEquals(source.XamlRoot, XamlRoot) && Manager.CrossWindowCoordinates == null) return;
         CancelDrag();
         _dragContent = content; _dragSource = source;
-        var point = GetPoint(args); _drag.Arm(args.Pointer.PointerId, new(point.X, point.Y), content is LayoutDocument);
+        if (!TryGetPoint(args, out var point)) { CancelDrag(); return; }
+        _drag.Arm(args.Pointer.PointerId, new(point.X, point.Y), content is LayoutDocument);
         source.AddHandler(PointerMovedEvent, new PointerEventHandler(OnDragMoved), true);
         source.AddHandler(PointerReleasedEvent, new PointerEventHandler(OnDragReleased), true);
-        source.PointerCanceled += OnDragCancelled; source.PointerCaptureLost += OnCaptureLost;
+        source.PointerCanceled += OnDragCancelled; source.PointerCaptureLost += OnCaptureLost; source.Unloaded += OnDragSourceUnloaded;
         if (!source.CapturePointer(args.Pointer)) CancelDrag();
     }
     private Point GetPoint(PointerRoutedEventArgs args)
@@ -131,6 +132,13 @@ internal sealed class DockSurface : Grid, IDisposable
         if (_dragSource == null || ReferenceEquals(_dragSource.XamlRoot, XamlRoot)) return args.GetCurrentPoint(this).Position;
         return Manager.CrossWindowCoordinates!.Translate(_dragSource, args.GetCurrentPoint(_dragSource).Position, this);
     }
+    private bool TryGetPoint(PointerRoutedEventArgs args, out Point point)
+    {
+        try { point = GetPoint(args); return true; }
+        catch (InvalidOperationException) { point = default; return false; }
+        catch (PlatformNotSupportedException) { point = default; return false; }
+    }
+    private void OnDragSourceUnloaded(object sender, RoutedEventArgs args) => CancelDrag();
     internal IReadOnlyList<IDropArea> GetDropAreas()
     {
         var result = new List<IDropArea>();
@@ -187,20 +195,35 @@ internal sealed class DockSurface : Grid, IDisposable
     private void OnDragMoved(object sender, PointerRoutedEventArgs args)
     {
         if (_dragContent == null || !_drag.OwnsPointer(args.Pointer.PointerId)) return;
-        var point = GetPoint(args);
+        if (!TryGetPoint(args, out var point)) { CancelDrag(); return; }
         if (!_drag.Move(args.Pointer.PointerId, new(point.X, point.Y), [])) return;
-        _overlay.ShowPreview(GetDropPlan(_dragContent, point), DockVisuals.Brush(Manager, "UnoDock.AccentBrush", "AccentFillColorDefaultBrush"));
+        try
+        {
+            var plan = GetDropPlan(_dragContent, point);
+            var accent = DockVisuals.Brush(Manager, "UnoDock.AccentBrush", "AccentFillColorDefaultBrush");
+            foreach (var window in Manager.FloatingWindows) window.HideDropPreview();
+            var floating = plan?.Target.FindParent<LayoutFloatingWindow>();
+            var host = floating == null ? null : Manager.FloatingWindows.FirstOrDefault(w => ReferenceEquals(w.Model, floating));
+            if (host?.NativeWindow != null && plan != null)
+            { _overlay.Hide(); host.ShowDropPreview(plan, this, accent); }
+            else _overlay.ShowPreview(plan, accent);
+        }
+        catch (InvalidOperationException) { CancelDrag(); }
+        catch (PlatformNotSupportedException) { CancelDrag(); }
         args.Handled = true;
     }
     private void OnDragReleased(object sender, PointerRoutedEventArgs args)
     {
         var content = _dragContent;
         if (content == null || !_drag.OwnsPointer(args.Pointer.PointerId)) return;
-        var point = GetPoint(args);
+        if (!TryGetPoint(args, out var point)) { CancelDrag(); return; }
         // A final release can arrive after arrange, source changes, or without a
         // matching move event. Never execute the last painted hover snapshot.
         _drag.Move(args.Pointer.PointerId, new(point.X, point.Y), []);
-        var plan = GetDropPlan(content, point);
+        DockDropPlan? plan;
+        try { plan = GetDropPlan(content, point); }
+        catch (InvalidOperationException) { CancelDrag(); return; }
+        catch (PlatformNotSupportedException) { CancelDrag(); return; }
         var committed = _drag.Commit(args.Pointer.PointerId);
         DetachDrag();
         if (!committed) return;
@@ -220,9 +243,10 @@ internal sealed class DockSurface : Grid, IDisposable
         if (source != null)
         {
             source.RemoveHandler(PointerMovedEvent, new PointerEventHandler(OnDragMoved)); source.RemoveHandler(PointerReleasedEvent, new PointerEventHandler(OnDragReleased));
-            source.PointerCanceled -= OnDragCancelled; source.PointerCaptureLost -= OnCaptureLost; source.ReleasePointerCaptures();
+            source.PointerCanceled -= OnDragCancelled; source.PointerCaptureLost -= OnCaptureLost; source.Unloaded -= OnDragSourceUnloaded; source.ReleasePointerCaptures();
         }
         _overlay.Hide();
+        foreach (var window in Manager.FloatingWindows) window.HideDropPreview();
     }
     internal void Reset()
     {

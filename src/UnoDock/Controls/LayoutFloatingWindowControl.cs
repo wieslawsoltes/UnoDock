@@ -13,6 +13,7 @@ public abstract class LayoutFloatingWindowControl : ContentControl, ILayoutContr
     public static readonly DependencyProperty IsMaximizedProperty = DependencyProperty.Register(nameof(IsMaximized), typeof(bool), typeof(LayoutFloatingWindowControl), new PropertyMetadata(false, (d, e) => ((LayoutFloatingWindowControl)d).OnStateChanged(EventArgs.Empty)));
     public static readonly DependencyProperty ResizeBorderThicknessProperty = DependencyProperty.Register(nameof(ResizeBorderThickness), typeof(Thickness), typeof(LayoutFloatingWindowControl), new PropertyMetadata(new Thickness(5)));
     private readonly Grid _frame = new();
+    private readonly OverlayWindow _dropPreview = new();
     private readonly ContentPresenter _body = new() { HorizontalContentAlignment = HorizontalAlignment.Stretch, VerticalContentAlignment = VerticalAlignment.Stretch };
     private readonly TextBlock _caption = new() { Margin = new Thickness(10, 6, 10, 6), VerticalAlignment = VerticalAlignment.Center };
     private readonly Grid _title = new();
@@ -40,6 +41,7 @@ public abstract class LayoutFloatingWindowControl : ContentControl, ILayoutContr
         Grid.SetRow(_body, 1); _frame.Children.Add(_title); _frame.Children.Add(_body);
         var resize = new Thumb { Width = 16, Height = 16, HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Bottom, Opacity = .25 };
         resize.DragDelta += (_, e) => ResizeBy(e.HorizontalChange, e.VerticalChange); Grid.SetRow(resize, 1); _frame.Children.Add(resize);
+        Grid.SetRowSpan(_dropPreview, 2); _frame.Children.Add(_dropPreview);
         Content = _frame; BorderThickness = new(1); MinWidth = 160; MinHeight = 100;
         GotFocus += (_, _) => { if ((Contents.FirstOrDefault(c => c.IsSelected) ?? Contents.FirstOrDefault()) is { } selected) selected.IsActive = true; };
     }
@@ -113,6 +115,16 @@ public abstract class LayoutFloatingWindowControl : ContentControl, ILayoutContr
         if (body != null) { body.Visibility = Visibility.Visible; if (!ReferenceEquals(_body.Content, body)) { VisualParenting.Detach(body); _body.Content = body; } }
         if (_window == null) { Width = Bounds.Width; Height = Bounds.Height; Canvas.SetLeft(this, Bounds.X); Canvas.SetTop(this, Bounds.Y); }
     }
+    internal void HideDropPreview() => _dropPreview.Hide();
+    internal void ShowDropPreview(DockDropPlan plan, FrameworkElement relativeTo, Brush accent)
+    {
+        var converter = Model.Root?.Manager?.CrossWindowCoordinates;
+        if (converter == null) return;
+        var rect = plan.PreviewRect;
+        var start = converter.Translate(relativeTo, new Point(rect.X, rect.Y), _dropPreview);
+        var end = converter.Translate(relativeTo, new Point(rect.Right, rect.Bottom), _dropPreview);
+        _dropPreview.ShowPreview(plan, accent, new Rect(start, end));
+    }
     internal void ShowNative()
     {
         if (_hostDisposed) return;
@@ -124,7 +136,7 @@ public abstract class LayoutFloatingWindowControl : ContentControl, ILayoutContr
             _window.AppWindow.Closing += OnNativeClosing;
             _window.AppWindow.Changed += OnNativeChanged;
             _window.Closed += OnNativeClosed;
-            var bounds = Bounds; var scale = Math.Max(1, XamlRoot?.RasterizationScale ?? 1);
+            var bounds = Bounds; var scale = DesktopWindowCoordinates.Scale(this);
             _syncBounds = true;
             try { _window.AppWindow.Move(new Windows.Graphics.PointInt32 { X = (int)(bounds.X * scale), Y = (int)(bounds.Y * scale) }); _window.AppWindow.Resize(new Windows.Graphics.SizeInt32 { Width = (int)(bounds.Width * scale), Height = (int)(bounds.Height * scale) }); }
             finally { _syncBounds = false; }
@@ -144,7 +156,7 @@ public abstract class LayoutFloatingWindowControl : ContentControl, ILayoutContr
     private void OnNativeChanged(AppWindow sender, AppWindowChangedEventArgs e)
     {
         if (_syncBounds || _closingHost) return;
-        var scale = Math.Max(1, XamlRoot?.RasterizationScale ?? 1);
+        var scale = DesktopWindowCoordinates.Scale(this);
         if (e.DidPositionChange || e.DidSizeChange) SetBounds(new(sender.Position.X / scale, sender.Position.Y / scale, sender.Size.Width / scale, sender.Size.Height / scale));
         var maximized = sender.Presenter is OverlappedPresenter p && p.State == OverlappedPresenterState.Maximized;
         IsMaximized = maximized;
@@ -243,7 +255,7 @@ public class LayoutAnchorableFloatingWindowControl : LayoutFloatingWindowControl
     public LayoutAnchorableFloatingWindowControl(LayoutAnchorableFloatingWindow model, bool isContentImmutable) : base(model, isContentImmutable)
     { _model = model; CloseWindowCommand = new DelegateCommand(_ => Close(), parameter => CanClose(parameter)); HideWindowCommand = new DelegateCommand(_ => Hide(), parameter => CanHide(parameter)); }
     public override ILayoutElement Model => _model;
-    public LayoutItem? SingleContentLayoutItem { get => (LayoutItem?)GetValue(SingleContentLayoutItemProperty); private set => SetValue(SingleContentLayoutItemProperty, value); }
+    public LayoutItem? SingleContentLayoutItem { get => (LayoutItem?)GetValue(SingleContentLayoutItemProperty); set => SetValue(SingleContentLayoutItemProperty, value); }
     public ICommand CloseWindowCommand { get; private set; }
     public ICommand HideWindowCommand { get; private set; }
     protected virtual void OnSingleContentLayoutItemChanged(DependencyPropertyChangedEventArgs e) { }

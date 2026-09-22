@@ -23,6 +23,7 @@ public partial class DockingManager : Control, IDisposable
     public static readonly DependencyProperty LayoutProperty = DependencyProperty.Register(nameof(Layout), typeof(LayoutRoot), typeof(DockingManager), new PropertyMetadata(null, (d, e) => ((DockingManager)d).ChangeLayout((LayoutRoot?)e.OldValue, (LayoutRoot?)e.NewValue)));
     public static readonly DockRoutedEvent PreviewDockEvent = new(nameof(PreviewDock)), DockedEvent = new(nameof(Docked)), PreviewFloatEvent = new(nameof(PreviewFloat)), FloatedEvent = new(nameof(Floated));
     private readonly UpdateBatch _updates;
+    private readonly DesktopWindowCoordinates _ownedCoordinates = new();
     private readonly Dictionary<LayoutContent, LayoutItem> _items = new(ReferenceEqualityComparer.Instance);
     private readonly ObservableCollection<LayoutFloatingWindowControl> _floating = [];
     private readonly Dictionary<DockRoutedEvent, List<RoutedEventHandler>> _handlers = [];
@@ -41,6 +42,7 @@ public partial class DockingManager : Control, IDisposable
     {
         DefaultStyleKey = typeof(DockingManager); IsTabStop = false;
         _updates = new(ScheduleRender);
+        CrossWindowCoordinates = _ownedCoordinates;
         _floating.CollectionChanged += (_, args) => LayoutFloatingWindowControlCollectionChanged?.Invoke(this, new(args));
         SetValue(LayoutProperty, new LayoutRoot());
         Loaded += OnLoaded; Unloaded += OnUnloaded;
@@ -55,12 +57,7 @@ public partial class DockingManager : Control, IDisposable
             SetValue(LayoutProperty, value);
         }
     }
-    public ICrossWindowCoordinates? CrossWindowCoordinates { get; set; } 
-#if WINDOWS
-        = new ContentIslandCoordinates();
-#else
-        = null;
-#endif
+    public ICrossWindowCoordinates? CrossWindowCoordinates { get; set; }
     internal void SetAutoHideHost(LayoutAutoHideWindowControl value) => SetAutoHideWindow(value);
     public FloatingWindowMode FloatingWindowMode { get; set; } = FloatingWindowMode.Auto;
     public IEnumerable<LayoutFloatingWindowControl> FloatingWindows => _floating;
@@ -297,6 +294,7 @@ public partial class DockingManager : Control, IDisposable
         _surface?.Dispose(); foreach (var item in _items.Values) item.Dispose(); _items.Clear();
         if (_host != null) _host.Content = null;
         _handlers.Clear(); _documents.Clear(); _anchorables.Clear();
+        _ownedCoordinates.Dispose(); // A caller-supplied adapter remains caller-owned.
     }
     private sealed record SourceEntry(object Value, LayoutContent Model);
 }

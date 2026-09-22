@@ -8,6 +8,7 @@ namespace Xceed.Wpf.AvalonDock.Compatibility;
 /// Dispose before releasing the view to remove source and dependency-property subscriptions.</summary>
 public sealed class ConverterBinding : IDisposable
 {
+    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<FrameworkElement, Dictionary<DependencyProperty, ConverterBinding>> Targets = new();
     private readonly FrameworkElement _target;
     private readonly DependencyProperty _property;
     private readonly Func<object?> _readSource;
@@ -47,6 +48,9 @@ public sealed class ConverterBinding : IDisposable
         _fallback = fallbackValue; _hasFallback = useFallbackValue; _dispatcher = target.DispatcherQueue;
         _sources = sources?.Distinct(ReferenceEqualityComparer.Instance).Cast<INotifyPropertyChanged>().ToArray() ?? [];
         if (_sources.Any(source => source == null)) throw new ArgumentException("A notification source cannot be null.", nameof(sources));
+        var bindings = Targets.GetOrCreateValue(target);
+        if (bindings.ContainsKey(targetProperty)) throw new InvalidOperationException("A converter binding already owns this target property.");
+        bindings.Add(targetProperty, this);
         var subscribed = 0;
         try
         {
@@ -56,7 +60,7 @@ public sealed class ConverterBinding : IDisposable
         }
         catch
         {
-            _disposed = true;
+            _disposed = true; bindings.Remove(targetProperty);
             for (var i = 0; i < subscribed; i++) _sources[i].PropertyChanged -= SourceChanged;
             if (_targetToken is { } token) target.UnregisterPropertyChangedCallback(targetProperty, token);
             throw;
@@ -67,6 +71,8 @@ public sealed class ConverterBinding : IDisposable
     public void UpdateTarget()
     {
         VerifyAccess(); ObjectDisposedException.ThrowIf(_disposed, this);
+        if (_target.GetBindingExpression(_property) != null)
+            throw new InvalidOperationException("The target acquired a native binding. Dispose ConverterBinding before changing its binding owner.");
         _dirty = true;
         if (_updating || _sourceWriteDepth != 0) return;
         _updating = true;
@@ -134,6 +140,7 @@ public sealed class ConverterBinding : IDisposable
         VerifyAccess();
         if (_disposed) return;
         _disposed = true;
+        if (Targets.TryGetValue(_target, out var bindings)) bindings.Remove(_property);
         foreach (var source in _sources) source.PropertyChanged -= SourceChanged;
         if (_targetToken is { } token) _target.UnregisterPropertyChangedCallback(_property, token);
         _targetToken = null;

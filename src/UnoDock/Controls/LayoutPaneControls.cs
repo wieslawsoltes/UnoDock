@@ -91,8 +91,10 @@ public class LayoutCachePaneControl : ContentControl
         foreach (var model in Items)
         {
             if (!_tabs.TryGetValue(model, out var tab)) continue;
-            var bounds = DockVisuals.Bounds(tab, surface);
-            if (FlowDirection == FlowDirection.RightToLeft ? surfacePoint.X > bounds.X + bounds.Width / 2 : surfacePoint.X < bounds.X + bounds.Width / 2) return index;
+            var local = ReferenceEquals(tab.XamlRoot, surface.XamlRoot)
+                ? surface.TransformToVisual(tab).TransformPoint(surfacePoint)
+                : surface.Manager.CrossWindowCoordinates!.Translate(surface, surfacePoint, tab);
+            if (FlowDirection == FlowDirection.RightToLeft ? local.X > tab.ActualWidth / 2 : local.X < tab.ActualWidth / 2) return index;
             index++;
         }
         return index;

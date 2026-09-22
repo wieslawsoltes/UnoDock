@@ -87,10 +87,22 @@
       "kind": "framework"
     },
     {
+      "source": "System.Windows.Data.IMultiValueConverter",
+      "target": "Xceed.Wpf.AvalonDock.Compatibility.IMultiValueConverter",
+      "kind": "adapter",
+      "note": "CultureInfo multi-value call contract. ConverterBinding supplies explicit multi-source transfer, not a native WPF MultiBinding parser."
+    },
+    {
       "source": "System.Windows.Data.IValueConverter",
       "target": "Microsoft.UI.Xaml.Data.IValueConverter",
       "kind": "adapter",
       "note": "WinUI uses language strings; CultureInfo overloads are implemented separately."
+    },
+    {
+      "source": "System.Windows.Data.ValueConversionAttribute",
+      "target": "Xceed.Wpf.AvalonDock.Compatibility.ValueConversionAttribute",
+      "kind": "adapter",
+      "note": "Independent source/target type annotation; it does not change WinUI binding behavior."
     },
     {
       "source": "System.Windows.DataTemplate",
@@ -188,6 +200,12 @@
       "source": "System.Windows.Thickness",
       "target": "Microsoft.UI.Xaml.Thickness",
       "kind": "framework"
+    },
+    {
+      "source": "System.Windows.Visibility",
+      "target": "Microsoft.UI.Xaml.Visibility",
+      "kind": "adapter",
+      "note": "Visible/Collapsed map by name; WinUI has no Hidden member."
     },
     {
       "source": "System.Windows.Window",

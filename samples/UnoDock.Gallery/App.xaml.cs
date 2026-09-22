@@ -29,8 +29,10 @@ public partial class App : Application
                     exitCode |= await Testing.InteropTests.Run(output);
                     exitCode |= await Testing.ParityTests.Run(gallery.Dock, output);
                     exitCode |= await Testing.LifecycleTests.Run(gallery.Dock, output);
+                    exitCode |= await Testing.ConverterTests.Run(output);
+                    exitCode |= await Testing.WindowCoordinateTests.Run(output, gallery.Dock);
                 }
-                catch (Exception e) { Console.Error.WriteLine(e); }
+                catch (Exception e) { exitCode = 2; Console.Error.WriteLine(e); }
                 finally
                 {
                     // Let native render loops unwind; Environment.Exit can tear down

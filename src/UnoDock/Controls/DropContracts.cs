@@ -60,9 +60,20 @@ public class DropArea<T> : IDropArea, IModelDropArea where T : FrameworkElement
         }
         var converter = ((IModelDropArea)this).Manager?.CrossWindowCoordinates;
         if (converter == null) return;
-        var origin = converter.Translate(AreaElement, new Point(0, 0), _relativeTo);
-        var end = converter.Translate(AreaElement, new Point(AreaElement.ActualWidth, AreaElement.ActualHeight), _relativeTo);
-        DetectionRect = new Rect(Math.Min(origin.X, end.X), Math.Min(origin.Y, end.Y), Math.Abs(end.X - origin.X), Math.Abs(end.Y - origin.Y));
+        try
+        {
+            var a = converter.Translate(AreaElement, new Point(0, 0), _relativeTo);
+            var b = converter.Translate(AreaElement, new Point(AreaElement.ActualWidth, 0), _relativeTo);
+            var c = converter.Translate(AreaElement, new Point(0, AreaElement.ActualHeight), _relativeTo);
+            var d = converter.Translate(AreaElement, new Point(AreaElement.ActualWidth, AreaElement.ActualHeight), _relativeTo);
+            var left = Math.Min(Math.Min(a.X, b.X), Math.Min(c.X, d.X));
+            var top = Math.Min(Math.Min(a.Y, b.Y), Math.Min(c.Y, d.Y));
+            var right = Math.Max(Math.Max(a.X, b.X), Math.Max(c.X, d.X));
+            var bottom = Math.Max(Math.Max(a.Y, b.Y), Math.Max(c.Y, d.Y));
+            DetectionRect = new Rect(left, top, right - left, bottom - top);
+        }
+        catch (InvalidOperationException) { /* Native host closed between arrange and query. */ }
+        catch (PlatformNotSupportedException) { /* This host needs an application coordinate adapter. */ }
     }
 }
 
@@ -187,11 +198,12 @@ public class OverlayWindow : ContentControl
         HorizontalContentAlignment = HorizontalAlignment.Stretch; VerticalContentAlignment = VerticalAlignment.Stretch;
         _canvas.Children.Add(_preview); Content = _canvas;
     }
-    public void ShowPreview(DockDropPlan? plan, Brush accent)
+    public void ShowPreview(DockDropPlan? plan, Brush accent) => ShowPreview(plan, accent, plan?.PreviewRect ?? default);
+    internal void ShowPreview(DockDropPlan? plan, Brush accent, Rect rect)
     {
         ArgumentNullException.ThrowIfNull(accent);
         if (plan?.CanExecute != true) { Hide(); return; }
-        CurrentPlan = plan; var rect = plan.PreviewRect;
+        CurrentPlan = plan;
         Canvas.SetLeft(_preview, rect.X); Canvas.SetTop(_preview, rect.Y);
         _preview.Width = rect.Width; _preview.Height = rect.Height; _preview.Background = accent; _preview.BorderBrush = accent;
         Visibility = Visibility.Visible;
