@@ -62,8 +62,14 @@ jobs:
         if: runner.os == 'Linux'
         env:
           UNODOCK_SELFTEST: '1'
+          UNODOCK_NATIVE_INPUT_TESTS: '1'
           UNODOCK_TEST_RESULTS: ${{ github.workspace }}/artifacts/test-results
-        run: timeout 300s xvfb-run -a dotnet run --project samples/UnoDock.Gallery -c Release -f net10.0-desktop --no-build -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0
+        run: timeout 300s xvfb-run -a -s "-screen 0 2560x1440x24" dotnet run --project samples/UnoDock.Gallery -c Release -f net10.0-desktop --no-build -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0
+      - uses: actions/upload-artifact@v4
+        if: always() && runner.os == 'Linux'
+        with:
+          name: runtime-test-results
+          path: artifacts/test-results/
       - uses: actions/upload-artifact@v4
         if: always()
         with:

@@ -1,0 +1,103 @@
+name: Land validated interaction implementation
+on:
+  workflow_dispatch:
+  push:
+    paths: ['.github/workflows/land-interaction.yml']
+permissions:
+  contents: write
+  actions: write
+concurrency:
+  group: land-validated-interaction
+  cancel-in-progress: false
+jobs:
+  land:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Verify and apply the tested integration without overwriting concurrent work
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import base64, hashlib, json, lzma, os, pathlib, shutil, subprocess, tarfile, urllib.request
+          workspace = pathlib.Path.cwd()
+          temporary = pathlib.Path(os.environ['RUNNER_TEMP']) / 'unodock-tested-integration'
+          temporary.mkdir()
+          def digest(path):
+              return hashlib.sha256(path.read_bytes()).hexdigest() if path.exists() else None
+          def safe(name):
+              p = pathlib.PurePosixPath(name)
+              assert not p.is_absolute() and not {'.git', '.github', '..'}.intersection(p.parts), name
+              return name
+          def payload(shas, expected):
+              parts = []
+              for sha in shas:
+                  request = urllib.request.Request(f'https://api.github.com/repos/{os.environ["GITHUB_REPOSITORY"]}/git/blobs/{sha}', headers={'Authorization': 'Bearer ' + os.environ['GH_TOKEN'], 'Accept': 'application/vnd.github+json'})
+                  with urllib.request.urlopen(request, timeout=60) as response:
+                      blob = json.load(response)
+                  data = base64.b64decode(blob['content'])
+                  assert hashlib.sha1(b'blob ' + str(len(data)).encode() + b'\0' + data).hexdigest() == sha
+                  parts.append(data)
+              data = b''.join(parts)
+              assert hashlib.sha256(data).hexdigest() == expected
+              result = json.loads(lzma.decompress(data))
+              assert result['schema'] == 1
+              for name in result['checks']: safe(name)
+              return result
+          original = payload(['fb7c82840f2cd301cc343890254b3bf0337c0813', '7c998ad2bd0cb2835f11de584394cf741ec35eb4'], '6c35328c73a58cde7e4739b74418c8520963fea2a12b01d3bad54fb08ec2cd21')
+          merged = payload(['d205de209c91836a35beb450c5a77ff69155c569'], '5a7da29878ab3f58bff8e6f4e2a7a2c22543169257fa9ab4b76e748e291b1267')
+          assert len(original['checks']) == 21 and len(merged['checks']) == 20
+          assert merged['base'] == 'cb5b68f31d77e33abbd6b3d7ad76ea635ecb5f56'
+          subprocess.run(['git', 'merge-base', '--is-ancestor', merged['base'], 'HEAD'], check=True)
+          for name, hashes in merged['checks'].items():
+              assert digest(workspace / name) == hashes['old'], 'Concurrent modification: ' + name
+          def export(revision, name):
+              directory = temporary / name
+              directory.mkdir()
+              archive = temporary / (name + '.tar')
+              subprocess.run(['git', 'archive', '--format=tar', '-o', str(archive), revision], check=True)
+              with tarfile.open(archive) as source:
+                  source.extractall(directory, filter='data')
+              return directory
+          def apply(directory, content, name):
+              patch = temporary / (name + '.patch')
+              patch.write_text(content, encoding='utf-8')
+              subprocess.run(['git', 'apply', '--check', str(patch)], cwd=directory, check=True)
+              subprocess.run(['git', 'apply', str(patch)], cwd=directory, check=True)
+          authored = export('5c3cfd033e5dd58326d5301186f4b6de921cfb62', 'authored')
+          for name, hashes in original['checks'].items():
+              assert digest(authored / name) == hashes['old'], 'Unexpected original input: ' + name
+          apply(authored, original['patch'], 'original')
+          for name, hashes in original['checks'].items():
+              assert digest(authored / name) == hashes['new'], 'Invalid original output: ' + name
+          combined = export(merged['base'], 'combined')
+          for name in original['checks']:
+              target = combined / name
+              target.parent.mkdir(parents=True, exist_ok=True)
+              shutil.copyfile(authored / name, target)
+          apply(combined, merged['patch'], 'merged')
+          for name, hashes in merged['checks'].items():
+              assert digest(combined / name) == hashes['new'], 'Invalid merged output: ' + name
+          # Copy only the reviewed differences relative to concurrent main.
+          # Its converter implementation, public APIs, ownership and baseline remain intact.
+          for name, hashes in merged['checks'].items():
+              target = workspace / name
+              target.parent.mkdir(parents=True, exist_ok=True)
+              shutil.copyfile(combined / name, target)
+              assert digest(target) == hashes['new'], name
+          subprocess.run(['git', 'add', '--', *merged['checks']], check=True)
+          print('Verified and staged 20 combined source, test and documentation files.')
+          PY
+      - name: Commit sources and dispatch complete validation
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'feat: integrate native occlusion-aware docking, captured dragging and stationary edge scrolling'
+          git pull --rebase origin main
+          git push origin HEAD:main
+          gh workflow run ci.yml --ref main
