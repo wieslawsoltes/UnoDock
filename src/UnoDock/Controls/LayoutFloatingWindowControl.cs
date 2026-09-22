@@ -1,5 +1,10 @@
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml.Input;
+#if WINDOWS
+using DockWindowActivationState = Microsoft.UI.Xaml.WindowActivationState;
+#else
+using DockWindowActivationState = Windows.UI.Core.CoreWindowActivationState;
+#endif
 using Xceed.Wpf.AvalonDock.Internal;
 using Xceed.Wpf.AvalonDock.Layout;
 
@@ -21,7 +26,41 @@ public abstract class LayoutFloatingWindowControl : ContentControl, ILayoutContr
     private readonly Grid _title = new();
     private bool _closingHost, _syncBounds, _hostDisposed;
     private Window? _window;
-    private bool _closingOperation;
+    private IDisposable? _systemRegistration;
+    private bool _closingOperation, _minimized;
+    internal double ChromeCaptionHeight { get => _title.MinHeight; set => _title.MinHeight = value; }
+    internal bool CanPerformSystemAction(Microsoft.Windows.Shell.WindowAction action)
+    {
+        if (_hostDisposed || _closingOperation) return false;
+        var presenter = _window?.AppWindow.Presenter as OverlappedPresenter;
+        return action switch
+        {
+            Microsoft.Windows.Shell.WindowAction.Close => CanClose(),
+            Microsoft.Windows.Shell.WindowAction.Maximize => !IsMaximized && (presenter?.IsMaximizable ?? true),
+            Microsoft.Windows.Shell.WindowAction.Minimize => !_minimized && presenter?.State != OverlappedPresenterState.Minimized && (presenter?.IsMinimizable ?? true),
+            Microsoft.Windows.Shell.WindowAction.Restore => IsMaximized || _minimized || presenter?.State == OverlappedPresenterState.Minimized,
+            Microsoft.Windows.Shell.WindowAction.Menu => IsLoaded,
+            _ => false
+        };
+    }
+    internal void PerformSystemAction(Microsoft.Windows.Shell.WindowAction action)
+    {
+        if (!CanPerformSystemAction(action)) return;
+        if (action == Microsoft.Windows.Shell.WindowAction.Close) { Close(); return; }
+        if (_window?.AppWindow.Presenter is OverlappedPresenter presenter)
+        {
+            if (action == Microsoft.Windows.Shell.WindowAction.Maximize) presenter.Maximize();
+            else if (action == Microsoft.Windows.Shell.WindowAction.Minimize) presenter.Minimize();
+            else if (action == Microsoft.Windows.Shell.WindowAction.Restore) presenter.Restore();
+            return;
+        }
+        if (action == Microsoft.Windows.Shell.WindowAction.Minimize) { _minimized = true; Visibility = Visibility.Collapsed; }
+        else
+        {
+            _minimized = false; Visibility = Visibility.Visible;
+            if (action == Microsoft.Windows.Shell.WindowAction.Maximize || IsMaximized) ToggleMaximize();
+        }
+    }
     protected bool CloseInitiatedByUser { get; private set; }
     private DockRect? _restoreBounds;
     protected LayoutFloatingWindowControl(ILayoutElement model) : this(model, false) { }
@@ -39,7 +78,8 @@ public abstract class LayoutFloatingWindowControl : ContentControl, ILayoutContr
         var actions = new StackPanel { Orientation = Orientation.Horizontal };
         actions.Children.Add(DockVisuals.Button("↙", DockAll, "Dock floating content"));
         actions.Children.Add(DockVisuals.Button("□", ToggleMaximize, "Maximize or restore floating window"));
-        actions.Children.Add(DockVisuals.Button("×", Close, "Close floating window")); Grid.SetColumn(actions, 1); _title.Children.Add(actions);
+        actions.Children.Add(DockVisuals.Button("×", Close, "Close floating window")); Microsoft.Windows.Shell.WindowChrome.SetIsHitTestVisibleInChrome(actions, true);
+        Grid.SetColumn(actions, 1); _title.Children.Add(actions);
         Grid.SetRow(_body, 1); _frame.Children.Add(_title); _frame.Children.Add(_body);
         var resize = new Thumb { Width = 16, Height = 16, HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Bottom, Opacity = .25 };
         resize.DragDelta += (_, e) => ResizeBy(e.HorizontalChange, e.VerticalChange); Grid.SetRow(resize, 1); _frame.Children.Add(resize);
@@ -103,7 +143,19 @@ public abstract class LayoutFloatingWindowControl : ContentControl, ILayoutContr
         try { DoHide(); } finally { _closingOperation = false; }
     }
     private void MarkInteraction() { InteractionOrder = System.Threading.Interlocked.Increment(ref _interactionSequence); Model.Root?.Manager?.Surface?.RefreshFloatingOrder(); }
-    public void Activate() { MarkInteraction(); if (_window != null) _window.Activate(); else Focus(FocusState.Programmatic); }
+    public void Activate()
+    {
+        if (_hostDisposed) return;
+        MarkInteraction();
+        if (_window != null)
+        {
+            if (_window.AppWindow.Presenter is OverlappedPresenter { State: OverlappedPresenterState.Minimized } p) p.Restore();
+            _window.Activate();
+        }
+        else { _minimized = false; Visibility = Visibility.Visible; Focus(FocusState.Programmatic); }
+        Microsoft.Windows.Shell.SystemCommands.InvalidateCommands();
+    }
+    internal void SetChromeBounds(DockRect bounds) { if (!_hostDisposed) SetBounds(bounds); }
     private void DockAll()
     {
         var root = Model.Root as LayoutRoot;
@@ -113,6 +165,9 @@ public abstract class LayoutFloatingWindowControl : ContentControl, ILayoutContr
     {
         var manager = Model.Root?.Manager; if (manager?.Surface == null) return;
         _caption.IsHitTestVisible = Model is LayoutDocumentFloatingWindow;
+        // Document captions are docking drag handles, not native window-move
+        // regions. Keep both them and the caption buttons in the client area.
+        Microsoft.Windows.Shell.WindowChrome.SetIsHitTestVisibleInChrome(_caption, _caption.IsHitTestVisible);
         _caption.Text = Contents.FirstOrDefault(c => c.IsActive)?.Title ?? Contents.FirstOrDefault()?.Title ?? "Floating tools";
         if (_window != null) _window.Title = _caption.Text;
         _frame.Background = DockVisuals.Brush(manager, "UnoDock.PaneBrush", "LayerFillColorDefaultBrush");
@@ -127,6 +182,7 @@ public abstract class LayoutFloatingWindowControl : ContentControl, ILayoutContr
         if (Model is LayoutAnchorableFloatingWindow { RootPanel: { } panel }) manager.Surface.UpdateView(panel);
         if (body != null) { body.Visibility = Visibility.Visible; if (!ReferenceEquals(_body.Content, body)) { VisualParenting.Detach(body); _body.Content = body; } }
         if (_window == null) { Width = Bounds.Width; Height = Bounds.Height; Canvas.SetLeft(this, Bounds.X); Canvas.SetTop(this, Bounds.Y); }
+        Microsoft.Windows.Shell.SystemCommands.InvalidateCommands();
     }
     internal void ShowDropPreview(DockDropPlan plan, FrameworkElement coordinateOwner, Brush accent)
     {
@@ -142,6 +198,7 @@ public abstract class LayoutFloatingWindowControl : ContentControl, ILayoutContr
         {
             VisualParenting.Detach(this); Width = double.NaN; Height = double.NaN;
             _window = new Window { Title = _caption.Text, Content = this };
+            _systemRegistration = Microsoft.Windows.Shell.SystemCommands.RegisterWindow(_window);
             _window.AppWindow.Closing += OnNativeClosing;
             _window.AppWindow.Changed += OnNativeChanged;
             _window.Closed += OnNativeClosed;
@@ -164,10 +221,10 @@ public abstract class LayoutFloatingWindowControl : ContentControl, ILayoutContr
     }
     private void OnNativeActivated(object sender, WindowActivatedEventArgs e)
     {
-        if (e.WindowActivationState != Windows.UI.Core.CoreWindowActivationState.Deactivated)
+        if (e.WindowActivationState != DockWindowActivationState.Deactivated)
             MarkInteraction();
     }
-    private void OnNativeClosed(object sender, WindowEventArgs e) { _window = null; OnClosed(EventArgs.Empty); }
+    private void OnNativeClosed(object sender, WindowEventArgs e) { _systemRegistration?.Dispose(); _systemRegistration = null; _window = null; OnClosed(EventArgs.Empty); }
     private void OnNativeChanged(AppWindow sender, AppWindowChangedEventArgs e)
     {
         if (_syncBounds || _closingHost) return;
@@ -175,6 +232,7 @@ public abstract class LayoutFloatingWindowControl : ContentControl, ILayoutContr
         if (e.DidPositionChange || e.DidSizeChange) SetBounds(new(sender.Position.X / scale, sender.Position.Y / scale, sender.Size.Width / scale, sender.Size.Height / scale));
         var maximized = sender.Presenter is OverlappedPresenter p && p.State == OverlappedPresenterState.Maximized;
         IsMaximized = maximized;
+        Microsoft.Windows.Shell.SystemCommands.InvalidateCommands();
         foreach (var content in Contents) content.IsMaximized = maximized;
     }
     internal void HideHost()
@@ -194,6 +252,7 @@ public abstract class LayoutFloatingWindowControl : ContentControl, ILayoutContr
                 DesktopWindowCoordinates.HideNativeClientBeforeClose(window);
                 window.Content = null;
                 window.Close();
+                _systemRegistration?.Dispose(); _systemRegistration = null;
                 _window = null;
             }
             finally { _closingHost = false; }
@@ -204,11 +263,12 @@ public abstract class LayoutFloatingWindowControl : ContentControl, ILayoutContr
     internal void CloseHost()
     {
         if (_hostDisposed) return; _hostDisposed = true; _closingHost = true;
+        Microsoft.Windows.Shell.WindowChrome.SetWindowChrome(this, null);
         if (_window is { } window)
         {
             window.AppWindow.Closing -= OnNativeClosing; window.AppWindow.Changed -= OnNativeChanged; window.Closed -= OnNativeClosed; window.Activated -= OnNativeActivated;
             DesktopWindowCoordinates.HideNativeClientBeforeClose(window);
-            window.Content = null; window.Close(); _window = null;
+            window.Content = null; window.Close(); _systemRegistration?.Dispose(); _systemRegistration = null; _window = null;
         }
         _dropOverlay.Hide(); _body.Content = null; VisualParenting.Detach(this); OnClosed(EventArgs.Empty);
     }

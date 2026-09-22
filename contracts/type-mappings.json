@@ -135,6 +135,24 @@
       "kind": "framework"
     },
     {
+      "source": "System.Windows.IInputElement",
+      "target": "Microsoft.UI.Xaml.UIElement",
+      "kind": "adapter",
+      "note": "Chrome input exclusions use WinUI UIElement. WPF input interfaces and its tunnel routing are not reproduced."
+    },
+    {
+      "source": "System.Windows.Input.KeyEventArgs",
+      "target": "Microsoft.UI.Xaml.Input.KeyRoutedEventArgs",
+      "kind": "adapter",
+      "note": "WinUI key data for named compatibility hooks. Preview-hook timing differs from WPF tunneling."
+    },
+    {
+      "source": "System.Windows.Input.RoutedCommand",
+      "target": "Xceed.Wpf.AvalonDock.Compatibility.RoutedCommand",
+      "kind": "adapter",
+      "note": "Explicit Window/FrameworkElement target resolution, CanExecuteChanged and cancellable commands. Does not implement WPF CommandBinding or InputGesture routing."
+    },
+    {
       "source": "System.Windows.Media.Brush",
       "target": "Microsoft.UI.Xaml.Media.Brush",
       "kind": "framework"

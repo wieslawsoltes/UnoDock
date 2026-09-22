@@ -1,4 +1,36 @@
-# Current status — preview 3
+# Current status — preview 4
+
+This increment preserves the native-input, occlusion and teardown fixes on main through
+`34bfc08e72410a62307f5d98c1af4d1326185423`. It adds an independent shell implementation
+and fixes the native WinUI activation enum mismatch revealed by that revision's package
+build. Native WinUI uses WindowActivationState; Uno uses CoreWindowActivationState.
+An explicit conditional alias preserves both targets.
+
+Implemented: SystemCommands, per-UI-thread SystemParameters2, WindowChrome dependency
+properties/attached properties, native Windows caption regions and glass, managed
+border/corner dragging, close-cancellation routing, weak-key window lifetime tracking,
+interactive-caption exclusion, frame rollback, and a gallery shell lab. See
+[window-shell.md](window-shell.md) for actual supported behavior and boundaries.
+
+The combined local build passes **1,844 C# cases**: 97 core, 36 runtime, 44 original XML,
+40 drop/menu/automation, 33 lifecycle, 25 interaction, 1,517 converter/binding, 16
+coordinate and 36 shell/chrome cases. Of these, eight opt-in Linux/XTEST tests deliver
+real server-generated pointer/keyboard events. Core chrome tests additionally probe
+75,000 points in randomized caption/exclusion arrangements. The comparator has 23
+Python regression tests. Local compilation uses the real Uno assemblies and an SDK-built
+host with explicit equivalent docking-template initialization. It does not substitute
+for the official SDK's XAML generation or native WinUI compilation; inspect CI for the
+exact source revision.
+
+Resolved structural comparison: **929/1,031 matched**, up from 884. All original type
+names have counterparts, but 46 missing members, 23 signature differences, 33 type-shape
+differences and 19 attribute diagnostics remain. The baseline records these differences;
+`--strict` does not pass. Neither the presence of all type names nor the shell adapters
+establishes full feature parity or native Windows runtime acceptance.
+
+The following sections are historical checkpoints.
+
+# Preview 3 checkpoint
 
 The combined preview 3 source preserves the concurrent converter and native-screen API
 work from cb5b68f and adds captured dragging, occlusion-aware targets, client unmapping

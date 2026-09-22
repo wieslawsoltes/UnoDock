@@ -32,6 +32,7 @@ public partial class App : Application
                     exitCode |= await Testing.InteractionTests.Run(gallery.Dock, output);
                     exitCode |= await Testing.ConverterTests.Run(output);
                     exitCode |= await Testing.WindowCoordinateTests.Run(output, gallery.Dock);
+                    exitCode |= await Testing.ShellTests.Run(output, gallery.Dock);
                 }
                 catch (Exception e) { exitCode = 2; Console.Error.WriteLine(e); }
                 finally

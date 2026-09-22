@@ -4,6 +4,7 @@ using UnoDock.Testing;
 
 var tests = new TestRunner();
 InteractionGeometryTests.Register(tests);
+ChromeTests.Register(tests);
 var star = DockLengthUnit.Star; var pixel = DockLengthUnit.Pixel; var auto = DockLengthUnit.Auto;
 tests.Test("empty allocation", () => Check.Equal(0, DockSplitSolver.Allocate(100, 4, []).Length));
 tests.Test("weighted allocation", () => { var x = DockSplitSolver.Allocate(306, 6, [new(1, star), new(2, star)]); Check.Near(100, x[0]); Check.Near(200, x[1]); });

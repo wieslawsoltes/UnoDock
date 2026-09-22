@@ -6,7 +6,7 @@
 Independent AvalonDock-style docking for **Uno Platform 6.7**, retaining familiar
 `Xceed.Wpf.AvalonDock` namespaces while using Uno/WinUI controls.
 
-**Status: 0.1.0-preview.3. This is a functional implementation, not a certified 100%
+**Status: 0.1.0-preview.4. This is a functional implementation, not a certified 100%
 AvalonDock replacement.** API shape, behavior, platform support and performance are
 separate claims. The repository records what is implemented, the original public
 contracts used to check it, runnable tests and the remaining boundaries.
@@ -18,8 +18,8 @@ contracts used to check it, runnable tests and the remaining boundaries.
 | `UnoDock.Core` | Framework-independent constrained sizing/resizing, drag state, update batching and bounded XML snapshots |
 | `UnoDock` | Layout models, docking manager, visual controls, content adapters, serializer and independent themes |
 | `UnoDock.Gallery` | Interactive IDE-style sample with editors, tool panes, persistence, MVVM and capability controls |
-| `UnoDock.Core.Tests` | 61 portable tests, including 30,000 randomized sizing/coordinate/scroll cases |
-| `UnoDock.Runtime.Tests` | 36 runtime + 44 interoperability + 40 drop/menu/automation + 33 lifecycle + 25 interaction tests, 1,517 converter replay/binding tests and 16 native coordinate tests, linked into the gallery |
+| `UnoDock.Core.Tests` | 97 portable tests, including sizing/coordinate/scroll cases and 75,000 caption-region point probes |
+| `UnoDock.Runtime.Tests` | 36 runtime + 44 interoperability + 40 drop/menu/automation + 33 lifecycle + 25 interaction tests, 1,517 converter replay/binding tests and 16 native coordinate tests plus 36 shell/chrome cases, linked into the gallery |
 | `tools/ApiScan` | Deterministic public/protected declaration inventory |
 | `tools/ApiMetadata` | Resolved PE metadata inventory, without reading IL bodies or executing the assembly |
 | `tools/ReferenceProbe` | Independently authored black-box public-API probes against the pinned original |
@@ -27,6 +27,26 @@ contracts used to check it, runnable tests and the remaining boundaries.
 Stable NuGet pins resolved on 2026-09-21: **Uno.Sdk 6.7.30**, **Uno.WinUI 6.7.135**,
 **Uno.Templates 6.7.30**. `global.json` selects .NET 10 with latest-feature roll-forward.
 Version upgrades are explicit; product builds consume committed pins.
+
+## Preview 4 additions
+
+Independent `Microsoft.Windows.Shell.SystemCommands`, `SystemParameters2` and
+`WindowChrome` adapters now provide explicitly targeted window commands, observable OS
+metrics, attached caption configuration, interactive chrome exclusions, Windows native
+caption/resize/system-menu/DWM integration and portable managed-frame resizing. Commands
+respect cancellation and closed-host lifetimes. Border drags anchor the opposite edge,
+clamp minimum/maximum sizes and roll back on cancellation, capture loss or detach.
+The **Window shell** gallery laboratory exposes commands, sizing, chrome settings,
+close protection and applied platform capabilities.
+
+Local validation of the combined source passes **1,844 C# cases** (97 core + 1,747
+actual Uno-host cases) and **23 Python metadata-comparator tests**. This includes eight
+opt-in Linux/XTEST scenarios, with two new managed-border input cases. The resolved
+comparison now matches **929/1,031** reference entries, up from 884, with **102 unresolved
+signature/type entries and 19 attribute differences**. All 105 reference type names
+have counterparts, but 33 type shapes still differ. This is not full behavioral parity.
+Native Windows paths require Windows runtime acceptance; compiling them is not that
+acceptance. See [shell architecture, usage and limits](docs/window-shell.md).
 
 ## Preview 3 additions
 
@@ -37,11 +57,11 @@ now wins over top-edge splitting and retains correct model indices around hidden
 In-surface activation updates visual stacking without detaching captured controls.
 The gallery parity lab exposes native-host selection and a 40-tab scroll scenario.
 
-The current suites have **1,772 passing C# cases** (61 core, 36 runtime, 44 original XML,
+The preview-3 checkpoint had **1,772 passing C# cases** (61 core, 36 runtime, 44 original XML,
 40 drop/menu/automation, 33 lifecycle, 25 interaction, 1,517 converter and 16 coordinate),
 including six opt-in XTEST
 input scenarios in the Linux/Xvfb CI job. These are regression cases, not a full
-behavioral equivalence certificate. The resolved API gate matches **884/1,031** entries
+behavioral equivalence certificate. The preview-3 resolved API gate matched **884/1,031** entries
 with **147 unresolved signatures/type shapes and 18 attribute differences**. The gate
 is still conservative and full parity is not asserted. See
 [interaction implementation and validation](docs/interaction.md).
@@ -55,7 +75,7 @@ selection/invoke automation, shared-context menu controls, model diagnostics,
 XML/XAML metadata and a **Parity lab** in the gallery.
 
 The preview-2 checkpoint had **198 C# tests and 23 metadata-gate tests**. The current
-preview-3 counts and gate result are reported above. CI enforces no newly unresolved
+preview-4 counts and gate result are reported above. CI enforces no newly unresolved
 entries; this is not a passed full-parity gate. See [implementation and evidence](docs/parity-progress.md).
 
 ## Run the sample

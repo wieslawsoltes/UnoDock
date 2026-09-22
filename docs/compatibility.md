@@ -5,7 +5,17 @@ compatibility with explicit WPF-to-WinUI mappings, not WPF binary identity. Appl
 must validate their own layouts, commands, custom styles, input, accessibility and
 windowing paths before replacing an existing docking system.
 
-## Preview 3 evidence
+## Preview 4 evidence
+
+The resolved gate now matches **929/1,031** entries: 833 declared members, 24 inherited
+members and 72 type-shape matches. All 105 reference type names exist. The remaining
+102 diagnostics comprise 46 missing members, 23 signature differences and 33 type-shape
+differences. There are 19 meaningful attribute differences. These are retained in the
+no-regression baseline; none has been treated as full compatibility merely because a
+mapping exists. The additional shell APIs are functional adapters with explicit
+platform boundaries described in [window-shell.md](window-shell.md).
+
+## Preview 3 evidence (historical)
 
 The resolved metadata gate matches 884/1,031 reference entries, with 147 unresolved
 signature/type diagnostics and 18 attribute differences. A reference/mapping-bound
@@ -46,10 +56,13 @@ are implemented; exhaustive original behavioral equivalence is not asserted.
 | ContextMenu / MenuItem | MenuFlyout / MenuFlyoutItem |
 | RoutedEvent identity and bubbling | Explicit docking event IDs/handlers, not WPF routed-event infrastructure |
 | IValueConverter CultureInfo | CultureInfo overloads and WinUI language-string adapter |
-| IMultiValueConverter/MultiBinding | Callable multi-value converter; no native WPF MultiBinding engine |
-| Binding.DoNothing | UnsetValue fallback; not identical suppression semantics |
+| IMultiValueConverter/MultiBinding | Independently implemented converter-binding adapter; not the full native WPF binding engine |
+| Binding.DoNothing | Adapter sentinel with distinct suppression behavior; use the converter-binding adapter rather than assuming native WinUI bindings implement WPF semantics |
 | WPF resources/templates | Require Uno/WinUI XAML translation |
-| Microsoft.Windows.Shell, WindowChrome, Freezable and Win32 hooks | No compatibility implementation in this preview |
+| Microsoft.Windows.Shell | Targeted system commands, metrics and managed/native chrome adapters |
+| RoutedCommand | Explicit-target ICommand adapter; not full WPF command routing or gesture bindings |
+| Freezable / WindowChrome inheritance | DependencyObject with Clone; no general freezing, animation or cross-thread transfer contract |
+| Win32 FilterMessage / HwndHost hooks | Still outstanding; native chrome uses supported window APIs rather than a WPF message-hook emulation |
 
 ## Evidence and its limits
 
@@ -60,10 +73,10 @@ Both profiles are scanned twice and compared byte for byte. This addresses limit
 of the initial syntax-only reference inventory; it does not complete the counterpart
 mapping or missing implementation APIs.
 
-The suite contains 61 portable tests, 36 Uno runtime/control tests, 44
+The suite contains 97 portable tests, 36 Uno runtime/control tests, 44
 interoperability/default/policy tests, 40 drop/menu/automation tests and 33 lifecycle
-tests, 25 interaction tests, 1,517 converter/binding cases and 16 coordinate tests
-(six cases use opt-in server-generated pointer/keyboard input).
+tests, 25 interaction tests, 1,517 converter/binding cases and 16 coordinate tests, plus 36 shell/chrome cases
+(eight cases use opt-in server-generated pointer/keyboard input).
 The metadata gate has 23 additional Python regression tests. Interoperability cases consume 13 original public-serializer
 layouts and defaults for 13 original types. Original random container IDs are normalized
 without breaking PreviousContainerId links. No original algorithm is translated.
@@ -77,7 +90,7 @@ still outstanding.
 
 ## Remaining implementation and acceptance work
 
-* Close the resolved comparison's remaining diagnostics: Windows.Shell/native message
+* Close the resolved comparison's remaining diagnostics: native message/Freezable
   contracts, legacy protected input/focus/initialization slots, remaining template,
   converter, type-shape and attribute mappings. Drop/overlay contracts and selection/
   invoke peers are implemented in preview 2, but do not imply full WPF infrastructure
