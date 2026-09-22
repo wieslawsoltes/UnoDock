@@ -1,6 +1,5 @@
 // Public-API black-box observations only: no source-body or private reflection access.
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -31,17 +30,19 @@ internal static class ConverterProbe
             var converter = (IValueConverter)Activator.CreateInstance(type);
             foreach (var key in inputs)
                 foreach (var reverse in new[] { false, true })
-                {
-                    var record = new XElement("Case", new XAttribute("Converter", name), new XAttribute("Input", key), new XAttribute("Reverse", reverse));
-                    var value = Input(key, document, tool);
-                    try
+                    foreach (var target in new[] { "object", "visibility", "bool", "nullable-bool" })
                     {
-                        var result = reverse ? converter.ConvertBack(value, typeof(object), null, CultureInfo.InvariantCulture) : converter.Convert(value, typeof(object), null, CultureInfo.InvariantCulture);
-                        record.Add(Result(result, value, manager, document, tool));
+                        var record = new XElement("Case", new XAttribute("Converter", name), new XAttribute("Input", key), new XAttribute("Reverse", reverse), new XAttribute("Target", target));
+                        var value = Input(key, document, tool);
+                        var targetType = target == "visibility" ? typeof(Visibility) : target == "bool" ? typeof(bool) : target == "nullable-bool" ? typeof(bool?) : typeof(object);
+                        try
+                        {
+                            var result = reverse ? converter.ConvertBack(value, targetType, null, CultureInfo.InvariantCulture) : converter.Convert(value, targetType, null, CultureInfo.InvariantCulture);
+                            record.Add(Result(result, value, manager, document, tool));
+                        }
+                        catch (Exception error) { record.Add(new XElement("Exception", new XAttribute("Type", error.GetType().FullName))); }
+                        cases.Add(record);
                     }
-                    catch (Exception error) { record.Add(new XElement("Exception", new XAttribute("Type", error.GetType().FullName))); }
-                    cases.Add(record);
-                }
         }
         var multiType = typeof(DockingManager).Assembly.GetType("Xceed.Wpf.AvalonDock.Converters.AnchorableContextMenuHideVisibilityConverter", true);
         var multi = (IMultiValueConverter)Activator.CreateInstance(multiType);
