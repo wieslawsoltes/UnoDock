@@ -1,0 +1,36 @@
+name: Recover parity continuation
+on:
+  workflow_dispatch:
+  push:
+    paths: ['.github/workflows/recover-continuation.yml']
+permissions:
+  contents: read
+jobs:
+  recover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Recover complete independent source files without changing repository
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          python3 - <<'PY'
+          import base64, hashlib, json, lzma, os, pathlib, urllib.request
+          sha = '4b2cee7c621b2cc3615c0a92f545c8bbd66be7cd'
+          request = urllib.request.Request(f'https://api.github.com/repos/{os.environ["REPOSITORY"]}/git/blobs/{sha}', headers={'Authorization': 'Bearer ' + os.environ['GH_TOKEN']})
+          with urllib.request.urlopen(request, timeout=30) as response: blob = json.load(response)
+          compressed = base64.b64decode(blob['content'])
+          assert hashlib.sha1(b'blob ' + str(len(compressed)).encode() + b'\0' + compressed).hexdigest() == sha
+          decoder = lzma.LZMADecompressor()
+          data = decoder.decompress(compressed)
+          root = pathlib.Path('recovery'); root.mkdir()
+          (root/'payload').write_bytes(data)
+          (root/'report.json').write_text(json.dumps({'complete': decoder.eof, 'recoveredBytes':len(data), 'sha256':hashlib.sha256(data).hexdigest()},indent=2))
+          print('Recovered', len(data), 'bytes; complete:', decoder.eof)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: parity-continuation
+          path: recovery/
+          retention-days: 1
