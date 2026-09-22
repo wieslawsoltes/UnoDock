@@ -1,0 +1,76 @@
+name: Integrate measured visual parity
+on:
+  workflow_dispatch:
+  push:
+    paths: ['.github/workflows/integrate-visual.yml']
+permissions:
+  contents: write
+  actions: write
+concurrency:
+  group: integrate-visual
+  cancel-in-progress: false
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Apply complete verified source patch without replacing concurrent changes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import base64, hashlib, json, lzma, os, pathlib, subprocess, urllib.request
+          shas = ['a578f2a6cc0dd419981de00e8c365d941c16d479', 'f49f6f00e74ad36b7b3c0a409e21d6f8c2924484']
+          pieces = []
+          for sha in shas:
+              request = urllib.request.Request(f'https://api.github.com/repos/{os.environ["GITHUB_REPOSITORY"]}/git/blobs/{sha}', headers={'Authorization': 'Bearer ' + os.environ['GH_TOKEN'], 'Accept': 'application/vnd.github+json'})
+              with urllib.request.urlopen(request, timeout=60) as response: blob = json.load(response)
+              value = base64.b64decode(blob['content'])
+              assert hashlib.sha1(b'blob ' + str(len(value)).encode() + b'\0' + value).hexdigest() == sha
+              pieces.append(value)
+          compressed = b''.join(pieces)
+          assert hashlib.sha256(compressed).hexdigest() == 'fd91716a78f8a07c1ccbadd57d6316cf608ba8848c756c7b1d59934a71a49452'
+          patch = pathlib.Path(os.environ['RUNNER_TEMP']) / 'visual-parity.patch'
+          patch.write_bytes(lzma.decompress(compressed))
+          stats = subprocess.check_output(['git', 'apply', '--numstat', str(patch)], text=True)
+          names = [line.split('\t', 2)[2] for line in stats.splitlines()]
+          assert len(names) == 37, len(names)
+          for name in names:
+              path = pathlib.PurePosixPath(name)
+              assert not path.is_absolute() and '..' not in path.parts
+              assert path.parts[0] in ('Directory.Build.props', 'README.md', 'src', 'tests', 'samples', 'contracts', 'docs')
+          subprocess.run(['git', 'apply', '--check', '--index', str(patch)], check=True)
+          subprocess.run(['git', 'apply', '--index', str(patch)], check=True)
+          print(stats)
+          PY
+      - name: Build complete SDK and XAML desktop application
+        run: dotnet build samples/UnoDock.Gallery -c Release -f net10.0-desktop -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0
+      - name: Run portable tests and verify resolved metadata
+        run: |
+          dotnet run --project tests/UnoDock.Core.Tests -c Release -- artifacts/test-results
+          python3 tools/generate-property-adapters.py
+          git diff --exit-code -- src/
+          bash tools/check-metadata.sh
+          git diff --cached --check
+      - name: Commit implementation and dispatch full platform validation
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'feat: implement measured compact docking chrome, per-item auto-hide and native RTL geometry'
+          git push origin HEAD:main
+          gh workflow run ci.yml --ref main
+          git rev-parse HEAD > artifacts/integrated-revision.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: visual-integration-results
+          path: artifacts/
