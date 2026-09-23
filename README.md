@@ -6,13 +6,30 @@
 Independent AvalonDock-style docking for **Uno Platform 6.7**, retaining familiar
 `Xceed.Wpf.AvalonDock` namespaces while using Uno/WinUI controls.
 
-**Status: 0.1.0-preview.11. Full AvalonDock compatibility is not yet verified.** API shape,
+**Status: 0.1.0-preview.12. Full AvalonDock compatibility is not yet verified.** API shape,
 behavior, appearance, platform coverage and performance are separate acceptance areas.
 The target is the pinned public repository and its stock theme, not separately licensed
 commercial themes. The independent implementation is MIT-licensed and is not affiliated
 with or endorsed by Xceed or Uno Platform.
 
-## Preview 11
+## Preview 12
+
+Default document/tool menus now match ten original public observations of command order,
+labels, enabled/collapsed states and 22-DIP rows. They retain real native menu items,
+continuous icon gutters, explicit RTL and coherent live palettes. Menus/rows survive
+refreshes; external command subscriptions exist only during an opening, worker requery
+is coalesced, and command/root identity is revalidated after application callbacks.
+Bulk-close operations stay within their original workspace and guard reentrancy.
+Application-owned custom menus remain untouched and receive opening-scoped contexts.
+
+**Menu quality** demonstrates capability toggles, close cancellation, command replacement,
+RTL, themes and larger fonts. Its 53 Linux / 50 Windows cases include actual rendering,
+ten public reference replays, three native XTEST interactions and six screenshots.
+See [menu implementation and limits](docs/menu-quality.md) and
+[preview-12 validation scope](docs/validation-preview12.md). The earlier interrupted
+auto-hide continuation is already committed and included, not pending recovery.
+
+## Preview 11 (included)
 
 Auto-hide windows now match the observed default/minimum sizing, reserve a separate
 resize gutter and reveal on hover without activating the tool. A bounded ghost previews
@@ -99,7 +116,7 @@ dotnet run --project samples/UnoDock.Gallery -c Release -f net10.0-desktop \
 
 The desktop head uses Uno's Skia hosts on Windows, macOS and Linux. Toolbar laboratories
 include **Window shell**, **Window lifecycle**, **Input extensions**, **Visual parity**
-**Navigator quality**, **Docking guides**, **Splitter quality** and **Auto-hide quality**. Existing editors preserve content and focus across docking.
+**Navigator quality**, **Docking guides**, **Splitter quality**, **Auto-hide quality** and **Menu quality**. Existing editors preserve content and focus across docking.
 For the browser head:
 
 ```bash
@@ -224,8 +241,8 @@ UNODOCK_SELFTEST=1 dotnet run --project samples/UnoDock.Gallery -c Release \
   -p:UnoDockLibraryFrameworks=net10.0
 ```
 
-The configured test matrix has **2,196 core/Linux C# cases**, a **300-case Windows
-subset**, and **23 Python comparator cases**. Linux enables 39 native XTEST scenarios
+The configured test matrix has **2,249 core/Linux C# cases**, a **350-case Windows
+subset**, and **23 Python comparator cases**. Linux enables 42 native XTEST scenarios
 in CI. Platform totals overlap. JSON/JUnit results and workflow conclusions, not the
 matrix size alone, establish what passed for a particular revision.
 

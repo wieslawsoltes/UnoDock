@@ -39,6 +39,7 @@ public class LayoutAnchorControl : DockInputControl, ILayoutControl
         _button.BorderBrush = palette.Border; _button.Height = palette.RailThickness - 4;
         _rotator.Vertical = Side is AnchorSide.Left or AnchorSide.Right;
         ToolTipService.SetToolTip(_button, _model.ToolTip ?? _model.Title);
+        MenuContext.SetTarget(this, _model);
         ContextFlyout = DockVisuals.Menu(manager, _model);
         DockVisuals.SetName(_button, "Auto-hidden tool: " + _model.Title);
         if (manager.AnchorTemplate != null) Template = manager.AnchorTemplate;

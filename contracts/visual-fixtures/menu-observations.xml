@@ -1,0 +1,98 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<MenuObservations method="public-model-context-menu-opening-not-native-pointer-acceptance">
+  <Scenario name="document" width="234.75333333333333" height="160" fontSize="12" background="#FFF5F5F5" foreground="#FF000000" padding="2,2,2,2">
+    <Item kind="command" visibility="Visible" enabled="true" height="22" header="Close" command="CloseCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Visible" enabled="true" height="22" header="Close All But This" command="CloseAllButThisCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Visible" enabled="true" height="22" header="Close All" command="CloseAllCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Visible" enabled="true" height="22" header="Float" command="FloatCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Visible" enabled="false" height="22" header="Dock as Tabbed Document" command="DockAsDocumentCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Visible" enabled="true" height="22" header="New Horizontal Tab Group" command="NewHorizontalTabGroupCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Visible" enabled="true" height="22" header="New Vertical Tab Group" command="NewVerticalTabGroupCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Collapsed" enabled="false" height="0" header="Move To Next Tab Group" command="MoveToNextTabGroupCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Collapsed" enabled="false" height="0" header="Move To Previous Tab Group" command="MoveToPreviousTabGroupCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+  </Scenario>
+  <Scenario name="document-single" width="234.75333333333333" height="116" fontSize="12" background="#FFF5F5F5" foreground="#FF000000" padding="2,2,2,2">
+    <Item kind="command" visibility="Visible" enabled="true" height="22" header="Close" command="CloseCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Visible" enabled="false" height="22" header="Close All But This" command="CloseAllButThisCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Visible" enabled="true" height="22" header="Close All" command="CloseAllCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Visible" enabled="true" height="22" header="Float" command="FloatCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Visible" enabled="false" height="22" header="Dock as Tabbed Document" command="DockAsDocumentCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Collapsed" enabled="false" height="0" header="New Horizontal Tab Group" command="NewHorizontalTabGroupCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Collapsed" enabled="false" height="0" header="New Vertical Tab Group" command="NewVerticalTabGroupCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Collapsed" enabled="false" height="0" header="Move To Next Tab Group" command="MoveToNextTabGroupCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Collapsed" enabled="false" height="0" header="Move To Previous Tab Group" command="MoveToPreviousTabGroupCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+  </Scenario>
+  <Scenario name="document-no-close" width="234.75333333333333" height="138" fontSize="12" background="#FFF5F5F5" foreground="#FF000000" padding="2,2,2,2">
+    <Item kind="command" visibility="Collapsed" enabled="false" height="0" header="Close" command="CloseCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Visible" enabled="true" height="22" header="Close All But This" command="CloseAllButThisCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Visible" enabled="true" height="22" header="Close All" command="CloseAllCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Visible" enabled="true" height="22" header="Float" command="FloatCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Visible" enabled="false" height="22" header="Dock as Tabbed Document" command="DockAsDocumentCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Visible" enabled="true" height="22" header="New Horizontal Tab Group" command="NewHorizontalTabGroupCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Visible" enabled="true" height="22" header="New Vertical Tab Group" command="NewVerticalTabGroupCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Collapsed" enabled="false" height="0" header="Move To Next Tab Group" command="MoveToNextTabGroupCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Collapsed" enabled="false" height="0" header="Move To Previous Tab Group" command="MoveToPreviousTabGroupCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+  </Scenario>
+  <Scenario name="document-no-float" width="234.75333333333333" height="160" fontSize="12" background="#FFF5F5F5" foreground="#FF000000" padding="2,2,2,2">
+    <Item kind="command" visibility="Visible" enabled="true" height="22" header="Close" command="CloseCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Visible" enabled="true" height="22" header="Close All But This" command="CloseAllButThisCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Visible" enabled="true" height="22" header="Close All" command="CloseAllCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Visible" enabled="false" height="22" header="Float" command="FloatCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Visible" enabled="false" height="22" header="Dock as Tabbed Document" command="DockAsDocumentCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Visible" enabled="true" height="22" header="New Horizontal Tab Group" command="NewHorizontalTabGroupCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Visible" enabled="true" height="22" header="New Vertical Tab Group" command="NewVerticalTabGroupCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Collapsed" enabled="false" height="0" header="Move To Next Tab Group" command="MoveToNextTabGroupCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Collapsed" enabled="false" height="0" header="Move To Previous Tab Group" command="MoveToPreviousTabGroupCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+  </Scenario>
+  <Scenario name="document-multiple-groups" width="234.75333333333333" height="160" fontSize="12" background="#FFF5F5F5" foreground="#FF000000" padding="2,2,2,2">
+    <Item kind="command" visibility="Visible" enabled="true" height="22" header="Close" command="CloseCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Visible" enabled="true" height="22" header="Close All But This" command="CloseAllButThisCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Visible" enabled="true" height="22" header="Close All" command="CloseAllCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Visible" enabled="true" height="22" header="Float" command="FloatCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Visible" enabled="false" height="22" header="Dock as Tabbed Document" command="DockAsDocumentCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Visible" enabled="true" height="22" header="New Horizontal Tab Group" command="NewHorizontalTabGroupCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Visible" enabled="true" height="22" header="New Vertical Tab Group" command="NewVerticalTabGroupCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Collapsed" enabled="false" height="0" header="Move To Next Tab Group" command="MoveToNextTabGroupCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Collapsed" enabled="false" height="0" header="Move To Previous Tab Group" command="MoveToPreviousTabGroupCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+  </Scenario>
+  <Scenario name="tool" width="234.75333333333333" height="116" fontSize="12" background="#FFF5F5F5" foreground="#FF000000" padding="2,2,2,2">
+    <Item kind="command" visibility="Visible" enabled="true" height="22" header="Float" command="FloatCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Visible" enabled="false" height="22" header="Dock" command="DockCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Visible" enabled="true" height="22" header="Dock as Tabbed Document" command="DockAsDocumentCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Visible" enabled="true" height="22" header="Auto Hide" command="AutoHideCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Collapsed" enabled="false" height="0" header="Close" command="CloseCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Visible" enabled="true" height="22" header="Hide" command="HideCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+  </Scenario>
+  <Scenario name="tool-no-hide" width="234.75333333333333" height="116" fontSize="12" background="#FFF5F5F5" foreground="#FF000000" padding="2,2,2,2">
+    <Item kind="command" visibility="Visible" enabled="true" height="22" header="Float" command="FloatCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Visible" enabled="false" height="22" header="Dock" command="DockCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Visible" enabled="true" height="22" header="Dock as Tabbed Document" command="DockAsDocumentCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Visible" enabled="true" height="22" header="Auto Hide" command="AutoHideCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Collapsed" enabled="false" height="0" header="Close" command="CloseCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Visible" enabled="false" height="22" header="Hide" command="HideCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+  </Scenario>
+  <Scenario name="tool-no-autohide" width="234.75333333333333" height="116" fontSize="12" background="#FFF5F5F5" foreground="#FF000000" padding="2,2,2,2">
+    <Item kind="command" visibility="Visible" enabled="true" height="22" header="Float" command="FloatCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Visible" enabled="false" height="22" header="Dock" command="DockCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Visible" enabled="true" height="22" header="Dock as Tabbed Document" command="DockAsDocumentCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Visible" enabled="false" height="22" header="Auto Hide" command="AutoHideCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Collapsed" enabled="false" height="0" header="Close" command="CloseCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Visible" enabled="true" height="22" header="Hide" command="HideCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+  </Scenario>
+  <Scenario name="tool-no-document" width="234.75333333333333" height="116" fontSize="12" background="#FFF5F5F5" foreground="#FF000000" padding="2,2,2,2">
+    <Item kind="command" visibility="Visible" enabled="true" height="22" header="Float" command="FloatCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Visible" enabled="false" height="22" header="Dock" command="DockCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Visible" enabled="false" height="22" header="Dock as Tabbed Document" command="DockAsDocumentCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Visible" enabled="true" height="22" header="Auto Hide" command="AutoHideCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Collapsed" enabled="false" height="0" header="Close" command="CloseCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Visible" enabled="true" height="22" header="Hide" command="HideCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+  </Scenario>
+  <Scenario name="tool-autohidden" width="234.75333333333333" height="116" fontSize="12" background="#FFF5F5F5" foreground="#FF000000" padding="2,2,2,2">
+    <Item kind="command" visibility="Visible" enabled="true" height="22" header="Float" command="FloatCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Visible" enabled="false" height="22" header="Dock" command="DockCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Visible" enabled="true" height="22" header="Dock as Tabbed Document" command="DockAsDocumentCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Visible" enabled="true" height="22" header="Restore" command="AutoHideCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Collapsed" enabled="false" height="0" header="Close" command="CloseCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+    <Item kind="command" visibility="Visible" enabled="true" height="22" header="Hide" command="HideCommand" checked="false" checkable="false" gesture="" padding="0,0,0,0" />
+  </Scenario>
+</MenuObservations>

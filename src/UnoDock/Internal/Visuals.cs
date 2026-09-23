@@ -26,20 +26,11 @@ internal static class DockVisuals
         var custom = model is LayoutAnchorable ? manager.AnchorableContextMenu : manager.DocumentContextMenu;
         if (custom != null)
         {
+            item.SuspendDefaultContextMenu();
             MenuContext.PrepareShared(custom);
             return custom;
         }
-        var menu = new MenuFlyout();
-        Add("Activate", item.ActivateCommand); Add("Float", item.FloatCommand); Add("Dock as document", item.DockAsDocumentCommand);
-        if (item is LayoutAnchorableItem tool)
-        { Add("Dock", tool.DockCommand); Add("Auto-hide / Pin", tool.AutoHideCommand); Add("Hide", tool.HideCommand); }
-        menu.Items.Add(new MenuFlyoutSeparator());
-        Add("Close", item.CloseCommand); Add("Close other documents", item.CloseAllButThisCommand); Add("Close all documents", item.CloseAllCommand);
-        menu.Items.Add(new MenuFlyoutSeparator());
-        Add("New horizontal tab group", item.NewHorizontalTabGroupCommand); Add("New vertical tab group", item.NewVerticalTabGroupCommand);
-        Add("Move to previous group", item.MoveToPreviousTabGroupCommand); Add("Move to next group", item.MoveToNextTabGroupCommand);
-        return menu;
-        void Add(string text, ICommand? command) { if (command != null) menu.Items.Add(new MenuFlyoutItem { Text = text, Command = command }); }
+        return item.GetDefaultContextMenu(manager);
     }
     internal static DockRect Bounds(FrameworkElement element, UIElement relative)
     {

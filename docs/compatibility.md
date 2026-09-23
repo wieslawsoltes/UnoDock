@@ -1,6 +1,6 @@
 # Compatibility contract and remaining boundaries
 
-**Preview 11 is not a certified 100% API, behavioral or visual replacement.** The
+**Preview 12 is not a certified 100% API, behavioral or visual replacement.** The
 migration target is source compatibility with explicit WPF-to-Uno/WinUI mappings,
 not WPF binary identity. Current sources and all earlier preview increments are
 committed; historical candidate/unpushed notes do not describe this checkpoint.
@@ -26,6 +26,12 @@ validate reentrant callbacks and cancel safely on capture/lifecycle invalidation
 nonactivating hover, reserve their own gutter, defer bounded resizing and respect
 focus/menu retention. Shared menus, reentrant host changes and template redirection
 are checked on the actual control path; native HwndHost semantics are not emulated.
+
+[Context menus](menu-quality.md) retain native rows, match ten observed stock scenarios,
+update live state/palettes, guard application command replacement and restrict bulk close
+to its original workspace. Custom menus preserve application styles and opening-scoped
+contexts. Per-item default menu identity, routed commands and arbitrary WPF menu templates
+are not equivalent to the original resource-backed menu properties.
 
 ## Resolved API accounting
 
@@ -64,14 +70,14 @@ and [window shell](window-shell.md) for exact extension and lifetime semantics.
 
 ## Evidence and limitations
 
-The matrix has 120 portable core cases, 2,076 Uno/Linux runtime cases, a 300-case
-Windows subset and 23 Python comparator cases. Linux includes 39 opt-in XTEST input
+The matrix has 120 portable core cases, 2,129 Uno/Linux runtime cases, a 350-case
+Windows subset and 23 Python comparator cases. Linux includes 42 opt-in XTEST input
 sequences. Actual JSON/JUnit and workflow conclusions establish what executed and
 passed on the exact revision; counts are not an equivalence score.
 
 Original public probes supply 13 XML layouts, defaults, converter observations, pane
 and guide geometry, navigator client rendering, 32 splitter protocol scenarios and
-eight auto-hide window extent/activation observations.
+eight auto-hide window extent/activation observations, and ten menu state/geometry scenarios.
 The observation method is labeled: synthetic routed events or Win32 moving messages
 are not represented as original end-to-end pointer input. Input tests on the port
 are reported separately. [Provenance](clean-room.md) records the declaration/metadata/
@@ -93,4 +99,4 @@ IME, localization, signing/notarization and workload-level performance equivalen
 Preview NuGet packages may be built. Publishing requires configured credentials or
 trusted publishing and its own successful workflow. Stable 1.0+ requires an explicit
 source-tree-bound full-compatibility attestation; none is supplied. See
-[publishing](publishing.md) and [preview-10 validation](validation-preview10.md).
+[publishing](publishing.md) and [preview-12 validation](validation-preview12.md).

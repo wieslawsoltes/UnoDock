@@ -6,6 +6,8 @@ namespace Xceed.Wpf.AvalonDock.Controls;
 
 public abstract partial class LayoutItem : FrameworkElement, IDisposable
 {
+    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<LayoutRoot, BulkCloseState> BulkClosures = new();
+    private sealed class BulkCloseState { internal bool Active; }
     private readonly Dictionary<DependencyProperty, Binding> _bindings = [];
     private readonly Dictionary<DependencyProperty, ICommand> _commands = [];
     private DockingManager? _manager;
@@ -15,6 +17,15 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
     public LayoutContent LayoutElement { get; private set; } = null!;
     public object? Model { get; private set; }
     private ContentPresenter? _view;
+    private DockContextMenu? _defaultMenu;
+    internal MenuFlyout GetDefaultContextMenu(DockingManager manager)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        _defaultMenu ??= new DockContextMenu(this, manager);
+        _defaultMenu.Refresh();
+        return _defaultMenu;
+    }
+    internal void SuspendDefaultContextMenu() => _defaultMenu?.Suspend();
     private WeakReference<DependencyObject>? _lastFocused;
     private void RememberFocus(object sender, RoutedEventArgs e)
     {
@@ -99,8 +110,8 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
         CommandDefault(CloseCommandProperty, Close, () => LayoutElement.CanClose && LayoutElement.Parent != null);
         CommandDefault(FloatCommandProperty, Float, () => LayoutElement.CanFloat && !LayoutElement.IsFloating && DockOperations.CanMove(LayoutElement));
         CommandDefault(DockAsDocumentCommandProperty, () => LayoutElement.DockAsDocument(), CanExecuteDockAsDocumentCommand);
-        CommandDefault(CloseAllCommandProperty, () => CloseDocuments(false), () => Documents().Any(d => d.CanClose));
-        CommandDefault(CloseAllButThisCommandProperty, () => CloseDocuments(true), () => Documents().Any(d => !ReferenceEquals(d, LayoutElement) && d.CanClose));
+        CommandDefault(CloseAllCommandProperty, () => CloseDocuments(false), () => CanCloseDocuments(false));
+        CommandDefault(CloseAllButThisCommandProperty, () => CloseDocuments(true), () => CanCloseDocuments(true));
         CommandDefault(NewHorizontalTabGroupCommandProperty, () => Split(DockPosition.Bottom), () => CanSplit(DockPosition.Bottom));
         CommandDefault(NewVerticalTabGroupCommandProperty, () => Split(DockPosition.Right), () => CanSplit(DockPosition.Right));
         CommandDefault(MoveToNextTabGroupCommandProperty, () => Move(1), () => AdjacentPane(1) != null && DockOperations.CanMove(LayoutElement));
@@ -130,12 +141,14 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
             case "CanHide" when this is LayoutAnchorableItem tool && LayoutElement is LayoutAnchorable a: a.CanHide = tool.CanHide; break;
             case "Description" when this is LayoutDocumentItem item && LayoutElement is LayoutDocument d: d.Description = item.Description; break;
         }
+        _defaultMenu?.Refresh();
         _manager?.InvalidateView();
     }
     private void ModelChanged(object? sender, PropertyChangedEventArgs args)
     {
         if (args.PropertyName == nameof(LayoutContent.Content)) { Model = LayoutElement.Content; DataContext = Model; UpdateView(); }
-        foreach (var command in _commands.Values.OfType<DelegateCommand>()) command.RaiseCanExecuteChanged();
+        foreach (var command in _commands.Values.OfType<DelegateCommand>().ToArray()) command.RaiseCanExecuteChanged();
+        _defaultMenu?.Refresh();
         _manager?.InvalidateView();
     }
     internal void UpdateView()
@@ -151,12 +164,35 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
         View.DataContext = Model;
     }
     private IEnumerable<LayoutDocument> Documents() => (LayoutElement.Root as LayoutRoot)?.Descendents().OfType<LayoutDocument>() ?? [];
-    private void CloseDocuments(bool exceptThis) { foreach (var document in Documents().Where(d => !exceptThis || !ReferenceEquals(d, LayoutElement)).ToArray()) document.Close(); }
+    private bool CanCloseDocuments(bool exceptThis) => LayoutElement.Root is LayoutRoot root &&
+        !BulkClosures.GetOrCreateValue(root).Active && Documents().Any(d => d.CanClose && (!exceptThis || !ReferenceEquals(d, LayoutElement)));
+    private void CloseDocuments(bool exceptThis)
+    {
+        if (_disposed || LayoutElement.Root is not LayoutRoot root || _manager is not { } manager ||
+            !ReferenceEquals(manager.Layout, root)) return;
+        var state = BulkClosures.GetOrCreateValue(root);
+        if (state.Active) return;
+        // Scope the operation to its original workspace, not the lifetime of the
+        // initiating adapter (which may itself close first). Never close an item
+        // moved by a callback into another root or enumerate replacement content.
+        var snapshot = root.Descendents().OfType<LayoutDocument>()
+            .Where(d => !exceptThis || !ReferenceEquals(d, LayoutElement)).ToArray();
+        state.Active = true;
+        try
+        {
+            foreach (var document in snapshot)
+            {
+                if (!ReferenceEquals(manager.Layout, root) || !ReferenceEquals(root.Manager, manager)) break;
+                if (document.CanClose && ReferenceEquals(document.Root, root) && document.Parent != null) document.Close();
+            }
+        }
+        finally { state.Active = false; }
+    }
     private bool CanSplit(DockPosition position) => LayoutElement.Parent is LayoutDocumentPane { ChildrenCount: > 1 } pane && DockOperations.CanDock(LayoutElement, pane, position);
     private void Split(DockPosition position) { if (LayoutElement.Parent is ILayoutGroup pane && CanSplit(position)) DockOperations.Dock(LayoutElement, pane, position); }
     private LayoutDocumentPane? AdjacentPane(int direction)
     {
-        var panes = (LayoutElement.Root as LayoutRoot)?.Descendents().OfType<LayoutDocumentPane>().ToArray() ?? [];
+        var panes = LayoutElement.Parent?.Parent is LayoutDocumentPaneGroup group ? group.Children.OfType<LayoutDocumentPane>().ToArray() : [];
         var index = Array.FindIndex(panes, p => ReferenceEquals(p, LayoutElement.Parent));
         index += direction; return index >= 0 && index < panes.Length ? panes[index] : null;
     }
@@ -168,6 +204,7 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
     #endif
     {
         if (_disposed) return; _disposed = true;
+        _defaultMenu?.Dispose(); _defaultMenu = null;
         if (LayoutElement != null) LayoutElement.PropertyChanged -= ModelChanged;
         UnregisterPropertyChangedCallback(VisibilityProperty, _visibilityToken);
         ClearDefaultBindings(); ClearDefaultCommands();
@@ -196,7 +233,7 @@ public partial class LayoutAnchorableItem : LayoutItem
         base.InitDefaultCommands();
         CommandDefault(HideCommandProperty, () => ((LayoutAnchorable)LayoutElement).Hide(), () => LayoutElement is LayoutAnchorable { CanHide: true, IsHidden: false });
         CommandDefault(AutoHideCommandProperty, () => ((LayoutAnchorable)LayoutElement).ToggleAutoHide(), () => LayoutElement is LayoutAnchorable { CanAutoHide: true } && LayoutElement.Parent is LayoutAnchorablePane or LayoutAnchorGroup);
-        CommandDefault(DockCommandProperty, () => LayoutElement.Dock(), () => LayoutElement.IsFloating || LayoutElement.Parent is LayoutDocumentPane or LayoutAnchorGroup);
+        CommandDefault(DockCommandProperty, () => LayoutElement.Dock(), () => LayoutElement.IsFloating || LayoutElement.Parent is LayoutDocumentPane);
     }
     protected override void ClearDefaultCommands() => base.ClearDefaultCommands();
     protected override void OnVisibilityChanged() { if (LayoutElement is LayoutAnchorable a) a.IsVisible = Visibility == Visibility.Visible; }
