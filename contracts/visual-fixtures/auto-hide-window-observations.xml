@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<AutoHideWindows input="public-model-activation-and-mouse-enter-event-not-native-pointer-acceptance">
+  <Window side="Left" explicitSize="false" autoHideWidth="0" autoHideHeight="0" minWidth="100" minHeight="100" active="false" visible="true" width="106" height="640" />
+  <Window side="Left" explicitSize="true" autoHideWidth="320" autoHideHeight="220" minWidth="100" minHeight="100" active="false" visible="true" width="326" height="640" />
+  <Window side="Right" explicitSize="false" autoHideWidth="0" autoHideHeight="0" minWidth="100" minHeight="100" active="false" visible="true" width="106" height="640" />
+  <Window side="Right" explicitSize="true" autoHideWidth="320" autoHideHeight="220" minWidth="100" minHeight="100" active="false" visible="true" width="326" height="640" />
+  <Window side="Top" explicitSize="false" autoHideWidth="0" autoHideHeight="0" minWidth="100" minHeight="100" active="false" visible="true" width="1000" height="106" />
+  <Window side="Top" explicitSize="true" autoHideWidth="320" autoHideHeight="220" minWidth="100" minHeight="100" active="false" visible="true" width="1000" height="226" />
+  <Window side="Bottom" explicitSize="false" autoHideWidth="0" autoHideHeight="0" minWidth="100" minHeight="100" active="false" visible="true" width="1000" height="106" />
+  <Window side="Bottom" explicitSize="true" autoHideWidth="320" autoHideHeight="220" minWidth="100" minHeight="100" active="false" visible="true" width="1000" height="226" />
+</AutoHideWindows>

@@ -1,6 +1,6 @@
 # Compatibility contract and remaining boundaries
 
-**Preview 10 is not a certified 100% API, behavioral or visual replacement.** The
+**Preview 11 is not a certified 100% API, behavioral or visual replacement.** The
 migration target is source compatibility with explicit WPF-to-Uno/WinUI mappings,
 not WPF binary identity. Current sources and all earlier preview increments are
 committed; historical candidate/unpushed notes do not describe this checkpoint.
@@ -22,6 +22,11 @@ execution, including projection into native floating clients. [Splitters](splitt
 now defer pane resizing until commit, render a moving ghost, preserve sizing units,
 validate reentrant callbacks and cancel safely on capture/lifecycle invalidation.
 
+[Auto-hide windows](auto-hide-quality.md) now match observed minimum sizing and
+nonactivating hover, reserve their own gutter, defer bounded resizing and respect
+focus/menu retention. Shared menus, reentrant host changes and template redirection
+are checked on the actual control path; native HwndHost semantics are not emulated.
+
 ## Resolved API accounting
 
 The pinned reference is `2c71faba5eecc1b6ae6cd3d269408e0df37715d8`. Release metadata
@@ -29,9 +34,9 @@ contains 105 public/protected type names and 1,031 declared entries; Debug and s
 profiles are recorded independently. All reference type names have counterparts,
 which does not imply equivalent inheritance or behavior.
 
-The preview-9 baseline matches **977/1,031**: 881 declared members, 24 inherited
+The current resolved comparison matches **978/1,031**: 883 declared members, 23 inherited
 counterparts and 72 type shapes. Remaining diagnostics are 9 missing members,
-12 signature differences and 33 type-shape differences; 18 attribute differences are
+11 signature differences and 33 type-shape differences; 18 attribute differences are
 reported separately. The current CI comparison is the authoritative count for a
 revision. No scanner/mapping/baseline rule is relaxed for visual or splitter increments.
 The regression gate rejects newly unresolved contracts; the full strict gate remains
@@ -59,13 +64,14 @@ and [window shell](window-shell.md) for exact extension and lifetime semantics.
 
 ## Evidence and limitations
 
-The matrix has 120 portable core cases, 2,012 Uno/Linux runtime cases, a 243-case
-Windows subset and 23 Python comparator cases. Linux includes 32 opt-in XTEST input
+The matrix has 120 portable core cases, 2,073 Uno/Linux runtime cases, a 297-case
+Windows subset and 23 Python comparator cases. Linux includes 39 opt-in XTEST input
 sequences. Actual JSON/JUnit and workflow conclusions establish what executed and
 passed on the exact revision; counts are not an equivalence score.
 
 Original public probes supply 13 XML layouts, defaults, converter observations, pane
-and guide geometry, navigator client rendering and 32 splitter protocol scenarios.
+and guide geometry, navigator client rendering, 32 splitter protocol scenarios and
+eight auto-hide window extent/activation observations.
 The observation method is labeled: synthetic routed events or Win32 moving messages
 are not represented as original end-to-end pointer input. Input tests on the port
 are reported separately. [Provenance](clean-room.md) records the declaration/metadata/

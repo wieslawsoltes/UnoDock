@@ -6,13 +6,30 @@
 Independent AvalonDock-style docking for **Uno Platform 6.7**, retaining familiar
 `Xceed.Wpf.AvalonDock` namespaces while using Uno/WinUI controls.
 
-**Status: 0.1.0-preview.10. Full AvalonDock compatibility is not yet verified.** API shape,
+**Status: 0.1.0-preview.11. Full AvalonDock compatibility is not yet verified.** API shape,
 behavior, appearance, platform coverage and performance are separate acceptance areas.
 The target is the pinned public repository and its stock theme, not separately licensed
 commercial themes. The independent implementation is MIT-licensed and is not affiliated
 with or endorsed by Xceed or Uno Platform.
 
-## Preview 10
+## Preview 11
+
+Auto-hide windows now match the observed default/minimum sizing, reserve a separate
+resize gutter and reveal on hover without activating the tool. A bounded ghost previews
+resize movement without changing editor geometry or persisted dimensions. Native
+cancellation, competing model edits, stale roots/viewports and callback exceptions are
+handled through the real shared splitter path. Focus and open menus retain the flyout;
+shared menu contexts, protected focus overrides and reentrant host/template callbacks
+are validated. The **Auto-hide quality** laboratory exercises all four sides, minimums,
+RTL, themes, cancellation and persistence.
+
+The new suite adds 61 Linux / 54 Windows cases, including eight original public
+observation replays, seven native XTEST input scenarios and six screenshots. The
+resolved API result improves to **978/1,031**, without relaxing mappings or the baseline.
+See [auto-hide implementation and limits](docs/auto-hide-quality.md) and
+[preview-11 validation scope](docs/validation-preview11.md).
+
+## Preview 10 (included)
 
 Splitters now show a moving translucent preview without resizing the editors or writing
 model lengths until commit. Star weights and mixed pixel/star units match the observed
@@ -80,7 +97,7 @@ dotnet run --project samples/UnoDock.Gallery -c Release -f net10.0-desktop \
 
 The desktop head uses Uno's Skia hosts on Windows, macOS and Linux. Toolbar laboratories
 include **Window shell**, **Window lifecycle**, **Input extensions**, **Visual parity**
-**Navigator quality** and **Docking guides**. Existing editors preserve content and focus across docking.
+**Navigator quality**, **Docking guides**, **Splitter quality** and **Auto-hide quality**. Existing editors preserve content and focus across docking.
 For the browser head:
 
 ```bash
@@ -180,9 +197,9 @@ Reference implementation binaries, source bodies, templates, artwork and fonts a
 copied into this implementation. Public behavior/geometry observations and their hashes
 are recorded separately. See [clean-room provenance](docs/clean-room.md).
 
-The current resolved comparison is **977/1,031**: 881 declared members, 24 inherited
-counterparts and 72 type shapes. **54 signature/type entries** remain unresolved
-(9 missing members, 12 signature differences, 33 type-shape differences), plus **18
+The current resolved comparison is **978/1,031**: 883 declared members, 23 inherited
+counterparts and 72 type shapes. **53 signature/type entries** remain unresolved
+(9 missing members, 11 signature differences, 33 type-shape differences), plus **18
 attribute differences** reported separately. The no-regression baseline passes only
 when it introduces no new diagnostics; the full strict parity gate is still unsatisfied.
 No mappings or comparison rules were relaxed for the visual increments.
@@ -205,8 +222,8 @@ UNODOCK_SELFTEST=1 dotnet run --project samples/UnoDock.Gallery -c Release \
   -p:UnoDockLibraryFrameworks=net10.0
 ```
 
-The configured test matrix has **2,132 core/Linux C# cases**, a **243-case Windows
-subset**, and **23 Python comparator cases**. Linux enables 32 native XTEST scenarios
+The configured test matrix has **2,193 core/Linux C# cases**, a **297-case Windows
+subset**, and **23 Python comparator cases**. Linux enables 39 native XTEST scenarios
 in CI. Platform totals overlap. JSON/JUnit results and workflow conclusions, not the
 matrix size alone, establish what passed for a particular revision.
 

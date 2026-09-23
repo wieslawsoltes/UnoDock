@@ -1,0 +1,9 @@
+{
+  "referenceRevision": "2c71faba5eecc1b6ae6cd3d269408e0df37715d8",
+  "probeRevision": "769210a607f304d11a840a461d6ec7888693489a",
+  "run": 35849397532,
+  "artifact": 10744772008,
+  "artifactSha256": "dfddb6eb5fa42e2d18824e9d4fb68b60ceb491b6c9a36f753768cf9786ddd36e",
+  "method": "public MouseEnter routed event; public model and auto-hide window dimensions; not native original pointer input",
+  "scope": "8 visible flyouts, dimension defaults, stored lengths, and hover activation state"
+}

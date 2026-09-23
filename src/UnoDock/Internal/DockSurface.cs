@@ -21,6 +21,7 @@ internal sealed partial class DockSurface : Grid, IDisposable
     private DockInputControl? _dragInput;
     private LayoutContent? _dragContent;
     private LayoutAutoHideWindowControl? _autoHide;
+    private long _autoHideGeneration;
     private NavigatorWindow? _navigator;
     private long _navigatorGeneration;
     private bool _disposed;
@@ -32,13 +33,7 @@ internal sealed partial class DockSurface : Grid, IDisposable
         _docked.RowDefinitions.Add(new() { Height = GridLength.Auto }); _docked.RowDefinitions.Add(new() { Height = new(1, GridUnitType.Star) }); _docked.RowDefinitions.Add(new() { Height = GridLength.Auto });
         _docked.ColumnDefinitions.Add(new() { Width = GridLength.Auto }); _docked.ColumnDefinitions.Add(new() { Width = new(1, GridUnitType.Star) }); _docked.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
         Children.Add(_docked); Children.Add(_floats); Children.Add(_overlay); Children.Add(_flyouts);
-        _autoHideTimer.Tick += (_, _) =>
-        {
-            _autoHideTimer.Stop();
-            if (_autoHide?.XamlRoot != null && FocusManager.GetFocusedElement(_autoHide.XamlRoot) is DependencyObject focused)
-                for (var current = focused; current != null; current = VisualTreeHelper.GetParent(current)) if (ReferenceEquals(current, _autoHide)) return;
-            CloseAutoHide();
-        };
+        _autoHideTimer.Tick += (_, _) => ExpireAutoHide();
         SizeChanged += (_, _) =>
         {
             PositionAutoHide();
@@ -96,36 +91,69 @@ internal sealed partial class DockSurface : Grid, IDisposable
         foreach (var window in _floats.Children.OfType<LayoutFloatingWindowControl>().OrderBy(w => w.InteractionOrder))
             Canvas.SetZIndex(window, z++);
     }
-    internal void OpenAutoHide(LayoutAnchorable model)
+    internal void OpenAutoHide(LayoutAnchorable model, bool activate = true)
     {
-        if (!model.IsAutoHidden || model.Root?.Manager != Manager) return;
-        StopAutoHideTimer(); _autoHide ??= new();
-        if (!_flyouts.Children.Contains(_autoHide)) _flyouts.Children.Add(_autoHide);
-        _flyouts.IsHitTestVisible = true; Manager.SetAutoHideHost(_autoHide); _autoHide.Open(model); PositionAutoHide();
+        if (_disposed || !model.IsEnabled || !model.IsAutoHidden || model.Root?.Manager != Manager) return;
+        var generation = ++_autoHideGeneration;
+        StopAutoHideTimer();
+        var view = _autoHide ?? Manager.CreateAutoHideView();
+        if (generation != _autoHideGeneration || _disposed) return;
+        _autoHide = view;
+        if (!_flyouts.Children.Contains(view)) _flyouts.Children.Add(view);
+        if (generation != _autoHideGeneration) return;
+        _flyouts.IsHitTestVisible = true; view.Open(model, activate);
+        if (generation != _autoHideGeneration) return;
+        PositionAutoHide();
+        if (generation == _autoHideGeneration && view.Model is LayoutAnchorable) Manager.SetAutoHideHost(view);
+    }
+    internal Grid AutoHideLayer => _flyouts;
+    internal Rect AutoHideClientRect
+    {
+        get
+        {
+            var left = Manager.LeftSidePanel is { Visibility: Visibility.Visible } l ? l.ActualWidth : 0;
+            var right = Manager.RightSidePanel is { Visibility: Visibility.Visible } r ? r.ActualWidth : 0;
+            var top = Manager.TopSidePanel is { Visibility: Visibility.Visible } t ? t.ActualHeight : 0;
+            var bottom = Manager.BottomSidePanel is { Visibility: Visibility.Visible } b ? b.ActualHeight : 0;
+            return new(left, top, Math.Max(0, ActualWidth - left - right), Math.Max(0, ActualHeight - top - bottom));
+        }
     }
     internal void PositionAutoHide()
     {
         if (_autoHide?.Model is not LayoutAnchorable model) return;
-        _autoHide.UpdateChrome();
-        var side = model.GetSide(); var horizontal = side is AnchorSide.Left or AnchorSide.Right;
-        var left = Manager.LeftSidePanel is { Visibility: Visibility.Visible } l ? l.ActualWidth : 0;
-        var right = Manager.RightSidePanel is { Visibility: Visibility.Visible } r ? r.ActualWidth : 0;
-        var top = Manager.TopSidePanel is { Visibility: Visibility.Visible } t ? t.ActualHeight : 0;
-        var bottom = Manager.BottomSidePanel is { Visibility: Visibility.Visible } b ? b.ActualHeight : 0;
-        _autoHide.Width = horizontal ? Math.Min(Math.Max(model.AutoHideWidth > 0 ? model.AutoHideWidth : 300, model.AutoHideMinWidth), Math.Max(0, ActualWidth - left - right)) : double.NaN;
-        _autoHide.Height = horizontal ? double.NaN : Math.Min(Math.Max(model.AutoHideHeight > 0 ? model.AutoHideHeight : 240, model.AutoHideMinHeight), Math.Max(0, ActualHeight - top - bottom));
-        _autoHide.HorizontalAlignment = side == AnchorSide.Left ? HorizontalAlignment.Left : side == AnchorSide.Right ? HorizontalAlignment.Right : HorizontalAlignment.Stretch;
-        _autoHide.VerticalAlignment = side == AnchorSide.Top ? VerticalAlignment.Top : side == AnchorSide.Bottom ? VerticalAlignment.Bottom : VerticalAlignment.Stretch;
-        _autoHide.Margin = new Thickness(left, top, right, bottom);
+        if (!model.IsEnabled || !model.IsAutoHidden || !ReferenceEquals(model.Root, Manager.Layout)) { CloseAutoHide(); return; }
+        _autoHide.SetViewport(AutoHideClientRect, new(ActualWidth, ActualHeight));
     }
     internal void CloseAutoHide()
     {
-        StopAutoHideTimer(); if (_autoHide == null) return;
-        _autoHide.CloseView(); _flyouts.Children.Remove(_autoHide); _flyouts.IsHitTestVisible = _navigator != null;
+        var generation = ++_autoHideGeneration; var view = _autoHide;
+        StopAutoHideTimer(); if (view == null) return;
+        try { view.CloseView(); }
+        finally
+        {
+            // Even a throwing observer must leave an empty flyout detached. A
+            // reentrant open, however, owns both the control and its hit-testing.
+            if (generation == _autoHideGeneration && view.Model == null)
+            {
+                _flyouts.Children.Remove(view); _flyouts.IsHitTestVisible = _navigator != null;
+                if (ReferenceEquals(Manager.AutoHideWindow, view)) Manager.SetAutoHideHost(null);
+            }
+        }
     }
     internal void StopAutoHideTimer() => _autoHideTimer.Stop();
     internal void StartAutoHideTimer()
-    { _autoHideTimer.Stop(); _autoHideTimer.Interval = TimeSpan.FromMilliseconds(Math.Max(1, Manager.AutoHideWindowClosingTimer)); _autoHideTimer.Start(); }
+    {
+        _autoHideTimer.Stop();
+        if (_disposed || _autoHide?.Model is not LayoutAnchorable) return;
+        _autoHideTimer.Interval = TimeSpan.FromMilliseconds(Math.Max(1, Manager.AutoHideWindowClosingTimer));
+        _autoHideTimer.Start();
+    }
+    internal void ExpireAutoHide()
+    {
+        _autoHideTimer.Stop();
+        if (_autoHide == null || _autoHide.RetainOpen) return;
+        CloseAutoHide();
+    }
     internal void ShowNavigator(NavigatorWindow navigator)
     {
         if (_navigator != null) { _navigator.Advance(InputState.ShiftDown ? -1 : 1); return; }

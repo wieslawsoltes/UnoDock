@@ -26,7 +26,7 @@ public class LayoutAnchorControl : DockInputControl, ILayoutControl
     protected override void OnMouseDown(DockMouseButtonEventArgs e)
     { if (!e.Handled && e.ChangedButton == DockMouseButton.Left && _model.IsEnabled) _model.Root?.Manager?.OpenAutoHide(_model); base.OnMouseDown(e); }
     protected override void OnMouseEnter(DockMouseEventArgs e)
-    { if (!e.Handled && _model.IsEnabled) { _model.Root?.Manager?.Surface?.StopAutoHideTimer(); _model.Root?.Manager?.OpenAutoHide(_model); } base.OnMouseEnter(e); }
+    { if (!e.Handled && _model.IsEnabled) { _model.Root?.Manager?.Surface?.StopAutoHideTimer(); _model.Root?.Manager?.OpenAutoHide(_model, activate: false); } base.OnMouseEnter(e); }
     protected override void OnMouseLeave(DockMouseEventArgs e)
     { if (!e.Handled) _model.Root?.Manager?.Surface?.StartAutoHideTimer(); base.OnMouseLeave(e); }
     public ILayoutElement Model => _model;
@@ -105,86 +105,4 @@ public class LayoutAnchorSideControl : ContentControl, ILayoutControl
         VisualParenting.ReconcilePanel(_panel, Children.Cast<UIElement>().ToArray());
         if (manager.AnchorSideTemplate != null) Template = manager.AnchorSideTemplate;
     }
-}
-
-public class LayoutAutoHideWindowControl : ContentControl, ILayoutControl
-{
-    public new static readonly DependencyProperty BackgroundProperty = Control.BackgroundProperty;
-    public static readonly DependencyProperty AnchorableStyleProperty = DependencyProperty.Register(nameof(AnchorableStyle), typeof(Style), typeof(LayoutAutoHideWindowControl), new PropertyMetadata(null));
-    private readonly Grid _layout = new();
-    private readonly ContentPresenter _presenter = new() { HorizontalContentAlignment = HorizontalAlignment.Stretch, VerticalContentAlignment = VerticalAlignment.Stretch };
-    private readonly TextBlock _title = new() { Margin = new Thickness(2, 0, 2, 0), VerticalAlignment = VerticalAlignment.Center };
-    private readonly ContentPresenter _titleView = new();
-    private readonly DockChromeButton _pinButton, _hideButton;
-    private readonly Thumb _resize = new();
-    private LayoutAnchorable? _model;
-    public LayoutAutoHideWindowControl()
-    {
-        HorizontalContentAlignment = HorizontalAlignment.Stretch; VerticalContentAlignment = VerticalAlignment.Stretch;
-        _layout.RowDefinitions.Add(new() { Height = GridLength.Auto }); _layout.RowDefinitions.Add(new() { Height = new(1, GridUnitType.Star) });
-        var title = new Grid(); title.ColumnDefinitions.Add(new() { Width = new(1, GridUnitType.Star) }); title.ColumnDefinitions.Add(new() { Width = GridLength.Auto }); _titleView.Content = _title; title.Children.Add(_titleView);
-        var buttons = new StackPanel { Orientation = Orientation.Horizontal };
-        _pinButton = DockChrome.Icon(DockGlyph.Pin, () => { var model = _model; model?.Root?.Manager?.CloseAutoHide(); model?.ToggleAutoHide(); }, "Pin tool");
-        buttons.Children.Add(_pinButton);
-        _hideButton = DockChrome.Icon(DockGlyph.Close, () => { if (_model != null) DockVisuals.CloseOrHide(_model); }, "Hide or close auto-hidden tool");
-        buttons.Children.Add(_hideButton); Grid.SetColumn(buttons, 1); title.Children.Add(buttons);
-        _layout.Children.Add(title); Grid.SetRow(_presenter, 1); _layout.Children.Add(_presenter);
-        _resize.DragDelta += (_, e) => Resize(e.HorizontalChange, e.VerticalChange); Grid.SetRowSpan(_resize, 2); _layout.Children.Add(_resize);
-        Content = _layout; BorderThickness = new(1);
-        PointerEntered += (_, _) => _model?.Root?.Manager?.Surface?.StopAutoHideTimer();
-        PointerExited += (_, _) => _model?.Root?.Manager?.Surface?.StartAutoHideTimer();
-    }
-    public ILayoutElement Model => _model!;
-    public Style? AnchorableStyle { get => (Style?)GetValue(AnchorableStyleProperty); set => SetValue(AnchorableStyleProperty, value); }
-    internal void Open(LayoutAnchorable model)
-    {
-        _model = model; var manager = model.Root?.Manager ?? throw new InvalidOperationException("Auto-hidden content must be attached.");
-        var item = manager.GetLayoutItemFromModel(model); item.UpdateView(); VisualParenting.Detach(item.View); item.View.Visibility = Visibility.Visible; _presenter.Content = item.View;
-        UpdateChrome();
-        var side = model.GetSide(); var horizontal = side is AnchorSide.Left or AnchorSide.Right;
-        _resize.Width = horizontal ? 6 : double.NaN; _resize.Height = horizontal ? double.NaN : 6;
-        _resize.HorizontalAlignment = side == AnchorSide.Left ? HorizontalAlignment.Right : side == AnchorSide.Right ? HorizontalAlignment.Left : HorizontalAlignment.Stretch;
-        _resize.VerticalAlignment = side == AnchorSide.Top ? VerticalAlignment.Bottom : side == AnchorSide.Bottom ? VerticalAlignment.Top : VerticalAlignment.Stretch;
-        _resize.Background = BorderBrush; model.IsActive = true; Visibility = Visibility.Visible;
-        if (AnchorableStyle != null) item.ApplyContainerStyle(AnchorableStyle);
-    }
-    internal void UpdateChrome()
-    {
-        if (_model?.Root?.Manager is not { } manager) return;
-        var p = DockChrome.Palette(manager);
-        _title.Text = _model.Title; _title.FontSize = p.FontSize; _title.Foreground = p.Foreground;
-        _layout.RowDefinitions[0].Height = new(p.TitleHeight);
-        Background = p.Surface; BorderBrush = p.Border;
-        _pinButton.Configure(p); _hideButton.Configure(p);
-        _pinButton.Visibility = _model.CanAutoHide ? Visibility.Visible : Visibility.Collapsed;
-        _hideButton.Visibility = _model.CanHide || _model.CanClose ? Visibility.Visible : Visibility.Collapsed;
-        _pinButton.IsEnabled = _hideButton.IsEnabled = _model.IsEnabled;
-        var template = manager.HeaderTemplate(_model, _titleView, title: true);
-        _titleView.ContentTemplate = template; _titleView.Content = template == null ? _title : _model;
-    }
-    protected virtual bool HasFocusWithinCore()
-    {
-        if (XamlRoot == null) return false;
-        for (var element = FocusManager.GetFocusedElement(XamlRoot) as DependencyObject; element != null; element = VisualTreeHelper.GetParent(element))
-            if (ReferenceEquals(element, this)) return true;
-        return false;
-    }
-    protected virtual IEnumerator LogicalChildren => (_presenter.Content is DependencyObject child ? new[] { child } : Array.Empty<DependencyObject>()).GetEnumerator();
-    private void Resize(double x, double y)
-    {
-        if (_model == null || !double.IsFinite(x) || !double.IsFinite(y)) return;
-        // Zero means unspecified in the original model. Begin resizing from the
-        // rendered fallback size, not from zero, to avoid a first-drag jump.
-        var width = _model.AutoHideWidth > 0 ? _model.AutoHideWidth : ActualWidth > 0 ? ActualWidth : 300;
-        var height = _model.AutoHideHeight > 0 ? _model.AutoHideHeight : ActualHeight > 0 ? ActualHeight : 240;
-        switch (_model.GetSide())
-        {
-            case AnchorSide.Left: _model.AutoHideWidth = Math.Max(_model.AutoHideMinWidth, width + x); break;
-            case AnchorSide.Right: _model.AutoHideWidth = Math.Max(_model.AutoHideMinWidth, width - x); break;
-            case AnchorSide.Top: _model.AutoHideHeight = Math.Max(_model.AutoHideMinHeight, height + y); break;
-            case AnchorSide.Bottom: _model.AutoHideHeight = Math.Max(_model.AutoHideMinHeight, height - y); break;
-        }
-        _model.Root?.Manager?.Surface?.PositionAutoHide();
-    }
-    internal void CloseView() { _presenter.Content = null; _model = null; Visibility = Visibility.Collapsed; }
 }

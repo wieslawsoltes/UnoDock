@@ -59,7 +59,7 @@ public partial class DockingManager : Control, IDisposable, Xceed.Wpf.AvalonDock
         }
     }
     public ICrossWindowCoordinates? CrossWindowCoordinates { get; set; }
-    internal void SetAutoHideHost(LayoutAutoHideWindowControl value) => SetAutoHideWindow(value);
+    internal void SetAutoHideHost(LayoutAutoHideWindowControl? value) => SetAutoHideWindow(value!);
     public FloatingWindowMode FloatingWindowMode { get; set; } = FloatingWindowMode.Auto;
     public IEnumerable<LayoutFloatingWindowControl> FloatingWindows => _floating;
     public int RealizedContentCount => _items.Values.Count(i => i.IsViewCreated);
@@ -270,7 +270,10 @@ public partial class DockingManager : Control, IDisposable, Xceed.Wpf.AvalonDock
         }
     }
     protected void SetAutoHideWindow(LayoutAutoHideWindowControl value) => AutoHideWindow = value;
-    internal void OpenAutoHide(LayoutAnchorable content) => _surface?.OpenAutoHide(content);
+    internal void OpenAutoHide(LayoutAnchorable content, bool activate = true) => _surface?.OpenAutoHide(content, activate);
+    /// <summary>Creates the managed flyout; subclasses can extend its focus-retention policy.</summary>
+    protected virtual LayoutAutoHideWindowControl CreateAutoHideWindowControl() => new();
+    internal LayoutAutoHideWindowControl CreateAutoHideView() => CreateAutoHideWindowControl() ?? throw new InvalidOperationException("Auto-hide factory returned null.");
     internal void CloseAutoHide() => _surface?.CloseAutoHide();
     internal void BeginDrag(LayoutContent content, FrameworkElement source, PointerRoutedEventArgs args) => _surface?.BeginDrag(content, source, args);
     internal DockSurface? Surface => _surface;
