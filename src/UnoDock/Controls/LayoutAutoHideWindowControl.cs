@@ -14,7 +14,8 @@ public partial class LayoutAutoHideWindowControl : ContentControl, ILayoutContro
     private readonly ContentPresenter _presenter = new() { Name = "PART_AutoHideContent", HorizontalContentAlignment = HorizontalAlignment.Stretch, VerticalContentAlignment = VerticalAlignment.Stretch };
     private readonly TextBlock _title = new() { Margin = new(2, 0, 2, 0), VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis };
     private readonly ContentPresenter _titleView = new() { VerticalContentAlignment = VerticalAlignment.Center };
-    private readonly DockChromeButton _pinButton, _hideButton;
+    private readonly DockChromeButton _menuButton, _pinButton, _hideButton;
+    [ThreadStatic] private static Brush? _stockCaption;
     private readonly LayoutGridResizerControl _resizer = new() { Name = "PART_AutoHideResizer" };
     private LayoutAnchorable? _model;
     private DockingManager? _manager;
@@ -36,9 +37,13 @@ public partial class LayoutAutoHideWindowControl : ContentControl, ILayoutContro
         _titleBar.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
         _titleView.Content = _title; _titleBar.Children.Add(_titleView);
         var buttons = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
+        _menuButton = DockChrome.Icon(DockGlyph.Menu, OpenMenu, "Auto-hidden tool menu");
+        _menuButton.Name = "PART_AutoHideMenuButton"; _titleBar.Name = "PART_AutoHideTitleBar";
         _pinButton = DockChrome.Icon(DockGlyph.Pin, Pin, "Pin tool");
         _hideButton = DockChrome.Icon(DockGlyph.Close, () => { if (_model is { IsEnabled: true } model) DockVisuals.CloseOrHide(model); }, "Hide or close auto-hidden tool");
-        buttons.Children.Add(_pinButton); buttons.Children.Add(_hideButton); Grid.SetColumn(buttons, 1); _titleBar.Children.Add(buttons);
+        if (_pinButton.Content is FrameworkElement pin) pin.RenderTransform = new RotateTransform { Angle = 90, CenterX = 5, CenterY = 5 };
+        foreach (var button in new[] { _menuButton, _pinButton, _hideButton }) button.Width = button.Height = 14;
+        buttons.Children.Add(_menuButton); buttons.Children.Add(_pinButton); buttons.Children.Add(_hideButton); Grid.SetColumn(buttons, 1); _titleBar.Children.Add(buttons);
         _layout.Children.Add(_titleBar); Grid.SetRow(_presenter, 1); _layout.Children.Add(_presenter);
         _root.Children.Add(_layout); _root.Children.Add(_resizer); Content = _root;
         DockVisuals.SetName(_resizer, "Resize auto-hidden tool");
@@ -97,6 +102,13 @@ public partial class LayoutAutoHideWindowControl : ContentControl, ILayoutContro
         if (version != _openVersion || !ReferenceEquals(model, _model)) return;
         if (!ReferenceEquals(model.Root, manager.Layout) || !model.IsAutoHidden) manager.CloseAutoHide();
     }
+    private void OpenMenu()
+    {
+        if (_model is not { IsEnabled: true } model || _manager is not { } manager) return;
+        var version = _openVersion;
+        UpdateChrome();
+        if (IsCurrent(model, manager, version)) _contextMenu?.ShowAt(_menuButton);
+    }
     private void Pin()
     {
         if (_model is not { IsEnabled: true, CanAutoHide: true } model || !ReferenceEquals(model.Root, _manager?.Layout)) return;
@@ -139,13 +151,22 @@ public partial class LayoutAutoHideWindowControl : ContentControl, ILayoutContro
         gutter = double.IsFinite(gutter) && gutter > 0 ? Math.Min(64, gutter) : 6;
         if (_gutter != gutter) { CancelResize(); if (!IsCurrent(model, manager, version)) return; _gutter = gutter; }
         _title.Text = model.Title; _title.FontSize = p.FontSize; _title.Foreground = p.Foreground;
-        _layout.RowDefinitions[0].Height = new(Math.Max(p.TitleHeight, p.FontSize * 1.5));
-        Background = _layout.Background = p.Surface; _titleBar.Background = model.IsActive ? p.ActiveTitle : p.Header;
+        // Stock public screen observations have a compact gray caption. Resource
+        // overrides and explicit theme dictionaries retain ownership of colors.
+        var titleHeight = manager.Resources.TryGetValue("UnoDock.AutoHideTitleHeight", out var value) && value is double h && double.IsFinite(h)
+            ? Math.Clamp(h, 16, 96) : 16;
+        _layout.RowDefinitions[0].Height = new(Math.Max(titleHeight, p.FontSize * 4 / 3));
+        var titleBrush = p.Header;
+        if (manager.Theme == null && manager.ActualTheme == ElementTheme.Light && !manager.Resources.TryGetValue("UnoDock.HeaderBrush", out _))
+            titleBrush = _stockCaption ??= DockChrome.Color(0xf0f0f0);
+        if (manager.Resources.TryGetValue("UnoDock.AutoHideTitleBrush", out var brush) && brush is Brush custom) titleBrush = custom;
+        _root.Background = titleBrush;
+        Background = _layout.Background = p.Surface; _titleBar.Background = model.IsActive ? p.ActiveTitle : titleBrush;
         BorderBrush = _layout.BorderBrush = p.Border;
-        _pinButton.Configure(p); _hideButton.Configure(p);
+        _menuButton.Configure(p); _pinButton.Configure(p); _hideButton.Configure(p);
         _pinButton.Visibility = model.CanAutoHide ? Visibility.Visible : Visibility.Collapsed;
         _hideButton.Visibility = model.CanHide || model.CanClose ? Visibility.Visible : Visibility.Collapsed;
-        _pinButton.IsEnabled = _hideButton.IsEnabled = model.IsEnabled;
+        _menuButton.IsEnabled = _pinButton.IsEnabled = _hideButton.IsEnabled = model.IsEnabled;
         var template = manager.HeaderTemplate(model, _titleView, title: true);
         if (!IsCurrent(model, manager, version)) return;
         _titleView.ContentTemplate = template; _titleView.Content = template == null ? _title : model;

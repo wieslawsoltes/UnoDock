@@ -23,7 +23,9 @@ shared menu contexts, protected focus overrides and reentrant host/template call
 are validated. The **Auto-hide quality** laboratory exercises all four sides, minimums,
 RTL, themes, cancellation and persistence.
 
-The new suite adds 61 Linux / 54 Windows cases, including eight original public
+The flyout now includes the observed compact gray caption, a working dropdown, and
+opaque themed rails. XML inspection stays bounded instead of hiding the workbench.
+The new suite adds 64 Linux / 57 Windows cases, including eight original public
 observation replays, seven native XTEST input scenarios and six screenshots. The
 resolved API result improves to **978/1,031**, without relaxing mappings or the baseline.
 See [auto-hide implementation and limits](docs/auto-hide-quality.md) and
@@ -222,7 +224,7 @@ UNODOCK_SELFTEST=1 dotnet run --project samples/UnoDock.Gallery -c Release \
   -p:UnoDockLibraryFrameworks=net10.0
 ```
 
-The configured test matrix has **2,193 core/Linux C# cases**, a **297-case Windows
+The configured test matrix has **2,196 core/Linux C# cases**, a **300-case Windows
 subset**, and **23 Python comparator cases**. Linux enables 39 native XTEST scenarios
 in CI. Platform totals overlap. JSON/JUnit results and workflow conclusions, not the
 matrix size alone, establish what passed for a particular revision.

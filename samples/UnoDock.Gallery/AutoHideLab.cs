@@ -20,7 +20,8 @@ public sealed partial class GalleryPage
         Add("Cancel resize", () => { foreach (var resizer in manager.FindVisualChildren<LayoutGridResizerControl>()) resizer.CancelDrag(); });
         Add("XML", () => { using var xml = new StringWriter(); new XmlLayoutSerializer(manager).Serialize(xml); status.Text = xml.ToString(); });
         panel.Children.Add(new ScrollViewer { Content = actions, HorizontalScrollBarVisibility = ScrollBarVisibility.Auto, VerticalScrollBarVisibility = ScrollBarVisibility.Disabled });
-        Grid.SetRow(status, 1); panel.Children.Add(status); Grid.SetRow(manager, 2); panel.Children.Add(manager); Populate();
+        var statusView = new ScrollViewer { Content = status, MaxHeight = 140, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
+        Grid.SetRow(statusView, 1); panel.Children.Add(statusView); Grid.SetRow(manager, 2); panel.Children.Add(manager); Populate();
         var document = new LayoutDocument { Title = "Auto-hide quality", ContentId = "auto-hide:" + Guid.NewGuid().ToString("N"), Content = panel };
         var ownerRoot = Dock.Layout;
         EventHandler? ownerChanged = null;

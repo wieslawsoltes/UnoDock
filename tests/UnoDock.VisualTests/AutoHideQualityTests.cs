@@ -231,6 +231,8 @@ public static class AutoHideQualityTests
                 {
                     var direction = variant switch { "right" => AnchorableShowStrategy.Right, "top" => AnchorableShowStrategy.Top, "bottom" => AnchorableShowStrategy.Bottom, _ => AnchorableShowStrategy.Left };
                     await Reset(direction, variant == "rtl"); if (variant == "dark") dock.Theme = new FluentTheme(ElementTheme.Dark);
+                    Check.Equal(6, ((TextBox)tool.Content!).Text.Replace("\r\n", "\n").Replace('\r', '\n').Split('\n').Length);
+                    await VisualCapture.Save(flyout, Path.Combine(output, "visuals", "auto-hide-client-" + variant + ".png"));
                     Begin(); Move(Sign() * 55); await Settle(); Check.Equal(1, Ghosts().Length);
                     await VisualCapture.Save(scene, Path.Combine(output, "visuals", "auto-hide-" + variant + ".png")); splitter.CancelDrag();
                 });
@@ -269,6 +271,7 @@ public static class AutoHideQualityTests
                         if (!scene.Children.Contains(dock)) scene.Children.Add(dock);
                     });
             }
+            AutoHideChromeTests.Register(tests, dock, scene, () => flyout, () => tool, async () => await Reset(), Settle);
             return await tests.Run(output, "auto-hide-quality");
         }
         finally { Call(dock, "CloseAutoHide"); window.Content = null; window.Close(); }
@@ -290,7 +293,7 @@ public static class AutoHideQualityTests
             doc = new LayoutDocument { ContentId = "editor", Title = "Workspace.cs", Content = new TextBox { Text = "The document retains its editor and geometry while an auto-hidden tool is previewed or resized.", AcceptsReturn = true, TextWrapping = TextWrapping.Wrap, Padding = new(16) } };
             dock.Layout = new() { RootPanel = new(new LayoutDocumentPane(doc)) };
             tool = new() { Title = "Solution Explorer", ContentId = "tool", AutoHideWidth = requested, AutoHideHeight = requestedHeight,
-                Content = new TextBox { Text = "Solution\n  Sources\n    Workspace.cs\n    Layout.cs\n  Tests\n    AutoHideQuality.cs", AcceptsReturn = true, Padding = new(10), BorderThickness = new(0) } };
+                Content = new TextBox { AcceptsReturn = true, FontSize = 12, Padding = new(10), BorderThickness = new(0), Text = "Solution\n  Sources\n    Workspace.cs\n    Layout.cs\n  Tests\n    AutoHideQuality.cs" } };
             tool.AddToLayout(dock, direction | AnchorableShowStrategy.Most); tool.ToggleAutoHide(); doc.IsActive = true;
             window.Activate(); await Settle(); Open(); await Settle();
             flyout = (FocusFlyout)dock.AutoHideWindow!; flyout.Keep = false;

@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "originalRevision": "2c71faba5eecc1b6ae6cd3d269408e0df37715d8",
+  "probeRevision": "3b158f75ee5ab0c07d0c29ab319f295c13c28053",
+  "runId": 35852914812,
+  "artifactId": 10746760882,
+  "artifactSha256": "2f0d5bb0d665ec00271057b8bc74afa09f3f5c34440ecc9b50aa0b08731c91cc",
+  "method": "Screen copy of public PointToScreen flyout bounds after public MouseEnter and dispatcher settling. Not original native-pointer acceptance.",
+  "observationsSha256": "f7037235a42698bc69ff9632f4c6e0b023a515d0cf2654e8e25d2f1efd1a72e7",
+  "images": {
+    "auto-hide-screen-left.png": "6145e839f70edb07107579e06ace25934698aea1657192430f3fc93cab234d9f",
+    "auto-hide-screen-top.png": "91af413c59cc3bef13b57d12da42239a06b8fc92a34efd84ab15454a8127123c",
+    "auto-hide-screen-bottom.png": "10876df6e994442b1906ab456a9b76877fd888dc3aa75c9f0341452b03ef835f",
+    "auto-hide-screen-right.png": "42d698e4436d3fdbe50bffb7fdcaad18bac225c1994c7555905bb534f7b2dd52"
+  },
+  "notes": [
+    "Only public rendered pixels/geometry are exported; no implementation bodies, templates, resource definitions, or fonts.",
+    "Auto-hide model/extent XML reproduced in two processes; screen-copy PNGs are not asserted byte-identical.",
+    "The port corrects sample initialization and owns its independently drawn compact caption; glyph/text rasterization and outer borders still differ."
+  ]
+}

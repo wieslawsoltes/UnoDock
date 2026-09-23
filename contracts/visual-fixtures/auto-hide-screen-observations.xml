@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<AutoHideScreens method="screen-copy-of-public-flyout-bounds-after-public-mouse-enter-not-native-pointer-acceptance">
+  <Window name="auto-hide-screen-left" side="Left" xPixels="46" yPixels="20" widthPixels="326" heightPixels="640" width="326" height="640" active="false" />
+  <Window name="auto-hide-screen-right" side="Right" xPixels="668" yPixels="20" widthPixels="326" heightPixels="640" width="326" height="640" active="false" />
+  <Window name="auto-hide-screen-top" side="Top" xPixels="20" yPixels="46" widthPixels="1000" heightPixels="326" width="1000" height="326" active="false" />
+  <Window name="auto-hide-screen-bottom" side="Bottom" xPixels="20" yPixels="308" widthPixels="1000" heightPixels="326" width="1000" height="326" active="false" />
+</AutoHideScreens>

@@ -17,8 +17,8 @@ integrated into the real flyout path. See [implementation and limits](auto-hide-
 | --- | ---: | ---: |
 | Portable core | 120 | Not scheduled |
 | Existing Uno runtime suites | 2,012 | 243 selected |
-| New auto-hide quality | 61 | 54 |
-| **C# cases per platform** | **2,193** | **297** |
+| New auto-hide quality | 64 | 57 |
+| **C# cases per platform** | **2,196** | **300** |
 | Python metadata comparator | 23 | Not scheduled |
 
 Linux includes 39 opt-in XTEST scenarios across all suites, seven new in this increment.
@@ -30,7 +30,7 @@ being treated as proof by themselves.
 
 Local iteration compiled current core/library/test C# against existing generated
 sample XAML/ICU resources. The complete old suites and the first 59 new cases passed;
-the final 61-case suite also passed after adding template-redirection guards. This is
+the 64-case suite also passed after template-redirection and rendered-chrome regressions. This is
 not a clean SDK/XAML build. CI independently builds the current complete desktop sample
 with warnings-as-errors on Linux, Windows and macOS; executes Linux and selected Windows
 acceptance; publishes the browser sample; and builds generic Uno/native WinUI packages.
@@ -48,6 +48,21 @@ dispatcher to obtain the revealed flyout. It does not establish original end-to-
 pointer input, animation timing or native HWND internals. Only original public
 observations are checked in, not original algorithm bodies, templates or resources.
 The reference workflow compares complete auto-hide XML from two independent processes.
+
+Additional public screen probe revision: `3b158f75ee5ab0c07d0c29ab319f295c13c28053`.
+Reference run: 35852914812; artifact: 10746760882.
+Artifact SHA256: `2f0d5bb0d665ec00271057b8bc74afa09f3f5c34440ecc9b50aa0b08731c91cc`.
+The original auto-hide XML reproduced byte-for-byte in separate probe processes.
+Four screen-copy images include the HwndHost content that ordinary subtree rendering
+omitted. The capture method and public physical/logical bounds are explicitly recorded
+in `auto-hide-screen-provenance.json` and `auto-hide-screen-observations.xml`.
+
+The first full platform run (35852914782) passed at that probe revision, including
+all six CI jobs. Actual Windows screenshots nevertheless exposed unpainted rail
+background and a single-line sample initialization defect. The final correction adds
+three acceptance cases (dropdown invocation/context retention, caption metrics/palette,
+and rendered rail opacity/six text bands), plus client-only captures. Its new CI run
+must pass before delivery; the manifest identifies that final exact revision.
 
 ## API accounting and platform limits
 

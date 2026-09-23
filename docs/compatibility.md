@@ -64,7 +64,7 @@ and [window shell](window-shell.md) for exact extension and lifetime semantics.
 
 ## Evidence and limitations
 
-The matrix has 120 portable core cases, 2,073 Uno/Linux runtime cases, a 297-case
+The matrix has 120 portable core cases, 2,076 Uno/Linux runtime cases, a 300-case
 Windows subset and 23 Python comparator cases. Linux includes 39 opt-in XTEST input
 sequences. Actual JSON/JUnit and workflow conclusions establish what executed and
 passed on the exact revision; counts are not an equivalence score.

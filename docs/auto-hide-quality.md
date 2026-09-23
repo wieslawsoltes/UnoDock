@@ -22,7 +22,22 @@ editor. Caption, content border and preview use the same compact palette/density
 system as the rest of the workbench. The caption grows for larger fonts, respects
 custom title templates and updates capability buttons without replacing the retained
 editor presenter. Six PNG captures exercise four edges, RTL and an independent dark
-palette; these are evidence for the implemented scenes, not a pixel-identity assertion.
+palette, plus six client-only captures; these are scene-specific evidence, not a
+pixel-identity assertion. The additional public screen probe captures the original
+HwndHost pixels through a screen copy of its publicly reported bounds; it does not
+inspect native internals. The original inactive caption has a compact gray presentation
+and a dropdown beside its pin/close buttons. The independently drawn port now includes
+that functional dropdown, a 16-DIP default caption, and explicit palette/density keys
+`UnoDock.AutoHideTitleBrush` and `UnoDock.AutoHideTitleHeight`. Larger fonts expand the
+caption, and explicit theme dictionaries keep ownership of their colors.
+
+Screenshot review found two gaps missed by geometry checks: side-rail background relied
+on parent window pixels, and the fixture's text-before-AcceptsReturn initialization lost
+all but its first line on Uno. The docking grid now paints the resolved rail background;
+owned sample text initializes multiline mode before content. Tests check opaque rail
+pixels, all six text ink bands, the actual caption extent/color and override behavior,
+and dropdown invocation through its automation peer. This does not force a style or
+font onto application-owned editor controls.
 
 ## Deferred resizing and native input
 
@@ -92,7 +107,7 @@ public sealed class OwnedAutoHideWindow : LayoutAutoHideWindowControl
 
 ## Tests, gallery and limits
 
-The new suite contains 61 Linux / 54 Windows cases: eight original observation replays,
+The new suite contains 64 Linux / 57 Windows cases: eight original observation replays,
 four-sided LTR/RTL geometry, dedicated gutter separation, deferred commit, bounds,
 clamp reversal, no-op semantics, stale model/root/viewport/capture cancellation,
 throwing/reentrant callbacks, template redirection, shared menus, actual editor focus,

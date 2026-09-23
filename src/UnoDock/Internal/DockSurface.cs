@@ -64,6 +64,9 @@ internal sealed partial class DockSurface : Grid, IDisposable
     {
         if (_disposed) return;
         _navigator?.UpdateAppearance();
+        // ContentControl does not necessarily paint Background on every host.
+        // Paint the full docking grid so side rails never depend on Window pixels.
+        _docked.Background = DockChrome.Palette(Manager).Header;
         var root = Manager.Layout;
         var panel = (LayoutPanelControl)GetView(root.RootPanel); UpdateView(root.RootPanel); Manager.LayoutRootPanel = panel;
         var top = (LayoutAnchorSideControl)GetView(root.TopSide); var bottom = (LayoutAnchorSideControl)GetView(root.BottomSide);
