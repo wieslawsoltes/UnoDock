@@ -15,7 +15,7 @@ jobs:
         with:
           ref: work/dropdown-lifecycle-20260923
           fetch-depth: 0
-      - name: Apply checked host-key and test-registration corrections
+      - name: Apply checked exception-recovery correction and regression tests
         run: |
           python3 - <<'PY'
           from pathlib import Path
@@ -24,13 +24,42 @@ jobs:
               if new in text: return
               assert text.count(old)==1, name
               p.write_text(text.replace(old,new))
-          old='''if (e.Key == Windows.System.VirtualKey.Application ||
-                      (e.Key == Windows.System.VirtualKey.F10 &&
-                       (InputKeyboardSource.GetKeyStateForCurrentThread(Windows.System.VirtualKey.Shift) & Windows.UI.Core.CoreVirtualKeyStates.Down) != 0))'''
-          change('src/UnoDock/Controls/DropDownControls.cs', old, 'if (DropDownKeyboard.IsContextRequest(this, e))')
-          change('tests/UnoDock.VisualTests/DropDownQualityTests.cs', '        DropDownTransitionTests.Register(tests, root, window);', '        DropDownTransitionTests.Register(tests, root, window);\n        DropDownKeyboardTests.Register(tests, root, window);')
-          p=Path('docs/dropdown-quality.md'); text=p.read_text().replace('three opt-in Linux XTEST cases.', 'six opt-in Linux XTEST cases.')
-          text=text.replace('The context-menu key and Shift+F10 are supported through keyboard and native', 'The pinned X11 host reports XK_Menu as VirtualKey.Menu, unlike its LeftMenu/RightMenu Alt keys. A host-checked adapter recognizes that distinction; native tests verify both Alt keys remain inert.\n\nThe context-menu key and Shift+F10 are supported through keyboard and native')
+          session='src/UnoDock/Internal/DropDownMenuSession.cs'
+          change(session, 'if (failures == null && menu.IsOpen && slot.ClosingArguments?.Cancel == true)', 'if (menu.IsOpen && (failures != null || slot.ClosingArguments?.Cancel == true))')
+          change(session, 'QueueAfterClosed(menu, slot); _state(true);\n                        return false;', '''QueueAfterClosed(menu, slot); Attempt(() => _state(true));
+                                  if (failures?.Count == 1) ExceptionDispatchInfo.Capture(failures[0]).Throw();
+                                  if (failures != null) throw new AggregateException("Native closing and state restoration failed.", failures);
+                                  return false;''')
+          anchor='            Add("source-generated menu rows receive and release trigger context", async t =>'
+          tests='''            Add("one-shot native closing exception cleans up and permits reopening", async t =>
+                      {
+                          t.Menu = NewMenu(out var row); t.Context = new object(); var fail = true;
+                          t.Menu.Closing += (_, _) => { if (fail) { fail = false; throw new InvalidOperationException("close fault"); } };
+                          t.Open(); await Wait(() => t.Menu.IsOpen);
+                          Check.Throws<InvalidOperationException>(t.Close);
+                          await Wait(() => !t.Menu.IsOpen); t.AssertState(false);
+                          Check.Same(DependencyProperty.UnsetValue, row.ReadLocalValue(FrameworkElement.DataContextProperty));
+                          t.Open(); await Wait(() => t.Menu.IsOpen);
+                      });
+                      Add("persistent native closing failures preserve scope and do not poison future openings", async t =>
+                      {
+                          t.Menu = NewMenu(out var row); var context = new object(); t.Context = context; var fail = true;
+                          t.Menu.Closing += (_, _) => { if (fail) throw new InvalidOperationException("persistent close fault"); };
+                          try
+                          {
+                              t.Open(); await Wait(() => t.Menu.IsOpen);
+                              var error = Check.Throws<AggregateException>(t.Close);
+                              Check.True(error.Flatten().InnerExceptions.Count >= 2);
+                              Check.True(t.Menu.IsOpen); Check.Same(context, row.DataContext); t.AssertState(true);
+                          }
+                          finally { fail = false; t.Close(); }
+                          await Wait(() => !t.Menu.IsOpen);
+                          t.Menu = NewMenu(out _); t.Open(); await Wait(() => t.Menu.IsOpen);
+                      });
+          '''
+          change('tests/UnoDock.VisualTests/DropDownTransitionTests.cs', anchor, tests+anchor)
+          p=Path('docs/dropdown-quality.md'); text=p.read_text().replace('62 common UI cases', '66 common UI cases')
+          text=text.replace('preserving multiple exceptions instead of discarding the original error.', 'preserving multiple exceptions instead of discarding the original error. A failed native Closing callback retains the live scope for cleanup/retry and cannot leave the thread-wide opening queue permanently blocked.')
           p.write_text(text)
           PY
       - uses: actions/setup-dotnet@v4
@@ -38,7 +67,7 @@ jobs:
           dotnet-version: '10.0.x'
       - name: Build complete SDK and XAML sample with warnings as errors
         run: dotnet build samples/UnoDock.Gallery -c Release -f net10.0-desktop -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0 -warnaserror
-      - name: Commit exact corrected source and dispatch platform validation
+      - name: Commit exact source and dispatch acceptance
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -46,6 +75,6 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add src tests docs
           git diff --cached --check
-          git diff --cached --quiet || (git commit -m 'fix: recognize native X11 context-menu key without consuming Alt' && git push origin HEAD:work/dropdown-lifecycle-20260923)
+          git diff --cached --quiet || (git commit -m 'fix: preserve live dropdown ownership across failing native Closing callbacks' && git push origin HEAD:work/dropdown-lifecycle-20260923)
           gh workflow run dropdown-acceptance.yml --ref work/dropdown-lifecycle-20260923
           gh workflow run ci.yml --ref work/dropdown-lifecycle-20260923
