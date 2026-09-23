@@ -12,6 +12,7 @@ internal static class MenuContext
         internal readonly Dictionary<MenuFlyoutItemBase, object?> Assigned = new(ReferenceEqualityComparer.Instance);
         internal bool Hooked, Updating, Pending, ApplyPending, CleaningAfterFailure;
         internal object? Context;
+        internal long Revision;
     }
     private static readonly ConditionalWeakTable<MenuFlyout, State> States = new();
     internal static readonly DependencyProperty ModelProperty = DependencyProperty.RegisterAttached(
@@ -34,6 +35,12 @@ internal static class MenuContext
         };
         menu.Closed += (_, _) => Clear(menu);
     }
+    internal static long NextRevision(MenuFlyout menu) => States.GetOrCreateValue(menu).Revision + 1;
+    internal static void ClearIfRevision(MenuFlyout menu, long revision)
+    {
+        if (revision != 0 && States.TryGetValue(menu, out var state) && state.Revision == revision)
+            Clear(menu);
+    }
     internal static void Apply(MenuFlyout menu, object? context) => Request(menu, States.GetOrCreateValue(menu), true, context);
     internal static void Clear(MenuFlyout menu)
     {
@@ -44,6 +51,7 @@ internal static class MenuContext
         // A callback failure terminates this scope. Cleanup must not recursively
         // reestablish the same failing scope through DataContextChanged.
         if (state.CleaningAfterFailure) return;
+        state.Revision++;
         state.Pending = true; state.ApplyPending = apply; state.Context = context;
         if (state.Updating) return;
         state.Updating = true;
