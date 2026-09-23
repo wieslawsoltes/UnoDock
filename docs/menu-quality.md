@@ -60,6 +60,27 @@ An initiating adapter may close before its remaining documents; its disposal is
 not confused with replacing the whole workspace. Adjacent-group commands follow
 siblings in a LayoutDocumentPaneGroup, not unrelated root-level panes.
 
+## Reentrant custom-menu context scopes
+
+Temporary DataContext ownership is recorded before setting a dependency property,
+because its callback can reenter or throw after the value changes. Apply/Clear requests
+are drained without recursion; the most recent explicit request wins across the whole
+menu/submenu tree. Clearing removes ownership before invoking application callbacks,
+and enumerates a snapshot rather than a dictionary that callbacks might mutate.
+
+Only still-owned local values are cleared. Application-assigned values and existing
+bindings survive, including when rows are removed while the scope is being assigned.
+Null is a legitimate scoped local value. Callback failure ends the partial scope and
+attempts cleanup of every remaining owned row. Cleanup errors are aggregated with the
+original error instead of replacing it. Nonconvergent callbacks are bounded; transition
+guards and references are released so the next valid opening can proceed.
+
+ContextMenuEx reads its current MenuDataContext when requesting a scope. It no longer
+clears and then reapplies a stale outer callback value over an application's nested
+property update. Fourteen independent real-Uno tests exercise these cases. Six initial
+regressions were demonstrated against the previous implementation before the correction.
+These are robustness tests of the port, not evidence of original WPF callback ordering.
+
 ## Styling and sample
 
 The default menu consumes these additive resources from the docking manager:

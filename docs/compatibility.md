@@ -30,7 +30,8 @@ are checked on the actual control path; native HwndHost semantics are not emulat
 [Context menus](menu-quality.md) retain native rows, match ten observed stock scenarios,
 update live state/palettes, guard application command replacement and restrict bulk close
 to its original workspace. Custom menus preserve application styles and opening-scoped
-contexts. Per-item default menu identity, routed commands and arbitrary WPF menu templates
+contexts, with bounded reentrant replacement and partial-failure cleanup covered by
+14 additional tests. Per-item default menu identity, routed commands and arbitrary WPF menu templates
 are not equivalent to the original resource-backed menu properties.
 
 ## Resolved API accounting
@@ -70,7 +71,7 @@ and [window shell](window-shell.md) for exact extension and lifetime semantics.
 
 ## Evidence and limitations
 
-The matrix has 120 portable core cases, 2,129 Uno/Linux runtime cases, a 350-case
+The matrix has 120 portable core cases, 2,143 Uno/Linux runtime cases, a 364-case
 Windows subset and 23 Python comparator cases. Linux includes 42 opt-in XTEST input
 sequences. Actual JSON/JUnit and workflow conclusions establish what executed and
 passed on the exact revision; counts are not an equivalence score.
