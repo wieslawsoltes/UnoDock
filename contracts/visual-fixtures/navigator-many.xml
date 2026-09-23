@@ -1,0 +1,315 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Navigator name="navigator-many" width="271.87" height="544.96" windowWidth="271.87" windowHeight="544.96" documentLabel="Active Files" toolLabel="Active Tool Windows" visibleBeforeSelection="true" visibleAfterSelection="false">
+  <Element type="Grid" name="" visibility="Visible" x="0" y="0" width="271.87" height="544.96" />
+  <Element type="Border" name="WindowBorder" visibility="Visible" x="0" y="0" width="271.87" height="544.96" background="#FFF0F0F0" border="#FFA0A0A0" thickness="3,3,3,3" />
+  <Element type="Grid" name="" visibility="Visible" x="8" y="8" width="255.87" height="528.96" />
+  <Element type="Grid" name="" visibility="Visible" x="8" y="8" width="255.87000000000003" height="54" />
+  <Element type="Grid" name="" visibility="Visible" x="8" y="8" width="255.87000000000003" height="27" />
+  <Element type="Image" name="" visibility="Visible" x="8" y="21.5" width="0" height="0" />
+  <Element type="TextBlock" name="selectedElementTitle" visibility="Visible" x="12" y="13.52" width="251.87000000000003" height="15.96" text="Document 00.cs" fontSize="12" foreground="#FF000000" />
+  <Element type="TextBlock" name="selectedElementDescription" visibility="Visible" x="8" y="13.52" width="255.87000000000003" height="15.96" text="Project / Source / Document 00.cs" fontSize="12" foreground="#FF000000" />
+  <Element type="Grid" name="" visibility="Visible" x="8" y="62" width="255.87000000000003" height="432.96000000000004" />
+  <Element type="Grid" name="" visibility="Visible" x="13" y="67" width="118.16000000000003" height="422.96000000000004" />
+  <Element type="TextBlock" name="" visibility="Visible" x="13" y="70" width="118.16000000000003" height="15.96" text="Active Tool Windows" fontSize="12" foreground="#FF000000" />
+  <Element type="ListBox" name="PART_AnchorableListBox" visibility="Visible" x="13" y="89.960000000000036" width="118.16000000000003" height="400.00000000000006" fontSize="12" padding="0,0,0,0" background="#00FFFFFF" foreground="#FF000000" />
+  <Element type="Border" name="Bd" visibility="Visible" x="13" y="89.960000000000036" width="118.16000000000003" height="400.00000000000006" background="#00FFFFFF" border="#FFABADB3" thickness="0,0,0,0" />
+  <Element type="ScrollViewer" name="" visibility="Visible" x="14" y="90.960000000000036" width="116.16000000000003" height="398.00000000000006" fontSize="12" padding="0,0,0,0" background="null" foreground="#FF000000" offset="0" extent="3" viewport="3" />
+  <Element type="Grid" name="" visibility="Visible" x="14" y="90.960000000000036" width="116.16000000000003" height="398.00000000000006" />
+  <Element type="Rectangle" name="" visibility="Visible" x="130.16000000000003" y="488.96000000000009" width="0" height="0" />
+  <Element type="ScrollContentPresenter" name="" visibility="Visible" x="14" y="90.960000000000036" width="116.16000000000003" height="398.00000000000006" />
+  <Element type="ItemsPresenter" name="" visibility="Visible" x="14" y="90.960000000000036" width="116.16000000000003" height="398.00000000000006" />
+  <Element type="VirtualizingStackPanel" name="" visibility="Visible" x="14" y="90.960000000000036" width="116.16000000000003" height="398.00000000000006" />
+  <Element type="ListBoxItem" name="" visibility="Visible" x="14" y="90.960000000000036" width="116.16000000000003" height="23.96" fontSize="12" padding="4,1,4,1" background="#00FFFFFF" foreground="#FF000000" selected="false" />
+  <Element type="Border" name="Bd" visibility="Visible" x="14" y="90.960000000000036" width="116.16000000000003" height="23.96" background="#00FFFFFF" border="#00FFFFFF" thickness="1,1,1,1" />
+  <Element type="ContentPresenter" name="" visibility="Visible" x="19" y="92.960000000000036" width="94.37" height="19.96" />
+  <Element type="Grid" name="" visibility="Visible" x="19" y="92.960000000000036" width="94.37" height="19.96" />
+  <Element type="Image" name="" visibility="Visible" x="19" y="102.94000000000003" width="0" height="0" />
+  <Element type="TextBlock" name="" visibility="Visible" x="23" y="94.960000000000036" width="90.37" height="15.96" text="Solution Explorer" fontSize="12" foreground="#FF000000" />
+  <Element type="ListBoxItem" name="" visibility="Visible" x="14" y="114.92000000000003" width="116.16000000000003" height="23.96" fontSize="12" padding="4,1,4,1" background="#00FFFFFF" foreground="#FF000000" selected="false" />
+  <Element type="Border" name="Bd" visibility="Visible" x="14" y="114.92000000000003" width="116.16000000000003" height="23.96" background="#00FFFFFF" border="#00FFFFFF" thickness="1,1,1,1" />
+  <Element type="ContentPresenter" name="" visibility="Visible" x="19" y="116.92000000000003" width="57.77" height="19.96" />
+  <Element type="Grid" name="" visibility="Visible" x="19" y="116.92000000000003" width="57.77" height="19.96" />
+  <Element type="Image" name="" visibility="Visible" x="19" y="126.90000000000003" width="0" height="0" />
+  <Element type="TextBlock" name="" visibility="Visible" x="23" y="118.92000000000003" width="53.77" height="15.96" text="Properties" fontSize="12" foreground="#FF000000" />
+  <Element type="ListBoxItem" name="" visibility="Visible" x="14" y="138.88000000000002" width="116.16000000000003" height="23.96" fontSize="12" padding="4,1,4,1" background="#00FFFFFF" foreground="#FF000000" selected="false" />
+  <Element type="Border" name="Bd" visibility="Visible" x="14" y="138.88000000000002" width="116.16000000000003" height="23.96" background="#00FFFFFF" border="#00FFFFFF" thickness="1,1,1,1" />
+  <Element type="ContentPresenter" name="" visibility="Visible" x="19" y="140.88000000000002" width="41.813333333333333" height="19.96" />
+  <Element type="Grid" name="" visibility="Visible" x="19" y="140.88000000000002" width="41.813333333333333" height="19.96" />
+  <Element type="Image" name="" visibility="Visible" x="19" y="150.86000000000004" width="0" height="0" />
+  <Element type="TextBlock" name="" visibility="Visible" x="23" y="142.88000000000002" width="37.813333333333333" height="15.96" text="Output" fontSize="12" foreground="#FF000000" />
+  <Element type="AdornerLayer" name="" visibility="Visible" x="14" y="90.960000000000036" width="116.16000000000003" height="398.00000000000006" />
+  <Element type="ScrollBar" name="" visibility="Collapsed" x="14" y="90.960000000000036" width="0" height="0" fontSize="12" padding="0,0,0,0" background="#FFF0F0F0" foreground="#FF000000" />
+  <Element type="ScrollBar" name="" visibility="Collapsed" x="14" y="90.960000000000036" width="0" height="0" fontSize="12" padding="0,0,0,0" background="#FFF0F0F0" foreground="#FF000000" />
+  <Element type="Grid" name="" visibility="Visible" x="141.16000000000003" y="67" width="117.71000000000001" height="422.96000000000004" />
+  <Element type="TextBlock" name="" visibility="Visible" x="141.16000000000003" y="70" width="117.71000000000001" height="15.96" text="Active Files" fontSize="12" foreground="#FF000000" />
+  <Element type="ListBox" name="PART_DocumentListBox" visibility="Visible" x="141.16000000000003" y="89.960000000000036" width="117.71000000000001" height="400.00000000000006" fontSize="12" padding="0,0,0,0" background="#00FFFFFF" foreground="#FF000000" />
+  <Element type="Border" name="Bd" visibility="Visible" x="141.16000000000003" y="89.960000000000036" width="117.71000000000001" height="400.00000000000006" background="#00FFFFFF" border="#FFABADB3" thickness="0,0,0,0" />
+  <Element type="ScrollViewer" name="" visibility="Visible" x="142.16000000000003" y="90.960000000000036" width="115.71000000000001" height="398.00000000000006" fontSize="12" padding="0,0,0,0" background="null" foreground="#FF000000" offset="0" extent="958.40000000000055" viewport="398.00000000000006" />
+  <Element type="Grid" name="" visibility="Visible" x="142.16000000000003" y="90.960000000000036" width="115.71000000000001" height="398.00000000000006" />
+  <Element type="Rectangle" name="" visibility="Visible" x="240.87000000000003" y="488.96000000000009" width="17" height="0" />
+  <Element type="ScrollContentPresenter" name="" visibility="Visible" x="142.16000000000003" y="90.960000000000036" width="98.710000000000008" height="398.00000000000006" />
+  <Element type="ItemsPresenter" name="" visibility="Visible" x="142.16000000000003" y="90.960000000000036" width="98.710000000000008" height="958.40000000000055" />
+  <Element type="WrapPanel" name="" visibility="Visible" x="142.16000000000003" y="90.960000000000036" width="98.710000000000008" height="958.40000000000055" />
+  <Element type="ListBoxItem" name="" visibility="Visible" x="142.16000000000003" y="90.960000000000036" width="98.710000000000008" height="23.96" fontSize="12" padding="4,1,4,1" background="#00FFFFFF" foreground="#FF000000" selected="false" />
+  <Element type="Border" name="Bd" visibility="Visible" x="142.16000000000003" y="90.960000000000036" width="98.710000000000008" height="23.96" background="#00FFFFFF" border="#00FFFFFF" thickness="1,1,1,1" />
+  <Element type="ContentPresenter" name="" visibility="Visible" x="147.16000000000003" y="92.960000000000036" width="88.710000000000008" height="19.96" />
+  <Element type="Grid" name="" visibility="Visible" x="147.16000000000003" y="92.960000000000036" width="88.710000000000008" height="19.96" />
+  <Element type="Image" name="" visibility="Visible" x="147.16000000000003" y="102.94000000000003" width="0" height="0" />
+  <Element type="TextBlock" name="" visibility="Visible" x="151.16000000000003" y="94.960000000000036" width="84.710000000000008" height="15.96" text="Document 39.cs" fontSize="12" foreground="#FF000000" />
+  <Element type="ListBoxItem" name="" visibility="Visible" x="142.16000000000003" y="114.92000000000003" width="98.710000000000008" height="23.96" fontSize="12" padding="4,1,4,1" background="#00FFFFFF" foreground="#FF000000" selected="false" />
+  <Element type="Border" name="Bd" visibility="Visible" x="142.16000000000003" y="114.92000000000003" width="98.710000000000008" height="23.96" background="#00FFFFFF" border="#00FFFFFF" thickness="1,1,1,1" />
+  <Element type="ContentPresenter" name="" visibility="Visible" x="147.16000000000003" y="116.92000000000003" width="88.710000000000008" height="19.96" />
+  <Element type="Grid" name="" visibility="Visible" x="147.16000000000003" y="116.92000000000003" width="88.710000000000008" height="19.96" />
+  <Element type="Image" name="" visibility="Visible" x="147.16000000000003" y="126.90000000000003" width="0" height="0" />
+  <Element type="TextBlock" name="" visibility="Visible" x="151.16000000000003" y="118.92000000000003" width="84.710000000000008" height="15.96" text="Document 38.cs" fontSize="12" foreground="#FF000000" />
+  <Element type="ListBoxItem" name="" visibility="Visible" x="142.16000000000003" y="138.88000000000002" width="98.710000000000008" height="23.96" fontSize="12" padding="4,1,4,1" background="#00FFFFFF" foreground="#FF000000" selected="false" />
+  <Element type="Border" name="Bd" visibility="Visible" x="142.16000000000003" y="138.88000000000002" width="98.710000000000008" height="23.96" background="#00FFFFFF" border="#00FFFFFF" thickness="1,1,1,1" />
+  <Element type="ContentPresenter" name="" visibility="Visible" x="147.16000000000003" y="140.88000000000002" width="88.710000000000008" height="19.96" />
+  <Element type="Grid" name="" visibility="Visible" x="147.16000000000003" y="140.88000000000002" width="88.710000000000008" height="19.96" />
+  <Element type="Image" name="" visibility="Visible" x="147.16000000000003" y="150.86000000000004" width="0" height="0" />
+  <Element type="TextBlock" name="" visibility="Visible" x="151.16000000000003" y="142.88000000000002" width="84.710000000000008" height="15.96" text="Document 37.cs" fontSize="12" foreground="#FF000000" />
+  <Element type="ListBoxItem" name="" visibility="Visible" x="142.16000000000003" y="162.84000000000003" width="98.710000000000008" height="23.96" fontSize="12" padding="4,1,4,1" background="#00FFFFFF" foreground="#FF000000" selected="false" />
+  <Element type="Border" name="Bd" visibility="Visible" x="142.16000000000003" y="162.84000000000003" width="98.710000000000008" height="23.96" background="#00FFFFFF" border="#00FFFFFF" thickness="1,1,1,1" />
+  <Element type="ContentPresenter" name="" visibility="Visible" x="147.16000000000003" y="164.84000000000003" width="88.710000000000008" height="19.96" />
+  <Element type="Grid" name="" visibility="Visible" x="147.16000000000003" y="164.84000000000003" width="88.710000000000008" height="19.96" />
+  <Element type="Image" name="" visibility="Visible" x="147.16000000000003" y="174.82000000000002" width="0" height="0" />
+  <Element type="TextBlock" name="" visibility="Visible" x="151.16000000000003" y="166.84000000000003" width="84.710000000000008" height="15.96" text="Document 36.cs" fontSize="12" foreground="#FF000000" />
+  <Element type="ListBoxItem" name="" visibility="Visible" x="142.16000000000003" y="186.80000000000004" width="98.710000000000008" height="23.96" fontSize="12" padding="4,1,4,1" background="#00FFFFFF" foreground="#FF000000" selected="false" />
+  <Element type="Border" name="Bd" visibility="Visible" x="142.16000000000003" y="186.80000000000004" width="98.710000000000008" height="23.96" background="#00FFFFFF" border="#00FFFFFF" thickness="1,1,1,1" />
+  <Element type="ContentPresenter" name="" visibility="Visible" x="147.16000000000003" y="188.80000000000004" width="88.710000000000008" height="19.96" />
+  <Element type="Grid" name="" visibility="Visible" x="147.16000000000003" y="188.80000000000004" width="88.710000000000008" height="19.96" />
+  <Element type="Image" name="" visibility="Visible" x="147.16000000000003" y="198.78000000000003" width="0" height="0" />
+  <Element type="TextBlock" name="" visibility="Visible" x="151.16000000000003" y="190.80000000000004" width="84.710000000000008" height="15.96" text="Document 35.cs" fontSize="12" foreground="#FF000000" />
+  <Element type="ListBoxItem" name="" visibility="Visible" x="142.16000000000003" y="210.76000000000005" width="98.710000000000008" height="23.96" fontSize="12" padding="4,1,4,1" background="#00FFFFFF" foreground="#FF000000" selected="false" />
+  <Element type="Border" name="Bd" visibility="Visible" x="142.16000000000003" y="210.76000000000005" width="98.710000000000008" height="23.96" background="#00FFFFFF" border="#00FFFFFF" thickness="1,1,1,1" />
+  <Element type="ContentPresenter" name="" visibility="Visible" x="147.16000000000003" y="212.76000000000005" width="88.710000000000008" height="19.96" />
+  <Element type="Grid" name="" visibility="Visible" x="147.16000000000003" y="212.76000000000005" width="88.710000000000008" height="19.96" />
+  <Element type="Image" name="" visibility="Visible" x="147.16000000000003" y="222.74000000000004" width="0" height="0" />
+  <Element type="TextBlock" name="" visibility="Visible" x="151.16000000000003" y="214.76000000000005" width="84.710000000000008" height="15.96" text="Document 34.cs" fontSize="12" foreground="#FF000000" />
+  <Element type="ListBoxItem" name="" visibility="Visible" x="142.16000000000003" y="234.72000000000006" width="98.710000000000008" height="23.96" fontSize="12" padding="4,1,4,1" background="#00FFFFFF" foreground="#FF000000" selected="false" />
+  <Element type="Border" name="Bd" visibility="Visible" x="142.16000000000003" y="234.72000000000006" width="98.710000000000008" height="23.96" background="#00FFFFFF" border="#00FFFFFF" thickness="1,1,1,1" />
+  <Element type="ContentPresenter" name="" visibility="Visible" x="147.16000000000003" y="236.72000000000006" width="88.710000000000008" height="19.96" />
+  <Element type="Grid" name="" visibility="Visible" x="147.16000000000003" y="236.72000000000006" width="88.710000000000008" height="19.96" />
+  <Element type="Image" name="" visibility="Visible" x="147.16000000000003" y="246.70000000000005" width="0" height="0" />
+  <Element type="TextBlock" name="" visibility="Visible" x="151.16000000000003" y="238.72000000000006" width="84.710000000000008" height="15.96" text="Document 33.cs" fontSize="12" foreground="#FF000000" />
+  <Element type="ListBoxItem" name="" visibility="Visible" x="142.16000000000003" y="258.68000000000006" width="98.710000000000008" height="23.96" fontSize="12" padding="4,1,4,1" background="#00FFFFFF" foreground="#FF000000" selected="false" />
+  <Element type="Border" name="Bd" visibility="Visible" x="142.16000000000003" y="258.68000000000006" width="98.710000000000008" height="23.96" background="#00FFFFFF" border="#00FFFFFF" thickness="1,1,1,1" />
+  <Element type="ContentPresenter" name="" visibility="Visible" x="147.16000000000003" y="260.68000000000006" width="88.710000000000008" height="19.96" />
+  <Element type="Grid" name="" visibility="Visible" x="147.16000000000003" y="260.68000000000006" width="88.710000000000008" height="19.96" />
+  <Element type="Image" name="" visibility="Visible" x="147.16000000000003" y="270.66000000000008" width="0" height="0" />
+  <Element type="TextBlock" name="" visibility="Visible" x="151.16000000000003" y="262.68000000000006" width="84.710000000000008" height="15.96" text="Document 32.cs" fontSize="12" foreground="#FF000000" />
+  <Element type="ListBoxItem" name="" visibility="Visible" x="142.16000000000003" y="282.6400000000001" width="98.710000000000008" height="23.96" fontSize="12" padding="4,1,4,1" background="#00FFFFFF" foreground="#FF000000" selected="false" />
+  <Element type="Border" name="Bd" visibility="Visible" x="142.16000000000003" y="282.6400000000001" width="98.710000000000008" height="23.96" background="#00FFFFFF" border="#00FFFFFF" thickness="1,1,1,1" />
+  <Element type="ContentPresenter" name="" visibility="Visible" x="147.16000000000003" y="284.6400000000001" width="88.710000000000008" height="19.96" />
+  <Element type="Grid" name="" visibility="Visible" x="147.16000000000003" y="284.6400000000001" width="88.710000000000008" height="19.96" />
+  <Element type="Image" name="" visibility="Visible" x="147.16000000000003" y="294.62000000000006" width="0" height="0" />
+  <Element type="TextBlock" name="" visibility="Visible" x="151.16000000000003" y="286.6400000000001" width="84.710000000000008" height="15.96" text="Document 31.cs" fontSize="12" foreground="#FF000000" />
+  <Element type="ListBoxItem" name="" visibility="Visible" x="142.16000000000003" y="306.60000000000008" width="98.710000000000008" height="23.96" fontSize="12" padding="4,1,4,1" background="#00FFFFFF" foreground="#FF000000" selected="false" />
+  <Element type="Border" name="Bd" visibility="Visible" x="142.16000000000003" y="306.60000000000008" width="98.710000000000008" height="23.96" background="#00FFFFFF" border="#00FFFFFF" thickness="1,1,1,1" />
+  <Element type="ContentPresenter" name="" visibility="Visible" x="147.16000000000003" y="308.60000000000008" width="88.710000000000008" height="19.96" />
+  <Element type="Grid" name="" visibility="Visible" x="147.16000000000003" y="308.60000000000008" width="88.710000000000008" height="19.96" />
+  <Element type="Image" name="" visibility="Visible" x="147.16000000000003" y="318.58000000000004" width="0" height="0" />
+  <Element type="TextBlock" name="" visibility="Visible" x="151.16000000000003" y="310.60000000000008" width="84.710000000000008" height="15.96" text="Document 30.cs" fontSize="12" foreground="#FF000000" />
+  <Element type="ListBoxItem" name="" visibility="Visible" x="142.16000000000003" y="330.56000000000006" width="98.710000000000008" height="23.96" fontSize="12" padding="4,1,4,1" background="#00FFFFFF" foreground="#FF000000" selected="false" />
+  <Element type="Border" name="Bd" visibility="Visible" x="142.16000000000003" y="330.56000000000006" width="98.710000000000008" height="23.96" background="#00FFFFFF" border="#00FFFFFF" thickness="1,1,1,1" />
+  <Element type="ContentPresenter" name="" visibility="Visible" x="147.16000000000003" y="332.56000000000006" width="88.710000000000008" height="19.96" />
+  <Element type="Grid" name="" visibility="Visible" x="147.16000000000003" y="332.56000000000006" width="88.710000000000008" height="19.96" />
+  <Element type="Image" name="" visibility="Visible" x="147.16000000000003" y="342.54000000000008" width="0" height="0" />
+  <Element type="TextBlock" name="" visibility="Visible" x="151.16000000000003" y="334.56000000000006" width="84.710000000000008" height="15.96" text="Document 29.cs" fontSize="12" foreground="#FF000000" />
+  <Element type="ListBoxItem" name="" visibility="Visible" x="142.16000000000003" y="354.5200000000001" width="98.710000000000008" height="23.96" fontSize="12" padding="4,1,4,1" background="#00FFFFFF" foreground="#FF000000" selected="false" />
+  <Element type="Border" name="Bd" visibility="Visible" x="142.16000000000003" y="354.5200000000001" width="98.710000000000008" height="23.96" background="#00FFFFFF" border="#00FFFFFF" thickness="1,1,1,1" />
+  <Element type="ContentPresenter" name="" visibility="Visible" x="147.16000000000003" y="356.5200000000001" width="88.710000000000008" height="19.96" />
+  <Element type="Grid" name="" visibility="Visible" x="147.16000000000003" y="356.5200000000001" width="88.710000000000008" height="19.96" />
+  <Element type="Image" name="" visibility="Visible" x="147.16000000000003" y="366.50000000000011" width="0" height="0" />
+  <Element type="TextBlock" name="" visibility="Visible" x="151.16000000000003" y="358.5200000000001" width="84.710000000000008" height="15.96" text="Document 28.cs" fontSize="12" foreground="#FF000000" />
+  <Element type="ListBoxItem" name="" visibility="Visible" x="142.16000000000003" y="378.48000000000008" width="98.710000000000008" height="23.96" fontSize="12" padding="4,1,4,1" background="#00FFFFFF" foreground="#FF000000" selected="false" />
+  <Element type="Border" name="Bd" visibility="Visible" x="142.16000000000003" y="378.48000000000008" width="98.710000000000008" height="23.96" background="#00FFFFFF" border="#00FFFFFF" thickness="1,1,1,1" />
+  <Element type="ContentPresenter" name="" visibility="Visible" x="147.16000000000003" y="380.48000000000008" width="88.710000000000008" height="19.96" />
+  <Element type="Grid" name="" visibility="Visible" x="147.16000000000003" y="380.48000000000008" width="88.710000000000008" height="19.96" />
+  <Element type="Image" name="" visibility="Visible" x="147.16000000000003" y="390.46000000000009" width="0" height="0" />
+  <Element type="TextBlock" name="" visibility="Visible" x="151.16000000000003" y="382.48000000000008" width="84.710000000000008" height="15.96" text="Document 27.cs" fontSize="12" foreground="#FF000000" />
+  <Element type="ListBoxItem" name="" visibility="Visible" x="142.16000000000003" y="402.44000000000005" width="98.710000000000008" height="23.96" fontSize="12" padding="4,1,4,1" background="#00FFFFFF" foreground="#FF000000" selected="false" />
+  <Element type="Border" name="Bd" visibility="Visible" x="142.16000000000003" y="402.44000000000005" width="98.710000000000008" height="23.96" background="#00FFFFFF" border="#00FFFFFF" thickness="1,1,1,1" />
+  <Element type="ContentPresenter" name="" visibility="Visible" x="147.16000000000003" y="404.44000000000005" width="88.710000000000008" height="19.96" />
+  <Element type="Grid" name="" visibility="Visible" x="147.16000000000003" y="404.44000000000005" width="88.710000000000008" height="19.96" />
+  <Element type="Image" name="" visibility="Visible" x="147.16000000000003" y="414.42000000000007" width="0" height="0" />
+  <Element type="TextBlock" name="" visibility="Visible" x="151.16000000000003" y="406.44000000000005" width="84.710000000000008" height="15.96" text="Document 26.cs" fontSize="12" foreground="#FF000000" />
+  <Element type="ListBoxItem" name="" visibility="Visible" x="142.16000000000003" y="426.40000000000003" width="98.710000000000008" height="23.96" fontSize="12" padding="4,1,4,1" background="#00FFFFFF" foreground="#FF000000" selected="false" />
+  <Element type="Border" name="Bd" visibility="Visible" x="142.16000000000003" y="426.40000000000003" width="98.710000000000008" height="23.96" background="#00FFFFFF" border="#00FFFFFF" thickness="1,1,1,1" />
+  <Element type="ContentPresenter" name="" visibility="Visible" x="147.16000000000003" y="428.40000000000003" width="88.710000000000008" height="19.96" />
+  <Element type="Grid" name="" visibility="Visible" x="147.16000000000003" y="428.40000000000003" width="88.710000000000008" height="19.96" />
+  <Element type="Image" name="" visibility="Visible" x="147.16000000000003" y="438.38000000000005" width="0" height="0" />
+  <Element type="TextBlock" name="" visibility="Visible" x="151.16000000000003" y="430.40000000000003" width="84.710000000000008" height="15.96" text="Document 25.cs" fontSize="12" foreground="#FF000000" />
+  <Element type="ListBoxItem" name="" visibility="Visible" x="142.16000000000003" y="450.36" width="98.710000000000008" height="23.96" fontSize="12" padding="4,1,4,1" background="#00FFFFFF" foreground="#FF000000" selected="false" />
+  <Element type="Border" name="Bd" visibility="Visible" x="142.16000000000003" y="450.36" width="98.710000000000008" height="23.96" background="#00FFFFFF" border="#00FFFFFF" thickness="1,1,1,1" />
+  <Element type="ContentPresenter" name="" visibility="Visible" x="147.16000000000003" y="452.36" width="88.710000000000008" height="19.96" />
+  <Element type="Grid" name="" visibility="Visible" x="147.16000000000003" y="452.36" width="88.710000000000008" height="19.96" />
+  <Element type="Image" name="" visibility="Visible" x="147.16000000000003" y="462.34000000000003" width="0" height="0" />
+  <Element type="TextBlock" name="" visibility="Visible" x="151.16000000000003" y="454.36" width="84.710000000000008" height="15.96" text="Document 24.cs" fontSize="12" foreground="#FF000000" />
+  <Element type="ListBoxItem" name="" visibility="Visible" x="142.16000000000003" y="474.32" width="98.710000000000008" height="23.96" fontSize="12" padding="4,1,4,1" background="#00FFFFFF" foreground="#FF000000" selected="false" />
+  <Element type="Border" name="Bd" visibility="Visible" x="142.16000000000003" y="474.32" width="98.710000000000008" height="23.96" background="#00FFFFFF" border="#00FFFFFF" thickness="1,1,1,1" />
+  <Element type="ContentPresenter" name="" visibility="Visible" x="147.16000000000003" y="476.32" width="88.710000000000008" height="19.96" />
+  <Element type="Grid" name="" visibility="Visible" x="147.16000000000003" y="476.32" width="88.710000000000008" height="19.96" />
+  <Element type="Image" name="" visibility="Visible" x="147.16000000000003" y="486.3" width="0" height="0" />
+  <Element type="TextBlock" name="" visibility="Visible" x="151.16000000000003" y="478.32" width="84.710000000000008" height="15.96" text="Document 23.cs" fontSize="12" foreground="#FF000000" />
+  <Element type="ListBoxItem" name="" visibility="Visible" x="142.16000000000003" y="498.28" width="98.710000000000008" height="23.96" fontSize="12" padding="4,1,4,1" background="#00FFFFFF" foreground="#FF000000" selected="false" />
+  <Element type="Border" name="Bd" visibility="Visible" x="142.16000000000003" y="498.28" width="98.710000000000008" height="23.96" background="#00FFFFFF" border="#00FFFFFF" thickness="1,1,1,1" />
+  <Element type="ContentPresenter" name="" visibility="Visible" x="147.16000000000003" y="500.28" width="88.710000000000008" height="19.96" />
+  <Element type="Grid" name="" visibility="Visible" x="147.16000000000003" y="500.28" width="88.710000000000008" height="19.96" />
+  <Element type="Image" name="" visibility="Visible" x="147.16000000000003" y="510.26" width="0" height="0" />
+  <Element type="TextBlock" name="" visibility="Visible" x="151.16000000000003" y="502.28" width="84.710000000000008" height="15.96" text="Document 22.cs" fontSize="12" foreground="#FF000000" />
+  <Element type="ListBoxItem" name="" visibility="Visible" x="142.16000000000003" y="522.24" width="98.710000000000008" height="23.96" fontSize="12" padding="4,1,4,1" background="#00FFFFFF" foreground="#FF000000" selected="false" />
+  <Element type="Border" name="Bd" visibility="Visible" x="142.16000000000003" y="522.24" width="98.710000000000008" height="23.96" background="#00FFFFFF" border="#00FFFFFF" thickness="1,1,1,1" />
+  <Element type="ContentPresenter" name="" visibility="Visible" x="147.16000000000003" y="524.24" width="88.710000000000008" height="19.96" />
+  <Element type="Grid" name="" visibility="Visible" x="147.16000000000003" y="524.24" width="88.710000000000008" height="19.96" />
+  <Element type="Image" name="" visibility="Visible" x="147.16000000000003" y="534.22" width="0" height="0" />
+  <Element type="TextBlock" name="" visibility="Visible" x="151.16000000000003" y="526.24" width="84.710000000000008" height="15.96" text="Document 21.cs" fontSize="12" foreground="#FF000000" />
+  <Element type="ListBoxItem" name="" visibility="Visible" x="142.16000000000003" y="546.19999999999993" width="98.710000000000008" height="23.96" fontSize="12" padding="4,1,4,1" background="#00FFFFFF" foreground="#FF000000" selected="false" />
+  <Element type="Border" name="Bd" visibility="Visible" x="142.16000000000003" y="546.19999999999993" width="98.710000000000008" height="23.96" background="#00FFFFFF" border="#00FFFFFF" thickness="1,1,1,1" />
+  <Element type="ContentPresenter" name="" visibility="Visible" x="147.16000000000003" y="548.19999999999993" width="88.710000000000008" height="19.96" />
+  <Element type="Grid" name="" visibility="Visible" x="147.16000000000003" y="548.19999999999993" width="88.710000000000008" height="19.96" />
+  <Element type="Image" name="" visibility="Visible" x="147.16000000000003" y="558.18" width="0" height="0" />
+  <Element type="TextBlock" name="" visibility="Visible" x="151.16000000000003" y="550.19999999999993" width="84.710000000000008" height="15.96" text="Document 20.cs" fontSize="12" foreground="#FF000000" />
+  <Element type="ListBoxItem" name="" visibility="Visible" x="142.16000000000003" y="570.15999999999985" width="98.710000000000008" height="23.96" fontSize="12" padding="4,1,4,1" background="#00FFFFFF" foreground="#FF000000" selected="false" />
+  <Element type="Border" name="Bd" visibility="Visible" x="142.16000000000003" y="570.15999999999985" width="98.710000000000008" height="23.96" background="#00FFFFFF" border="#00FFFFFF" thickness="1,1,1,1" />
+  <Element type="ContentPresenter" name="" visibility="Visible" x="147.16000000000003" y="572.15999999999985" width="88.710000000000008" height="19.96" />
+  <Element type="Grid" name="" visibility="Visible" x="147.16000000000003" y="572.15999999999985" width="88.710000000000008" height="19.96" />
+  <Element type="Image" name="" visibility="Visible" x="147.16000000000003" y="582.13999999999987" width="0" height="0" />
+  <Element type="TextBlock" name="" visibility="Visible" x="151.16000000000003" y="574.15999999999985" width="84.710000000000008" height="15.96" text="Document 19.cs" fontSize="12" foreground="#FF000000" />
+  <Element type="ListBoxItem" name="" visibility="Visible" x="142.16000000000003" y="594.11999999999989" width="98.710000000000008" height="23.96" fontSize="12" padding="4,1,4,1" background="#00FFFFFF" foreground="#FF000000" selected="false" />
+  <Element type="Border" name="Bd" visibility="Visible" x="142.16000000000003" y="594.11999999999989" width="98.710000000000008" height="23.96" background="#00FFFFFF" border="#00FFFFFF" thickness="1,1,1,1" />
+  <Element type="ContentPresenter" name="" visibility="Visible" x="147.16000000000003" y="596.11999999999989" width="88.710000000000008" height="19.96" />
+  <Element type="Grid" name="" visibility="Visible" x="147.16000000000003" y="596.11999999999989" width="88.710000000000008" height="19.96" />
+  <Element type="Image" name="" visibility="Visible" x="147.16000000000003" y="606.09999999999991" width="0" height="0" />
+  <Element type="TextBlock" name="" visibility="Visible" x="151.16000000000003" y="598.11999999999989" width="84.710000000000008" height="15.96" text="Document 18.cs" fontSize="12" foreground="#FF000000" />
+  <Element type="ListBoxItem" name="" visibility="Visible" x="142.16000000000003" y="618.07999999999993" width="98.710000000000008" height="23.96" fontSize="12" padding="4,1,4,1" background="#00FFFFFF" foreground="#FF000000" selected="false" />
+  <Element type="Border" name="Bd" visibility="Visible" x="142.16000000000003" y="618.07999999999993" width="98.710000000000008" height="23.96" background="#00FFFFFF" border="#00FFFFFF" thickness="1,1,1,1" />
+  <Element type="ContentPresenter" name="" visibility="Visible" x="147.16000000000003" y="620.07999999999993" width="88.710000000000008" height="19.96" />
+  <Element type="Grid" name="" visibility="Visible" x="147.16000000000003" y="620.07999999999993" width="88.710000000000008" height="19.96" />
+  <Element type="Image" name="" visibility="Visible" x="147.16000000000003" y="630.06" width="0" height="0" />
+  <Element type="TextBlock" name="" visibility="Visible" x="151.16000000000003" y="622.07999999999993" width="84.710000000000008" height="15.96" text="Document 17.cs" fontSize="12" foreground="#FF000000" />
+  <Element type="ListBoxItem" name="" visibility="Visible" x="142.16000000000003" y="642.04" width="98.710000000000008" height="23.96" fontSize="12" padding="4,1,4,1" background="#00FFFFFF" foreground="#FF000000" selected="false" />
+  <Element type="Border" name="Bd" visibility="Visible" x="142.16000000000003" y="642.04" width="98.710000000000008" height="23.96" background="#00FFFFFF" border="#00FFFFFF" thickness="1,1,1,1" />
+  <Element type="ContentPresenter" name="" visibility="Visible" x="147.16000000000003" y="644.04" width="88.710000000000008" height="19.96" />
+  <Element type="Grid" name="" visibility="Visible" x="147.16000000000003" y="644.04" width="88.710000000000008" height="19.96" />
+  <Element type="Image" name="" visibility="Visible" x="147.16000000000003" y="654.02" width="0" height="0" />
+  <Element type="TextBlock" name="" visibility="Visible" x="151.16000000000003" y="646.04" width="84.710000000000008" height="15.96" text="Document 16.cs" fontSize="12" foreground="#FF000000" />
+  <Element type="ListBoxItem" name="" visibility="Visible" x="142.16000000000003" y="666" width="98.710000000000008" height="23.96" fontSize="12" padding="4,1,4,1" background="#00FFFFFF" foreground="#FF000000" selected="false" />
+  <Element type="Border" name="Bd" visibility="Visible" x="142.16000000000003" y="666" width="98.710000000000008" height="23.96" background="#00FFFFFF" border="#00FFFFFF" thickness="1,1,1,1" />
+  <Element type="ContentPresenter" name="" visibility="Visible" x="147.16000000000003" y="668" width="88.710000000000008" height="19.96" />
+  <Element type="Grid" name="" visibility="Visible" x="147.16000000000003" y="668" width="88.710000000000008" height="19.96" />
+  <Element type="Image" name="" visibility="Visible" x="147.16000000000003" y="677.98" width="0" height="0" />
+  <Element type="TextBlock" name="" visibility="Visible" x="151.16000000000003" y="670" width="84.710000000000008" height="15.96" text="Document 15.cs" fontSize="12" foreground="#FF000000" />
+  <Element type="ListBoxItem" name="" visibility="Visible" x="142.16000000000003" y="689.96" width="98.710000000000008" height="23.96" fontSize="12" padding="4,1,4,1" background="#00FFFFFF" foreground="#FF000000" selected="false" />
+  <Element type="Border" name="Bd" visibility="Visible" x="142.16000000000003" y="689.96" width="98.710000000000008" height="23.96" background="#00FFFFFF" border="#00FFFFFF" thickness="1,1,1,1" />
+  <Element type="ContentPresenter" name="" visibility="Visible" x="147.16000000000003" y="691.96" width="88.710000000000008" height="19.96" />
+  <Element type="Grid" name="" visibility="Visible" x="147.16000000000003" y="691.96" width="88.710000000000008" height="19.96" />
+  <Element type="Image" name="" visibility="Visible" x="147.16000000000003" y="701.94" width="0" height="0" />
+  <Element type="TextBlock" name="" visibility="Visible" x="151.16000000000003" y="693.96" width="84.710000000000008" height="15.96" text="Document 14.cs" fontSize="12" foreground="#FF000000" />
+  <Element type="ListBoxItem" name="" visibility="Visible" x="142.16000000000003" y="713.92000000000007" width="98.710000000000008" height="23.96" fontSize="12" padding="4,1,4,1" background="#00FFFFFF" foreground="#FF000000" selected="false" />
+  <Element type="Border" name="Bd" visibility="Visible" x="142.16000000000003" y="713.92000000000007" width="98.710000000000008" height="23.96" background="#00FFFFFF" border="#00FFFFFF" thickness="1,1,1,1" />
+  <Element type="ContentPresenter" name="" visibility="Visible" x="147.16000000000003" y="715.92000000000007" width="88.710000000000008" height="19.96" />
+  <Element type="Grid" name="" visibility="Visible" x="147.16000000000003" y="715.92000000000007" width="88.710000000000008" height="19.96" />
+  <Element type="Image" name="" visibility="Visible" x="147.16000000000003" y="725.90000000000009" width="0" height="0" />
+  <Element type="TextBlock" name="" visibility="Visible" x="151.16000000000003" y="717.92000000000007" width="84.710000000000008" height="15.96" text="Document 13.cs" fontSize="12" foreground="#FF000000" />
+  <Element type="ListBoxItem" name="" visibility="Visible" x="142.16000000000003" y="737.88000000000011" width="98.710000000000008" height="23.96" fontSize="12" padding="4,1,4,1" background="#00FFFFFF" foreground="#FF000000" selected="false" />
+  <Element type="Border" name="Bd" visibility="Visible" x="142.16000000000003" y="737.88000000000011" width="98.710000000000008" height="23.96" background="#00FFFFFF" border="#00FFFFFF" thickness="1,1,1,1" />
+  <Element type="ContentPresenter" name="" visibility="Visible" x="147.16000000000003" y="739.88000000000011" width="88.710000000000008" height="19.96" />
+  <Element type="Grid" name="" visibility="Visible" x="147.16000000000003" y="739.88000000000011" width="88.710000000000008" height="19.96" />
+  <Element type="Image" name="" visibility="Visible" x="147.16000000000003" y="749.86000000000013" width="0" height="0" />
+  <Element type="TextBlock" name="" visibility="Visible" x="151.16000000000003" y="741.88000000000011" width="84.710000000000008" height="15.96" text="Document 12.cs" fontSize="12" foreground="#FF000000" />
+  <Element type="ListBoxItem" name="" visibility="Visible" x="142.16000000000003" y="761.84000000000015" width="98.710000000000008" height="23.96" fontSize="12" padding="4,1,4,1" background="#00FFFFFF" foreground="#FF000000" selected="false" />
+  <Element type="Border" name="Bd" visibility="Visible" x="142.16000000000003" y="761.84000000000015" width="98.710000000000008" height="23.96" background="#00FFFFFF" border="#00FFFFFF" thickness="1,1,1,1" />
+  <Element type="ContentPresenter" name="" visibility="Visible" x="147.16000000000003" y="763.84000000000015" width="88.710000000000008" height="19.96" />
+  <Element type="Grid" name="" visibility="Visible" x="147.16000000000003" y="763.84000000000015" width="88.710000000000008" height="19.96" />
+  <Element type="Image" name="" visibility="Visible" x="147.16000000000003" y="773.82000000000016" width="0" height="0" />
+  <Element type="TextBlock" name="" visibility="Visible" x="151.16000000000003" y="765.84000000000015" width="84.710000000000008" height="15.96" text="Document 11.cs" fontSize="12" foreground="#FF000000" />
+  <Element type="ListBoxItem" name="" visibility="Visible" x="142.16000000000003" y="785.80000000000018" width="98.710000000000008" height="23.96" fontSize="12" padding="4,1,4,1" background="#00FFFFFF" foreground="#FF000000" selected="false" />
+  <Element type="Border" name="Bd" visibility="Visible" x="142.16000000000003" y="785.80000000000018" width="98.710000000000008" height="23.96" background="#00FFFFFF" border="#00FFFFFF" thickness="1,1,1,1" />
+  <Element type="ContentPresenter" name="" visibility="Visible" x="147.16000000000003" y="787.80000000000018" width="88.710000000000008" height="19.96" />
+  <Element type="Grid" name="" visibility="Visible" x="147.16000000000003" y="787.80000000000018" width="88.710000000000008" height="19.96" />
+  <Element type="Image" name="" visibility="Visible" x="147.16000000000003" y="797.7800000000002" width="0" height="0" />
+  <Element type="TextBlock" name="" visibility="Visible" x="151.16000000000003" y="789.80000000000018" width="84.710000000000008" height="15.96" text="Document 10.cs" fontSize="12" foreground="#FF000000" />
+  <Element type="ListBoxItem" name="" visibility="Visible" x="142.16000000000003" y="809.76000000000022" width="98.710000000000008" height="23.96" fontSize="12" padding="4,1,4,1" background="#00FFFFFF" foreground="#FF000000" selected="false" />
+  <Element type="Border" name="Bd" visibility="Visible" x="142.16000000000003" y="809.76000000000022" width="98.710000000000008" height="23.96" background="#00FFFFFF" border="#00FFFFFF" thickness="1,1,1,1" />
+  <Element type="ContentPresenter" name="" visibility="Visible" x="147.16000000000003" y="811.76000000000022" width="88.710000000000008" height="19.96" />
+  <Element type="Grid" name="" visibility="Visible" x="147.16000000000003" y="811.76000000000022" width="88.710000000000008" height="19.96" />
+  <Element type="Image" name="" visibility="Visible" x="147.16000000000003" y="821.74000000000024" width="0" height="0" />
+  <Element type="TextBlock" name="" visibility="Visible" x="151.16000000000003" y="813.76000000000022" width="84.710000000000008" height="15.96" text="Document 09.cs" fontSize="12" foreground="#FF000000" />
+  <Element type="ListBoxItem" name="" visibility="Visible" x="142.16000000000003" y="833.72000000000025" width="98.710000000000008" height="23.96" fontSize="12" padding="4,1,4,1" background="#00FFFFFF" foreground="#FF000000" selected="false" />
+  <Element type="Border" name="Bd" visibility="Visible" x="142.16000000000003" y="833.72000000000025" width="98.710000000000008" height="23.96" background="#00FFFFFF" border="#00FFFFFF" thickness="1,1,1,1" />
+  <Element type="ContentPresenter" name="" visibility="Visible" x="147.16000000000003" y="835.72000000000025" width="88.710000000000008" height="19.96" />
+  <Element type="Grid" name="" visibility="Visible" x="147.16000000000003" y="835.72000000000025" width="88.710000000000008" height="19.96" />
+  <Element type="Image" name="" visibility="Visible" x="147.16000000000003" y="845.70000000000027" width="0" height="0" />
+  <Element type="TextBlock" name="" visibility="Visible" x="151.16000000000003" y="837.72000000000025" width="84.710000000000008" height="15.96" text="Document 08.cs" fontSize="12" foreground="#FF000000" />
+  <Element type="ListBoxItem" name="" visibility="Visible" x="142.16000000000003" y="857.68000000000029" width="98.710000000000008" height="23.96" fontSize="12" padding="4,1,4,1" background="#00FFFFFF" foreground="#FF000000" selected="false" />
+  <Element type="Border" name="Bd" visibility="Visible" x="142.16000000000003" y="857.68000000000029" width="98.710000000000008" height="23.96" background="#00FFFFFF" border="#00FFFFFF" thickness="1,1,1,1" />
+  <Element type="ContentPresenter" name="" visibility="Visible" x="147.16000000000003" y="859.68000000000029" width="88.710000000000008" height="19.96" />
+  <Element type="Grid" name="" visibility="Visible" x="147.16000000000003" y="859.68000000000029" width="88.710000000000008" height="19.96" />
+  <Element type="Image" name="" visibility="Visible" x="147.16000000000003" y="869.66000000000031" width="0" height="0" />
+  <Element type="TextBlock" name="" visibility="Visible" x="151.16000000000003" y="861.68000000000029" width="84.710000000000008" height="15.96" text="Document 07.cs" fontSize="12" foreground="#FF000000" />
+  <Element type="ListBoxItem" name="" visibility="Visible" x="142.16000000000003" y="881.64000000000033" width="98.710000000000008" height="23.96" fontSize="12" padding="4,1,4,1" background="#00FFFFFF" foreground="#FF000000" selected="false" />
+  <Element type="Border" name="Bd" visibility="Visible" x="142.16000000000003" y="881.64000000000033" width="98.710000000000008" height="23.96" background="#00FFFFFF" border="#00FFFFFF" thickness="1,1,1,1" />
+  <Element type="ContentPresenter" name="" visibility="Visible" x="147.16000000000003" y="883.64000000000033" width="88.710000000000008" height="19.96" />
+  <Element type="Grid" name="" visibility="Visible" x="147.16000000000003" y="883.64000000000033" width="88.710000000000008" height="19.96" />
+  <Element type="Image" name="" visibility="Visible" x="147.16000000000003" y="893.62000000000035" width="0" height="0" />
+  <Element type="TextBlock" name="" visibility="Visible" x="151.16000000000003" y="885.64000000000033" width="84.710000000000008" height="15.96" text="Document 06.cs" fontSize="12" foreground="#FF000000" />
+  <Element type="ListBoxItem" name="" visibility="Visible" x="142.16000000000003" y="905.60000000000036" width="98.710000000000008" height="23.96" fontSize="12" padding="4,1,4,1" background="#00FFFFFF" foreground="#FF000000" selected="false" />
+  <Element type="Border" name="Bd" visibility="Visible" x="142.16000000000003" y="905.60000000000036" width="98.710000000000008" height="23.96" background="#00FFFFFF" border="#00FFFFFF" thickness="1,1,1,1" />
+  <Element type="ContentPresenter" name="" visibility="Visible" x="147.16000000000003" y="907.60000000000036" width="88.710000000000008" height="19.96" />
+  <Element type="Grid" name="" visibility="Visible" x="147.16000000000003" y="907.60000000000036" width="88.710000000000008" height="19.96" />
+  <Element type="Image" name="" visibility="Visible" x="147.16000000000003" y="917.58000000000038" width="0" height="0" />
+  <Element type="TextBlock" name="" visibility="Visible" x="151.16000000000003" y="909.60000000000036" width="84.710000000000008" height="15.96" text="Document 05.cs" fontSize="12" foreground="#FF000000" />
+  <Element type="ListBoxItem" name="" visibility="Visible" x="142.16000000000003" y="929.5600000000004" width="98.710000000000008" height="23.96" fontSize="12" padding="4,1,4,1" background="#00FFFFFF" foreground="#FF000000" selected="false" />
+  <Element type="Border" name="Bd" visibility="Visible" x="142.16000000000003" y="929.5600000000004" width="98.710000000000008" height="23.96" background="#00FFFFFF" border="#00FFFFFF" thickness="1,1,1,1" />
+  <Element type="ContentPresenter" name="" visibility="Visible" x="147.16000000000003" y="931.5600000000004" width="88.710000000000008" height="19.96" />
+  <Element type="Grid" name="" visibility="Visible" x="147.16000000000003" y="931.5600000000004" width="88.710000000000008" height="19.96" />
+  <Element type="Image" name="" visibility="Visible" x="147.16000000000003" y="941.54000000000042" width="0" height="0" />
+  <Element type="TextBlock" name="" visibility="Visible" x="151.16000000000003" y="933.5600000000004" width="84.710000000000008" height="15.96" text="Document 04.cs" fontSize="12" foreground="#FF000000" />
+  <Element type="ListBoxItem" name="" visibility="Visible" x="142.16000000000003" y="953.52000000000044" width="98.710000000000008" height="23.96" fontSize="12" padding="4,1,4,1" background="#00FFFFFF" foreground="#FF000000" selected="false" />
+  <Element type="Border" name="Bd" visibility="Visible" x="142.16000000000003" y="953.52000000000044" width="98.710000000000008" height="23.96" background="#00FFFFFF" border="#00FFFFFF" thickness="1,1,1,1" />
+  <Element type="ContentPresenter" name="" visibility="Visible" x="147.16000000000003" y="955.52000000000044" width="88.710000000000008" height="19.96" />
+  <Element type="Grid" name="" visibility="Visible" x="147.16000000000003" y="955.52000000000044" width="88.710000000000008" height="19.96" />
+  <Element type="Image" name="" visibility="Visible" x="147.16000000000003" y="965.50000000000045" width="0" height="0" />
+  <Element type="TextBlock" name="" visibility="Visible" x="151.16000000000003" y="957.52000000000044" width="84.710000000000008" height="15.96" text="Document 03.cs" fontSize="12" foreground="#FF000000" />
+  <Element type="ListBoxItem" name="" visibility="Visible" x="142.16000000000003" y="977.48000000000047" width="98.710000000000008" height="23.96" fontSize="12" padding="4,1,4,1" background="#00FFFFFF" foreground="#FF000000" selected="false" />
+  <Element type="Border" name="Bd" visibility="Visible" x="142.16000000000003" y="977.48000000000047" width="98.710000000000008" height="23.96" background="#00FFFFFF" border="#00FFFFFF" thickness="1,1,1,1" />
+  <Element type="ContentPresenter" name="" visibility="Visible" x="147.16000000000003" y="979.48000000000047" width="88.710000000000008" height="19.96" />
+  <Element type="Grid" name="" visibility="Visible" x="147.16000000000003" y="979.48000000000047" width="88.710000000000008" height="19.96" />
+  <Element type="Image" name="" visibility="Visible" x="147.16000000000003" y="989.46000000000049" width="0" height="0" />
+  <Element type="TextBlock" name="" visibility="Visible" x="151.16000000000003" y="981.48000000000047" width="84.710000000000008" height="15.96" text="Document 02.cs" fontSize="12" foreground="#FF000000" />
+  <Element type="ListBoxItem" name="" visibility="Visible" x="142.16000000000003" y="1001.4400000000005" width="98.710000000000008" height="23.96" fontSize="12" padding="4,1,4,1" background="#00FFFFFF" foreground="#FF000000" selected="false" />
+  <Element type="Border" name="Bd" visibility="Visible" x="142.16000000000003" y="1001.4400000000005" width="98.710000000000008" height="23.96" background="#00FFFFFF" border="#00FFFFFF" thickness="1,1,1,1" />
+  <Element type="ContentPresenter" name="" visibility="Visible" x="147.16000000000003" y="1003.4400000000005" width="88.710000000000008" height="19.96" />
+  <Element type="Grid" name="" visibility="Visible" x="147.16000000000003" y="1003.4400000000005" width="88.710000000000008" height="19.96" />
+  <Element type="Image" name="" visibility="Visible" x="147.16000000000003" y="1013.4200000000005" width="0" height="0" />
+  <Element type="TextBlock" name="" visibility="Visible" x="151.16000000000003" y="1005.4400000000005" width="84.710000000000008" height="15.96" text="Document 01.cs" fontSize="12" foreground="#FF000000" />
+  <Element type="ListBoxItem" name="" visibility="Visible" x="142.16000000000003" y="1025.4000000000005" width="98.710000000000008" height="23.96" fontSize="12" padding="4,1,4,1" background="#00FFFFFF" foreground="#FF000000" selected="true" />
+  <Element type="Border" name="Bd" visibility="Visible" x="142.16000000000003" y="1025.4000000000005" width="98.710000000000008" height="23.96" background="#3DDADADA" border="#FFDADADA" thickness="1,1,1,1" />
+  <Element type="ContentPresenter" name="" visibility="Visible" x="147.16000000000003" y="1027.4000000000005" width="88.710000000000008" height="19.96" />
+  <Element type="Grid" name="" visibility="Visible" x="147.16000000000003" y="1027.4000000000005" width="88.710000000000008" height="19.96" />
+  <Element type="Image" name="" visibility="Visible" x="147.16000000000003" y="1037.3800000000006" width="0" height="0" />
+  <Element type="TextBlock" name="" visibility="Visible" x="151.16000000000003" y="1029.4000000000005" width="84.710000000000008" height="15.96" text="Document 00.cs" fontSize="12" foreground="#FF000000" />
+  <Element type="AdornerLayer" name="" visibility="Visible" x="142.16000000000003" y="90.960000000000036" width="98.710000000000008" height="398.00000000000006" />
+  <Element type="ScrollBar" name="" visibility="Visible" x="240.87000000000003" y="90.960000000000036" width="17" height="398.00000000000006" fontSize="12" padding="0,0,0,0" background="#FFF0F0F0" foreground="#FF000000" />
+  <Element type="Grid" name="Bg" visibility="Visible" x="240.87000000000003" y="90.960000000000036" width="17" height="398.00000000000006" />
+  <Element type="Border" name="" visibility="Visible" x="240.87000000000003" y="107.96000000000004" width="17" height="364.00000000000006" background="#FFF0F0F0" border="#FFF0F0F0" thickness="1,0,1,0" />
+  <Element type="RepeatButton" name="PART_LineUpButton" visibility="Visible" x="240.87000000000003" y="90.960000000000036" width="17" height="17" fontSize="12" padding="1,1,1,1" background="#FFDDDDDD" foreground="#FF000000" />
+  <Element type="Border" name="border" visibility="Visible" x="240.87000000000003" y="90.960000000000036" width="17" height="17" background="#FFF0F0F0" border="#FFF0F0F0" thickness="1,1,1,1" />
+  <Element type="ContentPresenter" name="contentPresenter" visibility="Visible" x="242.87000000000003" y="93.210000000000036" width="13" height="12.5" />
+  <Element type="Path" name="ArrowTop" visibility="Visible" x="245.87000000000003" y="97.210000000000036" width="7" height="5.5" />
+  <Element type="Track" name="PART_Track" visibility="Visible" x="240.87000000000003" y="107.96000000000004" width="17" height="364.00000000000006" />
+  <Element type="RepeatButton" name="" visibility="Visible" x="240.87000000000003" y="107.96000000000004" width="17" height="0" fontSize="12" padding="0,0,0,0" background="#00FFFFFF" foreground="#FF000000" />
+  <Element type="Rectangle" name="" visibility="Visible" x="240.87000000000003" y="107.96000000000004" width="17" height="0" />
+  <Element type="RepeatButton" name="" visibility="Visible" x="240.87000000000003" y="259.12026711185308" width="17" height="212.839732888147" fontSize="12" padding="0,0,0,0" background="#00FFFFFF" foreground="#FF000000" />
+  <Element type="Rectangle" name="" visibility="Visible" x="240.87000000000003" y="259.12026711185308" width="17" height="212.839732888147" />
+  <Element type="Thumb" name="" visibility="Visible" x="240.87000000000003" y="107.96000000000004" width="17" height="151.16026711185305" fontSize="12" padding="0,0,0,0" background="null" foreground="#FF000000" />
+  <Element type="Rectangle" name="rectangle" visibility="Visible" x="240.87000000000003" y="107.96000000000004" width="17" height="151.16026711185305" />
+  <Element type="RepeatButton" name="PART_LineDownButton" visibility="Visible" x="240.87000000000003" y="471.96000000000009" width="17" height="17" fontSize="12" padding="1,1,1,1" background="#FFDDDDDD" foreground="#FF000000" />
+  <Element type="Border" name="border" visibility="Visible" x="240.87000000000003" y="471.96000000000009" width="17" height="17" background="#FFF0F0F0" border="#FFF0F0F0" thickness="1,1,1,1" />
+  <Element type="ContentPresenter" name="contentPresenter" visibility="Visible" x="242.87000000000003" y="474.21000000000009" width="13" height="12.5" />
+  <Element type="Path" name="ArrowBottom" visibility="Visible" x="245.87000000000003" y="478.21000000000009" width="7" height="5.5" />
+  <Element type="ScrollBar" name="" visibility="Collapsed" x="142.16000000000003" y="90.960000000000036" width="0" height="0" fontSize="12" padding="0,0,0,0" background="#FFF0F0F0" foreground="#FF000000" />
+  <Element type="Grid" name="" visibility="Visible" x="8" y="494.96000000000004" width="255.87000000000003" height="42" />
+  <Element type="TextBlock" name="" visibility="Visible" x="8" y="507.98" width="255.87000000000003" height="15.96" text="" fontSize="12" foreground="#FF000000" />
+</Navigator>

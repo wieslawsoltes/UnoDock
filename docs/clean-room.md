@@ -89,3 +89,12 @@ as product resources. Our vectors, templates and layouts are independently autho
 See contracts/visual-fixtures/provenance.json and docs/visual-parity.md. Only application-
 owned shared scene text, numeric observations and behavior XML are committed; no font
 files are added.
+
+## Navigator public observations
+
+The independent NavigatorObservations probe renders application-owned document/tool
+scenarios through public APIs. Raw measured XML from run 35817270444 is recorded with
+input/probe/artifact/file hashes. The observed visibility transition is retained, not
+hidden by screenshot-only assertions. Product templates and geometry are independently
+authored. Uno framework source was consulted for platform API integration; the requested
+original AvalonDock implementation bodies/templates/resources were not inspected.

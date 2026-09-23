@@ -32,7 +32,7 @@ public sealed partial class GalleryPage : Page
         Add("Show tools", () => { foreach (var tool in Dock.Layout.Hidden.ToArray()) tool.Show(); });
         Add("Save", () => Run(Save)); Add("Restore", () => Run(Restore)); Add("XML", ShowXml); Add("MVVM", BindingDemo);
         Add("Theme", () => { RequestedTheme = RequestedTheme == ElementTheme.Dark ? ElementTheme.Light : ElementTheme.Dark; Dock.Theme = new FluentTheme(RequestedTheme); });
-        Add("Reset", Reset); Add("1,000 tabs", Stress); Add("Parity lab", ShowParityLab); Add("Converter lab", ShowConverterLab); Add("Native windows", ShowNativeWindowLab); Add("Window shell", ShowShellLab); Add("Window lifecycle", ShowWindowLifecycleLab); Add("Input extensions", ShowInputExtensionsLab); Add("Visual parity", ShowVisualParityLab);
+        Add("Reset", Reset); Add("1,000 tabs", Stress); Add("Parity lab", ShowParityLab); Add("Converter lab", ShowConverterLab); Add("Native windows", ShowNativeWindowLab); Add("Window shell", ShowShellLab); Add("Window lifecycle", ShowWindowLifecycleLab); Add("Input extensions", ShowInputExtensionsLab); Add("Visual parity", ShowVisualParityLab); Add("Navigator quality", ShowNavigatorLab);
         var scroll = new ScrollViewer { Content = commands, HorizontalScrollBarVisibility = ScrollBarVisibility.Auto, VerticalScrollBarVisibility = ScrollBarVisibility.Disabled, MaxHeight = 70 }; Grid.SetRow(scroll, 1); shell.Children.Add(scroll);
         Dock.Margin = new(10, 0, 10, 0); Grid.SetRow(Dock, 2); shell.Children.Add(Dock); Grid.SetRow(_status, 3); shell.Children.Add(_status); Content = shell;
         Dock.Theme = new FluentTheme(RequestedTheme);

@@ -316,7 +316,11 @@ public partial class DockingManager : Control, IDisposable, Xceed.Wpf.AvalonDock
             e.Handled = true;
         }
     }
+    #if WINDOWS
     public void Dispose()
+    #else
+    public new void Dispose()
+    #endif
     {
         if (_disposed) return; _disposed = true;
         Loaded -= OnLoaded; Unloaded -= OnUnloaded;

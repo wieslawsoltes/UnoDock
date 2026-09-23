@@ -126,7 +126,7 @@ public abstract class LayoutFloatingWindowControl : DockWindowControl, ILayoutCo
     }
     protected override void OnClosing(CancelEventArgs e) => base.OnClosing(e);
     protected override void OnStateChanged(EventArgs e) => base.OnStateChanged(e);
-    protected virtual nint FilterMessage(nint hwnd, int msg, nint wParam, nint lParam, ref bool handled) => 0;
+    protected virtual System.IntPtr FilterMessage(System.IntPtr hwnd, int msg, System.IntPtr wParam, System.IntPtr lParam, ref bool handled) => 0;
     private void MaximizedChanged()
     {
         using ((Model.Root as LayoutRoot)?.BeginUpdate())
@@ -448,7 +448,7 @@ public class LayoutDocumentFloatingWindowControl : LayoutFloatingWindowControl
         ClearValue(DataContextProperty);
         base.OnClosed(e);
     }
-    protected override nint FilterMessage(nint hwnd, int msg, nint wParam, nint lParam, ref bool handled)
+    protected override System.IntPtr FilterMessage(System.IntPtr hwnd, int msg, System.IntPtr wParam, System.IntPtr lParam, ref bool handled)
         => base.FilterMessage(hwnd, msg, wParam, lParam, ref handled);
 }
 public class LayoutAnchorableFloatingWindowControl : LayoutFloatingWindowControl
@@ -487,7 +487,7 @@ public class LayoutAnchorableFloatingWindowControl : LayoutFloatingWindowControl
         ((DelegateCommand)HideWindowCommand).RaiseCanExecuteChanged();
         base.OnClosed(e);
     }
-    protected override nint FilterMessage(nint hwnd, int msg, nint wParam, nint lParam, ref bool handled)
+    protected override System.IntPtr FilterMessage(System.IntPtr hwnd, int msg, System.IntPtr wParam, System.IntPtr lParam, ref bool handled)
         => base.FilterMessage(hwnd, msg, wParam, lParam, ref handled);
     internal override void UpdateView()
     {

@@ -6,7 +6,7 @@
 Independent AvalonDock-style docking for **Uno Platform 6.7**, retaining familiar
 `Xceed.Wpf.AvalonDock` namespaces while using Uno/WinUI controls.
 
-**Status: 0.1.0-preview.7. This is a functional implementation, not a certified 100%
+**Status: 0.1.0-preview.8. This is a functional implementation, not a certified 100%
 AvalonDock replacement.** API shape, behavior, platform support and performance are
 separate claims. The repository records what is implemented, the original public
 contracts used to check it, runnable tests and the remaining boundaries.
@@ -307,3 +307,20 @@ See [publishing](docs/publishing.md) and [architecture](docs/architecture.md).
 
 This project is not affiliated with or endorsed by Xceed or Uno Platform. Product names
 identify compatibility targets. The independent implementation is MIT-licensed.
+
+## Preview 8: navigator quality
+
+The compact navigator now creates real selectable rows for FrameworkElement-based
+layout adapters, preserves category collections and containers during navigation,
+reveals off-screen selections through the actual ScrollViewer, handles Home/End and
+live model/theme/label updates, and revalidates queued work after cancellation or
+retemplating. It includes an additive NavigatorListBox for custom named template parts,
+an independent stock-style two-column presentation, five screenshot scenarios, and
+39 new Linux / 37 Windows regression cases. The gallery adds a Navigator quality lab.
+See [implementation, provenance and remaining differences](docs/navigator-quality.md).
+
+The three inherited Dispose warnings are resolved through explicit, target-conditional
+member hiding; unsupported ListBox selection-mode/scroll APIs are no longer called.
+API comparison remains 977/1,031 with 54 signature/type and 18 attribute differences.
+This increment does not assert full strict API, event-ordering, template, pixel or
+platform parity. NuGet packages are not automatically published by a source commit.

@@ -161,7 +161,11 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
         index += direction; return index >= 0 && index < panes.Length ? panes[index] : null;
     }
     private void Move(int direction) { if (AdjacentPane(direction) is { } target) DockOperations.Dock(LayoutElement, target, DockPosition.Inside); }
+    #if WINDOWS
     public void Dispose()
+    #else
+    public new void Dispose()
+    #endif
     {
         if (_disposed) return; _disposed = true;
         if (LayoutElement != null) LayoutElement.PropertyChanged -= ModelChanged;

@@ -149,3 +149,15 @@ the pinned original's behavior: one requested tool moves at a time, without an i
 sibling veto. Compact tool tabs now sit below their content. Native RTL coordinate
 conversion includes the root transform. API difference counts are not changed by these
 behavioral/rendering corrections.
+
+## Preview 8 navigator increment
+
+The default navigator now materializes actual row containers for layout adapters,
+avoids source resets during navigation, and uses realized ScrollViewer geometry for
+selection reveal. Theme, label, density and model updates preserve row identity.
+Native-input and screenshot tests complement the earlier logical-selection tests.
+The additive NavigatorListBox is recommended for custom template parts on Uno.
+Original direct public selection setters were observed to close the native navigator;
+the port still stages those assignments until explicit commit. This difference remains
+open, as do arbitrary template virtualization and full inherited WPF contracts.
+See [navigator quality](navigator-quality.md) for precise evidence and limits.

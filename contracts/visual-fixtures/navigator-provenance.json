@@ -1,0 +1,14 @@
+{
+  "referenceRevision": "2c71faba5eecc1b6ae6cd3d269408e0df37715d8",
+  "probeRevision": "356ac7dd1ccf67baebc9c3c0097cd37b53955372",
+  "workflowRun": 35817270444,
+  "artifactId": 10731178748,
+  "artifactSha256": "fadf7c05743487c97212ac5ecbbbe0466ff8425feef57e58933ce1ef63df58bc",
+  "method": "Public constructors, properties, visual-tree measurements and pixel capture only. No original bodies/templates/resources copied. Preserve raw XML bytes. Effective visibility and capture coordinate scope are documented in docs/navigator-quality.md.",
+  "xmlSha256": {
+    "navigator-many.xml": "2aeeb020fd4ea03839539e9b3366923a501a794ecd2004c2e8fe4a44d6630e7d",
+    "navigator-rtl.xml": "aa5f03fe4125add99e661f58876c00fd0f380ce145bafa2f4a0736c53dadffda",
+    "navigator-tool.xml": "8309683a3235ad3e1eda2a47c9eafb5f1718c70e754c009819822c828a56b9de",
+    "navigator.xml": "02bd0f765ce027c982ffb54d4bbacdf8ab5d074c5f0c03f2aac7a6f6064f7bbe"
+  }
+}

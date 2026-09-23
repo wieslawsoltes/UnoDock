@@ -68,6 +68,7 @@ internal sealed class DockSurface : Grid, IDisposable
     internal void Update()
     {
         if (_disposed) return;
+        _navigator?.UpdateAppearance();
         var root = Manager.Layout;
         var panel = (LayoutPanelControl)GetView(root.RootPanel); UpdateView(root.RootPanel); Manager.LayoutRootPanel = panel;
         var top = (LayoutAnchorSideControl)GetView(root.TopSide); var bottom = (LayoutAnchorSideControl)GetView(root.BottomSide);
@@ -360,5 +361,10 @@ internal sealed class DockSurface : Grid, IDisposable
         foreach (var view in _views.Values) if (view is LayoutCachePaneControl pane) pane.ReleaseViews();
         _views.Clear(); _docked.Children.Clear(); _floats.Children.Clear();
     }
-    public void Dispose() { if (_disposed) return; _disposed = true; Reset(); _autoHideTimer.Stop(); _dragScrollTimer.Tick -= OnDragScroll; }
+    #if WINDOWS
+    public void Dispose()
+    #else
+    public new void Dispose()
+    #endif
+    { if (_disposed) return; _disposed = true; Reset(); _autoHideTimer.Stop(); _dragScrollTimer.Tick -= OnDragScroll; }
 }
