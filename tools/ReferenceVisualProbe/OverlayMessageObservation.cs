@@ -1,5 +1,5 @@
-// Public Win32 message protocol observation. This is NOT an end-to-end pointer test.
-// No private members, implementation bodies, templates or Path.Data are inspected.
+// Public Win32 message protocol observation, NOT end-to-end pointer acceptance.
+// Only application-owned layouts, rendered pixels and public arranged rectangles.
 using System;
 using System.IO;
 using System.Linq;
@@ -17,15 +17,21 @@ internal static class OverlayMessageObservation
     public static void TryObserve(LayoutFloatingWindowControl floating, Point point, string output, string name)
     {
         var hwnd = new WindowInteropHelper(floating).Handle;
-        if (!SetCursorPos((int)point.X, (int)point.Y)) throw new InvalidOperationException("SetCursorPos failed: " + Marshal.GetLastWin32Error());
-        GetCursorPos(out var cursor); Console.WriteLine($"Actual cursor={cursor.X},{cursor.Y}; requested={point}");
-        var rect = new NativeRect(); GetWindowRect(hwnd, ref rect);
-        var data = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(NativeRect)));
+        if (!GetCursorPos(out var previous)) throw new InvalidOperationException("GetCursorPos failed: " + Marshal.GetLastWin32Error());
+        var data = IntPtr.Zero;
+        var entered = false;
         try
         {
+            if (!SetCursorPos((int)point.X, (int)point.Y)) throw new InvalidOperationException("SetCursorPos failed: " + Marshal.GetLastWin32Error());
+            if (!GetCursorPos(out var cursor)) throw new InvalidOperationException("GetCursorPos failed: " + Marshal.GetLastWin32Error());
+            Console.WriteLine($"Actual cursor={cursor.X},{cursor.Y}; requested={point}");
+            var rect = new NativeRect();
+            if (!GetWindowRect(hwnd, ref rect)) throw new InvalidOperationException("GetWindowRect failed: " + Marshal.GetLastWin32Error());
+            data = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(NativeRect)));
             Marshal.StructureToPtr(rect, data, false);
+            entered = true;
             SendMessage(hwnd, 0x0231, IntPtr.Zero, IntPtr.Zero); // WM_ENTERSIZEMOVE
-            SendMessage(hwnd, 0x0216, IntPtr.Zero, data);       // WM_MOVING, valid native RECT
+            SendMessage(hwnd, 0x0216, IntPtr.Zero, data);       // WM_MOVING: valid native RECT
             SendMessage(hwnd, 0x0003, IntPtr.Zero, IntPtr.Zero); // WM_MOVE
             foreach (var overlay in Application.Current.Windows.OfType<OverlayWindow>())
             {
@@ -42,7 +48,15 @@ internal static class OverlayMessageObservation
                 Walk(root, root, xml); new XDocument(xml).Save(Path.Combine(output, name + "-message.xml"));
             }
         }
-        finally { SendMessage(hwnd, 0x0232, IntPtr.Zero, IntPtr.Zero); Marshal.FreeHGlobal(data); }
+        finally
+        {
+            try { if (entered) SendMessage(hwnd, 0x0232, IntPtr.Zero, IntPtr.Zero); }
+            finally
+            {
+                if (data != IntPtr.Zero) Marshal.FreeHGlobal(data);
+                SetCursorPos(previous.X, previous.Y);
+            }
+        }
     }
     private static void Walk(DependencyObject node, FrameworkElement root, XElement xml)
     {
@@ -57,7 +71,7 @@ internal static class OverlayMessageObservation
     [StructLayout(LayoutKind.Sequential)] private struct NativeRect { public int Left, Top, Right, Bottom; }
     [StructLayout(LayoutKind.Sequential)] private struct NativePoint { public int X, Y; }
     [DllImport("user32.dll", SetLastError = true)] private static extern bool SetCursorPos(int x, int y);
-    [DllImport("user32.dll")] private static extern bool GetCursorPos(out NativePoint point);
-    [DllImport("user32.dll")] private static extern bool GetWindowRect(IntPtr hwnd, ref NativeRect rect);
+    [DllImport("user32.dll", SetLastError = true)] private static extern bool GetCursorPos(out NativePoint point);
+    [DllImport("user32.dll", SetLastError = true)] private static extern bool GetWindowRect(IntPtr hwnd, ref NativeRect rect);
     [DllImport("user32.dll")] private static extern IntPtr SendMessage(IntPtr hwnd, uint message, IntPtr wParam, IntPtr lParam);
 }

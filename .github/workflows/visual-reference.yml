@@ -15,7 +15,7 @@ jobs:
         with:
           dotnet-version: '10.0.x'
       - uses: microsoft/setup-msbuild@v2
-      - name: Build pinned reference in isolation, without emitting source bodies
+      - name: Build pinned reference in isolation without exporting implementation bodies
         shell: pwsh
         run: |
           $revision = (Get-Content contracts/reference.json | ConvertFrom-Json).revision
@@ -32,15 +32,31 @@ jobs:
           dotnet build tools/ReferenceVisualProbe -c Release -p:ReferenceAssembly="$stage/bin/Xceed.Wpf.AvalonDock.dll"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           Copy-Item "$stage/bin/Xceed.Wpf.Toolkit.dll" tools/ReferenceVisualProbe/bin/Release/net48/
-      - name: Capture public rendering, guide geometry and native pointer observations
+      - name: Capture public rendering and explicitly labeled native-message guide states twice
         shell: pwsh
         env:
           UNODOCK_REFERENCE_INPUT: '1'
         run: |
-          New-Item -ItemType Directory -Force artifacts/reference-visuals | Out-Null
-          $process = Start-Process tools/ReferenceVisualProbe/bin/Release/net48/ReferenceVisualProbe.exe -ArgumentList artifacts/reference-visuals -NoNewWindow -PassThru
-          if (-not $process.WaitForExit(90000)) { $process.Kill($true); throw 'Reference input observation timed out.' }
-          if ($process.ExitCode -ne 0) { exit $process.ExitCode }
+          function Observe([string]$directory) {
+            New-Item -ItemType Directory -Force $directory | Out-Null
+            $process = Start-Process tools/ReferenceVisualProbe/bin/Release/net48/ReferenceVisualProbe.exe -ArgumentList $directory -NoNewWindow -PassThru
+            if (-not $process.WaitForExit(90000)) { $process.Kill($true); throw 'Reference state observation timed out.' }
+            if ($process.ExitCode -ne 0) { throw "Reference probe exited with $($process.ExitCode)." }
+          }
+          Observe 'artifacts/reference-visuals'
+          $repeat = Join-Path $env:RUNNER_TEMP 'repeat-reference-visuals'
+          Observe $repeat
+          $results = @()
+          foreach ($scene in @('guides-document-message','guides-tool-message')) {
+            foreach ($extension in @('xml','png')) {
+              $name = "$scene.$extension"
+              $first = (Get-FileHash "artifacts/reference-visuals/$name" -Algorithm SHA256).Hash
+              $second = (Get-FileHash "$repeat/$name" -Algorithm SHA256).Hash
+              if ($first -ne $second) { throw "Non-deterministic public guide observation: $name" }
+              $results += @{ file = $name; sha256 = $first.ToLowerInvariant(); byteIdentical = $true }
+            }
+          }
+          $results | ConvertTo-Json | Set-Content artifacts/reference-visuals/guide-reproducibility.json
           git rev-parse HEAD > artifacts/reference-visuals/probe-revision.txt
           Copy-Item contracts/reference.json artifacts/reference-visuals/
       - name: Delete isolated original code and binaries
