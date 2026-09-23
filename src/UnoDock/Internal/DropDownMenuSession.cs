@@ -20,6 +20,7 @@ internal sealed class DropDownMenuSession
         internal WeakReference<DropDownMenuSession>? Owner;
         internal FlyoutBaseClosingEventArgs? ClosingArguments;
         internal bool ResumeQueued;
+        internal long CloseGeneration, ResumeGeneration;
     }
     private sealed class Opening(MenuFlyout menu, XamlRoot root)
     {
@@ -72,10 +73,15 @@ internal sealed class DropDownMenuSession
     });
     private static void QueueAfterClosed(MenuFlyout menu, Slot slot)
     {
-        if (slot.ResumeQueued) return;
-        slot.ResumeQueued = true;
+        var generation = slot.CloseGeneration;
+        if (slot.ResumeQueued && slot.ResumeGeneration == generation) return;
+        slot.ResumeQueued = true; slot.ResumeGeneration = generation;
         if (!menu.DispatcherQueue.TryEnqueue(() =>
         {
+            // Cleanup may retry a failed Hide synchronously. A continuation for
+            // that failed attempt must not unblock the later accepted close
+            // before its own native Closed callback completes.
+            if (generation != slot.CloseGeneration) return;
             slot.ResumeQueued = false; slot.Queue.Closing.Remove(slot);
             if (slot.Queue.Closing.Count != 0) return;
             var queue = slot.Queue;
@@ -85,6 +91,7 @@ internal sealed class DropDownMenuSession
                 owner._wanted && owner._revision == revision && ReferenceEquals(owner._menu(), target)) owner.Request(true);
         }))
         {
+            if (generation != slot.CloseGeneration) return;
             slot.ResumeQueued = false; slot.Queue.Closing.Remove(slot);
             slot.Queue.WaitingOwner = null; slot.Queue.WaitingMenu = null;
         }
@@ -238,8 +245,9 @@ internal sealed class DropDownMenuSession
                 var awaitingNativeClose = active.WasShown || menu.IsOpen;
                 if (active.ShowStarted)
                 {
-                    // Hold ownership through native Closing before releasing data.
-                    // A cancelled close retains the exact opening and row scope.
+                    // Each attempt invalidates callbacks belonging to a previous
+                    // cancelled or failed Hide, including synchronous retries.
+                    slot.CloseGeneration++;
                     slot.Queue.Closing.Add(slot); slot.ClosingArguments = null;
                     Attempt(menu.Hide);
                     if (menu.IsOpen && (failures != null || slot.ClosingArguments?.Cancel == true))
