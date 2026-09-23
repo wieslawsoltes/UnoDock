@@ -5,84 +5,108 @@ and public API documentation. No original implementation bodies, templates, reso
 artwork or fonts are used. These are product regressions and explicit Uno adapters,
 not a certificate of original WPF event ordering or whole-product parity.
 
-## Implementation
+## Opening and context ownership
 
-DropDownButton and DropDownControlArea now share an opening-session controller. It records
+DropDownButton and DropDownControlArea share an opening-session controller. It records
 menu/root/context ownership before assigning a temporary row DataContext, because that
 assignment can invoke application callbacks which replace the menu, close it, disable
 its trigger, or request another context. Requests are serialized, version checked and
 drained with a finite convergence budget. A replaced menu is not opened by stale work.
 
-Context changes on the trigger update an active opening while retaining its menu rows.
-Closed menus are not populated with temporary contexts. Application row local values
-and bindings remain governed by MenuContext's ownership rules. On failure, cleanup
-attempts both context release and native hiding and preserves multiple exceptions.
+Trigger context changes update an active opening while retaining its menu rows. Closed
+menus are not populated with temporary trigger contexts. Application row local values
+and bindings remain governed by MenuContext's ownership rules. ContextMenuEx source rows
+are handled after their creation; a non-null explicit MenuDataContext has precedence over
+trigger refreshes. On failure, cleanup attempts both context release and native hiding,
+preserving multiple exceptions instead of discarding the original error.
 
-A weak shared-menu owner registry coordinates transfer between dropdown triggers.
-Ownership is held through cleanup and hiding, so a second trigger opened by a cleanup
-callback cannot have its newly assigned context cleared by the previous trigger. One
-bounded dispatcher retry handles this reentrant handoff; there is no polling timer.
-Closed events check the current opening identity and native IsOpen state. Unload and
-disable invalidate the current trigger's opening, not a later opening from another owner.
+A weak shared-menu registry coordinates transfer between dropdown triggers. Ownership
+is held through native hiding and context cleanup, so a trigger opened by a cleanup
+callback cannot lose its new context to the previous owner. A reentrant preparation
+handoff has one bounded dispatcher retry; ordinary close handoff waits on native events.
 
-The additional OpenDropDown/CloseDropDown APIs use that same controller. ToggleButton
-checked state follows the current opening and is revalidated after application Checked
-callbacks. IsChecked alone is not an imperative opening API; use OpenDropDown or native
-click input. ContextMenuEx and MenuItemEx retain their existing source/template behavior.
+## Native close sequencing
+
+Actual Win32 regression tests exposed a platform race: IsOpen can become false before
+native Closed dispatch finishes, and an immediate ShowAt can be ignored. The native
+close chain can also dismiss another menu opened during that callback interval.
+
+A UI-thread close queue now fences both same-menu reopening and replacement menus until
+Closed has returned. Its waiting owner and menu references are weak. Only the latest
+pending request wins; cancellation, disable, unload, menu replacement and later context
+requests are checked through generation and current-state validation. A superseded
+waiter cannot revive its old request through a DataContext refresh. No polling timer is
+used. Opening cancelled before actual native showing gets a single dispatcher fence
+because it has no native Closed event to await.
+
+Closing handlers may veto Hide. When the native event reports cancellation and the
+menu remains open, the controller retains that opening, its row contexts and checked
+state. A second trigger cannot take ownership of the vetoed menu. Such a veto also
+means disabling/unloading the trigger cannot promise unconditional native dismissal;
+the application's explicit Closing decision wins until the menu actually closes.
+
+The additive OpenDropDown/CloseDropDown APIs use the same controller as input. Checked
+state is revalidated after application callbacks. IsChecked alone is not an imperative
+opening API; use OpenDropDown or native click input.
 
 ## Input extension points
 
 DropDownControlArea exposes protected virtual OnMouseRightButtonDown and
-OnPreviewMouseRightButtonUp with the existing DockMouseButtonEventArgs adapter. They
+OnPreviewMouseRightButtonUp using the existing DockMouseButtonEventArgs adapter. They
 receive the actual pointer identifier, changed button, native event and coordinates.
 The release stage opens the menu only when not handled; a subclass may omit the base
-call or set Handled to prevent the default opening. Right-button transitions delivered
-as PointerMoved during a chord are included. Mouse RightTapped is suppressed when that
-same pointer protocol has already handled opening. Touch/pen RightTapped retains the
-native fallback path.
+call or set Handled to prevent default opening. Right-button transitions delivered as
+PointerMoved during a chord are included. The corresponding mouse RightTapped and
+ContextRequested paths cannot bypass the right-release veto. Touch/pen retain native
+context-request fallback paths, but device acceptance is separate.
 
-The context-menu key and Shift+F10 open at the focused area; Escape dismisses an opening.
-These are control-local compatibility stages, not a fabricated WPF tunnel. The methods
-are virtual additions on Uno UserControl rather than overrides of WPF's UIElement
-methods. This remaining signature distinction stays visible in the API comparison.
+The context-menu key and Shift+F10 are supported through keyboard and native
+ContextRequested paths; Escape dismisses the opening. These are control-local
+compatibility stages, not a fabricated WPF tunnel. The mouse methods are virtual
+additions on Uno UserControl rather than overrides of WPF UIElement methods. That
+signature distinction remains visible in the API comparison.
 
 ## Sample
 
 Open **Menu quality**, then **Dropdown contracts**. Two compact dropdown buttons and a
 right-click area share a real native menu. The laboratory demonstrates context transfer,
-live context change, right-release vetoes, enabling/disabling, RTL, document float/dock,
-and closing the containing document. The log and retained editor show the lifecycle.
-This adds interaction coverage; it does not claim new pixel-identical screenshot evidence.
+live context changes, right-release vetoes, enabling/disabling, RTL, document float/dock,
+and closing the containing document. Its bounded log and retained editor show the
+lifecycle. This adds interaction coverage, not new pixel-equivalent screenshot evidence.
 
 ## Acceptance
 
-DropDownQualityTests runs inside the actual Uno gallery on Linux and the Windows Skia
-host. It covers scoped contexts, live changes, application-owned row values, callbacks
-which replace or close menus during preparation/opening, failure cleanup, shared-menu
-transfer, repeated openings, disable/unload and reattachment, detached triggers, checked
-state rejection and click overrides. Linux additionally opts into XTEST right-button
-normal/veto sequences and the native context-menu-key/Escape sequence.
+DropDownQualityTests and DropDownTransitionTests run inside the real Uno gallery on
+Linux and the Windows Skia host. The scheduled suite contains 62 common UI cases and
+three opt-in Linux XTEST cases. Coverage includes context ownership and reentrancy,
+preparation/opening callbacks, failure cleanup, shared-menu transfer, repeated opening,
+disable/unload/reattachment, native close vetoes, cross-menu replacement, stale queued
+requests, source-created rows, explicit menu contexts, checked-state rejection and
+click overrides. Native input covers right-button acceptance/veto and the context-menu
+keyboard path. The suite is also included in full Linux and Windows-acceptance runs.
 
-Use the workflow result and JSON/JUnit artifact for the exact consumed revision. The
-local execution service was unavailable during this continuation; SDK/XAML builds and
+Use the workflow conclusion and JSON/JUnit artifact for the exact consumed revision;
+counts here describe registered tests, not an assertion about an unobserved run. Local
+execution was unavailable during this continuation. Clean SDK/XAML builds and native
 runtime execution are performed by GitHub Actions, not claimed from a local harness.
 No dependency mapping, metadata comparator or regression baseline is relaxed.
 
 ## Remaining boundaries
 
-The shared owner registry coordinates these dropdown triggers; an arbitrary application
-calling ShowAt directly on the same menu bypasses that registry. Native cancellation of
-FlyoutBase.Hide by application Closing handlers follows the platform, and is not a WPF
-ContextMenu-equivalence guarantee. Arbitrary custom templates, complete routed-event and
-command semantics, original dropdown event ordering, cross-root context menus, mobile
-input and screen-reader acceptance require further evidence. Full API/behavior/visual
-parity remains unverified; NuGet publishing is a separate release action.
+The registry coordinates these dropdown triggers; arbitrary application ShowAt calls
+bypass its ownership protocol. Full WPF ContextMenu event ordering, routed-command and
+event infrastructure, arbitrary templates, cross-root menu migration, mobile/touch,
+screen-reader traversal and pixel-level appearance require further acceptance. Existing
+compact-menu visuals are retained, not newly certified equivalent. Full API, behavior
+and visual parity remains unverified. NuGet publishing is a separate release action.
 
 ## Public contract references
 
 - https://xceed.com/documentation/xceed-toolkit-plus-for-wpf/Xceed.Wpf.AvalonDock~Xceed.Wpf.AvalonDock.Controls.DropDownButton~DropDownContextMenu.html
 - https://xceed.com/documentation/xceed-toolkit-plus-for-wpf/Xceed.Wpf.AvalonDock~Xceed.Wpf.AvalonDock.Controls.DropDownControlArea~OnPreviewMouseRightButtonUp.html
 - https://learn.microsoft.com/en-us/windows/windows-app-sdk/api/winrt/microsoft.ui.xaml.controls.primitives.flyoutbase.showat
+- https://learn.microsoft.com/en-us/windows/windows-app-sdk/api/winrt/microsoft.ui.xaml.uielement.contextrequested
 
-The pinned reference inventory, rather than documentation for separately licensed PLUS
-features, defines the requested compatibility surface.
+The pinned AvalonDock inventory defines the requested surface, not separately licensed
+PLUS features. Public Uno hosting code was inspected to diagnose native event timing;
+no original AvalonDock algorithms were translated.
