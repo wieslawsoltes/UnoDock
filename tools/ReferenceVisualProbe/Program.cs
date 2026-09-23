@@ -44,6 +44,7 @@ internal static class Program
                         Console.WriteLine("Captured public reference scene " + scenario);
                     }
                     NavigatorObservations.Run(manager, window, args[0]);
+                    OverlayObservations.Run(manager, window, args[0]);
                 }
                 catch (Exception error) { failure = 1; Console.Error.WriteLine(error); }
                 finally { window.Close(); app.Shutdown(); }

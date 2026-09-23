@@ -32,12 +32,15 @@ jobs:
           dotnet build tools/ReferenceVisualProbe -c Release -p:ReferenceAssembly="$stage/bin/Xceed.Wpf.AvalonDock.dll"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           Copy-Item "$stage/bin/Xceed.Wpf.Toolkit.dll" tools/ReferenceVisualProbe/bin/Release/net48/
-      - name: Capture public rendering and arranged control bounds
+      - name: Capture public rendering, guide geometry and native pointer observations
         shell: pwsh
+        env:
+          UNODOCK_REFERENCE_INPUT: '1'
         run: |
           New-Item -ItemType Directory -Force artifacts/reference-visuals | Out-Null
-          & tools/ReferenceVisualProbe/bin/Release/net48/ReferenceVisualProbe.exe artifacts/reference-visuals
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $process = Start-Process tools/ReferenceVisualProbe/bin/Release/net48/ReferenceVisualProbe.exe -ArgumentList artifacts/reference-visuals -NoNewWindow -PassThru
+          if (-not $process.WaitForExit(90000)) { $process.Kill($true); throw 'Reference input observation timed out.' }
+          if ($process.ExitCode -ne 0) { exit $process.ExitCode }
           git rev-parse HEAD > artifacts/reference-visuals/probe-revision.txt
           Copy-Item contracts/reference.json artifacts/reference-visuals/
       - name: Delete isolated original code and binaries
