@@ -1,9 +1,10 @@
 using System.Runtime.ExceptionServices;
+using Xceed.Wpf.AvalonDock.Controls;
 
 namespace Xceed.Wpf.AvalonDock.Internal;
 
-/// <summary>One UI-thread opening owned by a dropdown trigger. All application
-/// callbacks are boundaries: context assignment, checked state and native Show/Hide.</summary>
+/// <summary>One UI-thread opening owned by a dropdown trigger. Context assignment,
+/// checked state and native Show/Hide are all application-callback boundaries.</summary>
 internal sealed class DropDownMenuSession
 {
     private sealed class Slot { internal WeakReference<DropDownMenuSession>? Owner; }
@@ -13,8 +14,7 @@ internal sealed class DropDownMenuSession
         internal readonly XamlRoot Root = root;
         internal bool ContextAssigned, ShowStarted;
         internal object? Context;
-        internal EventHandler<object>? Unused; // Native events use typed delegates below.
-        internal Windows.Foundation.TypedEventHandler<object, object>? Opened, Closed;
+        internal EventHandler<object>? Preparing, Opened, Closed;
     }
     private static readonly ConditionalWeakTable<MenuFlyout, Slot> Owners = new();
     private readonly Control _owner;
@@ -24,6 +24,7 @@ internal sealed class DropDownMenuSession
     private Opening? _active;
     private Point? _position;
     private bool _wanted, _pending, _draining, _cleaning, _retryQueued;
+    private int _transferRetries;
     private long _revision;
 
     internal DropDownMenuSession(Control owner, Func<MenuFlyout?> menu, Func<object?> context, Action<bool> state)
@@ -31,7 +32,7 @@ internal sealed class DropDownMenuSession
     internal bool IsRequested => _wanted;
     internal bool IsOpen => _active is { } active && active.Menu.IsOpen;
     internal void Open(Point? position = null)
-    { _position = position; Request(true); }
+    { _position = position; _transferRetries = 0; Request(true); }
     internal void Close() => Request(false);
     internal void Refresh() { if (_wanted || _active != null) Request(_wanted); }
     private bool CanOpen => _owner.IsEnabled && _owner.IsLoaded && _owner.XamlRoot != null;
@@ -87,32 +88,41 @@ internal sealed class DropDownMenuSession
             {
                 current.Close();
                 if (revision != _revision) return;
-                // The prior owner may be inside its own application callback.
-                // Retry once on the dispatcher after that stack has unwound.
+                // A second trigger can arrive from the prior owner's cleanup.
+                // Allow one dispatcher retry after that callback stack unwinds.
                 if (slot.Owner?.TryGetTarget(out current) == true && !ReferenceEquals(current, this))
                 { Defer(revision); return; }
             }
             var active = new Opening(menu, _owner.XamlRoot!);
             _active = active; slot.Owner = new(this);
+            active.Preparing = (_, _) =>
+            {
+                // ContextMenuEx generates its rows from ItemsSource in Opening.
+                // Its explicit MenuDataContext has precedence; otherwise apply
+                // the trigger context to the newly generated rows as well.
+                if (ReferenceEquals(_active, active) && _wanted &&
+                    menu is ContextMenuEx { ItemsSource: not null, MenuDataContext: null })
+                    MenuContext.Apply(menu, _context());
+            };
             active.Opened = (_, _) =>
             {
                 if (!ReferenceEquals(_active, active)) return;
                 if (!_wanted || !CanOpen || !ReferenceEquals(_menu(), menu) || !ReferenceEquals(_owner.XamlRoot, active.Root))
                 { Close(); return; }
-                _state(true);
+                Refresh();
             };
             active.Closed = (_, _) =>
             {
                 // A late event cannot tear down a replacement opening.
                 if (ReferenceEquals(_active, active) && !menu.IsOpen) Close();
             };
-            menu.Opened += active.Opened; menu.Closed += active.Closed;
+            menu.Opening += active.Preparing; menu.Opened += active.Opened; menu.Closed += active.Closed;
         }
         var opening = _active!;
         var context = _context();
         if (!opening.ContextAssigned || !ReferenceEquals(opening.Context, context))
         {
-            // Record the opening BEFORE DataContextChanged can replace/close it.
+            // Record ownership BEFORE DataContextChanged can replace or close it.
             opening.ContextAssigned = true; opening.Context = context;
             MenuContext.Apply(menu, context);
             if (revision != _revision || !ReferenceEquals(_active, opening)) return;
@@ -130,7 +140,8 @@ internal sealed class DropDownMenuSession
 
     private void Defer(long revision)
     {
-        if (_retryQueued) { _wanted = false; _state(false); return; }
+        if (_retryQueued) return;
+        if (++_transferRetries > 1) { _wanted = false; _state(false); return; }
         _retryQueued = true;
         if (!_owner.DispatcherQueue.TryEnqueue(() =>
         {
@@ -145,7 +156,7 @@ internal sealed class DropDownMenuSession
         if (_active is not { } active) return;
         _active = null;
         var menu = active.Menu;
-        menu.Opened -= active.Opened; menu.Closed -= active.Closed;
+        menu.Opening -= active.Preparing; menu.Opened -= active.Opened; menu.Closed -= active.Closed;
         var slot = Owners.GetOrCreateValue(menu);
         var owns = slot.Owner?.TryGetTarget(out var owner) == true && ReferenceEquals(owner, this);
         List<Exception>? failures = null;
@@ -153,8 +164,8 @@ internal sealed class DropDownMenuSession
         { try { action(); } catch (Exception error) { (failures ??= []).Add(error); } }
         try
         {
-            // Keep the lease until BOTH context cleanup and native hiding finish:
-            // a reentrant second trigger must not have its new context cleared.
+            // Do not release the shared lease until cleanup AND native Hide
+            // finish. A reentrant new owner must not lose its context to us.
             if (owns)
             {
                 Attempt(() => MenuContext.Clear(menu));
