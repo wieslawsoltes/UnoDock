@@ -1,0 +1,48 @@
+name: Verify preview 13 delivery
+on:
+  push:
+    branches: [work/preview13-delivery-20260923]
+    paths: [.github/workflows/verify-preview13-delivery.yml]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  delivery:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 6502dfb220ae202e52f5c4ed107b236204679274
+          path: delivery-tools
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: b9c6d561aea20a869b8623ea259cb176e466e377
+          path: product
+          persist-credentials: false
+      - name: Require the exact product workflow to complete successfully
+        working-directory: product
+        run: gh run watch 35902251415 --repo wieslawsoltes/UnoDock --exit-status --interval 15
+      - name: Pin the verifier to the final correction revision and run
+        working-directory: product
+        run: |
+          python3 - <<'PY'
+          import os,pathlib
+          source=pathlib.Path('../delivery-tools/tools/verify-preview13-delivery.py').read_text()
+          old="REVISION = '08611c5dbb199eedc6a98b0589f8e2b6d1e3a125'"
+          assert source.count(old)==1
+          source=source.replace(old,"REVISION = 'b9c6d561aea20a869b8623ea259cb176e466e377'")
+          assert source.count('RUN_ID = 35901417138')==1
+          source=source.replace('RUN_ID = 35901417138','RUN_ID = 35902251415')
+          pathlib.Path(os.environ['RUNNER_TEMP'],'verify-delivery.py').write_text(source)
+          PY
+          python3 "$RUNNER_TEMP/verify-delivery.py"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: UnoDock-preview13-delivery
+          path: ${{ runner.temp }}/unodock-delivery/files/
+          if-no-files-found: error
+          retention-days: 30
