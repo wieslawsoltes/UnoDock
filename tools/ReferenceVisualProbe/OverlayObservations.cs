@@ -1,5 +1,5 @@
-// Independent black-box pointer probes against application-owned content.
-// Export pixels and public arranged rectangles, never path data or templates.
+// Independent black-box probes. Application-owned content, public model/window APIs,
+// native pointer input and public arranged rectangles only; no template/path extraction.
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -28,37 +28,50 @@ internal static class OverlayObservations
             GetCursorPos(out var previous);
             try
             {
+                owner.Left = 20; owner.Top = 20;
                 foreach (var tool in new[] { false, true })
                 {
                     var doc = new LayoutDocument { Title = "Dragged document", ContentId = "dragged", Content = new TextBox { Text = "Owned content" } };
-                    var docs = new LayoutDocumentPane(new LayoutDocument { Title = "Target", ContentId = "target", Content = new TextBox { Text = "Target editor" } });
-                    docs.Children.Add(doc);
+                    var docs = new LayoutDocumentPane(new LayoutDocument { Title = "Target", ContentId = "target", Content = new TextBox { Text = "Target editor" } }); docs.Children.Add(doc);
                     var anchor = new LayoutAnchorable { Title = "Dragged tool", ContentId = "tool", Content = new TextBox { Text = "Owned tool" } };
-                    var tools = new LayoutAnchorablePane(anchor) { DockWidth = new GridLength(200) };
-                    tools.Children.Add(new LayoutAnchorable { Title = "Other tool", ContentId = "other" });
+                    var tools = new LayoutAnchorablePane(anchor) { DockWidth = new GridLength(200) }; tools.Children.Add(new LayoutAnchorable { Title = "Other tool", ContentId = "other" });
                     var panel = new LayoutPanel(tools); panel.Children.Add(docs);
-                    manager.FlowDirection = FlowDirection.LeftToRight;
-                    manager.Layout = new LayoutRoot { RootPanel = panel };
-                    (tool ? (LayoutContent)anchor : doc).IsActive = true;
-                    owner.Activate(); manager.UpdateLayout(); await Task.Delay(200);
-                    var source = Descendants(manager).OfType<FrameworkElement>().First(e => e.IsVisible &&
-                        (tool ? e is LayoutAnchorableTabItem a && ReferenceEquals(a.Model, anchor) : e is LayoutDocumentTabItem d && ReferenceEquals(d.Model, doc)));
+                    manager.FlowDirection = FlowDirection.LeftToRight; manager.Layout = new LayoutRoot { RootPanel = panel };
+                    var content = tool ? (LayoutContent)anchor : doc;
+                    content.FloatingLeft = 40; content.FloatingTop = 60; content.FloatingWidth = 280; content.FloatingHeight = 180;
+                    content.Float(); manager.UpdateLayout(); await Task.Delay(250);
+                    var floating = manager.FloatingWindows.Single(); floating.Left = 40; floating.Top = 60; floating.Width = 280; floating.Height = 180;
+                    floating.Activate(); floating.UpdateLayout(); await Task.Delay(150);
                     var target = Descendants(manager).OfType<LayoutDocumentPaneControl>().First(e => ReferenceEquals(e.Model, docs));
-                    var start = source.PointToScreen(new Point(Math.Min(25, source.ActualWidth / 2), source.ActualHeight / 2));
-                    var end = target.PointToScreen(new Point(target.ActualWidth / 2 + 70, target.ActualHeight / 2 + 70));
-                    SetCursorPos((int)start.X, (int)start.Y); await Task.Delay(80);
-                    MouseEvent(2, 0, 0, 0, UIntPtr.Zero); await Task.Delay(100);
-                    SetCursorPos((int)start.X + 30, (int)start.Y + 60); await Task.Delay(250);
-                    SetCursorPos((int)end.X, (int)end.Y); await Task.Delay(450);
+                    var start = floating.PointToScreen(new Point(20, 8));
+                    var end = target.PointToScreen(new Point(target.ActualWidth / 2 + 90, target.ActualHeight / 2 + 90));
+                    Console.WriteLine($"Observed drag start={start}; end={end}; floating={floating.IsVisible}; target={target.IsVisible}");
+                    SetCursorPos((int)start.X, (int)start.Y); MouseEvent(2, 0, 0, 0, UIntPtr.Zero); await Task.Delay(80);
+                    // DragMove is a public Window method. Its nested native message loop
+                    // allows delayed pointer moves and public visual observations below.
+                    var ended = new TaskCompletionSource<bool>();
+                    floating.Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        try { floating.DragMove(); ended.TrySetResult(true); }
+                        catch (Exception error) { ended.TrySetException(error); }
+                    }));
+                    await Task.Delay(150);
+                    for (var step = 1; step <= 12; step++)
+                    {
+                        SetCursorPos((int)(start.X + (end.X - start.X) * step / 12), (int)(start.Y + (end.Y - start.Y) * step / 12));
+                        await Task.Delay(35);
+                    }
+                    await Task.Delay(250);
                     var overlays = Application.Current.Windows.OfType<OverlayWindow>().Where(w => w.IsVisible).ToArray();
-                    if (overlays.Length == 0) throw new InvalidOperationException("Native pointer drag did not realize the reference overlay.");
-                    var i = 0;
+                    Console.WriteLine("Visible windows: " + string.Join(", ", Application.Current.Windows.OfType<Window>().Select(w => w.GetType().Name + ":" + w.IsVisible)));
+                    if (overlays.Length == 0) throw new InvalidOperationException("Public DragMove did not realize the reference overlay.");
+                    var index = 0;
                     foreach (var overlay in overlays)
                     {
                         overlay.UpdateLayout();
                         var root = VisualTreeHelper.GetChildrenCount(overlay) > 0 ? VisualTreeHelper.GetChild(overlay, 0) as FrameworkElement : null;
                         if (root == null) throw new InvalidOperationException("Reference overlay has no arranged client root.");
-                        var name = (tool ? "guides-tool" : "guides-document") + (i++ == 0 ? "" : "-" + i);
+                        var name = (tool ? "guides-tool" : "guides-document") + (index++ == 0 ? "" : "-" + index);
                         var bmp = new RenderTargetBitmap((int)Math.Ceiling(root.ActualWidth), (int)Math.Ceiling(root.ActualHeight), 96, 96, PixelFormats.Pbgra32);
                         bmp.Render(root); var png = new PngBitmapEncoder(); png.Frames.Add(BitmapFrame.Create(bmp));
                         using (var file = File.Create(Path.Combine(output, name + ".png"))) png.Save(file);
@@ -69,11 +82,11 @@ internal static class OverlayObservations
                             xml.Add(new XElement("Element", new XAttribute("type", element.GetType().Name), new XAttribute("name", element.Name ?? ""),
                                 new XAttribute("x", bounds.X), new XAttribute("y", bounds.Y), new XAttribute("width", bounds.Width), new XAttribute("height", bounds.Height)));
                         }
-                        new XDocument(xml).Save(Path.Combine(output, name + ".xml"));
-                        Console.WriteLine("Captured public drag overlay: " + name);
+                        new XDocument(xml).Save(Path.Combine(output, name + ".xml")); Console.WriteLine("Captured public drag overlay: " + name);
                     }
-                    KeyEvent(0x1B, 0, 0, UIntPtr.Zero); KeyEvent(0x1B, 0, 2, UIntPtr.Zero);
-                    MouseEvent(4, 0, 0, 0, UIntPtr.Zero); await Task.Delay(200);
+                    KeyEvent(0x1B, 0, 0, UIntPtr.Zero); KeyEvent(0x1B, 0, 2, UIntPtr.Zero); MouseEvent(4, 0, 0, 0, UIntPtr.Zero);
+                    if (await Task.WhenAny(ended.Task, Task.Delay(1500)) != ended.Task) throw new TimeoutException("Native drag loop did not terminate.");
+                    await ended.Task; content.Dock(); await Task.Delay(100);
                 }
             }
             catch (Exception error) { failure = error; }
