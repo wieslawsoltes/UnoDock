@@ -43,7 +43,8 @@ internal static class NavigatorObservations
                 else navigator.SelectedDocument = navigator.Documents.Last();
                 navigator.UpdateLayout(); navigator.Dispatcher.Invoke(DispatcherPriority.Render, new Action(() => { }));
                 // Capture the client content only, excluding OS-owned non-client chrome.
-                var root = navigator.Content as FrameworkElement;
+                var root = navigator.Content as FrameworkElement ??
+                    (VisualTreeHelper.GetChildrenCount(navigator) > 0 ? VisualTreeHelper.GetChild(navigator, 0) as FrameworkElement : null);
                 if (root == null) throw new InvalidOperationException("Navigator client content is not realized.");
                 var bitmap = new RenderTargetBitmap((int)Math.Ceiling(root.ActualWidth), (int)Math.Ceiling(root.ActualHeight), 96, 96, PixelFormats.Pbgra32);
                 bitmap.Render(root); var encoder = new PngBitmapEncoder(); encoder.Frames.Add(BitmapFrame.Create(bitmap));
