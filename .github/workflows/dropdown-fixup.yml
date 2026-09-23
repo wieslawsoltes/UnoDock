@@ -15,7 +15,7 @@ jobs:
         with:
           ref: work/dropdown-lifecycle-20260923
           fetch-depth: 0
-      - name: Apply exact reviewed integration corrections
+      - name: Apply exact reviewed context-request and acceptance changes
         run: |
           python3 - <<'PY'
           from pathlib import Path
@@ -24,13 +24,50 @@ jobs:
               if new in text: return
               assert text.count(old) == 1, name
               p.write_text(text.replace(old, new))
-          test = 'tests/UnoDock.VisualTests/DropDownQualityTests.cs'
-          change(test, 'private sealed class Button : DropDownButton', 'private sealed class Button : Xceed.Wpf.AvalonDock.Controls.DropDownButton')
-          change(test, 'internal MenuFlyout? Menu', 'internal MenuFlyout Menu')
-          change(test, 'get => Button != null ? Button.DropDownContextMenu : Area!.DropDownContextMenu;', 'get => (Button != null ? Button.DropDownContextMenu : Area!.DropDownContextMenu) ?? throw new InvalidOperationException("No test menu is configured.");')
-          change('samples/UnoDock.Gallery/MenuLab.cs', 'Add("Reset", Populate);', 'Add("Dropdown contracts", ShowDropDownLab); Add("Reset", Populate);')
-          change('Directory.Build.props', '<Version>0.1.0-preview.12</Version>', '<Version>0.1.0-preview.13</Version>')
-          change('samples/UnoDock.Gallery/GalleryPage.cs', 'INDEPENDENT IMPLEMENTATION  /  PREVIEW 12', 'INDEPENDENT IMPLEMENTATION  /  PREVIEW 13')
+          controls='src/UnoDock/Controls/DropDownControls.cs'
+          change(controls, '        PointerCanceled += (_, _) => ResetPointer();', '''        ContextRequested += (_, e) =>
+                  {
+                      if (e.Handled || !IsEnabled) return;
+                      if (e.TryGetPosition(this, out var position))
+                      {
+                          if (_suppressMouseRightTap) { e.Handled = true; return; }
+                          _session.Open(position);
+                      }
+                      else _session.Open();
+                      if (_session.IsRequested) e.Handled = true;
+                  };
+                  PointerCanceled += (_, _) => ResetPointer();''')
+          change('src/UnoDock/Internal/DropDownMenuSession.cs', '        var context = _context();', '        var context = menu is ContextMenuEx { MenuDataContext: { } explicitContext } ? explicitContext : _context();')
+          test='tests/UnoDock.VisualTests/DropDownQualityTests.cs'
+          change(test, '        internal int Downs, Ups;', '''        internal int Downs, Ups;
+                  internal string LastKey = "none";
+                  protected override void OnKeyDown(KeyRoutedEventArgs e)
+                  { LastKey = e.Key.ToString(); base.OnKeyDown(e); }''')
+          change(test, 'await Wait(() => t.View.IsLoaded); window.Activate(); t.View.Focus(FocusState.Keyboard); await Task.Delay(80);', '''await Wait(() => t.View.IsLoaded); window.Activate(); root.UpdateLayout(); await Task.Delay(80);
+                              Check.True(t.View.Focus(FocusState.Keyboard), "Context area refused keyboard focus.");
+                              await Wait(() => ReferenceEquals(FocusManager.GetFocusedElement(t.View.XamlRoot!), t.View));''')
+          change(test, '                    await Wait(() => t.Menu.IsOpen); input.Escape(); await Wait(() => !t.Menu.IsOpen);', '''                    try { await Wait(() => t.Menu.IsOpen); }
+                              catch (Exception error) { throw new InvalidOperationException("Application key did not open menu. Last native key: " + t.Area!.LastKey, error); }
+                              await Task.Delay(80); input.Escape();
+                              await Wait(() => !t.Menu.IsOpen);''')
+          change(test, '        try { return await tests.Run(output, "dropdown-quality"); }', '        DropDownTransitionTests.Register(tests, root, window);\n        try { return await tests.Run(output, "dropdown-quality"); }')
+          readme=Path('README.md')
+          text=readme.read_text().replace('**Version: 0.1.0-preview.12.', '**Version: 0.1.0-preview.13.')
+          header='## Current continuation: compact menus and safe context lifetimes'
+          addition='''## Preview 13: dropdown ownership and native input
+
+          Dropdown buttons and context areas now serialize opening, context assignment and
+          cleanup across application callbacks. Shared-menu handoff and immediate reopening
+          wait for native Closed dispatch to finish, including replacement menus in the same
+          UI thread. Native closing vetoes retain the current context and checked state.
+          Protected right-button hooks, keyboard/native context requests, and retained row
+          contexts run through the same lifecycle. The **Dropdown contracts** laboratory is
+          available from **Menu quality**. See [implementation and acceptance boundaries](docs/dropdown-quality.md).
+          Full parity remains unverified; consult actual CI results for the consumed revision.
+
+          ## Included: compact menus and safe context lifetimes'''
+          if header in text: text=text.replace(header,addition)
+          readme.write_text(text)
           PY
       - uses: actions/setup-dotnet@v4
         with:
@@ -43,7 +80,8 @@ jobs:
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add tests samples Directory.Build.props
+          git add src tests README.md
           git diff --cached --check
-          git diff --cached --quiet || (git commit -m 'fix: qualify dropdown test types and integrate preview 13 gallery laboratory' && git push origin HEAD:work/dropdown-lifecycle-20260923)
+          git diff --cached --quiet || (git commit -m 'fix: handle native context requests and verify deferred cancellation and close vetoes' && git push origin HEAD:work/dropdown-lifecycle-20260923)
+          gh workflow run dropdown-acceptance.yml --ref work/dropdown-lifecycle-20260923
           gh workflow run ci.yml --ref work/dropdown-lifecycle-20260923
