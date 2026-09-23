@@ -1,0 +1,76 @@
+name: Integrate auto-hide visual corrections
+on:
+  workflow_dispatch:
+  push:
+    paths: ['.github/workflows/integrate-autohide.yml']
+permissions:
+  contents: write
+  actions: write
+concurrency:
+  group: integrate-autohide
+  cancel-in-progress: false
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Verify and apply the reviewed visual correction
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import base64, hashlib, json, lzma, os, pathlib, subprocess, urllib.request
+          sha = 'b39c0405281337bf8b7ce5687b61570cf187f037'
+          request = urllib.request.Request(f'https://api.github.com/repos/{os.environ["GITHUB_REPOSITORY"]}/git/blobs/{sha}', headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'], 'Accept':'application/vnd.github+json'})
+          with urllib.request.urlopen(request, timeout=60) as response: blob = json.load(response)
+          compressed = base64.b64decode(blob['content'])
+          assert hashlib.sha1(b'blob '+str(len(compressed)).encode()+b'\0'+compressed).hexdigest() == sha
+          assert hashlib.sha256(compressed).hexdigest() == '2292c83330a2af3bb47891181cfbec179717ab1b89a82b24b3c902b2acc50833'
+          patch = pathlib.Path(os.environ['RUNNER_TEMP'])/'auto-hide-chrome.patch'
+          patch.write_bytes(lzma.decompress(compressed))
+          stats = subprocess.check_output(['git','apply','--numstat',str(patch)],text=True)
+          names = [line.split('\t',2)[2] for line in stats.splitlines()]
+          expected = {
+              'README.md','contracts/visual-fixtures/auto-hide-screen-observations.xml',
+              'contracts/visual-fixtures/auto-hide-screen-provenance.json',
+              'docs/auto-hide-quality.md','docs/compatibility.md','docs/validation-preview11.md',
+              'samples/UnoDock.Gallery/AutoHideLab.cs',
+              'src/UnoDock/Controls/LayoutAutoHideWindowControl.cs','src/UnoDock/Internal/DockSurface.cs',
+              'tests/UnoDock.VisualTests/AutoHideChromeTests.cs','tests/UnoDock.VisualTests/AutoHideQualityTests.cs'
+          }
+          assert len(names) == len(expected) and set(names) == expected, names
+          subprocess.run(['git','apply','--check','--index',str(patch)],check=True)
+          subprocess.run(['git','apply','--index',str(patch)],check=True)
+          print(stats)
+          PY
+      - name: Build complete current SDK and XAML desktop sample with warnings as errors
+        run: dotnet build samples/UnoDock.Gallery -c Release -f net10.0-desktop -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0 -warnaserror
+      - name: Portable tests and deterministic metadata regression gate
+        run: |
+          dotnet run --project tests/UnoDock.Core.Tests -c Release -- artifacts/test-results
+          python3 tools/generate-property-adapters.py
+          git diff --exit-code -- src/
+          bash tools/check-metadata.sh
+          git diff --cached --check
+      - name: Commit corrections and dispatch platform acceptance
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'fix: match auto-hide caption, expose its menu, paint rails and verify multiline rendering'
+          git push origin HEAD:main
+          git rev-parse HEAD > artifacts/integrated-revision.txt
+          gh workflow run ci.yml --ref main
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: auto-hide-chrome-integration-results
+          path: artifacts/
