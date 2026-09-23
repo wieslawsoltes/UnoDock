@@ -6,7 +6,7 @@ namespace Xceed.Wpf.AvalonDock.Internal;
 /// All transitions run on its UI thread. The weak registry does not root closed triggers.</summary>
 internal sealed class DropDownMenuSession
 {
-    private sealed record Request(FrameworkElement Owner, Func<bool> IsValid,
+    private sealed record Request(Control Owner, Func<bool> IsValid,
         Func<object?> Context, Action<bool> SetOpen, Point? Position, XamlRoot Root);
     private static readonly ConditionalWeakTable<MenuFlyout, DropDownMenuSession> Sessions = new();
     private readonly MenuFlyout _menu;
@@ -39,10 +39,10 @@ internal sealed class DropDownMenuSession
         };
     }
 
-    internal static bool Owns(MenuFlyout menu, FrameworkElement owner) =>
+    internal static bool Owns(MenuFlyout menu, Control owner) =>
         Sessions.TryGetValue(menu, out var state) && ReferenceEquals(state._desired?.Owner, owner);
 
-    internal static void Open(MenuFlyout menu, FrameworkElement owner, Func<bool> valid,
+    internal static void Open(MenuFlyout menu, Control owner, Func<bool> valid,
         Func<object?> context, Action<bool> setOpen, Point? position = null)
     {
         var root = owner.XamlRoot ?? throw new InvalidOperationException("The dropdown trigger must be attached to a XamlRoot.");
@@ -52,7 +52,7 @@ internal sealed class DropDownMenuSession
         state.Drain();
     }
 
-    internal static void Close(MenuFlyout? menu, FrameworkElement owner)
+    internal static void Close(MenuFlyout? menu, Control owner)
     {
         if (menu == null || !Sessions.TryGetValue(menu, out var state) ||
             !ReferenceEquals(state._desired?.Owner, owner)) return;
@@ -60,7 +60,7 @@ internal sealed class DropDownMenuSession
         state.Drain();
     }
 
-    internal static void UpdateContext(MenuFlyout? menu, FrameworkElement owner)
+    internal static void UpdateContext(MenuFlyout? menu, Control owner)
     {
         if (menu == null || !Sessions.TryGetValue(menu, out var state) ||
             !ReferenceEquals(state._desired?.Owner, owner)) return;
