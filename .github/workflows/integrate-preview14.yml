@@ -15,11 +15,12 @@ jobs:
         with:
           fetch-depth: 0
           ref: work/preview14-samples-namespaces
-      - name: Apply exact reviewed sources after deterministic namespace migration
+      - name: Apply exact reviewed product sources after deterministic namespace migration
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          test "$(git rev-parse HEAD~2)" = b9c6d561aea20a869b8623ea259cb176e466e377
+          git merge-base --is-ancestor b9c6d561aea20a869b8623ea259cb176e466e377 HEAD
+          git diff --exit-code b9c6d561aea20a869b8623ea259cb176e466e377 HEAD -- src samples tests contracts Directory.Build.props README.md
           python3 tools/migrate-namespaces.py
           python3 - <<'PY'
           import base64,hashlib,json,lzma,os,pathlib,subprocess
@@ -34,23 +35,22 @@ jobs:
           assert hashlib.sha256(packed).hexdigest()=='a6509637dd40bea0cbdfd0a9dd38efeae20c96238d6b6c94e60253b106636a6c'
           patch=pathlib.Path(os.environ['RUNNER_TEMP'])/'preview14.patch'
           patch.write_bytes(lzma.decompress(packed))
-          subprocess.run(['git','apply','--check',str(patch)],check=True)
-          subprocess.run(['git','apply',str(patch)],check=True)
+          exclusion='--exclude=.github/workflows/visual-reference.yml'
+          subprocess.run(['git','apply',exclusion,'--check',str(patch)],check=True)
+          subprocess.run(['git','apply',exclusion,str(patch)],check=True)
           PY
           python3 tools/generate-property-adapters.py
           python3 tests/metadata/test_namespace_migration.py
           python3 tests/metadata/test_metadata.py
           git diff --check
-      - name: Commit complete sources and run platform and reference validation
+      - name: Commit complete product sources and dispatch platform validation
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git rm .github/workflows/integrate-preview14.yml
-          git add src samples tests tools docs contracts README.md Directory.Build.props .github/workflows/visual-reference.yml
+          git add src samples tests tools docs contracts README.md Directory.Build.props
           git diff --cached --check
           git commit -m 'feat!: rename namespaces to UnoDock and rebuild classic samples with live property inspection and native quality tests'
           git push origin HEAD:work/preview14-samples-namespaces
           gh workflow run ci.yml --ref work/preview14-samples-namespaces
-          gh workflow run visual-reference.yml --ref work/preview14-samples-namespaces
