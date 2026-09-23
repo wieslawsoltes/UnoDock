@@ -1,0 +1,49 @@
+name: Dropdown integration corrections
+on:
+  push:
+    branches: [work/dropdown-lifecycle-20260923]
+    paths: [.github/workflows/dropdown-fixup.yml]
+permissions:
+  contents: write
+  actions: write
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: work/dropdown-lifecycle-20260923
+          fetch-depth: 0
+      - name: Apply exact reviewed integration corrections
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          def change(name, old, new):
+              p = Path(name); text = p.read_text()
+              if new in text: return
+              assert text.count(old) == 1, name
+              p.write_text(text.replace(old, new))
+          test = 'tests/UnoDock.VisualTests/DropDownQualityTests.cs'
+          change(test, 'private sealed class Button : DropDownButton', 'private sealed class Button : Xceed.Wpf.AvalonDock.Controls.DropDownButton')
+          change(test, 'internal MenuFlyout? Menu', 'internal MenuFlyout Menu')
+          change(test, 'get => Button != null ? Button.DropDownContextMenu : Area!.DropDownContextMenu;', 'get => (Button != null ? Button.DropDownContextMenu : Area!.DropDownContextMenu) ?? throw new InvalidOperationException("No test menu is configured.");')
+          change('samples/UnoDock.Gallery/MenuLab.cs', 'Add("Reset", Populate);', 'Add("Dropdown contracts", ShowDropDownLab); Add("Reset", Populate);')
+          change('Directory.Build.props', '<Version>0.1.0-preview.12</Version>', '<Version>0.1.0-preview.13</Version>')
+          change('samples/UnoDock.Gallery/GalleryPage.cs', 'INDEPENDENT IMPLEMENTATION  /  PREVIEW 12', 'INDEPENDENT IMPLEMENTATION  /  PREVIEW 13')
+          PY
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Compile complete SDK and XAML sample with warnings as errors
+        run: dotnet build samples/UnoDock.Gallery -c Release -f net10.0-desktop -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0 -warnaserror
+      - name: Commit exact corrected sources and dispatch platform tests
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add tests samples Directory.Build.props
+          git diff --cached --check
+          git diff --cached --quiet || (git commit -m 'fix: qualify dropdown test types and integrate preview 13 gallery laboratory' && git push origin HEAD:work/dropdown-lifecycle-20260923)
+          gh workflow run ci.yml --ref work/dropdown-lifecycle-20260923
