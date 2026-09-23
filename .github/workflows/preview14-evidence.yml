@@ -1,0 +1,133 @@
+name: Preview 14 evidence verification
+on:
+  push:
+    branches: [work/preview14-validation-evidence]
+    paths: [.github/workflows/preview14-evidence.yml]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
+      ACCEPTANCE_RUN: '35913023351'
+      REFERENCE_RUN: '35912438698'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Wait for the pinned acceptance run to finish
+        run: gh run watch "$ACCEPTANCE_RUN" --interval 10 --exit-status || true
+      - name: Download and verify artifact digests; reconcile source, packages and executed reports
+        run: |
+          python3 - <<'PY'
+          import hashlib, io, json, os, pathlib, re, runpy, shutil, subprocess, zipfile
+          import xml.etree.ElementTree as ET
+          root = pathlib.Path('evidence'); root.mkdir()
+          repo = os.environ['GITHUB_REPOSITORY']; run_id = int(os.environ['ACCEPTANCE_RUN']); reference_id = int(os.environ['REFERENCE_RUN'])
+          def api(path):
+              return json.loads(subprocess.check_output(['gh','api',f'repos/{repo}/'+path]))
+          run = api(f'actions/runs/{run_id}'); reference = api(f'actions/runs/{reference_id}')
+          (root/'acceptance-run.json').write_text(json.dumps(run,indent=2)+'\n')
+          jobs = api(f'actions/runs/{run_id}/jobs?per_page=100')['jobs']
+          manifest = {'schema':1,'acceptanceRun':run_id,'headRevision':run['head_sha'],'conclusion':run['conclusion'],
+                      'referenceRun':reference_id,'referenceConclusion':reference['conclusion'],
+                      'jobs':[{k:j[k] for k in ('name','status','conclusion')} for j in jobs], 'artifacts':[], 'suites':{}}
+          def download(identifier, name, directory):
+              entries = api(f'actions/runs/{identifier}/artifacts?per_page=100')['artifacts']
+              matches = [a for a in entries if a['name']==name and not a['expired']]
+              if len(matches)!=1: raise ValueError('Missing or ambiguous artifact: '+name)
+              item=matches[0]
+              data=subprocess.check_output(['gh','api',f'repos/{repo}/actions/artifacts/{item["id"]}/zip'])
+              digest=hashlib.sha256(data).hexdigest()
+              if item.get('digest')!='sha256:'+digest: raise ValueError('Artifact digest mismatch: '+name)
+              manifest['artifacts'].append({'name':name,'id':item['id'],'run':identifier,'sha256':digest})
+              directory.mkdir(parents=True,exist_ok=True)
+              with zipfile.ZipFile(io.BytesIO(data)) as archive:
+                  names=archive.namelist()
+                  if len(names)!=len(set(names)): raise ValueError('Duplicate artifact entry')
+                  for entry in archive.infolist():
+                      path=pathlib.PurePosixPath(entry.filename)
+                      if path.is_absolute() or '..' in path.parts or '\\' in entry.filename: raise ValueError('Unsafe artifact path')
+                      if entry.is_dir(): continue
+                      target=directory/path; target.parent.mkdir(parents=True,exist_ok=True); target.write_bytes(archive.read(entry))
+          download(run_id,'core-and-api-results',root/'core')
+          download(run_id,'runtime-test-results',root/'linux')
+          download(run_id,'windows-runtime-test-results',root/'windows')
+          download(run_id,'nuget-preview',root/'packages')
+          download(reference_id,'public-sample-reference',root/'reference')
+          revision=(root/'core/source-revision.txt').read_text().strip()
+          if not re.fullmatch('[0-9a-f]{40}',revision): raise ValueError('Invalid source revision')
+          subprocess.run(['git','fetch','origin',revision,'--depth=1'],check=True)
+          records=subprocess.check_output(['git','ls-tree','-r','-z',revision]).split(b'\0')
+          tracked={}
+          for record in records:
+              if not record: continue
+              metadata,name=record.split(b'\t',1); mode,kind,sha=metadata.decode().split()
+              if kind!='blob': raise ValueError('Unexpected submodule in source export')
+              tracked[name.decode()]=(mode,sha)
+          with zipfile.ZipFile(root/'core/UnoDock-source.zip') as archive:
+              entries=[e for e in archive.infolist() if not e.is_dir()]
+              if len(entries)!=len(tracked) or {e.filename for e in entries}!=set(tracked): raise ValueError('Source file-set mismatch')
+              for entry in entries:
+                  value=archive.read(entry); mode,expected=tracked[entry.filename]
+                  digest=hashlib.sha1(b'blob '+str(len(value)).encode()+b'\0'+value).hexdigest()
+                  if digest!=expected: raise ValueError('Source blob mismatch: '+entry.filename)
+                  if mode=='100755' and not ((entry.external_attr>>16)&0o111): raise ValueError('Lost executable mode')
+                  if pathlib.PurePosixPath(entry.filename).suffix.lower() in ('.ttf','.otf','.ttc','.woff','.woff2'): raise ValueError('Font files are excluded from delivery')
+          manifest['sourceRevision']=revision; manifest['sourceFiles']=len(tracked)
+          manifest['sourceTree']=subprocess.check_output(['git','rev-parse',revision+'^{tree}'],text=True).strip()
+          package_files=sorted((root/'packages').glob('*.*pkg'))
+          if len(package_files)!=4: raise ValueError('Expected two NuGet packages plus two symbol packages')
+          manifest['packages']=[]
+          for path in package_files:
+              with zipfile.ZipFile(path) as package:
+                  nuspec=next(n for n in package.namelist() if n.endswith('.nuspec'))
+                  metadata=ET.fromstring(package.read(nuspec)).find('{*}metadata')
+                  if metadata.find('{*}repository').get('commit')!=revision: raise ValueError('Package/source revision mismatch')
+                  manifest['packages'].append({'file':path.name,'version':metadata.findtext('{*}version'),'sha256':hashlib.sha256(path.read_bytes()).hexdigest()})
+          for platform,directory in [('core',root/'core/test-results'),('linux',root/'linux'),('windows',root/'windows')]:
+              suites=[]
+              for path in sorted(directory.glob('*.xml')):
+                  document=ET.parse(path).getroot()
+                  if document.tag!='testsuite': continue
+                  cases=document.findall('testcase'); recorded=json.loads(path.with_suffix('.json').read_text())
+                  if len(cases)!=len(recorded): raise ValueError('JUnit/JSON case-count mismatch: '+str(path))
+                  for case,record in zip(cases,recorded):
+                      if case.get('name')!=record['Name'] or (case.find('failure') is not None)!=(record['Error'] is not None): raise ValueError('JUnit/JSON result mismatch')
+                  failed=sum(r['Error'] is not None for r in recorded)
+                  if int(document.get('tests'))!=len(recorded) or int(document.get('failures'))!=failed: raise ValueError('JUnit total mismatch')
+                  suites.append({'suite':document.get('name'),'passed':len(recorded)-failed,'failed':failed})
+                  for record in recorded:
+                      if record['Error'] is not None: print('FAIL '+platform+' '+record['Name']+'\n'+record['Error'])
+              if not suites: raise ValueError('No executed suites: '+platform)
+              manifest['suites'][platform]=suites
+              print(platform+': '+json.dumps(suites,sort_keys=True))
+          metadata=json.loads((root/'core/metadata-diff.json').read_text())
+          manifest['api']={k:metadata[k] for k in ('referenceEntryCount','mappedSignatureMatches','unresolvedSignatureCount','attributeDifferenceCount','counts')}
+          print('API '+json.dumps(manifest['api'],sort_keys=True))
+          comparer=runpy.run_path('tools/compare-sample-geometry.py')['compare']
+          comparisons={}
+          for platform in ('linux','windows'):
+              comparisons[platform]={}
+              for scene in ('classic','selected-editor','rtl'):
+                  result=comparer(root/'reference'/f'sample-reference-{scene}.xml',root/platform/'visuals'/f'sample-surface-{scene}.xml')
+                  comparisons[platform][scene]=result
+                  print(f'{platform}/{scene}: '+json.dumps({k:v for k,v in result.items() if k!='rectangles'},sort_keys=True))
+                  for item in result['rectangles']:
+                      if max(item['absoluteDelta'].values())>1: print('GEOMETRY '+json.dumps(item,sort_keys=True))
+          (root/'sample-geometry-comparison.json').write_text(json.dumps(comparisons,indent=2)+'\n')
+          manifest['sampleGeometryPassed']=all(s['passed'] for p in comparisons.values() for s in p.values())
+          manifest['verified']=run['conclusion']=='success' and len(jobs)==6 and all(j['conclusion']=='success' for j in jobs) and reference['conclusion']=='success' and manifest['sampleGeometryPassed'] and all(s['failed']==0 for p in manifest['suites'].values() for s in p)
+          (root/'verification.json').write_text(json.dumps(manifest,indent=2)+'\n')
+          print(json.dumps({k:v for k,v in manifest.items() if k not in ('suites','artifacts','packages')},indent=2))
+          if not manifest['verified']: raise SystemExit('Evidence is incomplete or failing; no successful-delivery claim.')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: preview14-verification-evidence
+          path: evidence/
+          if-no-files-found: error
