@@ -17,7 +17,7 @@ public sealed partial class GalleryPage
         LayoutDocument editor = null!; LayoutAnchorable explorer = null!;
         ICommand? originalFloat = null; var cancelled = false; var overridden = false; var queryEnabled = true;
         var overrideFloat = new MenuLabCommand(() => { status.Text = "Application Float command executed; model intentionally unchanged."; }, () => queryEnabled);
-        Add("Reset", Populate); Add("Document menu", () => Show(editor)); Add("Tool menu", () => Show(explorer));
+        Add("Dropdown contracts", ShowDropDownLab); Add("Reset", Populate); Add("Document menu", () => Show(editor)); Add("Tool menu", () => Show(explorer));
         Add("CanClose", () => { editor.CanClose = !editor.CanClose; Status(); });
         Add("CanFloat", () => { editor.CanFloat = !editor.CanFloat; Status(); });
         Add("CanHide", () => { explorer.CanHide = !explorer.CanHide; Status(); });

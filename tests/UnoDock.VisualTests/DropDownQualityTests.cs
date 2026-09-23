@@ -19,7 +19,7 @@ public static class DropDownQualityTests
         protected override void OnPreviewMouseRightButtonUp(DockMouseButtonEventArgs e)
         { Ups++; if (Veto) e.Handled = true; base.OnPreviewMouseRightButtonUp(e); }
     }
-    private sealed class Button : DropDownButton
+    private sealed class Button : Xceed.Wpf.AvalonDock.Controls.DropDownButton
     {
         internal bool Veto;
         internal void InvokeClick() => OnClick();
@@ -36,9 +36,9 @@ public static class DropDownQualityTests
             else Button = new() { Content = "Document menu" };
             View.Width = 380; View.Height = 60; View.IsTabStop = true;
         }
-        internal MenuFlyout? Menu
+        internal MenuFlyout Menu
         {
-            get => Button != null ? Button.DropDownContextMenu : Area!.DropDownContextMenu;
+            get => (Button != null ? Button.DropDownContextMenu : Area!.DropDownContextMenu) ?? throw new InvalidOperationException("No test menu is configured.");
             set { if (Button != null) Button.DropDownContextMenu = value; else Area!.DropDownContextMenu = value; }
         }
         internal object? Context
