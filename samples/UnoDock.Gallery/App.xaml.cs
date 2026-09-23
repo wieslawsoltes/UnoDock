@@ -29,6 +29,8 @@ public partial class App : Application
                     var suite = Environment.GetEnvironmentVariable("UNODOCK_TEST_SUITE");
                     if (suite == "menu-quality")
                         exitCode = await Testing.MenuQualityTests.Run(gallery.Dock, output);
+                    else if (suite == "menu-context-lifetime")
+                        exitCode = await Testing.MenuContextLifetimeTests.Run(output);
                     else if (suite == "auto-hide-quality")
                         exitCode = await Testing.AutoHideQualityTests.Run(gallery.Dock, output);
                     else if (suite == "splitter-quality")
@@ -42,17 +44,18 @@ public partial class App : Application
                     else if (suite == "visual-parity")
                         exitCode = await Testing.VisualParityTests.Run(gallery.Dock, output);
                     else if (suite == "input-extensions")
-                        exitCode = await Testing.InputExtensionTests.Run(gallery.Dock, output);
+                        exitCode = await Testing.InputRoutingTrace.Run(gallery.Dock, output);
                     else if (suite == "windows-acceptance")
                     {
                         exitCode = await Testing.WindowLifecycleTests.Run(gallery.Dock, output);
-                        exitCode |= await Testing.InputExtensionTests.Run(gallery.Dock, output);
+                        exitCode |= await Testing.InputRoutingTrace.Run(gallery.Dock, output);
                         exitCode |= await Testing.VisualParityTests.Run(gallery.Dock, output);
                         exitCode |= await Testing.NavigatorQualityTests.Run(gallery.Dock, output);
                         exitCode |= await Testing.DockGuideTests.Run(gallery.Dock, output);
                         exitCode |= await Testing.SplitterQualityTests.Run(gallery.Dock, output);
                         exitCode |= await Testing.AutoHideQualityTests.Run(gallery.Dock, output);
                         exitCode |= await Testing.MenuQualityTests.Run(gallery.Dock, output);
+                        exitCode |= await Testing.MenuContextLifetimeTests.Run(output);
                     }
                     else if (string.IsNullOrEmpty(suite) || suite == "all")
                     {
@@ -65,13 +68,14 @@ public partial class App : Application
                         exitCode |= await Testing.WindowCoordinateTests.Run(output, gallery.Dock);
                         exitCode |= await Testing.ShellTests.Run(output, gallery.Dock);
                         exitCode |= await Testing.WindowLifecycleTests.Run(gallery.Dock, output);
-                        exitCode |= await Testing.InputExtensionTests.Run(gallery.Dock, output);
+                        exitCode |= await Testing.InputRoutingTrace.Run(gallery.Dock, output);
                         exitCode |= await Testing.VisualParityTests.Run(gallery.Dock, output);
                         exitCode |= await Testing.NavigatorQualityTests.Run(gallery.Dock, output);
                         exitCode |= await Testing.DockGuideTests.Run(gallery.Dock, output);
                         exitCode |= await Testing.SplitterQualityTests.Run(gallery.Dock, output);
                         exitCode |= await Testing.AutoHideQualityTests.Run(gallery.Dock, output);
                         exitCode |= await Testing.MenuQualityTests.Run(gallery.Dock, output);
+                        exitCode |= await Testing.MenuContextLifetimeTests.Run(output);
                     }
                     else throw new ArgumentException("Unknown UNODOCK_TEST_SUITE: " + suite);
                 }

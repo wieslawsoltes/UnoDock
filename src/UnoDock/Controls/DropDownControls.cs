@@ -60,7 +60,7 @@ public class DropDownControlArea : UserControl
 public class ContextMenuEx : MenuFlyout
 {
     public static readonly DependencyProperty ItemsSourceProperty = DependencyProperty.Register(nameof(ItemsSource), typeof(IEnumerable), typeof(ContextMenuEx), new PropertyMetadata(null));
-    public static readonly DependencyProperty MenuDataContextProperty = DependencyProperty.Register(nameof(MenuDataContext), typeof(object), typeof(ContextMenuEx), new PropertyMetadata(null, (d, e) => { var menu = (ContextMenuEx)d; MenuContext.Clear(menu); MenuContext.Apply(menu, e.NewValue); }));
+    public static readonly DependencyProperty MenuDataContextProperty = DependencyProperty.Register(nameof(MenuDataContext), typeof(object), typeof(ContextMenuEx), new PropertyMetadata(null, (d, e) => { var menu = (ContextMenuEx)d; MenuContext.Apply(menu, menu.MenuDataContext); }));
     public IEnumerable? ItemsSource { get => (IEnumerable?)GetValue(ItemsSourceProperty); set => SetValue(ItemsSourceProperty, value); }
     public object? MenuDataContext { get => GetValue(MenuDataContextProperty); set => SetValue(MenuDataContextProperty, value); }
     public ContextMenuEx()
