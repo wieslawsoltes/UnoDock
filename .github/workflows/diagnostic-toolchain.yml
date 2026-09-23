@@ -18,14 +18,25 @@ jobs:
         run: |
           dotnet build samples/UnoDock.Gallery -c Release -f net10.0-desktop -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0 -warnaserror
           dotnet build tests/UnoDock.Core.Tests -c Release
-      - name: Export only public SDK and restored package binaries, never credentials
+      - name: Export only resolved project packages and public SDK, never credentials
         run: |
           mkdir -p artifacts/toolchain
           sdk=$(dotnet --version)
           runtime=$(dotnet --list-runtimes | awk '$1 == "Microsoft.NETCore.App" && $2 ~ /^10\./ {print $2}' | sort -V | tail -1)
           ref=$(ls "$DOTNET_ROOT/packs/Microsoft.NETCore.App.Ref" | grep '^10\.' | sort -V | tail -1)
           tar -czf artifacts/toolchain/dotnet.tar.gz -C "$DOTNET_ROOT" dotnet host/fxr/"$runtime" shared/Microsoft.NETCore.App/"$runtime" sdk/"$sdk" packs/Microsoft.NETCore.App.Ref/"$ref" packs/Microsoft.NETCore.App.Host.linux-x64/"$ref"
-          tar -czf artifacts/toolchain/packages.tar.gz -C "$HOME/.nuget" packages
+          python3 - <<'PY'
+          import json,pathlib
+          paths=set()
+          for assets in pathlib.Path('.').rglob('project.assets.json'):
+              for lib in json.loads(assets.read_text()).get('libraries',{}).values():
+                  if lib.get('type')=='package':paths.add('packages/'+lib['path'])
+          for name,version in json.loads(pathlib.Path('global.json').read_text()).get('msbuild-sdks',{}).items():
+              paths.add('packages/'+name.lower()+'/'+version)
+          pathlib.Path('artifacts/toolchain/resolved-packages.txt').write_text('\n'.join(sorted(paths))+'\n')
+          print('Resolved packages:',len(paths))
+          PY
+          tar --exclude='*.nupkg' --exclude='*.pdb' -czf artifacts/toolchain/packages.tar.gz -C "$HOME/.nuget" -T "$GITHUB_WORKSPACE/artifacts/toolchain/resolved-packages.txt"
           git rev-parse HEAD > artifacts/toolchain/source-revision.txt
           sha256sum artifacts/toolchain/*.tar.gz > artifacts/toolchain/checksums.txt
       - uses: actions/upload-artifact@v4
