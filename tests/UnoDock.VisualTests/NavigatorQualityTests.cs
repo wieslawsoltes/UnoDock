@@ -256,6 +256,24 @@ public static class NavigatorQualityTests
             Check.Near(24, ((FrameworkElement)List(nav, true).ContainerFromItem(nav.Documents[0])).ActualHeight, 0.1);
             Check.Near(23.96, ((FrameworkElement)List(nav, true).ContainerFromItem(nav.Documents[0])).ActualHeight, 1);
         });
+        foreach (var explicitMode in new[] { ElementTheme.Light, ElementTheme.Dark })
+            foreach (var requestedMode in new[] { ElementTheme.Light, ElementTheme.Dark })
+                tests.Test($"explicit {explicitMode} navigator palette stays coherent under requested {requestedMode}", async () =>
+                {
+                    using var f = new Fixture(host);
+                    var theme = new Xceed.Wpf.AvalonDock.Themes.FluentTheme(explicitMode);
+                    host.Theme = theme; host.RequestedTheme = requestedMode; host.Refresh();
+                    var nav = f.Show(); await Ready(nav);
+                    Check.Same(theme.ThemeResourceDictionary["UnoDock.PaneBrush"], nav.Background);
+                    Check.Same(theme.ThemeResourceDictionary["UnoDock.ForegroundBrush"], nav.Foreground);
+                    var foreground = ((SolidColorBrush)nav.Foreground).Color;
+                    var background = ((SolidColorBrush)nav.Background).Color;
+                    Check.True(explicitMode == ElementTheme.Dark
+                        ? foreground.R > 200 && background.R < 80
+                        : foreground.R < 80 && background.R > 200, "Navigator foreground/background came from different palettes.");
+                    foreach (var text in PaletteTexts(nav))
+                        Check.Equal(foreground, ((SolidColorBrush)text.Foreground).Color);
+                });
         foreach (var scenario in new[] { "navigator", "navigator-tool", "navigator-many", "navigator-rtl", "navigator-dark" })
             tests.Test("capture live navigator scene: " + scenario, async () =>
             {
@@ -266,6 +284,10 @@ public static class NavigatorQualityTests
                 if (scenario == "navigator-tool") nav.SelectedAnchorable = nav.Anchorables.First(); else nav.SelectedDocument = nav.Documents.Last();
                 await Tick(); nav.UpdateLayout();
                 var path = Path.Combine(output, "visuals", scenario);
+                var expectedText = scenario == "navigator-dark" ? Microsoft.UI.ColorHelper.FromArgb(255, 242, 242, 242) : Microsoft.UI.Colors.Black;
+                Check.Equal(expectedText, ((SolidColorBrush)nav.Foreground).Color);
+                foreach (var text in PaletteTexts(nav))
+                    Check.Equal(expectedText, ((SolidColorBrush)text.Foreground).Color);
                 await VisualCapture.Save(nav, path + ".png"); SaveGeometry(nav, path + ".xml");
                 Check.True(nav.ActualWidth < 620 && nav.ActualHeight <= 560);
             });
@@ -292,12 +314,14 @@ public static class NavigatorQualityTests
     private sealed class Fixture : IDisposable
     {
         private readonly DockingManager _host; private readonly LayoutRoot _root; private readonly ElementTheme _theme;
+        private readonly Xceed.Wpf.AvalonDock.Themes.Theme? _palette;
         internal LayoutDocument[] Docs { get; }
         internal LayoutDocumentPane Pane { get; } = new();
         internal LayoutAnchorablePane Tools { get; } = new();
         internal Fixture(DockingManager host, int count = 3)
         {
-            _host = host; _root = host.Layout; _theme = host.RequestedTheme; host.RequestedTheme = ElementTheme.Light;
+            _host = host; _root = host.Layout; _theme = host.RequestedTheme; _palette = host.Theme;
+            host.Theme = null; host.RequestedTheme = ElementTheme.Light;
             Docs = Enumerable.Range(0, count).Select(i => new LayoutDocument { ContentId = "document-" + i, Title = $"Document {i:D2}.cs",
                 Description = $"Project / Source / Document {i:D2}.cs", Content = new TextBox { Text = "Owned probe document " + i } }).ToArray();
             foreach (var doc in Docs) Pane.Children.Add(doc);
@@ -310,7 +334,7 @@ public static class NavigatorQualityTests
         }
         internal NavigatorWindow Show(NavigatorWindow? nav = null)
         { nav ??= new(_host); Surface(_host, "ShowNavigator", nav); return nav; }
-        public void Dispose() { Surface(_host, "CloseNavigator", false); _host.Layout = _root; _host.RequestedTheme = _theme; _host.Refresh(); }
+        public void Dispose() { Surface(_host, "CloseNavigator", false); _host.Layout = _root; _host.RequestedTheme = _theme; _host.Theme = _palette; _host.Refresh(); }
     }
     private static async Task Ready(NavigatorWindow nav)
     { await Until(() => nav.ActualHeight > 0 && (nav.Documents.Length == 0 || List(nav, true).ContainerFromItem(nav.Documents[0]) is FrameworkElement { ActualHeight: > 0 })); await Tick(); }
@@ -329,6 +353,20 @@ public static class NavigatorQualityTests
     {
         if (list.ContainerFromItem(item) is not FrameworkElement row || row.ActualHeight <= 0) return false;
         var scroll = Scroll(list); var rect = Bounds(row, scroll); return rect.Top >= -1 && rect.Bottom <= scroll.ViewportHeight + 2;
+    }
+    private static IEnumerable<TextBlock> PaletteTexts(NavigatorWindow nav)
+    {
+        // ScrollBar glyphs have their own opacity/disabled colors. Assert the
+        // navigator-owned headings, details and row text, not platform chrome.
+        foreach (var name in new[] { "_selectionTitle", "_selectionDescription", "_documentHeading", "_toolHeading" })
+            yield return Field<TextBlock>(nav, name);
+        foreach (var documents in new[] { false, true })
+        {
+            var list = List(nav, documents);
+            foreach (var item in list.Items.OfType<LayoutItem>())
+                if (list.ContainerFromItem(item) is FrameworkElement row)
+                    foreach (var text in row.FindVisualChildren<TextBlock>()) yield return text;
+        }
     }
     private static XDocument Reference(string name)
     { using var stream = typeof(NavigatorQualityTests).Assembly.GetManifestResourceStream("VisualFixtures." + name + ".xml")!; return XDocument.Load(stream); }
@@ -353,7 +391,16 @@ public static class NavigatorQualityTests
             var row = new XElement("Element", new XAttribute("type", element.GetType().Name), new XAttribute("name", element.Name ?? ""),
                 new XAttribute("x", bounds.X.ToString("R", CultureInfo.InvariantCulture)), new XAttribute("y", bounds.Y.ToString("R", CultureInfo.InvariantCulture)),
                 new XAttribute("width", bounds.Width.ToString("R", CultureInfo.InvariantCulture)), new XAttribute("height", bounds.Height.ToString("R", CultureInfo.InvariantCulture)));
-            if (element is TextBlock text) row.SetAttributeValue("text", text.Text);
+            if (element is TextBlock text)
+            {
+                row.SetAttributeValue("text", text.Text);
+                if (text.Foreground is SolidColorBrush foreground) row.SetAttributeValue("foreground", foreground.Color.ToString());
+            }
+            if (element is Control control)
+            {
+                if (control.Background is SolidColorBrush background) row.SetAttributeValue("background", background.Color.ToString());
+                if (control.Foreground is SolidColorBrush foreground) row.SetAttributeValue("foreground", foreground.Color.ToString());
+            }
             root.Add(row);
         }
         new XDocument(root).Save(path);

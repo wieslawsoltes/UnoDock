@@ -59,6 +59,13 @@ outer border, five-DIP inset, 54-DIP details band, approximately 24-DIP rows, an
 The stock light background and border are observed #F0F0F0 and #A0A0A0. Selection,
 hover and focus use real framework controls rather than painted-only hit targets.
 
+Explicit dictionary palettes are resolved as a coherent set even when RequestedTheme
+or the OS mode disagrees. The Windows screenshots exposed a white-on-light mismatch
+that logical selection tests had missed. Four explicit/requested light/dark combinations
+now assert foreground, background and every rendered text brush; stock scene captures
+also assert their expected text colors before writing images. Test fixtures isolate and
+restore the owner's explicit Theme, not only RequestedTheme.
+
 Title and description have independent lines. The captured original overlapped those
 two text blocks; reproducing that defect is deliberately not an acceptance criterion.
 Long details are trimmed within the width chosen by the lists. Increased font size
@@ -109,8 +116,8 @@ WPF templates, WPF inherited types and routed-event infrastructure is not claime
 
 ## Validation
 
-`NavigatorQualityTests` has 39 Linux cases (including two opt-in XTEST sequences), or
-37 cases on Windows. It checks actual rows, stable collection/container identities,
+`NavigatorQualityTests` has 43 Linux cases (including two opt-in XTEST sequences), or
+41 cases on Windows. It checks actual rows, stable collection/container identities,
 structural updates, callbacks, scrolling, cancellation, custom parts, colors, density,
 labels and five live screenshot scenes. The `Navigator quality` gallery laboratory
 contains 3/40/200-document workspaces and live theme/RTL/density controls.

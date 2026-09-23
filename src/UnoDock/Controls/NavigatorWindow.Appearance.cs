@@ -47,8 +47,11 @@ public partial class NavigatorWindow
     {
         var palette = DockChrome.Palette(_manager);
         var dark = _manager.ActualTheme == ElementTheme.Dark && _manager.Theme is not Themes.GenericTheme;
-        Background = Brush("NavigatorBrush", dark ? palette.Surface : LightSurface);
-        BorderBrush = Brush("NavigatorBorderBrush", dark ? palette.Border : LightBorder);
+        // An explicit dictionary palette can disagree with RequestedTheme/OS mode.
+        // Never combine its foreground with unrelated stock-light backgrounds.
+        var usePalette = dark || _manager.Theme is Themes.DictionaryTheme;
+        Background = Brush("NavigatorBrush", usePalette ? palette.Surface : LightSurface);
+        BorderBrush = Brush("NavigatorBorderBrush", usePalette ? palette.Border : LightBorder);
         Foreground = palette.Foreground; FontSize = palette.FontSize;
         _chrome.Background = Background;
         _details.LineHeight = NavigatorListItem.RowHeight(palette.FontSize);
@@ -57,8 +60,8 @@ public partial class NavigatorWindow
         { text.Foreground = palette.Foreground; text.FontSize = palette.FontSize; }
         var rowPalette = palette with
         {
-            Tab = Brush("NavigatorSelectionBrush", dark ? palette.Tab : LightSelection),
-            Border = Brush("NavigatorSelectionBorderBrush", dark ? palette.Border : LightSelectionBorder)
+            Tab = Brush("NavigatorSelectionBrush", usePalette ? palette.Tab : LightSelection),
+            Border = Brush("NavigatorSelectionBorderBrush", usePalette ? palette.Border : LightSelectionBorder)
         };
         if (_defaultDocuments is NavigatorListBox documents) documents.Configure(rowPalette, Background);
         if (_defaultAnchorables is NavigatorListBox tools) tools.Configure(rowPalette, Background);
