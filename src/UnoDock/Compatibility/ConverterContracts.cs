@@ -1,6 +1,6 @@
 using System.Globalization;
 
-namespace Xceed.Wpf.AvalonDock.Compatibility;
+namespace UnoDock.Compatibility;
 
 /// <summary>Declares the input and output types of an independently implemented converter.</summary>
 [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]

@@ -1,11 +1,11 @@
-using Xceed.Wpf.AvalonDock.Internal;
-using Xceed.Wpf.AvalonDock.Layout;
+using UnoDock.Internal;
+using UnoDock.Layout;
 
-namespace Xceed.Wpf.AvalonDock;
+namespace UnoDock;
 
 public partial class DockingManager
 {
-    bool Xceed.Wpf.AvalonDock.Compatibility.IWeakEventListener.ReceiveWeakEvent(Type managerType, object sender, EventArgs e)
+    bool UnoDock.Compatibility.IWeakEventListener.ReceiveWeakEvent(Type managerType, object sender, EventArgs e)
     {
         ArgumentNullException.ThrowIfNull(managerType); ArgumentNullException.ThrowIfNull(e);
         if (_disposed || DispatcherQueue?.HasThreadAccess == false) return false;
@@ -25,7 +25,7 @@ public partial class DockingManager
         {
             // Events queued by replaced/disposed subscriptions cannot reach new sources.
             if (!_disposed && (ReferenceEquals(observer, _documentObserver) || ReferenceEquals(observer, _anchorableObserver)))
-                ((Xceed.Wpf.AvalonDock.Compatibility.IWeakEventListener)this).ReceiveWeakEvent(typeof(INotifyCollectionChanged), sender, e);
+                ((UnoDock.Compatibility.IWeakEventListener)this).ReceiveWeakEvent(typeof(INotifyCollectionChanged), sender, e);
         }
         if (DispatcherQueue?.HasThreadAccess == false) DispatcherQueue.TryEnqueue(Deliver);
         else Deliver();

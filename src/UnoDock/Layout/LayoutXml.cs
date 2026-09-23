@@ -1,7 +1,7 @@
 using System.Globalization;
 using System.Xml;
 
-namespace Xceed.Wpf.AvalonDock.Layout;
+namespace UnoDock.Layout;
 
 /// <summary>Explicit, trimming-safe XML codec. Every accepted node and property is listed here.</summary>
 internal static class LayoutXml

@@ -1,6 +1,6 @@
 using System.Xml;
 
-namespace Xceed.Wpf.AvalonDock.Layout;
+namespace UnoDock.Layout;
 
 public abstract class LayoutPositionableGroup<T> : LayoutGroup<T>, ILayoutPositionableElement where T : class, ILayoutElement
 {

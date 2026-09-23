@@ -1,4 +1,4 @@
-namespace Xceed.Wpf.AvalonDock.Controls;
+namespace UnoDock.Controls;
 
 /// <summary>Retains the original public spelling. Logical traversal follows ownership,
 /// including unrealized content; visual traversal follows only realized visuals.</summary>

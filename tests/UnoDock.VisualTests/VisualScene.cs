@@ -1,5 +1,5 @@
-using Xceed.Wpf.AvalonDock.Controls;
-using Xceed.Wpf.AvalonDock.Themes;
+using UnoDock.Controls;
+using UnoDock.Themes;
 using UnoDock.VisualValidation;
 using System.Xml.Linq;
 using System.Globalization;

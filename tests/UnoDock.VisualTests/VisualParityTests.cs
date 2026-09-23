@@ -5,8 +5,8 @@ using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Automation.Peers;
 using Microsoft.UI.Xaml.Automation.Provider;
 using Microsoft.UI.Xaml.Markup;
-using Xceed.Wpf.AvalonDock.Controls;
-using Xceed.Wpf.AvalonDock.Themes;
+using UnoDock.Controls;
+using UnoDock.Themes;
 using Windows.Foundation;
 
 namespace UnoDock.Testing;

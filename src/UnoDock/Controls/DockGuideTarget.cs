@@ -1,4 +1,4 @@
-namespace Xceed.Wpf.AvalonDock.Controls;
+namespace UnoDock.Controls;
 
 /// <summary>An immutable glyph hit region and its independently validated docking intent.</summary>
 public sealed class DockGuideTarget

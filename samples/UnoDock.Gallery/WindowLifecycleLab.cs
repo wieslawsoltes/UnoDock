@@ -1,6 +1,6 @@
 using System.ComponentModel;
 using Microsoft.Windows.Shell;
-using Xceed.Wpf.AvalonDock.Controls;
+using UnoDock.Controls;
 
 namespace UnoDock.Gallery;
 
@@ -76,7 +76,7 @@ public sealed partial class GalleryPage
         Add("Serialize", () =>
         {
             using var writer = new StringWriter(System.Globalization.CultureInfo.InvariantCulture);
-            new Xceed.Wpf.AvalonDock.Layout.Serialization.XmlLayoutSerializer(Dock).Serialize(writer);
+            new UnoDock.Layout.Serialization.XmlLayoutSerializer(Dock).Serialize(writer);
             saved.Text = writer.ToString(); Record("Serialized current model; inspect FloatingWidth/Height and IsMaximized");
         });
         Add("Navigator", Dock.OpenNavigator);

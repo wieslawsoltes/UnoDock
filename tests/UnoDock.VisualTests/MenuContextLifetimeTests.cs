@@ -1,7 +1,7 @@
 using System.Reflection;
 using System.Runtime.ExceptionServices;
 using Microsoft.UI.Xaml.Data;
-using Xceed.Wpf.AvalonDock.Controls;
+using UnoDock.Controls;
 
 namespace UnoDock.Testing;
 
@@ -161,7 +161,7 @@ public static class MenuContextLifetimeTests
     private static void Clear(MenuFlyout menu) => Call("Clear", [menu]);
     private static void Call(string name, object?[] args)
     {
-        var type = typeof(DockingManager).Assembly.GetType("Xceed.Wpf.AvalonDock.Internal.MenuContext", true)!;
+        var type = typeof(DockingManager).Assembly.GetType("UnoDock.Internal.MenuContext", true)!;
         try { type.GetMethod(name, BindingFlags.Static | BindingFlags.NonPublic)!.Invoke(null, args); }
         catch (TargetInvocationException e) when (e.InnerException != null) { ExceptionDispatchInfo.Capture(e.InnerException).Throw(); }
     }

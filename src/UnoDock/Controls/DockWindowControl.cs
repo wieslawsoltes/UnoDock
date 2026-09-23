@@ -1,4 +1,4 @@
-namespace Xceed.Wpf.AvalonDock.Controls;
+namespace UnoDock.Controls;
 
 /// <summary>
 /// Lifecycle for a composed docking window. Initialization is delayed until the

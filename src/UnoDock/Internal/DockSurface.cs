@@ -1,9 +1,9 @@
 using System.Diagnostics;
 using Microsoft.UI.Xaml.Input;
-using Xceed.Wpf.AvalonDock.Controls;
-using Xceed.Wpf.AvalonDock.Layout;
+using UnoDock.Controls;
+using UnoDock.Layout;
 
-namespace Xceed.Wpf.AvalonDock.Internal;
+namespace UnoDock.Internal;
 
 internal sealed partial class DockSurface : Grid, IDisposable
 {

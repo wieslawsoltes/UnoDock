@@ -1,8 +1,8 @@
 using Microsoft.UI.Xaml.Data;
-using Xceed.Wpf.AvalonDock.Internal;
-using Xceed.Wpf.AvalonDock.Layout;
+using UnoDock.Internal;
+using UnoDock.Layout;
 
-namespace Xceed.Wpf.AvalonDock.Controls;
+namespace UnoDock.Controls;
 
 public abstract partial class LayoutItem : FrameworkElement, IDisposable
 {

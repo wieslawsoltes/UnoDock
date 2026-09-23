@@ -3,7 +3,7 @@ using Microsoft.UI.Xaml.Input;
 using Windows.System;
 using Windows.UI.Core;
 
-namespace Xceed.Wpf.AvalonDock.Internal;
+namespace UnoDock.Internal;
 
 internal static class DropDownKeyboard
 {

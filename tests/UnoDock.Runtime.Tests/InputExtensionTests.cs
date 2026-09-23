@@ -8,14 +8,14 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Media;
-using Xceed.Wpf.AvalonDock;
-using Xceed.Wpf.AvalonDock.Compatibility;
-using Xceed.Wpf.AvalonDock.Controls;
-using Xceed.Wpf.AvalonDock.Layout;
+using UnoDock;
+using UnoDock.Compatibility;
+using UnoDock.Controls;
+using UnoDock.Layout;
 
 namespace UnoDock.Testing;
 
-using LayoutPanel = Xceed.Wpf.AvalonDock.Layout.LayoutPanel;
+using LayoutPanel = UnoDock.Layout.LayoutPanel;
 
 public static class InputExtensionTests
 {

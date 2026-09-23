@@ -1,6 +1,6 @@
 using System.Globalization;
 using System.Resources;
-namespace Xceed.Wpf.AvalonDock.Properties;
+namespace UnoDock.Properties;
 /// <summary>Independent English fallback strings. Applications can replace values in Translations by culture name.</summary>
 public class Resources
 {

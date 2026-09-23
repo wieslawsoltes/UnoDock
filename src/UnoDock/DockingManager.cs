@@ -1,10 +1,10 @@
 using Microsoft.UI.Xaml.Input;
-using Xceed.Wpf.AvalonDock.Controls;
-using Xceed.Wpf.AvalonDock.Internal;
-using Xceed.Wpf.AvalonDock.Layout;
-using Xceed.Wpf.AvalonDock.Themes;
+using UnoDock.Controls;
+using UnoDock.Internal;
+using UnoDock.Layout;
+using UnoDock.Themes;
 
-namespace Xceed.Wpf.AvalonDock;
+namespace UnoDock;
 
 public enum FloatingWindowMode { Auto, Native, InSurface }
 public class DocumentClosingEventArgs(LayoutDocument document) : CancelEventArgs { public LayoutDocument Document { get; private set; } = document; }
@@ -18,7 +18,7 @@ public sealed record DockRoutedEvent(string Name);
 
 [TemplatePart(Name = "PART_AutoHideArea")]
 [ContentProperty(Name = nameof(Layout))]
-public partial class DockingManager : Control, IDisposable, Xceed.Wpf.AvalonDock.Compatibility.IWeakEventListener
+public partial class DockingManager : Control, IDisposable, UnoDock.Compatibility.IWeakEventListener
 {
     public static readonly DependencyProperty LayoutProperty = DependencyProperty.Register(nameof(Layout), typeof(LayoutRoot), typeof(DockingManager), new PropertyMetadata(null, (d, e) => ((DockingManager)d).ChangeLayout((LayoutRoot?)e.OldValue, (LayoutRoot?)e.NewValue)));
     public static readonly DockRoutedEvent PreviewDockEvent = new(nameof(PreviewDock)), DockedEvent = new(nameof(Docked)), PreviewFloatEvent = new(nameof(PreviewFloat)), FloatedEvent = new(nameof(Floated));
@@ -31,7 +31,7 @@ public partial class DockingManager : Control, IDisposable, Xceed.Wpf.AvalonDock
     private SourceObserver? _documentObserver, _anchorableObserver;
     private DockSurface? _surface;
     private ContentPresenter? _host;
-    private bool _loaded, _changingLayout;
+    private bool _loaded, _changingLayout, _initialized;
     private LayoutRoot? _attachedLayout;
     private readonly Dictionary<LayoutContent, bool> _transitions = new(ReferenceEqualityComparer.Instance);
     private bool _renderPending, _disposed, _syncActive, _reconcilingSources;
@@ -63,7 +63,12 @@ public partial class DockingManager : Control, IDisposable, Xceed.Wpf.AvalonDock
     public FloatingWindowMode FloatingWindowMode { get; set; } = FloatingWindowMode.Auto;
     public IEnumerable<LayoutFloatingWindowControl> FloatingWindows => _floating;
     public int RealizedContentCount => _items.Values.Count(i => i.IsViewCreated);
-    public IEnumerator LogicalChildrenPublic => _items.Values.Select(i => i.ExistingView).OfType<object>().Concat(_floating).GetEnumerator();
+    public IEnumerator LogicalChildrenPublic => LogicalChildren;
+    /// <summary>Snapshot of owned realized views and floating controls. This is a
+    /// compatibility enumeration, not a replacement for the native XAML logical tree.</summary>
+    protected virtual IEnumerator LogicalChildren => _items.Values.Select(i => i.ExistingView).OfType<object>().Concat(_floating).ToArray().GetEnumerator();
+    /// <summary>Called on first loading, after the derived constructor has completed.</summary>
+    protected virtual void OnInitialized(EventArgs e) { }
     public IReadOnlyList<IDropArea> GetDropAreas() => _surface?.GetDropAreas() ?? [];
     public DockDropPlan? GetDropPlan(LayoutContent content, Point surfacePoint) => _surface?.GetDropPlan(content, surfacePoint);
     public event EventHandler? ActiveContentChanged, LayoutChanged, LayoutChanging;
@@ -193,7 +198,18 @@ public partial class DockingManager : Control, IDisposable, Xceed.Wpf.AvalonDock
         if (_host != null) RenderNow();
     }
     protected override Size ArrangeOverride(Size arrangeBounds) => base.ArrangeOverride(arrangeBounds);
-    private void OnLoaded(object sender, RoutedEventArgs args) { _loaded = true; if (!_disposed) { ReconcileSources(); InvalidateView(); } }
+    private void OnLoaded(object sender, RoutedEventArgs args)
+    {
+        if (_disposed) return;
+        _loaded = true;
+        if (!_initialized)
+        {
+            _initialized = true;
+            OnInitialized(EventArgs.Empty);
+        }
+        // A derived callback can dispose this manager or replace its layout.
+        if (!_disposed && _loaded) { ReconcileSources(); InvalidateView(); }
+    }
     private void OnUnloaded(object sender, RoutedEventArgs args)
     { _loaded = false; _surface?.CancelDrag(); foreach (var window in _floating) window.HideHost(); }
     public LayoutItem GetLayoutItemFromModel(LayoutContent content)

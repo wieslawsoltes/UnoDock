@@ -1,5 +1,5 @@
 using System.Globalization;
-using Xceed.Wpf.AvalonDock.Compatibility;
+using UnoDock.Compatibility;
 
 namespace UnoDock.Gallery;
 

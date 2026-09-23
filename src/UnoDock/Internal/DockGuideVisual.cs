@@ -1,7 +1,7 @@
-using Xceed.Wpf.AvalonDock.Controls;
+using UnoDock.Controls;
 using Path = Microsoft.UI.Xaml.Shapes.Path;
 
-namespace Xceed.Wpf.AvalonDock.Internal;
+namespace UnoDock.Internal;
 
 // Independent vector construction from observed window/compass appearance, not
 // reference artwork, image bytes, resource definitions, or extracted Path.Data.

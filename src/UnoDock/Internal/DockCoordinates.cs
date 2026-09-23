@@ -1,4 +1,4 @@
-namespace Xceed.Wpf.AvalonDock.Internal;
+namespace UnoDock.Internal;
 
 internal static class DockCoordinates
 {

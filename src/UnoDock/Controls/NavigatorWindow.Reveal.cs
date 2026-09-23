@@ -1,6 +1,6 @@
-using Xceed.Wpf.AvalonDock.Internal;
+using UnoDock.Internal;
 
-namespace Xceed.Wpf.AvalonDock.Controls;
+namespace UnoDock.Controls;
 
 public partial class NavigatorWindow
 {

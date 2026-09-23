@@ -5,6 +5,7 @@ cd "$(dirname "$0")/.."
 refs=$(mktemp -d)
 trap 'rm -rf "$refs"' EXIT
 mkdir -p artifacts
+python3 tests/metadata/test_namespace_migration.py 2>&1 | tee artifacts/namespace-migration-tests.log
 python3 tests/metadata/test_metadata.py 2>&1 | tee artifacts/metadata-tests.log
 dotnet build src/UnoDock -c Release -f net10.0 -p:UnoDockLibraryFrameworks=net10.0
 dotnet msbuild src/UnoDock/UnoDock.csproj -t:ExportApiReferences \

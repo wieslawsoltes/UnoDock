@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 
-namespace Xceed.Wpf.AvalonDock;
+namespace UnoDock;
 
 /// <summary>Optional physical-screen coordinate contract for desktop hosts. Screen points
 /// are device pixels; visual points are device-independent units in the supplied element.</summary>

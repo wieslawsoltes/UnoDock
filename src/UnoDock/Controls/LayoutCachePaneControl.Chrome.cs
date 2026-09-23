@@ -1,7 +1,7 @@
-using Xceed.Wpf.AvalonDock.Internal;
-using Xceed.Wpf.AvalonDock.Layout;
+using UnoDock.Internal;
+using UnoDock.Layout;
 
-namespace Xceed.Wpf.AvalonDock.Controls;
+namespace UnoDock.Controls;
 
 public partial class LayoutCachePaneControl
 {
@@ -70,6 +70,7 @@ public partial class LayoutCachePaneControl
         _tabBar.Visibility = showHeader ? Visibility.Visible : Visibility.Collapsed;
         if (!tool && !showHeader) _layout.RowDefinitions[0].Height = new(0);
         _scroll.Visibility = Visibility.Visible;
+        _scroll.MaxHeight = tool ? p.ToolTabHeight : p.TabHeight;
         _documentsButton.Visibility = tool ? Visibility.Collapsed : Visibility.Visible;
         _documentsButton.Configure(p);
         _tabBar.BorderBrush = p.Border; _tabBar.BorderThickness = tool ? new(0, 1, 0, 0) : new(0, 0, 0, 1);

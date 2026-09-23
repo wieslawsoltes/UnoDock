@@ -2,7 +2,7 @@ using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 
-namespace Xceed.Wpf.AvalonDock.Layout;
+namespace UnoDock.Layout;
 
 [ContentProperty(Name = nameof(Content))]
 public abstract class LayoutContent : LayoutElement, IComparable<LayoutContent>, IXmlSerializable, ILayoutPreviousContainer

@@ -2,7 +2,7 @@ using Microsoft.UI.Xaml.Input;
 using Windows.UI;
 using Path = Microsoft.UI.Xaml.Shapes.Path;
 
-namespace Xceed.Wpf.AvalonDock.Internal;
+namespace UnoDock.Internal;
 
 // Independent compact chrome. Geometry and layout follow public visual observations,
 // not the original resource dictionaries, templates or vector assets.
@@ -35,12 +35,16 @@ internal static class DockChrome
     {
         var dark = manager.ActualTheme == ElementTheme.Dark && manager.Theme is not Themes.GenericTheme;
         var p = Default(dark);
+        var fontSize = N("FontSize", p.FontSize, 8, 32);
+        var textScale = Math.Max(1, fontSize / 12);
+        double Fit(string key, double fallback, double min, double max) =>
+            Math.Max(N(key, fallback, min, max), Math.Ceiling(fallback * textScale));
         return new(B("PaneBrush", p.Surface), B("HeaderBrush", p.Header), B("InactiveTabBrush", p.Tab),
             B("BorderBrush", p.Border), B("ForegroundBrush", p.Foreground), B("HoverBrush", p.Hover),
             B("PressedBrush", p.Pressed), B("AccentBrush", p.Accent), B("ActiveTitleBrush", p.ActiveTitle),
-            N("FontSize", p.FontSize, 8, 32), N("TitleHeight", p.TitleHeight, 18, 64),
-            N("TabHeight", p.TabHeight, 20, 64), N("ToolTabHeight", p.ToolTabHeight, 20, 64),
-            N("RailThickness", p.RailThickness, 24, 72));
+            fontSize, Fit("TitleHeight", p.TitleHeight, 18, 64),
+            Fit("TabHeight", p.TabHeight, 20, 64), Fit("ToolTabHeight", p.ToolTabHeight, 20, 64),
+            Fit("RailThickness", p.RailThickness, 24, 72));
         Brush B(string key, Brush fallback) => manager.Resources.TryGetValue("UnoDock." + key, out var value) && value is Brush b ? b : fallback;
         double N(string key, double fallback, double min, double max) => manager.Resources.TryGetValue("UnoDock." + key, out var value) && value is double d && double.IsFinite(d) ? Math.Clamp(d, min, max) : fallback;
     }

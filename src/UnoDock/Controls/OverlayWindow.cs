@@ -1,7 +1,7 @@
-using Xceed.Wpf.AvalonDock.Internal;
-using Xceed.Wpf.AvalonDock.Layout;
+using UnoDock.Internal;
+using UnoDock.Layout;
 
-namespace Xceed.Wpf.AvalonDock.Controls;
+namespace UnoDock.Controls;
 
 /// <summary>Non-activating guide and preview layer. It never captures input or focus.
 /// All hit rectangles are shared with the validated docking intents.</summary>

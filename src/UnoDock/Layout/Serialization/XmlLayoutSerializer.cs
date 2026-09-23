@@ -1,6 +1,6 @@
 using System.Xml;
 
-namespace Xceed.Wpf.AvalonDock.Layout.Serialization;
+namespace UnoDock.Layout.Serialization;
 
 public class LayoutSerializationCallbackEventArgs(LayoutContent model, object? previousContent) : CancelEventArgs
 {

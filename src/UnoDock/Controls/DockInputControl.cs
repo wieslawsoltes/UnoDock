@@ -1,8 +1,8 @@
 using Microsoft.UI.Input;
 using Microsoft.UI.Xaml.Input;
-using Xceed.Wpf.AvalonDock.Compatibility;
+using UnoDock.Compatibility;
 
-namespace Xceed.Wpf.AvalonDock.Controls;
+namespace UnoDock.Controls;
 
 /// <summary>
 /// Composed control with the named AvalonDock mouse/focus extension points. These

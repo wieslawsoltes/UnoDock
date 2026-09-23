@@ -1,8 +1,8 @@
 using Microsoft.UI.Xaml.Input;
-using Xceed.Wpf.AvalonDock.Internal;
-using Xceed.Wpf.AvalonDock.Layout;
+using UnoDock.Internal;
+using UnoDock.Layout;
 
-namespace Xceed.Wpf.AvalonDock.Controls;
+namespace UnoDock.Controls;
 
 /// <summary>A retained managed flyout with a dedicated resize gutter and cancellable preview.</summary>
 public partial class LayoutAutoHideWindowControl : ContentControl, ILayoutControl

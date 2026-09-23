@@ -1,4 +1,4 @@
-using Xceed.Wpf.AvalonDock.Controls;
+using UnoDock.Controls;
 using Windows.Foundation;
 
 namespace UnoDock.Gallery;

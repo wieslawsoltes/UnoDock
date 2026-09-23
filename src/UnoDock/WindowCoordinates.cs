@@ -1,4 +1,4 @@
-namespace Xceed.Wpf.AvalonDock;
+namespace UnoDock;
 
 /// <summary>Extension point for hosts with embedded content islands or custom non-client geometry.</summary>
 public interface ICrossWindowCoordinates

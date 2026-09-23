@@ -3,12 +3,12 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using Windows.Foundation;
-using Xceed.Wpf.AvalonDock;
-using Xceed.Wpf.AvalonDock.Controls;
-using Xceed.Wpf.AvalonDock.Layout;
+using UnoDock;
+using UnoDock.Controls;
+using UnoDock.Layout;
 
 namespace UnoDock.Testing;
-using LayoutPanel = Xceed.Wpf.AvalonDock.Layout.LayoutPanel;
+using LayoutPanel = UnoDock.Layout.LayoutPanel;
 
 public static class InteractionTests
 {

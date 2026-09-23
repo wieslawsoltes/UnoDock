@@ -3,9 +3,9 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.Windows.Shell;
 using Windows.Foundation;
-using Xceed.Wpf.AvalonDock;
-using Xceed.Wpf.AvalonDock.Controls;
-using Xceed.Wpf.AvalonDock.Layout;
+using UnoDock;
+using UnoDock.Controls;
+using UnoDock.Layout;
 
 namespace UnoDock.Testing;
 
@@ -23,7 +23,7 @@ public static partial class ShellTests
             try
             {
                 host.FloatingWindowMode = FloatingWindowMode.InSurface;
-                host.Layout = new() { RootPanel = new Xceed.Wpf.AvalonDock.Layout.LayoutPanel(new LayoutDocumentPane(content)) };
+                host.Layout = new() { RootPanel = new UnoDock.Layout.LayoutPanel(new LayoutDocumentPane(content)) };
                 content.Float(); host.Refresh();
                 await Until(() => host.FloatingWindows.Any(w => w.IsLoaded && w.ActualWidth > 0));
                 floating = host.FloatingWindows.Single();

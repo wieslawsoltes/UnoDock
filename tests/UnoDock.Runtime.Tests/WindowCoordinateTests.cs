@@ -2,9 +2,9 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using Windows.Foundation;
-using Xceed.Wpf.AvalonDock;
-using Xceed.Wpf.AvalonDock.Controls;
-using Xceed.Wpf.AvalonDock.Layout;
+using UnoDock;
+using UnoDock.Controls;
+using UnoDock.Layout;
 
 namespace UnoDock.Testing;
 
@@ -129,7 +129,7 @@ public static partial class WindowCoordinateTests
                         try
                         {
                             host.FloatingWindowMode = FloatingWindowMode.Native;
-                            host.Layout = new() { RootPanel = new Xceed.Wpf.AvalonDock.Layout.LayoutPanel(new LayoutDocumentPane(document)) };
+                            host.Layout = new() { RootPanel = new UnoDock.Layout.LayoutPanel(new LayoutDocumentPane(document)) };
                             toolA.AddToLayout(host, AnchorableShowStrategy.Left); toolB.AddToLayout(host, AnchorableShowStrategy.Right);
                             toolA.Float(); toolB.Float(); host.Refresh();
                             await Until(() => host.FloatingWindows.Count() == 2 && host.FloatingWindows.All(w => w.NativeWindow != null && w.IsLoaded));

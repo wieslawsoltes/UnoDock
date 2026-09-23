@@ -3,40 +3,43 @@
 [![Build and test](https://github.com/wieslawsoltes/UnoDock/actions/workflows/ci.yml/badge.svg)](https://github.com/wieslawsoltes/UnoDock/actions/workflows/ci.yml)
 [![Reference metadata](https://github.com/wieslawsoltes/UnoDock/actions/workflows/reference-metadata.yml/badge.svg)](https://github.com/wieslawsoltes/UnoDock/actions/workflows/reference-metadata.yml)
 
-Independent AvalonDock-style docking for **Uno Platform 6.7**, retaining familiar
-`Xceed.Wpf.AvalonDock` namespaces while using Uno/WinUI controls.
+Independent AvalonDock-style docking for **Uno Platform 6.7**, using the **`UnoDock`** namespace family and Uno/WinUI controls.
 
-**Version: 0.1.0-preview.13. Full API, behavioral and visual parity is not verified.**
+**Version: 0.1.0-preview.14. Full API, behavioral and visual parity is not verified.**
 The target is the pinned public AvalonDock repository and stock presentation, not
 separately licensed commercial themes. Framework mappings require source/XAML migration;
 this is not binary compatibility with WPF. The independently authored implementation is
 MIT-licensed and is not affiliated with or endorsed by Xceed or Uno Platform.
 
-## Preview 13: dropdown ownership and native input
+## Preview 14: UnoDock namespaces and classic samples
 
-Dropdown buttons and context areas now serialize menu opening, context assignment and
-cleanup across application callbacks. Replacing or closing a menu during DataContextChanged
-cannot leave a stale opening. Shared-menu handoff and immediate reopening wait until native
-Closed dispatch finishes, including replacement menus in the same UI thread. Requests
-invalidated by cancellation, replacement, disabling or unloading cannot reopen later.
+**Breaking change:** product types now live in `UnoDock`, `UnoDock.Layout`,
+`UnoDock.Controls`, `UnoDock.Themes`, `UnoDock.Converters` and their corresponding
+subnamespaces. There are no deprecated Xceed aliases. Update C# imports and Uno XAML
+`using:` declarations; the assembly and package names stay `UnoDock` / `UnoDock.Core`.
+See [namespace migration](docs/namespace-migration.md).
 
-Application Closing vetoes retain the original opening, row context and checked state;
-another trigger cannot steal that menu. Failing native Closing callbacks preserve the
-live scope for cleanup/retry instead of poisoning the thread's opening queue. Original
-and cleanup errors remain visible. Existing application row contexts and bindings are
-not overwritten. An explicit ContextMenuEx.MenuDataContext has precedence over trigger
-context changes, including source-generated menu rows.
+The default sample is now a compact, independently authored **classic docking** scene,
+inspired by the documented public AvalonDock example: Properties, two documents,
+Alarms/Journal, and Agenda/Contacts auto-hide rails. A native menu bar and compact sample
+and theme selectors replace the oversized banner and crowded laboratory toolbar.
+**IDE workspace**, **MVVM documents**, and all previous diagnostic laboratories remain
+available from the Samples and Diagnostics menus. The sample property inspector edits a
+whitelisted subset of real model/editor properties and validates input; it is not a
+complete port of Xceed PropertyGrid.
 
-Protected right-button hooks execute on real pointer events before default opening.
-Keyboard and native ContextRequested paths support the context-menu key and Shift+F10.
-The pinned X11 host's distinct context-key mapping is handled without consuming Alt.
-The **Dropdown contracts** laboratory is available from **Menu quality**.
+Large text now expands tool captions, document/tool tabs and auto-hide rails instead of
+keeping 12-point geometry. Default-density geometry is unchanged. Manager/grid
+initialization and document-tab-panel pointer-leave extension points run on the actual
+lifecycle/input path. Manager-owned-view enumeration takes a stable snapshot.
 
-The new suite registers **72 Linux / 66 Windows cases**, including six opt-in Linux XTEST
-scenarios. These counts describe coverage, not the outcome of an unobserved run. See
-[dropdown implementation and boundaries](docs/dropdown-quality.md) and
-[preview-13 validation](docs/validation-preview13.md). Temporary integration workflows
-are removed; the tests run in the ordinary Linux and Windows acceptance jobs.
+The original reference inventories and diagnostic allowlist remain unchanged. Explicit
+per-type namespace mappings document the deliberate source-breaking rename; they do not
+normalize virtual overrides, framework type shape or behavior. Original probes remain
+in the original namespace and are isolated from product packaging.
+
+See [sample fidelity and acceptance](docs/sample-quality.md),
+[dropdown lifetime](docs/dropdown-quality.md), and [prior validation](docs/validation-preview13.md).
 
 ## Included menus, visuals and interaction
 
@@ -83,7 +86,7 @@ dotnet run --project samples/UnoDock.Gallery -c Release -f net10.0-desktop \
   -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0
 ```
 
-Toolbar laboratories include Window shell, Window lifecycle, Input extensions, Visual
+The Diagnostics menu includes Window shell, Window lifecycle, Input extensions, Visual
 parity, Navigator quality, Docking guides, Splitter quality, Auto-hide quality and Menu
 quality. Open Dropdown contracts from Menu quality. The workbench demonstrates native
 and in-surface windows, capabilities/cancellation, source-bound editors, MRU navigation,
@@ -103,10 +106,10 @@ and device acceptance are not included. Browser publishing is not browser input 
 
 ```csharp
 using Microsoft.UI.Xaml.Controls;
-using Xceed.Wpf.AvalonDock;
-using Xceed.Wpf.AvalonDock.Layout;
-using Xceed.Wpf.AvalonDock.Layout.Serialization;
-using LayoutPanel = Xceed.Wpf.AvalonDock.Layout.LayoutPanel;
+using UnoDock;
+using UnoDock.Layout;
+using UnoDock.Layout.Serialization;
+using LayoutPanel = UnoDock.Layout.LayoutPanel;
 
 var editor = new LayoutDocument
 {
@@ -142,8 +145,8 @@ serializer.Serialize("workspace.xml");
 serializer.Deserialize("workspace.xml");
 ```
 
-Use `xmlns:dock="using:Xceed.Wpf.AvalonDock"` and
-`xmlns:layout="using:Xceed.Wpf.AvalonDock.Layout"` in Uno XAML. WPF namespace URIs,
+Use `xmlns:dock="using:UnoDock"` and
+`xmlns:layout="using:UnoDock.Layout"` in Uno XAML. WPF namespace URIs,
 framework types, resource dictionaries and templates need explicit migration.
 Restoration constructs a detached layout and resolves content before replacing the
 active root. Bounded XML parsing rejects unsafe/unknown input; supplied XmlReader
@@ -158,7 +161,7 @@ settings remain the caller's responsibility. Arbitrary CLR objects are not deser
 | Interactive workbench and laboratories | `samples/UnoDock.Gallery` |
 | Portable, real-host and visual acceptance | `tests/UnoDock.Core.Tests`, `tests/UnoDock.Runtime.Tests`, `tests/UnoDock.VisualTests` |
 | Syntax and resolved metadata inventories | `tools/ApiScan`, `tools/ApiMetadata` |
-| Independent original public observations | `tools/ReferenceProbe`, `tools/ReferenceVisualProbe` |
+| Independent original public observations | `tools/ReferenceProbe`, `tools/ReferenceVisualProbe`, `tools/ReferenceSampleProbe` |
 
 The original is pinned at **2c71faba5eecc1b6ae6cd3d269408e0df37715d8**. The syntax inventory
 has 996 declarations; resolved Release metadata has 105 type names and 1,031 entries,
@@ -167,10 +170,11 @@ Repeated inventories must be byte-identical; unresolved types fail. Original imp
 bodies, templates, resource definitions, artwork and font files are not copied into the
 product. Public protocol observations are distinguished from native input acceptance.
 
-The resolved regression comparison is **978/1,031**, with **53 signature/type entries**
+The preview-13 resolved regression comparison was **978/1,031**, with **53 signature/type entries**
 and **18 separately reported attribute differences** unresolved. Adding callable protected
 virtual input methods does not make them WPF overrides: that distinction remains visible.
-No comparator, mapping or regression baseline is relaxed. The full strict-parity gate
+The comparator and diagnostic allowlist remain strict. Only explicit namespace mappings
+are added for the intentional rename; the baseline mapping digest is rebound accordingly. The full strict-parity gate
 remains unsatisfied; API counts do not measure whole-product feature completeness.
 
 Measured pane/guide geometry and menu row replays establish their specific scenes, not

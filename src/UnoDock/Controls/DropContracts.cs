@@ -1,7 +1,7 @@
-using Xceed.Wpf.AvalonDock.Internal;
-using Xceed.Wpf.AvalonDock.Layout;
+using UnoDock.Internal;
+using UnoDock.Layout;
 
-namespace Xceed.Wpf.AvalonDock.Controls;
+namespace UnoDock.Controls;
 
 public enum DropAreaType { DockingManager = 0, DocumentPane = 1, DocumentPaneGroup = 2, AnchorablePane = 3 }
 public enum DropTargetType

@@ -3,10 +3,10 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
-using Xceed.Wpf.AvalonDock;
-using Xceed.Wpf.AvalonDock.Compatibility;
-using Xceed.Wpf.AvalonDock.Converters;
-using Xceed.Wpf.AvalonDock.Layout;
+using UnoDock;
+using UnoDock.Compatibility;
+using UnoDock.Converters;
+using UnoDock.Layout;
 
 namespace UnoDock.Testing;
 

@@ -9,12 +9,12 @@ public partial class App : Application
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
-        _window = new Window { Title = "UnoDock — docking workbench" };
+        _window = new Window { Title = "UnoDock Samples" };
         var gallery = new GalleryPage();
         _window.Content = gallery;
         _window.AppWindow.Resize(new Windows.Graphics.SizeInt32 { Width = 1440, Height = 960 });
         var windowRegistration = Microsoft.Windows.Shell.SystemCommands.RegisterWindow(_window);
-        _window.Closed += (_, _) => { windowRegistration.Dispose(); gallery.Dock.Dispose(); };
+        _window.Closed += (_, _) => { windowRegistration.Dispose(); gallery.Dispose(); };
         if (Environment.GetEnvironmentVariable("UNODOCK_SELFTEST") == "1")
             gallery.Loaded += async (_, _) =>
             {
@@ -26,7 +26,9 @@ public partial class App : Application
                     await Task.Delay(300);
                     var output = Environment.GetEnvironmentVariable("UNODOCK_TEST_RESULTS") ?? "artifacts/test-results";
                     var suite = Environment.GetEnvironmentVariable("UNODOCK_TEST_SUITE");
-                    if (suite == "dropdown-quality")
+                    if (suite == "sample-quality")
+                        exitCode = await Testing.SampleQualityTests.Run(gallery, output);
+                    else if (suite == "dropdown-quality")
                         exitCode = await Testing.DropDownQualityTests.Run(output);
                     else if (suite == "menu-quality")
                         exitCode = await Testing.MenuQualityTests.Run(gallery.Dock, output);
@@ -58,6 +60,7 @@ public partial class App : Application
                         exitCode |= await Testing.MenuQualityTests.Run(gallery.Dock, output);
                         exitCode |= await Testing.MenuContextLifetimeTests.Run(output);
                         exitCode |= await Testing.DropDownQualityTests.Run(output);
+                        exitCode |= await Testing.SampleQualityTests.Run(gallery, output);
                     }
                     else if (string.IsNullOrEmpty(suite) || suite == "all")
                     {
@@ -79,6 +82,7 @@ public partial class App : Application
                         exitCode |= await Testing.MenuQualityTests.Run(gallery.Dock, output);
                         exitCode |= await Testing.MenuContextLifetimeTests.Run(output);
                         exitCode |= await Testing.DropDownQualityTests.Run(output);
+                        exitCode |= await Testing.SampleQualityTests.Run(gallery, output);
                     }
                     else throw new ArgumentException("Unknown UNODOCK_TEST_SUITE: " + suite);
                 }

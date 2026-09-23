@@ -1,9 +1,9 @@
 using Microsoft.UI.Xaml.Automation;
-using Xceed.Wpf.AvalonDock.Controls;
-using Xceed.Wpf.AvalonDock.Layout;
-using Strings = Xceed.Wpf.AvalonDock.Properties.Resources;
+using UnoDock.Controls;
+using UnoDock.Layout;
+using Strings = UnoDock.Properties.Resources;
 
-namespace Xceed.Wpf.AvalonDock.Internal;
+namespace UnoDock.Internal;
 
 // An item owns its menu. Neither a global cache nor a subscribed application
 // command keeps an obsolete layout alive after the opening session has ended.

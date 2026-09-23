@@ -1,9 +1,9 @@
 using Microsoft.UI.Input;
 using Microsoft.UI.Xaml.Input;
-using Xceed.Wpf.AvalonDock.Compatibility;
-using Xceed.Wpf.AvalonDock.Internal;
+using UnoDock.Compatibility;
+using UnoDock.Internal;
 
-namespace Xceed.Wpf.AvalonDock.Controls;
+namespace UnoDock.Controls;
 
 public class DropDownButton : ToggleButton
 {
