@@ -4,14 +4,14 @@ using System.Xml;
 using System.Xml.Linq;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Xceed.Wpf.AvalonDock;
-using Xceed.Wpf.AvalonDock.Layout;
-using Xceed.Wpf.AvalonDock.Layout.Serialization;
+using UnoDock;
+using UnoDock.Layout;
+using UnoDock.Layout.Serialization;
 using UnoDock.Core;
 
 namespace UnoDock.Testing;
 
-using LayoutPanel = Xceed.Wpf.AvalonDock.Layout.LayoutPanel;
+using LayoutPanel = UnoDock.Layout.LayoutPanel;
 
 /// <summary>Tests against outputs produced by the original public API, not an implementation translation.</summary>
 public static class InteropTests
@@ -81,7 +81,7 @@ public static class InteropTests
                 var typeName = record.Attribute("Name")!.Value;
                 tests.Test("observed public defaults: " + typeName, () =>
                 {
-                    var type = typeof(DockingManager).Assembly.GetType(typeName, throwOnError: true)!;
+                    var type = typeof(DockingManager).Assembly.GetType(typeName.Replace("Xceed.Wpf.AvalonDock", "UnoDock", StringComparison.Ordinal), throwOnError: true)!;
                     var instance = Activator.CreateInstance(type)!;
                     try
                     {

@@ -5,8 +5,8 @@ using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Input;
 using Windows.Foundation;
 using Windows.System;
-using Xceed.Wpf.AvalonDock.Controls;
-using Xceed.Wpf.AvalonDock.Themes;
+using UnoDock.Controls;
+using UnoDock.Themes;
 
 namespace UnoDock.Testing;
 

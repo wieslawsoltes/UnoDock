@@ -1,9 +1,9 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.Windows.Shell;
-using Xceed.Wpf.AvalonDock;
-using Xceed.Wpf.AvalonDock.Controls;
-using Xceed.Wpf.AvalonDock.Layout;
+using UnoDock;
+using UnoDock.Controls;
+using UnoDock.Layout;
 
 namespace UnoDock.Testing;
 
@@ -131,7 +131,7 @@ public static partial class ShellTests
             {
                 host.FloatingWindowMode = FloatingWindowMode.InSurface;
                 var document = new LayoutDocument { Title = "Document drag handle" };
-                host.Layout = new() { RootPanel = new Xceed.Wpf.AvalonDock.Layout.LayoutPanel(new LayoutDocumentPane(document)) };
+                host.Layout = new() { RootPanel = new UnoDock.Layout.LayoutPanel(new LayoutDocumentPane(document)) };
                 document.Float(); host.Refresh(); await Tick();
                 var floating = host.FloatingWindows.Single();
                 var caption = (TextBlock)typeof(LayoutFloatingWindowControl).GetField("_caption", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(floating)!;
@@ -152,7 +152,7 @@ public static partial class ShellTests
             try
             {
                 host.FloatingWindowMode = FloatingWindowMode.InSurface;
-                host.Layout = new() { RootPanel = new Xceed.Wpf.AvalonDock.Layout.LayoutPanel(new LayoutDocumentPane(doc)) };
+                host.Layout = new() { RootPanel = new UnoDock.Layout.LayoutPanel(new LayoutDocumentPane(doc)) };
                 doc.Float(); host.Refresh(); await Tick();
                 var window = host.FloatingWindows.Single(); var content = doc.Content;
                 Check.True(SystemCommands.MaximizeWindowCommand.CanExecute(null, window));

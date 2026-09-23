@@ -1,6 +1,6 @@
 using Microsoft.UI.Xaml.Controls;
-using Xceed.Wpf.AvalonDock.Controls;
-using DockButton = Xceed.Wpf.AvalonDock.Controls.DropDownButton;
+using UnoDock.Controls;
+using DockButton = UnoDock.Controls.DropDownButton;
 
 namespace UnoDock.Testing;
 

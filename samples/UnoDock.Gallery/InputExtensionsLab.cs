@@ -1,8 +1,8 @@
 using System.ComponentModel;
 using System.Collections.Specialized;
 using Microsoft.UI.Xaml.Data;
-using Xceed.Wpf.AvalonDock.Compatibility;
-using Xceed.Wpf.AvalonDock.Controls;
+using UnoDock.Compatibility;
+using UnoDock.Controls;
 
 namespace UnoDock.Gallery;
 

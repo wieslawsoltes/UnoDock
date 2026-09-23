@@ -1,6 +1,6 @@
 using Microsoft.UI.Xaml.Input;
 
-namespace Xceed.Wpf.AvalonDock.Internal;
+namespace UnoDock.Internal;
 
 internal sealed class ActionDisposable(Action action) : IDisposable
 {

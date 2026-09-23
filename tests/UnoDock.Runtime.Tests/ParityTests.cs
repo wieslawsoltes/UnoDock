@@ -7,12 +7,12 @@ using Microsoft.UI.Xaml.Automation.Peers;
 using Microsoft.UI.Xaml.Automation.Provider;
 using Windows.Foundation;
 using UnoDock.Core;
-using Xceed.Wpf.AvalonDock;
-using Xceed.Wpf.AvalonDock.Controls;
-using Xceed.Wpf.AvalonDock.Layout;
+using UnoDock;
+using UnoDock.Controls;
+using UnoDock.Layout;
 
 namespace UnoDock.Testing;
-using LayoutPanel = Xceed.Wpf.AvalonDock.Layout.LayoutPanel;
+using LayoutPanel = UnoDock.Layout.LayoutPanel;
 
 public static class ParityTests
 {

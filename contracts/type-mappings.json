@@ -77,7 +77,7 @@
     },
     {
       "source": "System.Windows.Controls.TabControl",
-      "target": "Xceed.Wpf.AvalonDock.Controls.DockSelectionControl",
+      "target": "UnoDock.Controls.DockSelectionControl",
       "kind": "adapter",
       "note": "Independent tab host base with selection-change hooks; derived cached pane supplies model-backed selection dependency properties."
     },
@@ -93,7 +93,7 @@
     },
     {
       "source": "System.Windows.Data.IMultiValueConverter",
-      "target": "Xceed.Wpf.AvalonDock.Compatibility.IMultiValueConverter",
+      "target": "UnoDock.Compatibility.IMultiValueConverter",
       "kind": "adapter",
       "note": "CultureInfo multi-value call contract. ConverterBinding supplies explicit multi-source transfer, not a native WPF MultiBinding parser."
     },
@@ -105,7 +105,7 @@
     },
     {
       "source": "System.Windows.Data.ValueConversionAttribute",
-      "target": "Xceed.Wpf.AvalonDock.Compatibility.ValueConversionAttribute",
+      "target": "UnoDock.Compatibility.ValueConversionAttribute",
       "kind": "adapter",
       "note": "Independent source/target type annotation; it does not change WinUI binding behavior."
     },
@@ -147,7 +147,7 @@
     },
     {
       "source": "System.Windows.IWeakEventListener",
-      "target": "Xceed.Wpf.AvalonDock.Compatibility.IWeakEventListener",
+      "target": "UnoDock.Compatibility.IWeakEventListener",
       "kind": "adapter",
       "note": "Weak source subscriptions dispatch on the owning UI thread; INotifyCollectionChanged identifies collection transport."
     },
@@ -159,25 +159,25 @@
     },
     {
       "source": "System.Windows.Input.KeyboardFocusChangedEventArgs",
-      "target": "Xceed.Wpf.AvalonDock.Compatibility.DockKeyboardFocusChangedEventArgs",
+      "target": "UnoDock.Compatibility.DockKeyboardFocusChangedEventArgs",
       "kind": "adapter",
       "note": "GettingFocus/GotFocus observations; cancellation only before focus completes."
     },
     {
       "source": "System.Windows.Input.MouseButtonEventArgs",
-      "target": "Xceed.Wpf.AvalonDock.Compatibility.DockMouseButtonEventArgs",
+      "target": "UnoDock.Compatibility.DockMouseButtonEventArgs",
       "kind": "adapter",
       "note": "Changed button comes from native PointerUpdateKind; touch/pen primary input maps to Left."
     },
     {
       "source": "System.Windows.Input.MouseEventArgs",
-      "target": "Xceed.Wpf.AvalonDock.Compatibility.DockMouseEventArgs",
+      "target": "UnoDock.Compatibility.DockMouseEventArgs",
       "kind": "adapter",
       "note": "Real native pointer data with a control-local Handled stage; not WPF tunneling."
     },
     {
       "source": "System.Windows.Input.RoutedCommand",
-      "target": "Xceed.Wpf.AvalonDock.Compatibility.RoutedCommand",
+      "target": "UnoDock.Compatibility.RoutedCommand",
       "kind": "adapter",
       "note": "Explicit Window/FrameworkElement target resolution, CanExecuteChanged and cancellable commands. Does not implement WPF CommandBinding or InputGesture routing."
     },
@@ -219,7 +219,7 @@
     },
     {
       "source": "System.Windows.RoutedEvent",
-      "target": "Xceed.Wpf.AvalonDock.DockRoutedEvent",
+      "target": "UnoDock.DockRoutedEvent",
       "kind": "adapter",
       "note": "Explicit docking event identifier, not WPF routed-event infrastructure."
     },
@@ -261,9 +261,645 @@
     },
     {
       "source": "System.Windows.Window",
-      "target": "Xceed.Wpf.AvalonDock.Controls.DockWindowControl",
+      "target": "UnoDock.Controls.DockWindowControl",
       "kind": "adapter",
       "note": "Composed docking window with one-time initialization, closing/closed and state lifecycle; native HWND ownership remains explicit."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Controls.AnchorablePaneControlOverlayArea",
+      "target": "UnoDock.Controls.AnchorablePaneControlOverlayArea",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Controls.AnchorablePaneTabPanel",
+      "target": "UnoDock.Controls.AnchorablePaneTabPanel",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Controls.AnchorablePaneTitle",
+      "target": "UnoDock.Controls.AnchorablePaneTitle",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Controls.ContextMenuEx",
+      "target": "UnoDock.Controls.ContextMenuEx",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Controls.DockingManagerOverlayArea",
+      "target": "UnoDock.Controls.DockingManagerOverlayArea",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Controls.DocumentPaneControlOverlayArea",
+      "target": "UnoDock.Controls.DocumentPaneControlOverlayArea",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Controls.DocumentPaneTabPanel",
+      "target": "UnoDock.Controls.DocumentPaneTabPanel",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Controls.DropArea",
+      "target": "UnoDock.Controls.DropArea",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Controls.DropAreaType",
+      "target": "UnoDock.Controls.DropAreaType",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Controls.DropArea`1",
+      "target": "UnoDock.Controls.DropArea`1",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Controls.DropDownButton",
+      "target": "UnoDock.Controls.DropDownButton",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Controls.DropDownControlArea",
+      "target": "UnoDock.Controls.DropDownControlArea",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Controls.DropTargetType",
+      "target": "UnoDock.Controls.DropTargetType",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Controls.Extentions",
+      "target": "UnoDock.Controls.Extentions",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Controls.IDropArea",
+      "target": "UnoDock.Controls.IDropArea",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Controls.LayoutAnchorControl",
+      "target": "UnoDock.Controls.LayoutAnchorControl",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Controls.LayoutAnchorGroupControl",
+      "target": "UnoDock.Controls.LayoutAnchorGroupControl",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Controls.LayoutAnchorSideControl",
+      "target": "UnoDock.Controls.LayoutAnchorSideControl",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableControl",
+      "target": "UnoDock.Controls.LayoutAnchorableControl",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableFloatingWindowControl",
+      "target": "UnoDock.Controls.LayoutAnchorableFloatingWindowControl",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableItem",
+      "target": "UnoDock.Controls.LayoutAnchorableItem",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Controls.LayoutAnchorablePaneControl",
+      "target": "UnoDock.Controls.LayoutAnchorablePaneControl",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Controls.LayoutAnchorablePaneGroupControl",
+      "target": "UnoDock.Controls.LayoutAnchorablePaneGroupControl",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Controls.LayoutAnchorableTabItem",
+      "target": "UnoDock.Controls.LayoutAnchorableTabItem",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Controls.LayoutAutoHideWindowControl",
+      "target": "UnoDock.Controls.LayoutAutoHideWindowControl",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Controls.LayoutCachePaneControl",
+      "target": "UnoDock.Controls.LayoutCachePaneControl",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Controls.LayoutDocumentControl",
+      "target": "UnoDock.Controls.LayoutDocumentControl",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Controls.LayoutDocumentFloatingWindowControl",
+      "target": "UnoDock.Controls.LayoutDocumentFloatingWindowControl",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Controls.LayoutDocumentItem",
+      "target": "UnoDock.Controls.LayoutDocumentItem",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Controls.LayoutDocumentPaneControl",
+      "target": "UnoDock.Controls.LayoutDocumentPaneControl",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Controls.LayoutDocumentPaneGroupControl",
+      "target": "UnoDock.Controls.LayoutDocumentPaneGroupControl",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Controls.LayoutDocumentTabItem",
+      "target": "UnoDock.Controls.LayoutDocumentTabItem",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Controls.LayoutFloatingWindowControl",
+      "target": "UnoDock.Controls.LayoutFloatingWindowControl",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Controls.LayoutGridControl",
+      "target": "UnoDock.Controls.LayoutGridControl",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Controls.LayoutGridControl`1",
+      "target": "UnoDock.Controls.LayoutGridControl`1",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Controls.LayoutGridResizerControl",
+      "target": "UnoDock.Controls.LayoutGridResizerControl",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Controls.LayoutItem",
+      "target": "UnoDock.Controls.LayoutItem",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Controls.LayoutPanelControl",
+      "target": "UnoDock.Controls.LayoutPanelControl",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Controls.MenuItemEx",
+      "target": "UnoDock.Controls.MenuItemEx",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Controls.NavigatorWindow",
+      "target": "UnoDock.Controls.NavigatorWindow",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Controls.OverlayArea",
+      "target": "UnoDock.Controls.OverlayArea",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Controls.OverlayWindow",
+      "target": "UnoDock.Controls.OverlayWindow",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Controls.OverlayWindowDropTarget",
+      "target": "UnoDock.Controls.OverlayWindowDropTarget",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Controls.OverlayWindowDropTargetType",
+      "target": "UnoDock.Controls.OverlayWindowDropTargetType",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Converters.ActivateCommandLayoutItemFromLayoutModelConverter",
+      "target": "UnoDock.Converters.ActivateCommandLayoutItemFromLayoutModelConverter",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Converters.AnchorSideToAngleConverter",
+      "target": "UnoDock.Converters.AnchorSideToAngleConverter",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Converters.AnchorSideToOrientationConverter",
+      "target": "UnoDock.Converters.AnchorSideToOrientationConverter",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Converters.AnchorableContextMenuAutoHideHeaderConverter",
+      "target": "UnoDock.Converters.AnchorableContextMenuAutoHideHeaderConverter",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Converters.AnchorableContextMenuHideVisibilityConverter",
+      "target": "UnoDock.Converters.AnchorableContextMenuHideVisibilityConverter",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Converters.AutoHideCommandLayoutItemFromLayoutModelConverter",
+      "target": "UnoDock.Converters.AutoHideCommandLayoutItemFromLayoutModelConverter",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Converters.BoolToVisibilityConverter",
+      "target": "UnoDock.Converters.BoolToVisibilityConverter",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Converters.HideCommandLayoutItemFromLayoutModelConverter",
+      "target": "UnoDock.Converters.HideCommandLayoutItemFromLayoutModelConverter",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Converters.InverseBoolToVisibilityConverter",
+      "target": "UnoDock.Converters.InverseBoolToVisibilityConverter",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Converters.LayoutItemFromLayoutModelConverter",
+      "target": "UnoDock.Converters.LayoutItemFromLayoutModelConverter",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Converters.NullToDoNothingConverter",
+      "target": "UnoDock.Converters.NullToDoNothingConverter",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Converters.UriSourceToBitmapImageConverter",
+      "target": "UnoDock.Converters.UriSourceToBitmapImageConverter",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.DockingManager",
+      "target": "UnoDock.DockingManager",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.DocumentClosedEventArgs",
+      "target": "UnoDock.DocumentClosedEventArgs",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.DocumentClosingEventArgs",
+      "target": "UnoDock.DocumentClosingEventArgs",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Layout.AnchorSide",
+      "target": "UnoDock.Layout.AnchorSide",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Layout.AnchorableShowStrategy",
+      "target": "UnoDock.Layout.AnchorableShowStrategy",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Layout.ChildrenTreeChange",
+      "target": "UnoDock.Layout.ChildrenTreeChange",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Layout.ChildrenTreeChangedEventArgs",
+      "target": "UnoDock.Layout.ChildrenTreeChangedEventArgs",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Layout.Extensions",
+      "target": "UnoDock.Layout.Extensions",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Layout.ILayoutAnchorablePane",
+      "target": "UnoDock.Layout.ILayoutAnchorablePane",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Layout.ILayoutContainer",
+      "target": "UnoDock.Layout.ILayoutContainer",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Layout.ILayoutContentSelector",
+      "target": "UnoDock.Layout.ILayoutContentSelector",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Layout.ILayoutControl",
+      "target": "UnoDock.Layout.ILayoutControl",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Layout.ILayoutDocumentPane",
+      "target": "UnoDock.Layout.ILayoutDocumentPane",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Layout.ILayoutElement",
+      "target": "UnoDock.Layout.ILayoutElement",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Layout.ILayoutElementWithVisibility",
+      "target": "UnoDock.Layout.ILayoutElementWithVisibility",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Layout.ILayoutGroup",
+      "target": "UnoDock.Layout.ILayoutGroup",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Layout.ILayoutOrientableGroup",
+      "target": "UnoDock.Layout.ILayoutOrientableGroup",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Layout.ILayoutPane",
+      "target": "UnoDock.Layout.ILayoutPane",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Layout.ILayoutPanelElement",
+      "target": "UnoDock.Layout.ILayoutPanelElement",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Layout.ILayoutRoot",
+      "target": "UnoDock.Layout.ILayoutRoot",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Layout.ILayoutUpdateStrategy",
+      "target": "UnoDock.Layout.ILayoutUpdateStrategy",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Layout.LayoutAnchorGroup",
+      "target": "UnoDock.Layout.LayoutAnchorGroup",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Layout.LayoutAnchorSide",
+      "target": "UnoDock.Layout.LayoutAnchorSide",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Layout.LayoutAnchorable",
+      "target": "UnoDock.Layout.LayoutAnchorable",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Layout.LayoutAnchorableFloatingWindow",
+      "target": "UnoDock.Layout.LayoutAnchorableFloatingWindow",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Layout.LayoutAnchorablePane",
+      "target": "UnoDock.Layout.LayoutAnchorablePane",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Layout.LayoutAnchorablePaneGroup",
+      "target": "UnoDock.Layout.LayoutAnchorablePaneGroup",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Layout.LayoutContent",
+      "target": "UnoDock.Layout.LayoutContent",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Layout.LayoutDocument",
+      "target": "UnoDock.Layout.LayoutDocument",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Layout.LayoutDocumentFloatingWindow",
+      "target": "UnoDock.Layout.LayoutDocumentFloatingWindow",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Layout.LayoutDocumentPane",
+      "target": "UnoDock.Layout.LayoutDocumentPane",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Layout.LayoutDocumentPaneGroup",
+      "target": "UnoDock.Layout.LayoutDocumentPaneGroup",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Layout.LayoutElement",
+      "target": "UnoDock.Layout.LayoutElement",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Layout.LayoutElementEventArgs",
+      "target": "UnoDock.Layout.LayoutElementEventArgs",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Layout.LayoutFloatingWindow",
+      "target": "UnoDock.Layout.LayoutFloatingWindow",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Layout.LayoutGroup",
+      "target": "UnoDock.Layout.LayoutGroup",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Layout.LayoutGroupBase",
+      "target": "UnoDock.Layout.LayoutGroupBase",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Layout.LayoutGroup`1",
+      "target": "UnoDock.Layout.LayoutGroup`1",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Layout.LayoutPanel",
+      "target": "UnoDock.Layout.LayoutPanel",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Layout.LayoutPositionableGroup",
+      "target": "UnoDock.Layout.LayoutPositionableGroup",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Layout.LayoutPositionableGroup`1",
+      "target": "UnoDock.Layout.LayoutPositionableGroup`1",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Layout.LayoutRoot",
+      "target": "UnoDock.Layout.LayoutRoot",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Layout.Serialization.LayoutSerializationCallbackEventArgs",
+      "target": "UnoDock.Layout.Serialization.LayoutSerializationCallbackEventArgs",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Layout.Serialization.LayoutSerializer",
+      "target": "UnoDock.Layout.Serialization.LayoutSerializer",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Layout.Serialization.XmlLayoutSerializer",
+      "target": "UnoDock.Layout.Serialization.XmlLayoutSerializer",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.LayoutFloatingWindowControlCollectionChangedEventArgs",
+      "target": "UnoDock.LayoutFloatingWindowControlCollectionChangedEventArgs",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Properties.Resources",
+      "target": "UnoDock.Properties.Resources",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Themes.DictionaryTheme",
+      "target": "UnoDock.Themes.DictionaryTheme",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Themes.GenericTheme",
+      "target": "UnoDock.Themes.GenericTheme",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
+    },
+    {
+      "source": "Xceed.Wpf.AvalonDock.Themes.Theme",
+      "target": "UnoDock.Themes.Theme",
+      "kind": "namespace-migration",
+      "note": "Preview 14 breaking namespace rename; no signature or behavior normalization."
     }
   ]
 }

@@ -1,0 +1,68 @@
+name: Public sample reference observations
+on:
+  workflow_dispatch:
+  push:
+    paths: ['tools/ReferenceSampleProbe/**', '.github/workflows/sample-reference.yml']
+permissions:
+  contents: read
+concurrency:
+  group: sample-reference-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  observe:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - uses: microsoft/setup-msbuild@v2
+      - name: Build pinned reference in isolated temporary storage
+        shell: pwsh
+        run: |
+          $revision = (Get-Content contracts/reference.json | ConvertFrom-Json).revision
+          $stage = Join-Path $env:RUNNER_TEMP 'sample-reference'
+          New-Item -ItemType Directory -Force $stage | Out-Null
+          Invoke-WebRequest "https://codeload.github.com/xceedsoftware/wpftoolkit/tar.gz/$revision" -OutFile "$stage/reference.tar.gz"
+          tar -xzf "$stage/reference.tar.gz" --strip-components=1 -C $stage
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Invoke-WebRequest 'https://api.nuget.org/v3-flatcontainer/microsoft.netframework.referenceassemblies.net40/1.0.3/microsoft.netframework.referenceassemblies.net40.1.0.3.nupkg' -OutFile "$stage/framework.zip"
+          Expand-Archive "$stage/framework.zip" "$stage/framework"
+          $project = "$stage/ExtendedWPFToolkitSolution/Src/Xceed.Wpf.AvalonDock/Xceed.Wpf.AvalonDock.csproj"
+          msbuild $project /nologo /v:minimal /p:Configuration=Release /p:TargetFrameworkRootPath="$stage/framework/build/" /p:OutputPath="$stage/bin/" /p:GenerateSerializationAssemblies=Off /p:CustomAfterMicrosoftCommonTargets="${{ github.workspace }}/tools/ReferenceProbe/LegacyCopy.targets"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          dotnet build tools/ReferenceSampleProbe -c Release -p:ReferenceAssembly="$stage/bin/Xceed.Wpf.AvalonDock.dll" -p:ToolkitAssembly="$stage/bin/Xceed.Wpf.Toolkit.dll"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Observe public rendering and geometry twice
+        shell: pwsh
+        run: |
+          function Observe([string]$directory) {
+            New-Item -ItemType Directory -Force $directory | Out-Null
+            $process = Start-Process tools/ReferenceSampleProbe/bin/Release/net48/ReferenceSampleProbe.exe -ArgumentList $directory -NoNewWindow -PassThru
+            if (-not $process.WaitForExit(90000)) { $process.Kill($true); throw 'Public sample observation timed out.' }
+            if ($process.ExitCode -ne 0) { throw "Reference observation exited with $($process.ExitCode)." }
+          }
+          Observe 'artifacts/sample-reference'
+          $repeat = Join-Path $env:RUNNER_TEMP 'sample-reference-repeat'
+          Observe $repeat
+          $observations = @()
+          foreach ($scenario in @('classic','selected-editor','rtl')) {
+            $name = "sample-reference-$scenario.xml"
+            $first = (Get-FileHash "artifacts/sample-reference/$name" -Algorithm SHA256).Hash
+            $second = (Get-FileHash "$repeat/$name" -Algorithm SHA256).Hash
+            if ($first -ne $second) { throw "Non-deterministic sample geometry: $name" }
+            $observations += @{ file = $name; sha256 = $first.ToLowerInvariant(); byteIdentical = $true }
+          }
+          @{ referenceRevision = (Get-Content contracts/reference.json | ConvertFrom-Json).revision; probeRevision = (git rev-parse HEAD); method = 'independently-authored-public-API-sample-arrangement'; geometry = $observations; pixelEquivalenceAsserted = $false } | ConvertTo-Json -Depth 6 | Set-Content artifacts/sample-reference/provenance.json
+          Get-Content artifacts/sample-reference/provenance.json
+      - name: Delete isolated original sources and binaries
+        if: always()
+        shell: pwsh
+        run: Remove-Item -Recurse -Force -ErrorAction SilentlyContinue (Join-Path $env:RUNNER_TEMP 'sample-reference')
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: public-sample-reference
+          path: artifacts/sample-reference/
+          if-no-files-found: error

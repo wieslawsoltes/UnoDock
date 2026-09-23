@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Text.Json;
 using Microsoft.UI.Xaml.Input;
-using Xceed.Wpf.AvalonDock.Controls;
+using UnoDock.Controls;
 
 namespace UnoDock.Testing;
 

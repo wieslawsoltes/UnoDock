@@ -1,4 +1,4 @@
-namespace Xceed.Wpf.AvalonDock.Compatibility;
+namespace UnoDock.Compatibility;
 
 /// <summary>A target-aware ICommand adapter. This preserves explicit CanExecute/Execute target
 /// calls; it does not emulate WPF's routed CommandBinding or input-gesture infrastructure.</summary>

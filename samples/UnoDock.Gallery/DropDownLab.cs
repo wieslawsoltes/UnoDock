@@ -1,5 +1,5 @@
-using Xceed.Wpf.AvalonDock.Controls;
-using Xceed.Wpf.AvalonDock.Compatibility;
+using UnoDock.Controls;
+using UnoDock.Compatibility;
 using Microsoft.UI.Xaml.Automation;
 
 namespace UnoDock.Gallery;
@@ -17,8 +17,8 @@ public sealed partial class GalleryPage
             log.Text = string.Join(Environment.NewLine, entries);
         }
         var menu = new MenuFlyout();
-        var first = new Xceed.Wpf.AvalonDock.Controls.DropDownButton { Content = "Primary  ▾", Padding = new(8, 2, 8, 2), MinHeight = 22, FontSize = 12 };
-        var second = new Xceed.Wpf.AvalonDock.Controls.DropDownButton { Content = "Secondary  ▾", Padding = new(8, 2, 8, 2), MinHeight = 22, FontSize = 12 };
+        var first = new UnoDock.Controls.DropDownButton { Content = "Primary  ▾", Padding = new(8, 2, 8, 2), MinHeight = 22, FontSize = 12 };
+        var second = new UnoDock.Controls.DropDownButton { Content = "Secondary  ▾", Padding = new(8, 2, 8, 2), MinHeight = 22, FontSize = 12 };
         AutomationProperties.SetName(first, "Primary document actions");
         AutomationProperties.SetName(second, "Secondary document actions");
         first.DropDownContextMenu = second.DropDownContextMenu = menu;

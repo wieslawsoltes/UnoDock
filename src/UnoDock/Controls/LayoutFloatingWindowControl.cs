@@ -5,10 +5,10 @@ using DockWindowActivationState = Microsoft.UI.Xaml.WindowActivationState;
 #else
 using DockWindowActivationState = Windows.UI.Core.CoreWindowActivationState;
 #endif
-using Xceed.Wpf.AvalonDock.Internal;
-using Xceed.Wpf.AvalonDock.Layout;
+using UnoDock.Internal;
+using UnoDock.Layout;
 
-namespace Xceed.Wpf.AvalonDock.Controls;
+namespace UnoDock.Controls;
 
 /// <summary>Compositional replacement for the WPF Window base. Native desktop and in-surface hosts share the same layout.</summary>
 public abstract class LayoutFloatingWindowControl : DockWindowControl, ILayoutControl

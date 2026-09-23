@@ -10,10 +10,10 @@ using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Markup;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.Windows.Shell;
-using Xceed.Wpf.AvalonDock;
-using Xceed.Wpf.AvalonDock.Controls;
-using Xceed.Wpf.AvalonDock.Layout;
-using Xceed.Wpf.AvalonDock.Layout.Serialization;
+using UnoDock;
+using UnoDock.Controls;
+using UnoDock.Layout;
+using UnoDock.Layout.Serialization;
 using UnoDock.Core;
 
 namespace UnoDock.Testing;
@@ -437,7 +437,7 @@ public static class WindowLifecycleTests
     }
     private static DockRect Bounds(LayoutContent content) => new(content.FloatingLeft, content.FloatingTop, content.FloatingWidth, content.FloatingHeight);
     private static LayoutRoot Root(params ILayoutPanelElement[] items)
-    { var panel = new Xceed.Wpf.AvalonDock.Layout.LayoutPanel(); foreach (var item in items) panel.Children.Add(item); return new() { RootPanel = panel }; }
+    { var panel = new UnoDock.Layout.LayoutPanel(); foreach (var item in items) panel.Children.Add(item); return new() { RootPanel = panel }; }
     private static DockingManager Floating(out LayoutDocumentFloatingWindow model)
     {
         var manager = new DockingManager(); var document = new LayoutDocument { Title = "Probe", Content = new TextBox() };

@@ -1,8 +1,8 @@
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml.Controls.Primitives;
-using Xceed.Wpf.AvalonDock;
-using Xceed.Wpf.AvalonDock.Controls;
-using Xceed.Wpf.AvalonDock.Compatibility;
+using UnoDock;
+using UnoDock.Controls;
+using UnoDock.Compatibility;
 
 namespace Microsoft.Windows.Shell;
 

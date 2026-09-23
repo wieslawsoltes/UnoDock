@@ -5,7 +5,7 @@ using System.Xml.Linq;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Markup;
 using Microsoft.UI.Xaml.Media;
-using Xceed.Wpf.AvalonDock.Controls;
+using UnoDock.Controls;
 using Windows.Foundation;
 
 namespace UnoDock.Testing;
@@ -261,7 +261,7 @@ public static class NavigatorQualityTests
                 tests.Test($"explicit {explicitMode} navigator palette stays coherent under requested {requestedMode}", async () =>
                 {
                     using var f = new Fixture(host);
-                    var theme = new Xceed.Wpf.AvalonDock.Themes.FluentTheme(explicitMode);
+                    var theme = new UnoDock.Themes.FluentTheme(explicitMode);
                     host.Theme = theme; host.RequestedTheme = requestedMode; host.Refresh();
                     var nav = f.Show(); await Ready(nav);
                     Check.Same(theme.ThemeResourceDictionary["UnoDock.PaneBrush"], nav.Background);
@@ -314,7 +314,7 @@ public static class NavigatorQualityTests
     private sealed class Fixture : IDisposable
     {
         private readonly DockingManager _host; private readonly LayoutRoot _root; private readonly ElementTheme _theme;
-        private readonly Xceed.Wpf.AvalonDock.Themes.Theme? _palette;
+        private readonly UnoDock.Themes.Theme? _palette;
         internal LayoutDocument[] Docs { get; }
         internal LayoutDocumentPane Pane { get; } = new();
         internal LayoutAnchorablePane Tools { get; } = new();
@@ -326,7 +326,7 @@ public static class NavigatorQualityTests
                 Description = $"Project / Source / Document {i:D2}.cs", Content = new TextBox { Text = "Owned probe document " + i } }).ToArray();
             foreach (var doc in Docs) Pane.Children.Add(doc);
             foreach (var title in new[] { "Solution Explorer", "Properties", "Output" }) Tools.Children.Add(new() { ContentId = title, Title = title, Content = new TextBox() });
-            var panel = new Xceed.Wpf.AvalonDock.Layout.LayoutPanel(Tools); panel.Children.Add(Pane); host.Layout = new() { RootPanel = panel };
+            var panel = new UnoDock.Layout.LayoutPanel(Tools); panel.Children.Add(Pane); host.Layout = new() { RootPanel = panel };
             Docs[0].IsActive = true; var time = new DateTime(2000, 1, 1); var i = 0;
             foreach (var c in host.Layout.Descendents().OfType<LayoutContent>()) c.LastActivationTimeStamp = time.AddSeconds(i++);
             host.Refresh(); host.UpdateLayout();
@@ -371,7 +371,7 @@ public static class NavigatorQualityTests
     private static XDocument Reference(string name)
     { using var stream = typeof(NavigatorQualityTests).Assembly.GetManifestResourceStream("VisualFixtures." + name + ".xml")!; return XDocument.Load(stream); }
     private static ControlTemplate CustomTemplate() => (ControlTemplate)XamlReader.Load("""
-        <ControlTemplate xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:dock="using:Xceed.Wpf.AvalonDock.Controls">
+        <ControlTemplate xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:dock="using:UnoDock.Controls">
           <StackPanel Width="320"><dock:NavigatorListBox x:Name="PART_DocumentListBox" Height="140"/><dock:NavigatorListBox x:Name="PART_AnchorableListBox" Height="100"/></StackPanel>
         </ControlTemplate>
         """);

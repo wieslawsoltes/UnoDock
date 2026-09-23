@@ -1,9 +1,9 @@
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Input;
-using Xceed.Wpf.AvalonDock.Internal;
+using UnoDock.Internal;
 using Windows.System;
 
-namespace Xceed.Wpf.AvalonDock.Controls;
+namespace UnoDock.Controls;
 
 /// <summary>Composes WinUI's sealed Thumb while retaining explicit drag lifetime and cancellation.</summary>
 public class LayoutGridResizerControl : ContentControl

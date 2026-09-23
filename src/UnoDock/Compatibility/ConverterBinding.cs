@@ -1,6 +1,6 @@
 using Microsoft.UI.Dispatching;
 
-namespace Xceed.Wpf.AvalonDock.Compatibility;
+namespace UnoDock.Compatibility;
 
 /// <summary>An explicit, UI-thread-owned binding transfer for CultureInfo converters.
 /// Unlike a native WinUI Binding, this preserves DoNothing without invoking FallbackValue.

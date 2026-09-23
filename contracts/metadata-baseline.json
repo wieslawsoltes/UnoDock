@@ -1,6 +1,6 @@
 {
   "referenceSha256": "afa13b694cce68ee4f5a9f98e10253ba11ffe48ee05ddd18c0a357ecfd37fe4e",
-  "mappingSha256": "1e810556403444c9f0da5b324af45be63ac9c663d7233995e116c11dd24da7eb",
+  "mappingSha256": "37a35d97cb5c07ebace0d29b31176c3889e296e4dee0820a248780a4078e7bb6",
   "diagnostics": [
     "Microsoft.Windows.Shell.WindowChrome | protected override method System.Windows.Freezable CreateInstanceCore()",
     "Xceed.Wpf.AvalonDock.Controls.ContextMenuEx | protected override method System.Void OnOpened(System.Windows.RoutedEventArgs e)",

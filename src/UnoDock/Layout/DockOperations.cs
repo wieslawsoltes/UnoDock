@@ -1,4 +1,4 @@
-namespace Xceed.Wpf.AvalonDock.Layout;
+namespace UnoDock.Layout;
 
 /// <summary>All visual and programmatic docking goes through these ownership-preserving operations.</summary>
 public static class DockOperations

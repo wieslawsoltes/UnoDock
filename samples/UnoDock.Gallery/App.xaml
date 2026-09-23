@@ -1,5 +1,5 @@
 <Application x:Class="UnoDock.Gallery.App" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
- xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:controls="using:Xceed.Wpf.AvalonDock.Controls">
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:controls="using:UnoDock.Controls">
  <Application.Resources>
   <ResourceDictionary>
    <ResourceDictionary.MergedDictionaries><XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" /></ResourceDictionary.MergedDictionaries>

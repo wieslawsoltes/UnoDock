@@ -1,7 +1,7 @@
-using Xceed.Wpf.AvalonDock.Controls;
-using Xceed.Wpf.AvalonDock.Layout;
+using UnoDock.Controls;
+using UnoDock.Layout;
 
-namespace Xceed.Wpf.AvalonDock;
+namespace UnoDock;
 
 /// <summary>Additive input policy. The default GuidesOnly mode requires a displayed glyph
 /// or a visible tab/caption insertion surface. GuidesAndEdges retains preview-8 edge zones.</summary>

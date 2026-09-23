@@ -1,9 +1,9 @@
 using Microsoft.UI.Xaml.Input;
-using Xceed.Wpf.AvalonDock.Compatibility;
-using Xceed.Wpf.AvalonDock.Internal;
-using Xceed.Wpf.AvalonDock.Layout;
+using UnoDock.Compatibility;
+using UnoDock.Internal;
+using UnoDock.Layout;
 
-namespace Xceed.Wpf.AvalonDock.Controls;
+namespace UnoDock.Controls;
 
 public class LayoutAnchorControl : DockInputControl, ILayoutControl
 {

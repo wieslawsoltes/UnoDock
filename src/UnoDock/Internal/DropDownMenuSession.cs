@@ -1,7 +1,7 @@
 using System.Runtime.ExceptionServices;
-using Xceed.Wpf.AvalonDock.Controls;
+using UnoDock.Controls;
 
-namespace Xceed.Wpf.AvalonDock.Internal;
+namespace UnoDock.Internal;
 
 /// <summary>Serializes dropdown requests around application and native callbacks.
 /// No original implementation code or private platform state is accessed.</summary>

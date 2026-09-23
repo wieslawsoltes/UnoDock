@@ -1,10 +1,10 @@
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Input;
-using Xceed.Wpf.AvalonDock.Internal;
-using Xceed.Wpf.AvalonDock.Layout;
-using Xceed.Wpf.AvalonDock.Compatibility;
+using UnoDock.Internal;
+using UnoDock.Layout;
+using UnoDock.Compatibility;
 
-namespace Xceed.Wpf.AvalonDock.Controls;
+namespace UnoDock.Controls;
 
 /// <summary>Uno tab host. Content presenters are keyed by model identity and survive tab selection and movement.</summary>
 public partial class LayoutCachePaneControl : DockSelectionControl

@@ -12,4 +12,4 @@ global using Microsoft.UI.Xaml.Markup;
 global using Windows.Foundation;
 global using UnoDock.Core;
 
-global using LayoutPanel = Xceed.Wpf.AvalonDock.Layout.LayoutPanel;
+global using LayoutPanel = UnoDock.Layout.LayoutPanel;

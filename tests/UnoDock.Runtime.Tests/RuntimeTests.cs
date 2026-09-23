@@ -3,13 +3,13 @@ using Microsoft.UI.Xaml.Controls;
 using System.Collections.ObjectModel;
 using System.Xml;
 using UnoDock.Core;
-using Xceed.Wpf.AvalonDock;
-using Xceed.Wpf.AvalonDock.Layout;
-using Xceed.Wpf.AvalonDock.Layout.Serialization;
+using UnoDock;
+using UnoDock.Layout;
+using UnoDock.Layout.Serialization;
 
 namespace UnoDock.Testing;
 
-using LayoutPanel = Xceed.Wpf.AvalonDock.Layout.LayoutPanel;
+using LayoutPanel = UnoDock.Layout.LayoutPanel;
 
 public static class RuntimeTests
 {

@@ -6,9 +6,9 @@ using Microsoft.UI.Xaml.Automation.Peers;
 using Microsoft.UI.Xaml.Automation.Provider;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Input;
-using Xceed.Wpf.AvalonDock.Controls;
-using Xceed.Wpf.AvalonDock.Themes;
-using Strings = Xceed.Wpf.AvalonDock.Properties.Resources;
+using UnoDock.Controls;
+using UnoDock.Themes;
+using Strings = UnoDock.Properties.Resources;
 
 namespace UnoDock.Testing;
 

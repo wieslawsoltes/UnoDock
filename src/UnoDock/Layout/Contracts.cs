@@ -1,4 +1,4 @@
-namespace Xceed.Wpf.AvalonDock.Layout;
+namespace UnoDock.Layout;
 
 public enum AnchorSide { Left, Top, Right, Bottom }
 [Flags] public enum AnchorableShowStrategy : byte { Most = 1, Left = 2, Right = 4, Top = 16, Bottom = 32 }

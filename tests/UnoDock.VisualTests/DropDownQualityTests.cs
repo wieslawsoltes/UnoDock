@@ -1,8 +1,8 @@
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
-using Xceed.Wpf.AvalonDock.Controls;
-using Xceed.Wpf.AvalonDock.Compatibility;
+using UnoDock.Controls;
+using UnoDock.Compatibility;
 
 namespace UnoDock.Testing;
 
@@ -22,7 +22,7 @@ public static class DropDownQualityTests
         protected override void OnPreviewMouseRightButtonUp(DockMouseButtonEventArgs e)
         { Ups++; if (Veto) e.Handled = true; base.OnPreviewMouseRightButtonUp(e); }
     }
-    private sealed class Button : Xceed.Wpf.AvalonDock.Controls.DropDownButton
+    private sealed class Button : UnoDock.Controls.DropDownButton
     {
         internal bool Veto;
         internal void InvokeClick() => OnClick();

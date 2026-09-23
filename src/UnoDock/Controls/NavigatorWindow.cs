@@ -1,8 +1,8 @@
 using Microsoft.UI.Xaml.Input;
-using Xceed.Wpf.AvalonDock.Internal;
-using Xceed.Wpf.AvalonDock.Layout;
+using UnoDock.Internal;
+using UnoDock.Layout;
 
-namespace Xceed.Wpf.AvalonDock.Controls;
+namespace UnoDock.Controls;
 
 [TemplatePart(Name = "PART_AnchorableListBox", Type = typeof(ListBox))]
 [TemplatePart(Name = "PART_DocumentListBox", Type = typeof(ListBox))]

@@ -1,11 +1,11 @@
 using System.Globalization;
 using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Media.Imaging;
-using Xceed.Wpf.AvalonDock.Compatibility;
-using Xceed.Wpf.AvalonDock.Controls;
-using Xceed.Wpf.AvalonDock.Layout;
+using UnoDock.Compatibility;
+using UnoDock.Controls;
+using UnoDock.Layout;
 
-namespace Xceed.Wpf.AvalonDock.Converters;
+namespace UnoDock.Converters;
 
 /// <summary>Legacy preview extension base. Concrete compatibility converters use the original
 /// non-virtual member shapes; this base remains available to existing derived converters.</summary>

@@ -7,11 +7,11 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Media.Imaging;
-using Xceed.Wpf.AvalonDock;
-using Xceed.Wpf.AvalonDock.Compatibility;
-using Xceed.Wpf.AvalonDock.Controls;
-using Xceed.Wpf.AvalonDock.Converters;
-using Xceed.Wpf.AvalonDock.Layout;
+using UnoDock;
+using UnoDock.Compatibility;
+using UnoDock.Controls;
+using UnoDock.Converters;
+using UnoDock.Layout;
 
 namespace UnoDock.Testing;
 
@@ -40,7 +40,7 @@ public static partial class ConverterTests
             var reverse = (bool)record.Attribute("Reverse")!;
             var targetKey = (string?)record.Attribute("Target") ?? "visibility";
             if (!converters.TryGetValue(name, out var converter))
-                converters[name] = converter = Activator.CreateInstance(typeof(DockingManager).Assembly.GetType("Xceed.Wpf.AvalonDock.Converters." + name, true)!)!;
+                converters[name] = converter = Activator.CreateInstance(typeof(DockingManager).Assembly.GetType("UnoDock.Converters." + name, true)!)!;
             tests.Test($"reference {name}: {key} -> {targetKey}, reverse={reverse}", () =>
             {
                 var input = record.Name == "MultiCase" ? Values(key) : Input(key, document, tool);
@@ -89,20 +89,20 @@ public static partial class ConverterTests
         });
         tests.Test("auto-hide caption respects culture-specific strings", () =>
         {
-            var old = Xceed.Wpf.AvalonDock.Properties.Resources.Culture;
-            var translations = Xceed.Wpf.AvalonDock.Properties.Resources.Translations;
+            var old = UnoDock.Properties.Resources.Culture;
+            var translations = UnoDock.Properties.Resources.Translations;
             translations.TryGetValue("pl-PL", out var previous);
             try
             {
                 translations["pl-PL"] = new Dictionary<string, string> { ["Window_Restore"] = "Przywróć", ["Anchorable_AutoHide"] = "Ukryj automatycznie" };
-                Xceed.Wpf.AvalonDock.Properties.Resources.Culture = CultureInfo.GetCultureInfo("pl-PL");
+                UnoDock.Properties.Resources.Culture = CultureInfo.GetCultureInfo("pl-PL");
                 var converter = new AnchorableContextMenuAutoHideHeaderConverter();
                 Check.Equal("Przywróć", converter.Convert(true, typeof(string), null!, Invariant));
                 Check.Equal("Ukryj automatycznie", converter.Convert(false, typeof(string), null!, Invariant));
             }
             finally
             {
-                Xceed.Wpf.AvalonDock.Properties.Resources.Culture = old;
+                UnoDock.Properties.Resources.Culture = old;
                 if (previous != null) translations["pl-PL"] = previous; else translations.Remove("pl-PL");
             }
         });
@@ -155,7 +155,7 @@ public static partial class ConverterTests
                 var type = (string)expected.Attribute("Type")!;
                 if (type == "System.Windows.Visibility") type = typeof(Visibility).FullName!;
                 if (type == "System.Windows.Controls.Orientation") type = typeof(Orientation).FullName!;
-                Check.Equal(type, result?.GetType().FullName);
+                Check.Equal(type.Replace("Xceed.Wpf.AvalonDock", "UnoDock", StringComparison.Ordinal), result?.GetType().FullName);
                 Check.Equal(expected.Value, Convert.ToString(result, Invariant)); break;
             case "Object" when (string?)expected.Attribute("Type") == "System.Windows.Controls.Image":
                 Check.True(result is Image { Source: BitmapImage });

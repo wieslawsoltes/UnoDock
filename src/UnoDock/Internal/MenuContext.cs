@@ -1,7 +1,7 @@
-using Xceed.Wpf.AvalonDock.Controls;
-using Xceed.Wpf.AvalonDock.Layout;
+using UnoDock.Controls;
+using UnoDock.Layout;
 
-namespace Xceed.Wpf.AvalonDock.Internal;
+namespace UnoDock.Internal;
 
 /// <summary>Scopes a flyout's temporary context to one opening. Application-owned local
 /// values and bindings are never replaced; values changed while open survive cleanup.</summary>

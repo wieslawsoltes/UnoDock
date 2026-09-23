@@ -1,4 +1,4 @@
-namespace Xceed.Wpf.AvalonDock.Themes;
+namespace UnoDock.Themes;
 
 public abstract partial class Theme : DependencyObject
 {

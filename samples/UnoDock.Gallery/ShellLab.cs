@@ -1,5 +1,5 @@
 using Microsoft.Windows.Shell;
-using Xceed.Wpf.AvalonDock.Controls;
+using UnoDock.Controls;
 
 namespace UnoDock.Gallery;
 

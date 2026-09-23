@@ -1,9 +1,10 @@
+using UnoDock.Compatibility;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Input;
-using Xceed.Wpf.AvalonDock.Internal;
-using Xceed.Wpf.AvalonDock.Layout;
+using UnoDock.Internal;
+using UnoDock.Layout;
 
-namespace Xceed.Wpf.AvalonDock.Controls;
+namespace UnoDock.Controls;
 
 public abstract partial class LayoutGridControl<T> : Grid, ILayoutControl, IRefreshableLayoutControl where T : class, ILayoutPanelElement
 {
@@ -11,13 +12,22 @@ public abstract partial class LayoutGridControl<T> : Grid, ILayoutControl, IRefr
     private ILayoutPanelElement[] _displayed = [];
     private Orientation _lastOrientation;
     private double _lastThickness = -1;
+    private bool _initialized;
     protected LayoutGridControl(ILayoutOrientableGroup model)
     {
         _group = model ?? throw new ArgumentNullException(nameof(model));
+        Loaded += (_, _) =>
+        {
+            if (_initialized) return;
+            _initialized = true;
+            OnInitialized(EventArgs.Empty);
+        };
         Unloaded += (_, _) => CancelResize();
         SizeChanged += (_, _) => CancelResize();
         RegisterPropertyChangedCallback(FlowDirectionProperty, (_, _) => CancelResize());
     }
+    /// <summary>Control-local initialization after construction, once per view.</summary>
+    protected virtual void OnInitialized(EventArgs e) { }
     public ILayoutElement Model => _group;
     public Orientation Orientation => _group.Orientation;
     protected void FixChildrenDockLengths() => OnFixChildrenDockLengths();
@@ -84,6 +94,18 @@ public class LayoutAnchorablePaneGroupControl(LayoutAnchorablePaneGroup model) :
 /// <summary>Natural-width tab panel: overflow is handled by its containing ScrollViewer.</summary>
 public class DocumentPaneTabPanel : Panel
 {
+    public DocumentPaneTabPanel()
+    {
+        PointerExited += (_, native) =>
+        {
+            var point = native.GetCurrentPoint(this).Position;
+            // Exiting a descendant is not exiting the complete header strip.
+            if (point.X >= 0 && point.Y >= 0 && point.X < ActualWidth && point.Y < ActualHeight) return;
+            var args = new DockMouseEventArgs(native, this);
+            try { OnMouseLeave(args); } finally { args.Complete(); }
+        };
+    }
+    protected virtual void OnMouseLeave(DockMouseEventArgs e) => InvalidateMeasure();
     protected override Size MeasureOverride(Size availableSize)
     {
         double width = 0, height = 0;

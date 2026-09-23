@@ -1,6 +1,6 @@
 using System.Globalization;
 
-namespace Xceed.Wpf.AvalonDock.Layout;
+namespace UnoDock.Layout;
 
 internal static class LayoutDiagnostics
 {

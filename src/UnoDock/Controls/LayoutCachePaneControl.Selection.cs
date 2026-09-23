@@ -1,6 +1,6 @@
-using Xceed.Wpf.AvalonDock.Layout;
+using UnoDock.Layout;
 
-namespace Xceed.Wpf.AvalonDock.Controls;
+namespace UnoDock.Controls;
 
 public partial class LayoutCachePaneControl
 {

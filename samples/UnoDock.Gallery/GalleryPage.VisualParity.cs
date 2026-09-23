@@ -1,5 +1,5 @@
 using UnoDock.Testing;
-using Xceed.Wpf.AvalonDock.Themes;
+using UnoDock.Themes;
 
 namespace UnoDock.Gallery;
 

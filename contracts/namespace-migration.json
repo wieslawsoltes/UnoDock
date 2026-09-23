@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "sourceRevision": "b9c6d561aea20a869b8623ea259cb176e466e377",
+  "from": "Xceed.Wpf.AvalonDock",
+  "to": "UnoDock",
+  "originalFiles": {
+    "contracts/avalondock-metadata-release.json": "f8fea6fb7123bc1d502880c200750cfc70ce3b40d817bff6743dc6f6edef43e1",
+    "contracts/reference.json": "a06b444e4c7206aac1991de61825ae7099c153c970fc4f0ef047947075b50d1a",
+    "tools/compare-metadata.py": "2bc7e737e5042fc3d61bb4767525481e9719286062e8795e7d2ecfcfc06f82fd"
+  },
+  "diagnosticsSha256": "35ec335479f296ba0459287733b4b3a8c3547f5c30ad3c07d3d004347abd8d3d"
+}

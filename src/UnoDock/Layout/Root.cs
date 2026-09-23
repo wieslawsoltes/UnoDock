@@ -2,7 +2,7 @@ using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 
-namespace Xceed.Wpf.AvalonDock.Layout;
+namespace UnoDock.Layout;
 
 [ContentProperty(Name = nameof(RootPanel))]
 public class LayoutRoot : LayoutElement, ILayoutContainer, ILayoutRoot, IXmlSerializable

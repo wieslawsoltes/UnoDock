@@ -1,6 +1,6 @@
 using AutomationProperties = Microsoft.UI.Xaml.Automation.AutomationProperties;
-using Xceed.Wpf.AvalonDock.Controls;
-using Xceed.Wpf.AvalonDock.Themes;
+using UnoDock.Controls;
+using UnoDock.Themes;
 using Windows.Storage;
 
 namespace UnoDock.Gallery;
@@ -16,52 +16,27 @@ public sealed partial class GalleryPage : Page
     private int _nextDocument = 4;
     public GalleryPage()
     {
-        RequestedTheme = ElementTheme.Dark;
-        var shell = new Grid { Background = new SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(255, 20, 24, 32)) };
-        shell.RowDefinitions.Add(new() { Height = new(64) }); shell.RowDefinitions.Add(new() { Height = GridLength.Auto }); shell.RowDefinitions.Add(new() { Height = new(1, GridUnitType.Star) }); shell.RowDefinitions.Add(new() { Height = new(30) });
-        var brand = new Grid { Padding = new(20, 12, 20, 12) }; brand.ColumnDefinitions.Add(new() { Width = new(1, GridUnitType.Star) }); brand.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
-        var title = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 14 };
-        title.Children.Add(new TextBlock { Text = "◈", FontSize = 30, Foreground = new SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(255, 119, 176, 255)) });
-        title.Children.Add(new TextBlock { Text = "UnoDock", FontSize = 26, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold });
-        title.Children.Add(new TextBlock { Text = "DOCKING WORKBENCH", VerticalAlignment = VerticalAlignment.Center, Opacity = .6, FontSize = 11 }); brand.Children.Add(title);
-        var build = new TextBlock { Text = "UNO 6.7  /  INDEPENDENT IMPLEMENTATION  /  PREVIEW 13", VerticalAlignment = VerticalAlignment.Center, FontSize = 11, Opacity = .65 }; Grid.SetColumn(build, 1); brand.Children.Add(build); shell.Children.Add(brand);
-        var commands = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 5, Margin = new(12, 4, 12, 9) };
-        Add("＋ Document", () => AddDocument()); Add("Split right", () => Split(DockPosition.Right)); Add("Split below", () => Split(DockPosition.Bottom));
-        Add("Float / Dock", () => { if (Dock.Layout.ActiveContent is { } active) { if (active.IsFloating) active.Dock(); else active.Float(); } });
-        Add("Pin / Auto-hide", () => { if (Dock.Layout.ActiveContent is LayoutAnchorable a) a.ToggleAutoHide(); else Log("Select a tool to toggle auto-hide."); });
-        Add("Show tools", () => { foreach (var tool in Dock.Layout.Hidden.ToArray()) tool.Show(); });
-        Add("Save", () => Run(Save)); Add("Restore", () => Run(Restore)); Add("XML", ShowXml); Add("MVVM", BindingDemo);
-        Add("Theme", () => { RequestedTheme = RequestedTheme == ElementTheme.Dark ? ElementTheme.Light : ElementTheme.Dark; Dock.Theme = new FluentTheme(RequestedTheme); });
-        Add("Reset", Reset); Add("1,000 tabs", Stress); Add("Parity lab", ShowParityLab); Add("Converter lab", ShowConverterLab); Add("Native windows", ShowNativeWindowLab); Add("Window shell", ShowShellLab); Add("Window lifecycle", ShowWindowLifecycleLab); Add("Input extensions", ShowInputExtensionsLab); Add("Visual parity", ShowVisualParityLab); Add("Navigator quality", ShowNavigatorLab); Add("Docking guides", ShowDockingGuidesLab); Add("Splitter quality", ShowSplitterLab); Add("Auto-hide quality", ShowAutoHideLab); Add("Menu quality", ShowMenuLab);
-        var scroll = new ScrollViewer { Content = commands, HorizontalScrollBarVisibility = ScrollBarVisibility.Auto, VerticalScrollBarVisibility = ScrollBarVisibility.Disabled, MaxHeight = 70 }; Grid.SetRow(scroll, 1); shell.Children.Add(scroll);
-        Dock.Margin = new(10, 0, 10, 0); Grid.SetRow(Dock, 2); shell.Children.Add(Dock); Grid.SetRow(_status, 3); shell.Children.Add(_status); Content = shell;
-        Dock.Theme = new FluentTheme(RequestedTheme);
-        Dock.ActiveContentChanged += (_, _) => _status.Text = $"{Dock.Layout.ActiveContent?.Title ?? "Ready"}    ·    Ctrl+Tab switches content    ·    Ctrl+F4 closes    ·    Drag a tab to dock";
+        Dock.ActiveContentChanged += (_, _) => _status.Text = $"{Dock.Layout.LastFocusedDocument?.Title ?? Dock.Layout.ActiveContent?.Title ?? "Ready"}  |  Ctrl+Tab: switch  |  Ctrl+F4: close";
         Dock.DocumentClosing += (_, e) => { if (_protectDraft && e.Document.ContentId == "draft") { e.Cancel = true; Log("Draft close cancelled. Disable protection in Properties to close it."); } };
         Dock.DocumentClosed += (_, e) => Log("Closed " + e.Document.Title);
         Dock.PreviewDock += (_, e) => Log("Dock preview: " + ((DockEventArgs)e).Content.Title);
         Dock.Docked += (_, e) => Log("Docked: " + ((DockEventArgs)e).Content.Title);
         Dock.Floated += (_, e) => Log("Floating: " + ((DockEventArgs)e).Content.Title);
         Dock.RenderingFailed += (_, e) => Log("Rendering failed: " + e.Message);
-        Reset();
-        void Add(string label, Action action)
-        {
-            var button = new Button { Content = label, Padding = new(10, 6, 10, 6), FontSize = 12 };
-            AutomationProperties.SetName(button, label); button.Click += (_, _) => { try { action(); } catch (Exception e) { Log(e.Message); } }; commands.Children.Add(button);
-        }
+        BuildSampleShell();
     }
     private void Run(Func<Task> operation) => _ = RunCore(operation);
     private async Task RunCore(Func<Task> operation) { try { await operation(); } catch (Exception e) { Log(e.Message); } }
     private void Log(string value) { _events.Insert(0, $"{DateTime.Now:HH:mm:ss}  {value}"); while (_events.Count > 250) _events.RemoveAt(_events.Count - 1); }
     private LayoutDocument Document(string id, string title, object content)
     { _content[id] = content; return new() { ContentId = id, Title = title, Content = content }; }
-    private TextBox Editor(string text) => new() { AcceptsReturn = true, Text = text, TextWrapping = TextWrapping.NoWrap, FontFamily = new FontFamily("Consolas"), Padding = new(24), BorderThickness = new(0), HorizontalAlignment = HorizontalAlignment.Stretch, VerticalAlignment = VerticalAlignment.Stretch };
-    private void Reset()
+    private TextBox Editor(string text) => new() { AcceptsReturn = true, Text = text, TextWrapping = TextWrapping.NoWrap, FontFamily = new FontFamily(OperatingSystem.IsWindows() ? "Consolas" : "DejaVu Sans Mono"), FontSize = 12, Padding = new(5), BorderThickness = new(0), HorizontalAlignment = HorizontalAlignment.Stretch, VerticalAlignment = VerticalAlignment.Stretch };
+    private void ResetWorkbench()
     {
         using var batch = Dock.BeginLayoutUpdate(); Dock.DocumentsSource = null; Dock.AnchorablesSource = null; Dock.LayoutItemTemplate = null; Dock.LayoutItemContainerStyle = null;
         _content.Clear();
         var welcome = Document("welcome", "Welcome.md", Welcome());
-        var code = Document("code", "Workspace.cs", Editor("using Xceed.Wpf.AvalonDock;\nusing Xceed.Wpf.AvalonDock.Layout;\n\n// Public namespaces retained; framework types are Uno / WinUI.\nvar documents = new LayoutDocumentPane();\ndocuments.Children.Add(new LayoutDocument\n{\n    Title = \"Hello, Uno\",\n    ContentId = \"hello\",\n    Content = new TextBox { Text = \"Edit me\" }\n});\n\nvar manager = new DockingManager\n{\n    Layout = new LayoutRoot\n    {\n        RootPanel = new LayoutPanel(documents)\n    }\n};\n"));
+        var code = Document("code", "Workspace.cs", Editor("using UnoDock;\nusing UnoDock.Layout;\n\n// UnoDock namespaces; framework types are Uno / WinUI.\nvar documents = new LayoutDocumentPane();\ndocuments.Children.Add(new LayoutDocument\n{\n    Title = \"Hello, Uno\",\n    ContentId = \"hello\",\n    Content = new TextBox { Text = \"Edit me\" }\n});\n\nvar manager = new DockingManager\n{\n    Layout = new LayoutRoot\n    {\n        RootPanel = new LayoutPanel(documents)\n    }\n};\n"));
         var draft = Document("draft", "Protected draft.txt", Editor("This tab demonstrates cancellable document closing.\n\nDisable protection in the Properties tool to allow closing.\nEdit this text, switch tabs, float it, and dock it again: the same editor instance is preserved."));
         var docs = new LayoutDocumentPane(welcome); docs.Children.Add(code); docs.Children.Add(draft);
         var explorer = new LayoutAnchorable { Title = "Explorer", ContentId = "explorer", Content = Explorer(), CanClose = false };
@@ -69,12 +44,12 @@ public sealed partial class GalleryPage : Page
         var output = new LayoutAnchorable { Title = "Output", ContentId = "output", Content = new ListView { ItemsSource = _events, FontFamily = new FontFamily("Consolas"), FontSize = 12 }, CanClose = true };
         var inspector = new LayoutAnchorable { Title = "Layout inspector", ContentId = "inspector", Content = Inspector(), CanClose = true };
         foreach (var tool in new[] { explorer, properties, output, inspector }) _content[tool.ContentId!] = tool.Content!;
-        var left = new LayoutAnchorablePane(explorer) { DockWidth = new(225), DockMinWidth = 140 };
-        var right = new LayoutAnchorablePane(properties) { DockWidth = new(280), DockMinWidth = 180 };
-        var bottom = new LayoutAnchorablePane(output) { DockHeight = new(190), DockMinHeight = 80 }; bottom.Children.Add(inspector);
+        var left = new LayoutAnchorablePane(explorer) { DockWidth = new(200), DockMinWidth = 140 };
+        var right = new LayoutAnchorablePane(properties) { DockWidth = new(230), DockMinWidth = 180 };
+        var bottom = new LayoutAnchorablePane(output) { DockHeight = new(155), DockMinHeight = 80 }; bottom.Children.Add(inspector);
         var center = new LayoutPanel(docs) { Orientation = Orientation.Vertical }; center.Children.Add(bottom);
         var panel = new LayoutPanel(left) { Orientation = Orientation.Horizontal }; panel.Children.Add(center); panel.Children.Add(right);
-        Dock.Layout = new LayoutRoot { RootPanel = panel }; welcome.IsActive = true; _status.Text = "Ready  ·  Drag tabs to dock  ·  All editors retain their state";
+        Dock.Layout = new LayoutRoot { RootPanel = panel }; code.IsActive = true; _status.Text = "Ready  ·  Drag tabs to dock  ·  All editors retain their state";
         Log("Workspace initialized. This preview has an explicit compatibility report in docs/compatibility.md.");
     }
     private UIElement Welcome()

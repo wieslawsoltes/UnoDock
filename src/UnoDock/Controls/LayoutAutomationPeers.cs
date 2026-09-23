@@ -1,7 +1,7 @@
 using Microsoft.UI.Xaml.Automation.Peers;
 using Microsoft.UI.Xaml.Automation.Provider;
 
-namespace Xceed.Wpf.AvalonDock.Controls;
+namespace UnoDock.Controls;
 
 public sealed class LayoutPaneAutomationPeer(LayoutCachePaneControl owner) : FrameworkElementAutomationPeer(owner), ISelectionProvider
 {
