@@ -12,24 +12,30 @@ jobs:
     timeout-minutes: 15
     env:
       GH_TOKEN: ${{ github.token }}
-      ACCEPTANCE_RUN: '35913023351'
-      REFERENCE_RUN: '35912438698'
+      ACCEPTANCE_RUN: '35914057579'
+      REFERENCE_RUN: '35914057506'
+      EXPECTED_REVISION: '4bd5d97e3dc284ba74eff6dc3692ada571f44399'
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Wait for the pinned acceptance run to finish
-        run: gh run watch "$ACCEPTANCE_RUN" --interval 10 --exit-status || true
-      - name: Download and verify artifact digests; reconcile source, packages and executed reports
+      - name: Await pinned validation conclusions without replacing failed runs
+        run: |
+          gh run watch "$ACCEPTANCE_RUN" --interval 10 --exit-status > "$RUNNER_TEMP/acceptance-watch.log" 2>&1 || true
+          gh run watch "$REFERENCE_RUN" --interval 10 --exit-status > "$RUNNER_TEMP/reference-watch.log" 2>&1 || true
+      - name: Verify artifact digests, source, packages, test reports and original geometry
         run: |
           python3 - <<'PY'
           import hashlib, io, json, os, pathlib, re, runpy, shutil, subprocess, zipfile
           import xml.etree.ElementTree as ET
           root = pathlib.Path('evidence'); root.mkdir()
           repo = os.environ['GITHUB_REPOSITORY']; run_id = int(os.environ['ACCEPTANCE_RUN']); reference_id = int(os.environ['REFERENCE_RUN'])
+          expected_revision = os.environ['EXPECTED_REVISION']
           def api(path):
               return json.loads(subprocess.check_output(['gh','api',f'repos/{repo}/'+path]))
           run = api(f'actions/runs/{run_id}'); reference = api(f'actions/runs/{reference_id}')
+          if run['head_sha'] != expected_revision or reference['head_sha'] != expected_revision:
+              raise ValueError('Pinned runs do not validate the expected merged revision')
           (root/'acceptance-run.json').write_text(json.dumps(run,indent=2)+'\n')
           jobs = api(f'actions/runs/{run_id}/jobs?per_page=100')['jobs']
           manifest = {'schema':1,'acceptanceRun':run_id,'headRevision':run['head_sha'],'conclusion':run['conclusion'],
@@ -52,6 +58,7 @@ jobs:
                       path=pathlib.PurePosixPath(entry.filename)
                       if path.is_absolute() or '..' in path.parts or '\\' in entry.filename: raise ValueError('Unsafe artifact path')
                       if entry.is_dir(): continue
+                      if path.suffix.lower() in ('.ttf','.otf','.ttc','.woff','.woff2'): raise ValueError('Font files are excluded from delivery')
                       target=directory/path; target.parent.mkdir(parents=True,exist_ok=True); target.write_bytes(archive.read(entry))
           download(run_id,'core-and-api-results',root/'core')
           download(run_id,'runtime-test-results',root/'linux')
@@ -59,7 +66,7 @@ jobs:
           download(run_id,'nuget-preview',root/'packages')
           download(reference_id,'public-sample-reference',root/'reference')
           revision=(root/'core/source-revision.txt').read_text().strip()
-          if not re.fullmatch('[0-9a-f]{40}',revision): raise ValueError('Invalid source revision')
+          if revision != expected_revision: raise ValueError('Source archive does not identify the merged commit')
           subprocess.run(['git','fetch','origin',revision,'--depth=1'],check=True)
           records=subprocess.check_output(['git','ls-tree','-r','-z',revision]).split(b'\0')
           tracked={}
@@ -84,9 +91,11 @@ jobs:
           manifest['packages']=[]
           for path in package_files:
               with zipfile.ZipFile(path) as package:
+                  if any(pathlib.PurePosixPath(n).suffix.lower() in ('.ttf','.otf','.ttc','.woff','.woff2') for n in package.namelist()): raise ValueError('Font files are excluded from packages')
                   nuspec=next(n for n in package.namelist() if n.endswith('.nuspec'))
                   metadata=ET.fromstring(package.read(nuspec)).find('{*}metadata')
                   if metadata.find('{*}repository').get('commit')!=revision: raise ValueError('Package/source revision mismatch')
+                  if metadata.findtext('{*}version')!='0.1.0-preview.14': raise ValueError('Unexpected package version')
                   manifest['packages'].append({'file':path.name,'version':metadata.findtext('{*}version'),'sha256':hashlib.sha256(path.read_bytes()).hexdigest()})
           for platform,directory in [('core',root/'core/test-results'),('linux',root/'linux'),('windows',root/'windows')]:
               suites=[]
@@ -124,10 +133,25 @@ jobs:
           (root/'verification.json').write_text(json.dumps(manifest,indent=2)+'\n')
           print(json.dumps({k:v for k,v in manifest.items() if k not in ('suites','artifacts','packages')},indent=2))
           if not manifest['verified']: raise SystemExit('Evidence is incomplete or failing; no successful-delivery claim.')
+          delivery=pathlib.Path('delivery'); delivery.mkdir()
+          shutil.copy2(root/'core/UnoDock-source.zip',delivery/'UnoDock-0.1.0-preview.14-source.zip')
+          shutil.make_archive(str(delivery/'UnoDock-0.1.0-preview.14-packages'),'zip',root/'packages')
+          (root/'core/UnoDock-source.zip').unlink()
+          shutil.rmtree(root/'packages')
+          shutil.copy2('.github/workflows/preview14-evidence.yml',root/'verification-workflow.yml')
+          shutil.copy2('tools/compare-sample-geometry.py',root/'compare-sample-geometry.py')
+          shutil.make_archive(str(delivery/'UnoDock-0.1.0-preview.14-validation'),'zip',root)
+          shutil.copy2(root/'verification.json',delivery/'verification.json')
+          (delivery/'README.txt').write_text('UnoDock 0.1.0-preview.14\nMerged source revision: '+revision+'\n\nSource ZIP: complete committed solution.\nPackages ZIP: UnoDock and UnoDock.Core NuGet packages plus symbols; not published to NuGet.org.\nValidation ZIP: exact platform test reports, API differences, actual PNG/XML captures, original public sample observations, geometry comparisons and verification workflow.\n\nBreaking change: Xceed.Wpf.AvalonDock.* namespaces are now UnoDock.*. Recompile clients and update C# using directives and Uno XAML using: namespaces. See docs/namespace-migration.md and docs/sample-quality.md.\n\nNo full-parity or pixel-equivalence claim. Runtime tests use Uno Skia X11 and Win32; macOS/browser/native WinUI have narrower build/publish validation.\n',encoding='utf-8')
           PY
       - uses: actions/upload-artifact@v4
-        if: always()
+        if: failure()
         with:
-          name: preview14-verification-evidence
+          name: preview14-verification-failure
           path: evidence/
+          if-no-files-found: warn
+      - uses: actions/upload-artifact@v4
+        with:
+          name: UnoDock-0.1.0-preview.14-delivery
+          path: delivery/
           if-no-files-found: error
