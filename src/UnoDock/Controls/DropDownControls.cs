@@ -1,4 +1,6 @@
 using Microsoft.UI.Xaml.Input;
+using Windows.System;
+using Xceed.Wpf.AvalonDock.Compatibility;
 using Xceed.Wpf.AvalonDock.Internal;
 
 namespace Xceed.Wpf.AvalonDock.Controls;
@@ -6,54 +8,137 @@ namespace Xceed.Wpf.AvalonDock.Controls;
 public class DropDownButton : ToggleButton
 {
     public static readonly DependencyProperty DropDownContextMenuProperty = DependencyProperty.Register(nameof(DropDownContextMenu), typeof(MenuFlyout), typeof(DropDownButton), new PropertyMetadata(null, (d, e) => ((DropDownButton)d).MenuChanged(e)));
-    public static readonly DependencyProperty DropDownContextMenuDataContextProperty = DependencyProperty.Register(nameof(DropDownContextMenuDataContext), typeof(object), typeof(DropDownButton), new PropertyMetadata(null));
+    public static readonly DependencyProperty DropDownContextMenuDataContextProperty = DependencyProperty.Register(nameof(DropDownContextMenuDataContext), typeof(object), typeof(DropDownButton), new PropertyMetadata(null, (d, _) => ((DropDownButton)d).UpdateMenuContext()));
     private MenuFlyout? _openMenu;
-    public DropDownButton() { Click += (_, _) => OnClick(); Unloaded += (_, _) => CloseMenu(); }
+    public DropDownButton()
+    {
+        Click += (_, _) => OnClick();
+        Unloaded += (_, _) => CloseMenu();
+        IsEnabledChanged += (_, _) => { if (!IsEnabled) CloseMenu(); };
+        DataContextChanged += (_, _) => UpdateMenuContext();
+    }
     public MenuFlyout? DropDownContextMenu { get => (MenuFlyout?)GetValue(DropDownContextMenuProperty); set => SetValue(DropDownContextMenuProperty, value); }
     public object? DropDownContextMenuDataContext { get => GetValue(DropDownContextMenuDataContextProperty); set => SetValue(DropDownContextMenuDataContextProperty, value); }
     protected virtual void OnDropDownContextMenuChanged(DependencyPropertyChangedEventArgs e) { }
-    private void MenuChanged(DependencyPropertyChangedEventArgs e) { CloseMenu(); OnDropDownContextMenuChanged(e); }
+    private void MenuChanged(DependencyPropertyChangedEventArgs e)
+    {
+        CloseMenu();
+        // Closing an old menu can replace this property again.
+        if (ReferenceEquals(DropDownContextMenu, e.NewValue)) OnDropDownContextMenuChanged(e);
+    }
     protected virtual void OnClick()
     {
-        var wasOpen = _openMenu != null;
-        if (wasOpen) { CloseMenu(); return; }
-        if (DropDownContextMenu is not { } menu) { IsChecked = false; return; }
-        MenuContext.Apply(menu, DropDownContextMenuDataContext ?? DataContext);
-        _openMenu = menu; menu.Closed += MenuClosed;
-        try { menu.ShowAt(this); IsChecked = true; }
-        catch { MenuClosed(menu, EventArgs.Empty); throw; }
+        if (_openMenu is { } previous && DropDownMenuSession.Owns(previous, this)) { CloseMenu(); return; }
+        if (!IsEnabled || DropDownContextMenu is not { } menu) { IsChecked = false; return; }
+        try
+        {
+            DropDownMenuSession.Open(menu, this, () => ReferenceEquals(DropDownContextMenu, menu),
+                () => DropDownContextMenuDataContext ?? DataContext, open =>
+                {
+                    if (open) _openMenu = menu;
+                    else if (ReferenceEquals(_openMenu, menu)) _openMenu = null;
+                    IsChecked = _openMenu != null;
+                });
+        }
+        catch { if (_openMenu == null) IsChecked = false; throw; }
     }
-    private void MenuClosed(object? sender, object args)
-    {
-        if (_openMenu is not { } menu) return;
-        _openMenu = null; menu.Closed -= MenuClosed; MenuContext.Clear(menu); IsChecked = false;
-    }
-    private void CloseMenu() { var menu = _openMenu; if (menu == null) return; MenuClosed(menu, EventArgs.Empty); menu.Hide(); }
+    private void UpdateMenuContext() => DropDownMenuSession.UpdateContext(_openMenu, this);
+    private void CloseMenu() => DropDownMenuSession.Close(_openMenu, this);
 }
 
 public class DropDownControlArea : UserControl
 {
-    public static readonly DependencyProperty DropDownContextMenuProperty = DependencyProperty.Register(nameof(DropDownContextMenu), typeof(MenuFlyout), typeof(DropDownControlArea), new PropertyMetadata(null));
-    public static readonly DependencyProperty DropDownContextMenuDataContextProperty = DependencyProperty.Register(nameof(DropDownContextMenuDataContext), typeof(object), typeof(DropDownControlArea), new PropertyMetadata(null));
+    public static readonly DependencyProperty DropDownContextMenuProperty = DependencyProperty.Register(nameof(DropDownContextMenu), typeof(MenuFlyout), typeof(DropDownControlArea), new PropertyMetadata(null, (d, _) => ((DropDownControlArea)d).CloseMenu()));
+    public static readonly DependencyProperty DropDownContextMenuDataContextProperty = DependencyProperty.Register(nameof(DropDownContextMenuDataContext), typeof(object), typeof(DropDownControlArea), new PropertyMetadata(null, (d, _) => ((DropDownControlArea)d).UpdateMenuContext()));
     public MenuFlyout? DropDownContextMenu { get => (MenuFlyout?)GetValue(DropDownContextMenuProperty); set => SetValue(DropDownContextMenuProperty, value); }
     public object? DropDownContextMenuDataContext { get => GetValue(DropDownContextMenuDataContextProperty); set => SetValue(DropDownContextMenuDataContextProperty, value); }
     private MenuFlyout? _openMenu;
-    public DropDownControlArea() => Unloaded += (_, _) => CloseMenu();
-    private void Closed(object? sender, object args)
+    private uint? _rightPointer;
+    private bool _rightVeto, _releaseSeen;
+    private long _inputVersion;
+
+    public DropDownControlArea()
     {
-        if (_openMenu is not { } menu) return;
-        _openMenu = null; menu.Closed -= Closed; MenuContext.Clear(menu);
+        AddHandler(PointerPressedEvent, new PointerEventHandler(RightPressed), false);
+        AddHandler(PointerReleasedEvent, new PointerEventHandler(RightReleased), true);
+        PointerCanceled += (_, _) => CancelInput();
+        Unloaded += (_, _) => { CancelInput(); CloseMenu(); };
+        IsEnabledChanged += (_, _) => { if (!IsEnabled) { CancelInput(); CloseMenu(); } };
+        DataContextChanged += (_, _) => UpdateMenuContext();
     }
-    private void CloseMenu() { var menu = _openMenu; if (menu == null) return; Closed(menu, EventArgs.Empty); menu.Hide(); }
+
+    /// <summary>Control-local stage over the original native right-button press.</summary>
+    protected virtual void OnMouseRightButtonDown(DockMouseButtonEventArgs e) { }
+
+    /// <summary>Override before opening. Setting Handled suppresses the default menu.</summary>
+    protected virtual void OnPreviewMouseRightButtonUp(DockMouseButtonEventArgs e)
+    {
+        if (e.Handled || !IsEnabled || DropDownContextMenu == null) return;
+        OpenMenu(e.GetPosition(this));
+        e.Handled = true;
+    }
+
+    private void RightPressed(object sender, PointerRoutedEventArgs e)
+    {
+        if (!IsEnabled || !e.GetCurrentPoint(this).Properties.IsRightButtonPressed) return;
+        _rightPointer = e.Pointer.PointerId; _rightVeto = false; _releaseSeen = false; _inputVersion++;
+        var args = new DockMouseButtonEventArgs(e, this, DockMouseButton.Right, true);
+        try { OnMouseRightButtonDown(args); }
+        catch { CancelInput(); throw; }
+        finally { _rightVeto |= args.Handled; args.Complete(); }
+    }
+
+    private void RightReleased(object sender, PointerRoutedEventArgs e)
+    {
+        if (_rightPointer != e.Pointer.PointerId || e.GetCurrentPoint(this).Properties.IsRightButtonPressed) return;
+        _rightPointer = null; _releaseSeen = true;
+        var args = new DockMouseButtonEventArgs(e, this, DockMouseButton.Right, false) { Handled = _rightVeto || e.Handled };
+        try { if (IsEnabled) OnPreviewMouseRightButtonUp(args); }
+        catch { CancelInput(); throw; }
+        finally { _rightVeto |= args.Handled; args.Complete(); }
+    }
+
     protected override void OnRightTapped(RightTappedRoutedEventArgs e)
     {
         base.OnRightTapped(e);
-        if (e.Handled || DropDownContextMenu is not { } menu) return;
-        CloseMenu(); MenuContext.Apply(menu, DropDownContextMenuDataContext ?? DataContext);
-        _openMenu = menu; menu.Closed += Closed;
-        try { menu.ShowAt(this, new FlyoutShowOptions { Position = e.GetPosition(this) }); e.Handled = true; }
-        catch { Closed(menu, EventArgs.Empty); throw; }
+        if (e.Handled || !IsEnabled || DropDownContextMenu == null) return;
+        if (e.PointerDeviceType == Microsoft.UI.Input.PointerDeviceType.Mouse && (_rightPointer != null || _releaseSeen))
+        {
+            // Mouse input is committed by the release stage, regardless of whether
+            // the platform delivers RightTapped before or after PointerReleased.
+            e.Handled = true;
+            return;
+        }
+        var generation = ++_inputVersion;
+        var root = XamlRoot; var position = e.GetPosition(this);
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            if (generation == _inputVersion && IsLoaded && IsEnabled && ReferenceEquals(root, XamlRoot)) OpenMenu(position);
+        });
+        e.Handled = true;
     }
+
+    protected override void OnKeyDown(KeyRoutedEventArgs e)
+    {
+        base.OnKeyDown(e);
+        if (!e.Handled && IsEnabled && DropDownContextMenu != null &&
+            (e.Key == VirtualKey.Application || e.Key == VirtualKey.F10 && InputState.ShiftDown))
+        { OpenMenu(null); e.Handled = true; }
+    }
+
+    private void CancelInput() { _rightPointer = null; _rightVeto = _releaseSeen = true; _inputVersion++; }
+    private void OpenMenu(Point? point)
+    {
+        if (!IsEnabled || DropDownContextMenu is not { } menu) return;
+        DropDownMenuSession.Open(menu, this, () => ReferenceEquals(DropDownContextMenu, menu),
+            () => DropDownContextMenuDataContext ?? DataContext, open =>
+            {
+                if (open) _openMenu = menu;
+                else if (ReferenceEquals(_openMenu, menu)) _openMenu = null;
+            }, point);
+    }
+    private void UpdateMenuContext() => DropDownMenuSession.UpdateContext(_openMenu, this);
+    private void CloseMenu() => DropDownMenuSession.Close(_openMenu, this);
 }
 
 /// <summary>Flyout container with independent data-source and container extension points.</summary>
