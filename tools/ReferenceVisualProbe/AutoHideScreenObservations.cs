@@ -15,6 +15,7 @@ using Xceed.Wpf.AvalonDock;
 using Xceed.Wpf.AvalonDock.Controls;
 using Xceed.Wpf.AvalonDock.Layout;
 using Point = System.Windows.Point;
+using PixelFormat = System.Drawing.Imaging.PixelFormat;
 
 internal static class AutoHideScreenObservations
 {
