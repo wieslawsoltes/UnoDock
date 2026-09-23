@@ -18,7 +18,6 @@ public partial class App : Application
         if (Environment.GetEnvironmentVariable("UNODOCK_SELFTEST") == "1")
             gallery.Loaded += async (_, _) =>
             {
-                // Loaded may be delivered again when a host is reattached.
                 if (_selfTestStarted) return;
                 _selfTestStarted = true;
                 var exitCode = 2;
@@ -27,7 +26,9 @@ public partial class App : Application
                     await Task.Delay(300);
                     var output = Environment.GetEnvironmentVariable("UNODOCK_TEST_RESULTS") ?? "artifacts/test-results";
                     var suite = Environment.GetEnvironmentVariable("UNODOCK_TEST_SUITE");
-                    if (suite == "menu-quality")
+                    if (suite == "dropdown-quality")
+                        exitCode = await Testing.DropDownQualityTests.Run(output);
+                    else if (suite == "menu-quality")
                         exitCode = await Testing.MenuQualityTests.Run(gallery.Dock, output);
                     else if (suite == "menu-context-lifetime")
                         exitCode = await Testing.MenuContextLifetimeTests.Run(output);
@@ -56,6 +57,7 @@ public partial class App : Application
                         exitCode |= await Testing.AutoHideQualityTests.Run(gallery.Dock, output);
                         exitCode |= await Testing.MenuQualityTests.Run(gallery.Dock, output);
                         exitCode |= await Testing.MenuContextLifetimeTests.Run(output);
+                        exitCode |= await Testing.DropDownQualityTests.Run(output);
                     }
                     else if (string.IsNullOrEmpty(suite) || suite == "all")
                     {
@@ -76,14 +78,13 @@ public partial class App : Application
                         exitCode |= await Testing.AutoHideQualityTests.Run(gallery.Dock, output);
                         exitCode |= await Testing.MenuQualityTests.Run(gallery.Dock, output);
                         exitCode |= await Testing.MenuContextLifetimeTests.Run(output);
+                        exitCode |= await Testing.DropDownQualityTests.Run(output);
                     }
                     else throw new ArgumentException("Unknown UNODOCK_TEST_SUITE: " + suite);
                 }
                 catch (Exception e) { exitCode = 2; Console.Error.WriteLine(e); }
                 finally
                 {
-                    // Let native render loops unwind; Environment.Exit can tear down
-                    // Skia/X11 while a render callback still owns native resources.
                     Environment.ExitCode = exitCode;
                     _window.Close();
                     Exit();
