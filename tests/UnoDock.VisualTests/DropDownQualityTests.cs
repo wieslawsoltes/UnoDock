@@ -265,6 +265,7 @@ public static class DropDownQualityTests
             });
         }
         DropDownTransitionTests.Register(tests, root, window);
+        DropDownKeyboardTests.Register(tests, root, window);
         try { return await tests.Run(output, "dropdown-quality"); }
         finally { window.Close(); }
     }

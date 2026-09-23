@@ -143,9 +143,7 @@ public class DropDownControlArea : UserControl
         if (e.Handled) return;
         if (e.Key == Windows.System.VirtualKey.Escape && _session.IsRequested)
         { _session.Close(); e.Handled = true; return; }
-        if (e.Key == Windows.System.VirtualKey.Application ||
-            (e.Key == Windows.System.VirtualKey.F10 &&
-             (InputKeyboardSource.GetKeyStateForCurrentThread(Windows.System.VirtualKey.Shift) & Windows.UI.Core.CoreVirtualKeyStates.Down) != 0))
+        if (DropDownKeyboard.IsContextRequest(this, e))
         { _session.Open(); if (_session.IsRequested) e.Handled = true; }
     }
 }

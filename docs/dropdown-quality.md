@@ -60,6 +60,8 @@ PointerMoved during a chord are included. The corresponding mouse RightTapped an
 ContextRequested paths cannot bypass the right-release veto. Touch/pen retain native
 context-request fallback paths, but device acceptance is separate.
 
+The pinned X11 host reports XK_Menu as VirtualKey.Menu, unlike its LeftMenu/RightMenu Alt keys. A host-checked adapter recognizes that distinction; native tests verify both Alt keys remain inert.
+
 The context-menu key and Shift+F10 are supported through keyboard and native
 ContextRequested paths; Escape dismisses the opening. These are control-local
 compatibility stages, not a fabricated WPF tunnel. The mouse methods are virtual
@@ -78,7 +80,7 @@ lifecycle. This adds interaction coverage, not new pixel-equivalent screenshot e
 
 DropDownQualityTests and DropDownTransitionTests run inside the real Uno gallery on
 Linux and the Windows Skia host. The scheduled suite contains 62 common UI cases and
-three opt-in Linux XTEST cases. Coverage includes context ownership and reentrancy,
+six opt-in Linux XTEST cases. Coverage includes context ownership and reentrancy,
 preparation/opening callbacks, failure cleanup, shared-menu transfer, repeated opening,
 disable/unload/reattachment, native close vetoes, cross-menu replacement, stale queued
 requests, source-created rows, explicit menu contexts, checked-state rejection and
