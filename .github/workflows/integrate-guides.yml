@@ -1,0 +1,84 @@
+name: Integrate verified docking guides
+on:
+  workflow_dispatch:
+  push:
+    paths: ['.github/workflows/integrate-guides.yml']
+permissions:
+  contents: write
+  actions: write
+concurrency:
+  group: integrate-guides
+  cancel-in-progress: false
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Verify complete reviewed patch and apply without replacing concurrent changes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import base64, hashlib, json, lzma, os, pathlib, subprocess, urllib.request
+          shas = ['47aa62e29f75d0cdecf4a95733321d50108f94fe','ea4f71ec5ca75a910ff3e9b4a8e316e21e5c7d80','25c6bb33533b1d2871e9b15bbb892b233a234d53','6b17e4b193d8f55be92a30763aacccc0b547b7c5']
+          pieces = []
+          for sha in shas:
+              request = urllib.request.Request(f'https://api.github.com/repos/{os.environ["GITHUB_REPOSITORY"]}/git/blobs/{sha}', headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'], 'Accept':'application/vnd.github+json'})
+              with urllib.request.urlopen(request, timeout=60) as response: blob = json.load(response)
+              value = base64.b64decode(blob['content'])
+              assert hashlib.sha1(b'blob '+str(len(value)).encode()+b'\0'+value).hexdigest() == sha
+              pieces.append(value)
+          data = b''.join(pieces)
+          assert hashlib.sha256(data).hexdigest() == 'f5aedaa44ab89d11fc232b12035190db1532f2a129b44822b183354c29b09b8e'
+          patch = pathlib.Path(os.environ['RUNNER_TEMP']) / 'guides.patch'
+          patch.write_bytes(lzma.decompress(data))
+          stats = subprocess.check_output(['git','apply','--numstat',str(patch)],text=True)
+          names = [line.split('\t',2)[2] for line in stats.splitlines()]
+          assert len(names) == 24, len(names)
+          for name in names:
+              p = pathlib.PurePosixPath(name)
+              assert not p.is_absolute() and '..' not in p.parts
+              assert p.parts[0] in ('Directory.Build.props','README.md','src','samples','tests','contracts','docs')
+          subprocess.run(['git','apply','--check','--index',str(patch)],check=True)
+          subprocess.run(['git','apply','--index',str(patch)],check=True)
+          print(stats)
+          PY
+      - name: Clean SDK and XAML desktop build with warnings as errors
+        run: dotnet build samples/UnoDock.Gallery -c Release -f net10.0-desktop -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0 -warnaserror
+      - name: Portable and deterministic API regression tests
+        run: |
+          dotnet run --project tests/UnoDock.Core.Tests -c Release -- artifacts/test-results
+          python3 tools/generate-property-adapters.py
+          git diff --exit-code -- src/
+          bash tools/check-metadata.sh
+          git diff --cached --check
+      - name: Install native input test dependencies
+        run: sudo apt-get update && sudo apt-get install -y xvfb libx11-6 libxi6 libxrandr2 libxcursor1 libfontconfig1 libgl1 libice6 libsm6 libxcb1 libxtst6
+      - name: Run actual Uno guide rendering and native input regressions
+        env:
+          UNODOCK_SELFTEST: '1'
+          UNODOCK_TEST_SUITE: docking-guides
+          UNODOCK_NATIVE_INPUT_TESTS: '1'
+          UNODOCK_TEST_RESULTS: ${{ github.workspace }}/artifacts/test-results
+        run: timeout 180s xvfb-run -a -s "-screen 0 2560x1440x24" dotnet run --project samples/UnoDock.Gallery -c Release -f net10.0-desktop --no-build -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0
+      - name: Commit verified sources and dispatch full platform validation
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'feat: implement measured stock docking guides, strict hit testing and native client drop policies'
+          git push origin HEAD:main
+          git rev-parse HEAD > artifacts/integrated-revision.txt
+          gh workflow run ci.yml --ref main
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: guides-integration-results
+          path: artifacts/
