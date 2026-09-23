@@ -34,13 +34,31 @@ internal readonly record struct DockGuidePalette(Brush Background, Brush Border,
     };
 }
 
-internal sealed class DockGuideVisual : Border
+// Native WinUI seals Border. Both targets use the same composed visual tree so
+// generic Uno runtime tests exercise the arrangement used by the native package.
+internal abstract class DockGuideContainer : Panel
+{
+    protected Border Frame { get; } = new();
+    protected DockGuideContainer() => Children.Add(Frame);
+    protected override Size MeasureOverride(Size availableSize)
+    {
+        Frame.Measure(availableSize);
+        return Frame.DesiredSize;
+    }
+    protected override Size ArrangeOverride(Size finalSize)
+    {
+        Frame.Arrange(new Rect(0, 0, finalSize.Width, finalSize.Height));
+        return finalSize;
+    }
+}
+
+internal sealed class DockGuideVisual : DockGuideContainer
 {
     private readonly Border _pane, _selection, _title;
     private readonly Path _detail = new() { StrokeThickness = 1.1, Stretch = Stretch.None };
     internal DockGuideVisual(DropTargetType type, DockPosition position)
     {
-        Name = "Guide_" + type; BorderThickness = new(1); CornerRadius = new(0); IsHitTestVisible = false;
+        Name = "Guide_" + type; Frame.BorderThickness = new(1); Frame.CornerRadius = new(0); IsHitTestVisible = false;
         Canvas.SetZIndex(this, 2); DockVisuals.SetName(this, "Docking target: " + type);
         var drawing = new Canvas { Width = 30, Height = 30, IsHitTestVisible = false };
         _pane = new Border { Width = 22, Height = 22, BorderThickness = new(1.2), CornerRadius = new(.5) };
@@ -78,18 +96,18 @@ internal sealed class DockGuideVisual : Border
             Figure(false, new(15, 8), new(15, 24));
         else Figure(false, new(6, 15), new(24, 15));
         _detail.Data = geometry; drawing.Children.Add(_detail);
-        Child = new Viewbox { Child = drawing, Stretch = Stretch.Fill };
+        Frame.Child = new Viewbox { Child = drawing, Stretch = Stretch.Fill };
     }
     internal void Paint(DockGuidePalette p, bool selected, bool joined)
     {
-        Background = selected ? p.Selection : joined ? DockChrome.Transparent : p.Background;
-        BorderBrush = selected ? p.Ink : joined ? DockChrome.Transparent : p.Border;
+        Frame.Background = selected ? p.Selection : joined ? DockChrome.Transparent : p.Background;
+        Frame.BorderBrush = selected ? p.Ink : joined ? DockChrome.Transparent : p.Border;
         _pane.BorderBrush = p.Ink; _pane.Background = p.Window; _selection.Background = p.Fill;
         _title.Background = p.Title; _detail.Stroke = _detail.Fill = p.Ink;
     }
 }
 
-internal sealed class DockGuideBackplate : Border
+internal sealed class DockGuideBackplate : DockGuideContainer
 {
     private readonly Path _shape;
     internal DockGuideBackplate()
@@ -100,7 +118,7 @@ internal sealed class DockGuideBackplate : Border
         var f = new PathFigure { StartPoint = points[0], IsClosed = true, IsFilled = true };
         foreach (var point in points.Skip(1)) f.Segments.Add(new LineSegment { Point = point });
         _shape = new Path { Data = new PathGeometry { Figures = { f } }, StrokeThickness = .8, Stretch = Stretch.Fill };
-        Child = _shape;
+        Frame.Child = _shape;
     }
     internal void Paint(DockGuidePalette p) { _shape.Fill = p.Background; _shape.Stroke = p.Border; }
 }
