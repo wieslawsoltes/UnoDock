@@ -44,6 +44,7 @@ internal static class Program
                         Console.WriteLine("Captured public reference scene " + scenario);
                     }
                     AutoHideWindowObservations.Run(manager, args[0]);
+                    AutoHideScreenObservations.Run(manager, args[0]);
                     SplitterObservations.Run(manager, args[0]);
                     NavigatorObservations.Run(manager, window, args[0]);
                     OverlayObservations.Run(manager, window, args[0]);
