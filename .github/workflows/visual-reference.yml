@@ -64,6 +64,11 @@ jobs:
             @{ file = $name; sha256 = $first.ToLowerInvariant(); byteIdentical = $true } | ConvertTo-Json | Set-Content "artifacts/reference-visuals/$kind-reproducibility.json"
           }
           $results | ConvertTo-Json | Set-Content artifacts/reference-visuals/guide-reproducibility.json
+          $name = 'menu-observations.xml'
+          $first = (Get-FileHash "artifacts/reference-visuals/$name" -Algorithm SHA256).Hash
+          $second = (Get-FileHash "$repeat/$name" -Algorithm SHA256).Hash
+          if ($first -ne $second) { throw 'Non-deterministic public menu observations' }
+          @{ file = $name; sha256 = $first.ToLowerInvariant(); byteIdentical = $true } | ConvertTo-Json | Set-Content artifacts/reference-visuals/menu-reproducibility.json
           git rev-parse HEAD > artifacts/reference-visuals/probe-revision.txt
           Copy-Item contracts/reference.json artifacts/reference-visuals/
       - name: Delete isolated original code and binaries
