@@ -6,13 +6,24 @@
 Independent AvalonDock-style docking for **Uno Platform 6.7**, retaining familiar
 `Xceed.Wpf.AvalonDock` namespaces while using Uno/WinUI controls.
 
-**Version: 0.1.0-preview.12. Full API, behavioral and visual parity is not verified.**
+**Version: 0.1.0-preview.13. Full API, behavioral and visual parity is not verified.**
 The target is the pinned public AvalonDock repository and stock presentation, not
 separately licensed commercial themes. Framework mappings require source/XAML migration;
 this is not binary compatibility with WPF. The independent implementation is MIT-licensed
 and is not affiliated with or endorsed by Xceed or Uno Platform.
 
-## Current continuation: compact menus and safe context lifetimes
+## Preview 13: dropdown ownership and native input
+
+Dropdown buttons and context areas now serialize opening, context assignment and
+cleanup across application callbacks. Shared-menu handoff and immediate reopening
+wait for native Closed dispatch to finish, including replacement menus in the same
+UI thread. Native closing vetoes retain the current context and checked state.
+Protected right-button hooks, keyboard/native context requests, and retained row
+contexts run through the same lifecycle. The **Dropdown contracts** laboratory is
+available from **Menu quality**. See [implementation and acceptance boundaries](docs/dropdown-quality.md).
+Full parity remains unverified; consult actual CI results for the consumed revision.
+
+## Included: compact menus and safe context lifetimes
 
 Default document/tool menus match ten original public observations of command order,
 labels, enabled/collapsed states and 22-DIP rows. They retain real native menu items,

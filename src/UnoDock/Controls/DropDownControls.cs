@@ -71,6 +71,17 @@ public class DropDownControlArea : UserControl
         AddHandler(PointerPressedEvent, new PointerEventHandler(RightPressed), true);
         AddHandler(PointerReleasedEvent, new PointerEventHandler(RightReleased), true);
         AddHandler(PointerMovedEvent, new PointerEventHandler(ButtonTransition), true);
+        ContextRequested += (_, e) =>
+        {
+            if (e.Handled || !IsEnabled) return;
+            if (e.TryGetPosition(this, out var position))
+            {
+                if (_suppressMouseRightTap) { e.Handled = true; return; }
+                _session.Open(position);
+            }
+            else _session.Open();
+            if (_session.IsRequested) e.Handled = true;
+        };
         PointerCanceled += (_, _) => ResetPointer();
         PointerCaptureLost += (_, e) => { if (ReferenceEquals(e.OriginalSource, this)) ResetPointer(); };
     }

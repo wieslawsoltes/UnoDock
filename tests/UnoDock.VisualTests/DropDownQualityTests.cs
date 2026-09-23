@@ -13,6 +13,9 @@ public static class DropDownQualityTests
     private sealed class Area : DropDownControlArea
     {
         internal int Downs, Ups;
+        internal string LastKey = "none";
+        protected override void OnKeyDown(KeyRoutedEventArgs e)
+        { LastKey = e.Key.ToString(); base.OnKeyDown(e); }
         internal bool Veto;
         protected override void OnMouseRightButtonDown(DockMouseButtonEventArgs e)
         { Downs++; Check.Equal(DockMouseButton.Right, e.ChangedButton); base.OnMouseRightButtonDown(e); }
@@ -248,14 +251,20 @@ public static class DropDownQualityTests
                 var t = new Trigger(true); root.Children.Add(t.View);
                 try
                 {
-                    await Wait(() => t.View.IsLoaded); window.Activate(); t.View.Focus(FocusState.Keyboard); await Task.Delay(80);
+                    await Wait(() => t.View.IsLoaded); window.Activate(); root.UpdateLayout(); await Task.Delay(80);
+                    Check.True(t.View.Focus(FocusState.Keyboard), "Context area refused keyboard focus.");
+                    await Wait(() => ReferenceEquals(FocusManager.GetFocusedElement(t.View.XamlRoot!), t.View));
                     t.Menu = NewMenu(out _); using var input = new X11TestInput(); input.KeyPress(0xff67);
-                    await Wait(() => t.Menu.IsOpen); input.Escape(); await Wait(() => !t.Menu.IsOpen);
+                    try { await Wait(() => t.Menu.IsOpen); }
+                    catch (Exception error) { throw new InvalidOperationException("Application key did not open menu. Last native key: " + t.Area!.LastKey, error); }
+                    await Task.Delay(80); input.Escape();
+                    await Wait(() => !t.Menu.IsOpen);
                     Check.Equal(0, t.Area!.Downs); Check.Equal(0, t.Area.Ups);
                 }
                 finally { t.Close(); root.Children.Remove(t.View); }
             });
         }
+        DropDownTransitionTests.Register(tests, root, window);
         try { return await tests.Run(output, "dropdown-quality"); }
         finally { window.Close(); }
     }

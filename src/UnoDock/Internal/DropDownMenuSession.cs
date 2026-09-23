@@ -186,7 +186,7 @@ internal sealed class DropDownMenuSession
             active.Subscribe();
         }
         var opening = _active!;
-        var context = _context();
+        var context = menu is ContextMenuEx { MenuDataContext: { } explicitContext } ? explicitContext : _context();
         if (!opening.ContextAssigned || !ReferenceEquals(opening.Context, context))
         {
             // Own the scope before its assignment invokes application callbacks.
