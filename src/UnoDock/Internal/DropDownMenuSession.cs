@@ -3,15 +3,23 @@ using Xceed.Wpf.AvalonDock.Controls;
 
 namespace Xceed.Wpf.AvalonDock.Internal;
 
-/// <summary>One UI-thread opening owned by a dropdown trigger. Context assignment,
-/// checked state and native Show/Hide are all application-callback boundaries.</summary>
+/// <summary>Serializes dropdown requests around application and native callbacks.
+/// No original implementation code or private platform state is accessed.</summary>
 internal sealed class DropDownMenuSession
 {
-    private sealed class Slot
+    private sealed class CloseQueue
     {
-        internal WeakReference<DropDownMenuSession>? Owner, WaitingOwner;
+        internal readonly HashSet<Slot> Closing = [];
+        internal WeakReference<DropDownMenuSession>? WaitingOwner;
+        internal WeakReference<MenuFlyout>? WaitingMenu;
         internal long WaitingRevision;
-        internal bool Closing, ResumeQueued;
+    }
+    private sealed class Slot(CloseQueue queue)
+    {
+        internal readonly CloseQueue Queue = queue;
+        internal WeakReference<DropDownMenuSession>? Owner;
+        internal FlyoutBaseClosingEventArgs? ClosingArguments;
+        internal bool ResumeQueued;
     }
     private sealed class Opening(MenuFlyout menu, XamlRoot root)
     {
@@ -20,15 +28,22 @@ internal sealed class DropDownMenuSession
         internal bool ContextAssigned, ShowStarted, WasShown;
         internal object? Context;
         internal EventHandler<object>? Preparing, Opened, Closed;
+        internal void Subscribe()
+        { Menu.Opening += Preparing; Menu.Opened += Opened; Menu.Closed += Closed; }
+        internal void Unsubscribe()
+        { Menu.Opening -= Preparing; Menu.Opened -= Opened; Menu.Closed -= Closed; }
     }
     private static readonly ConditionalWeakTable<MenuFlyout, Slot> Owners = new();
+    // Menu dismissal can close the next menu in the native thread's popup chain.
+    // Fence different menus as well as repeat openings of the same instance.
+    [ThreadStatic] private static CloseQueue? _threadCloseQueue;
     private readonly Control _owner;
     private readonly Func<MenuFlyout?> _menu;
     private readonly Func<object?> _context;
     private readonly Action<bool> _state;
     private Opening? _active;
     private Point? _position;
-    private bool _wanted, _pending, _draining, _cleaning, _retryQueued;
+    private bool _wanted, _pending, _draining, _cleaning, _releasing, _retryQueued;
     private int _transferRetries;
     private long _revision;
 
@@ -44,14 +59,13 @@ internal sealed class DropDownMenuSession
 
     private static Slot GetSlot(MenuFlyout menu) => Owners.GetValue(menu, key =>
     {
-        var slot = new Slot();
-        // The retained delegate references only its menu and weak owner slots.
-        // Native IsOpen may become false before Closed, and ShowAt may be ignored
-        // until the entire Closed callback returns. Do not rehost inside Closed.
+        var slot = new Slot(_threadCloseQueue ??= new());
+        // Retained delegates reference only their menu and weak ownership slots.
+        key.Closing += (_, args) => slot.ClosingArguments = args;
         key.Closed += (_, _) =>
         {
             if (key.IsOpen) return;
-            slot.Closing = true;
+            slot.Queue.Closing.Add(slot);
             QueueAfterClosed(key, slot);
         };
         return slot;
@@ -62,22 +76,36 @@ internal sealed class DropDownMenuSession
         slot.ResumeQueued = true;
         if (!menu.DispatcherQueue.TryEnqueue(() =>
         {
-            slot.ResumeQueued = false; slot.Closing = false;
-            var pending = slot.WaitingOwner; var revision = slot.WaitingRevision;
-            slot.WaitingOwner = null;
-            if (pending?.TryGetTarget(out var owner) == true && owner._wanted && owner._revision == revision &&
-                ReferenceEquals(owner._menu(), menu)) owner.Request(true);
+            slot.ResumeQueued = false; slot.Queue.Closing.Remove(slot);
+            if (slot.Queue.Closing.Count != 0) return;
+            var queue = slot.Queue;
+            var pending = queue.WaitingOwner; var pendingMenu = queue.WaitingMenu; var revision = queue.WaitingRevision;
+            queue.WaitingOwner = null; queue.WaitingMenu = null;
+            if (pending?.TryGetTarget(out var owner) == true && pendingMenu?.TryGetTarget(out var target) == true &&
+                owner._wanted && owner._revision == revision && ReferenceEquals(owner._menu(), target)) owner.Request(true);
         }))
-        { slot.ResumeQueued = false; slot.Closing = false; slot.WaitingOwner = null; }
+        {
+            slot.ResumeQueued = false; slot.Queue.Closing.Remove(slot);
+            slot.Queue.WaitingOwner = null; slot.Queue.WaitingMenu = null;
+        }
     }
-    private void WaitForClose(Slot slot)
-    { slot.WaitingOwner = new(this); slot.WaitingRevision = _revision; _state(false); }
+    private void WaitForClose(MenuFlyout menu, CloseQueue queue)
+    {
+        if (queue.WaitingOwner?.TryGetTarget(out var previous) == true && !ReferenceEquals(previous, this))
+        {
+            // Superseded waiters own no native opening. Withdraw their intent so
+            // a later DataContext change cannot revive an obsolete request.
+            previous._wanted = false; previous._revision++;
+        }
+        queue.WaitingOwner = new(this); queue.WaitingMenu = new(menu); queue.WaitingRevision = _revision;
+        _state(false);
+    }
 
     private void Request(bool wanted)
     {
         if (_owner.DispatcherQueue is { HasThreadAccess: false })
             throw new InvalidOperationException("Dropdown operations require their owning UI thread.");
-        if (_cleaning) return;
+        if (_cleaning || (_releasing && !wanted && !_wanted)) return;
         _wanted = wanted; _pending = true; _revision++;
         if (_draining) return;
         _draining = true;
@@ -108,26 +136,30 @@ internal sealed class DropDownMenuSession
         var menu = _menu();
         if (!_wanted || !CanOpen || menu == null)
         {
-            _wanted = false; Release();
+            _wanted = false;
+            if (!Release()) return;
             if (revision == _revision) _state(false);
             return;
         }
         if (_active is { } previous && (!ReferenceEquals(previous.Menu, menu) || !ReferenceEquals(previous.Root, _owner.XamlRoot) ||
             (previous.WasShown && !previous.Menu.IsOpen)))
         {
-            Release();
-            if (revision != _revision) return;
+            if (!Release() || revision != _revision) return;
         }
         if (_active == null)
         {
             var slot = GetSlot(menu);
-            if (slot.Closing) { WaitForClose(slot); return; }
+            if (slot.Queue.Closing.Count != 0) { WaitForClose(menu, slot.Queue); return; }
             if (slot.Owner?.TryGetTarget(out var current) == true && !ReferenceEquals(current, this))
             {
                 current.Close();
                 if (revision != _revision) return;
-                if (slot.Closing) { WaitForClose(slot); return; }
-                // A second trigger can arrive while preparation invokes user code.
+                if (current.IsOpen)
+                {
+                    // Native Closing was cancelled; never steal its live context.
+                    _wanted = false; _state(false); return;
+                }
+                if (slot.Queue.Closing.Count != 0) { WaitForClose(menu, slot.Queue); return; }
                 if (slot.Owner?.TryGetTarget(out current) == true && !ReferenceEquals(current, this))
                 { Defer(revision); return; }
             }
@@ -135,9 +167,6 @@ internal sealed class DropDownMenuSession
             _active = active; slot.Owner = new(this);
             active.Preparing = (_, _) =>
             {
-                // The source container generates its rows during Opening. Apply
-                // trigger context to the new rows only in the absence of an
-                // explicit context declared by the menu itself.
                 if (ReferenceEquals(_active, active) && _wanted &&
                     menu is ContextMenuEx { ItemsSource: not null, MenuDataContext: null })
                     MenuContext.Apply(menu, _context());
@@ -154,12 +183,13 @@ internal sealed class DropDownMenuSession
             {
                 if (ReferenceEquals(_active, active) && !menu.IsOpen) Close();
             };
-            menu.Opening += active.Preparing; menu.Opened += active.Opened; menu.Closed += active.Closed;
+            active.Subscribe();
         }
         var opening = _active!;
         var context = _context();
         if (!opening.ContextAssigned || !ReferenceEquals(opening.Context, context))
         {
+            // Own the scope before its assignment invokes application callbacks.
             opening.ContextAssigned = true; opening.Context = context;
             MenuContext.Apply(menu, context);
             if (revision != _revision || !ReferenceEquals(_active, opening)) return;
@@ -189,14 +219,15 @@ internal sealed class DropDownMenuSession
         { _retryQueued = false; _wanted = false; _state(false); }
     }
 
-    private void Release()
+    /// <returns>False when the application vetoed native closing.</returns>
+    private bool Release()
     {
-        if (_active is not { } active) return;
-        _active = null;
+        if (_active is not { } active) return true;
+        _active = null; active.Unsubscribe(); _releasing = true;
         var menu = active.Menu;
-        menu.Opening -= active.Preparing; menu.Opened -= active.Opened; menu.Closed -= active.Closed;
         var slot = GetSlot(menu);
         var owns = slot.Owner?.TryGetTarget(out var owner) == true && ReferenceEquals(owner, this);
+        var retained = false;
         List<Exception>? failures = null;
         void Attempt(Action action)
         { try { action(); } catch (Exception error) { (failures ??= []).Add(error); } }
@@ -205,26 +236,37 @@ internal sealed class DropDownMenuSession
             if (owns)
             {
                 var awaitingNativeClose = active.WasShown || menu.IsOpen;
-                // Gate BEFORE cleanup callbacks can request another owner. Keep
-                // it gated beyond Hide until native Closed has finished dispatch.
-                if (active.ShowStarted) slot.Closing = true;
-                Attempt(() => MenuContext.Clear(menu));
                 if (active.ShowStarted)
                 {
+                    // Hold ownership through native Closing before releasing data.
+                    // A cancelled close retains the exact opening and row scope.
+                    slot.Queue.Closing.Add(slot); slot.ClosingArguments = null;
                     Attempt(menu.Hide);
-                    // A preparation cancelled before actual native showing has
-                    // no Closed event; unwind its callbacks once before retrying.
+                    if (failures == null && menu.IsOpen && slot.ClosingArguments?.Cancel == true)
+                    {
+                        retained = true; _active = active; _wanted = true; active.Subscribe();
+                        QueueAfterClosed(menu, slot); _state(true);
+                        return false;
+                    }
                     if (!awaitingNativeClose && !menu.IsOpen) QueueAfterClosed(menu, slot);
                 }
+                // The shared lease is still held. Nested takeovers cannot clear a
+                // successor's context while these application callbacks execute.
+                Attempt(() => MenuContext.Clear(menu));
             }
             Attempt(() => _state(false));
         }
         finally
         {
-            if (owns && slot.Owner?.TryGetTarget(out owner) == true && ReferenceEquals(owner, this)) slot.Owner = null;
-            active.Context = null;
+            _releasing = false;
+            if (!retained)
+            {
+                if (owns && slot.Owner?.TryGetTarget(out owner) == true && ReferenceEquals(owner, this)) slot.Owner = null;
+                active.Context = null;
+            }
         }
         if (failures?.Count == 1) ExceptionDispatchInfo.Capture(failures[0]).Throw();
         if (failures != null) throw new AggregateException("Dropdown cleanup failed.", failures);
+        return true;
     }
 }
