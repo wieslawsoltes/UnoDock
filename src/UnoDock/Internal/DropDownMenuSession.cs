@@ -242,10 +242,12 @@ internal sealed class DropDownMenuSession
                     // A cancelled close retains the exact opening and row scope.
                     slot.Queue.Closing.Add(slot); slot.ClosingArguments = null;
                     Attempt(menu.Hide);
-                    if (failures == null && menu.IsOpen && slot.ClosingArguments?.Cancel == true)
+                    if (menu.IsOpen && (failures != null || slot.ClosingArguments?.Cancel == true))
                     {
                         retained = true; _active = active; _wanted = true; active.Subscribe();
-                        QueueAfterClosed(menu, slot); _state(true);
+                        QueueAfterClosed(menu, slot); Attempt(() => _state(true));
+                        if (failures?.Count == 1) ExceptionDispatchInfo.Capture(failures[0]).Throw();
+                        if (failures != null) throw new AggregateException("Native closing and state restoration failed.", failures);
                         return false;
                     }
                     if (!awaitingNativeClose && !menu.IsOpen) QueueAfterClosed(menu, slot);

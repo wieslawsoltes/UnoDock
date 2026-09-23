@@ -108,6 +108,31 @@ internal static class DropDownTransitionTests
                 }
                 finally { cancel = false; next.Close(); t.Close(); root.Children.Remove(next.View); }
             });
+            Add("one-shot native closing exception cleans up and permits reopening", async t =>
+            {
+                t.Menu = NewMenu(out var row); t.Context = new object(); var fail = true;
+                t.Menu.Closing += (_, _) => { if (fail) { fail = false; throw new InvalidOperationException("close fault"); } };
+                t.Open(); await Wait(() => t.Menu.IsOpen);
+                Check.Throws<InvalidOperationException>(t.Close);
+                await Wait(() => !t.Menu.IsOpen); t.AssertState(false);
+                Check.Same(DependencyProperty.UnsetValue, row.ReadLocalValue(FrameworkElement.DataContextProperty));
+                t.Open(); await Wait(() => t.Menu.IsOpen);
+            });
+            Add("persistent native closing failures preserve scope and do not poison future openings", async t =>
+            {
+                t.Menu = NewMenu(out var row); var context = new object(); t.Context = context; var fail = true;
+                t.Menu.Closing += (_, _) => { if (fail) throw new InvalidOperationException("persistent close fault"); };
+                try
+                {
+                    t.Open(); await Wait(() => t.Menu.IsOpen);
+                    var error = Check.Throws<AggregateException>(t.Close);
+                    Check.True(error.Flatten().InnerExceptions.Count >= 2);
+                    Check.True(t.Menu.IsOpen); Check.Same(context, row.DataContext); t.AssertState(true);
+                }
+                finally { fail = false; t.Close(); }
+                await Wait(() => !t.Menu.IsOpen);
+                t.Menu = NewMenu(out _); t.Open(); await Wait(() => t.Menu.IsOpen);
+            });
             Add("source-generated menu rows receive and release trigger context", async t =>
             {
                 var row = new MenuFlyoutItem { Text = "Source-owned row" };

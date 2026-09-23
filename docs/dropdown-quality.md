@@ -18,7 +18,7 @@ menus are not populated with temporary trigger contexts. Application row local v
 and bindings remain governed by MenuContext's ownership rules. ContextMenuEx source rows
 are handled after their creation; a non-null explicit MenuDataContext has precedence over
 trigger refreshes. On failure, cleanup attempts both context release and native hiding,
-preserving multiple exceptions instead of discarding the original error.
+preserving multiple exceptions instead of discarding the original error. A failed native Closing callback retains the live scope for cleanup/retry and cannot leave the thread-wide opening queue permanently blocked.
 
 A weak shared-menu registry coordinates transfer between dropdown triggers. Ownership
 is held through native hiding and context cleanup, so a trigger opened by a cleanup
@@ -79,7 +79,7 @@ lifecycle. This adds interaction coverage, not new pixel-equivalent screenshot e
 ## Acceptance
 
 DropDownQualityTests and DropDownTransitionTests run inside the real Uno gallery on
-Linux and the Windows Skia host. The scheduled suite contains 62 common UI cases and
+Linux and the Windows Skia host. The scheduled suite contains 66 common UI cases and
 six opt-in Linux XTEST cases. Coverage includes context ownership and reentrancy,
 preparation/opening callbacks, failure cleanup, shared-menu transfer, repeated opening,
 disable/unload/reattachment, native close vetoes, cross-menu replacement, stale queued
