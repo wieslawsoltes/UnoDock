@@ -6,13 +6,30 @@
 Independent AvalonDock-style docking for **Uno Platform 6.7**, retaining familiar
 `Xceed.Wpf.AvalonDock` namespaces while using Uno/WinUI controls.
 
-**Status: 0.1.0-preview.9. Full AvalonDock compatibility is not yet verified.** API shape,
+**Status: 0.1.0-preview.10. Full AvalonDock compatibility is not yet verified.** API shape,
 behavior, appearance, platform coverage and performance are separate acceptance areas.
 The target is the pinned public repository and its stock theme, not separately licensed
 commercial themes. The independent implementation is MIT-licensed and is not affiliated
 with or endorsed by Xceed or Uno Platform.
 
-## Preview 9
+## Preview 10
+
+Splitters now show a moving translucent preview without resizing the editors or writing
+model lengths until commit. Star weights and mixed pixel/star units match the observed
+two-pane reference protocol. Escape, capture loss, disabling, unloading, root replacement
+and competing edits cancel safely. Orientation-aware keyboard movement follows physical
+Left/Right under RTL. The public drag events, IsDragging and CancelDrag are forwarded
+through a composed native Thumb with generation-checked completion.
+
+The **Splitter quality** laboratory demonstrates deferred sizing, constraints, RTL,
+orientation, star/pixel modes and XML persistence. Sixty Linux / 53 Windows tests cover
+these contracts, including sixteen public original-protocol replays, seven actual XTEST
+input sequences and four screenshots. The original ignores a synthetic cancelled drag
+completion; safe cancellation is an intentional difference, not a full-equivalence claim.
+See [splitter implementation](docs/splitter-quality.md) and
+[preview-10 validation scope](docs/validation-preview10.md).
+
+## Preview 9 docking guides (included)
 
 The drag overlay now displays independently rendered stock-style docking glyphs:
 an 88-DIP pane compass and rectangular workspace-edge guides measured from original
@@ -188,8 +205,8 @@ UNODOCK_SELFTEST=1 dotnet run --project samples/UnoDock.Gallery -c Release \
   -p:UnoDockLibraryFrameworks=net10.0
 ```
 
-The configured test matrix has **2,072 core/Linux C# cases**, a **190-case Windows
-subset**, and **23 Python comparator cases**. Linux enables 25 native XTEST scenarios
+The configured test matrix has **2,132 core/Linux C# cases**, a **243-case Windows
+subset**, and **23 Python comparator cases**. Linux enables 32 native XTEST scenarios
 in CI. Platform totals overlap. JSON/JUnit results and workflow conclusions, not the
 matrix size alone, establish what passed for a particular revision.
 

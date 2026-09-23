@@ -27,7 +27,9 @@ public partial class App : Application
                     await Task.Delay(300);
                     var output = Environment.GetEnvironmentVariable("UNODOCK_TEST_RESULTS") ?? "artifacts/test-results";
                     var suite = Environment.GetEnvironmentVariable("UNODOCK_TEST_SUITE");
-                    if (suite == "docking-guides")
+                    if (suite == "splitter-quality")
+                        exitCode = await Testing.SplitterQualityTests.Run(gallery.Dock, output);
+                    else if (suite == "docking-guides")
                         exitCode = await Testing.DockGuideTests.Run(gallery.Dock, output);
                     else if (suite == "window-lifecycle")
                         exitCode = await Testing.WindowLifecycleTests.Run(gallery.Dock, output);
@@ -44,6 +46,7 @@ public partial class App : Application
                         exitCode |= await Testing.VisualParityTests.Run(gallery.Dock, output);
                         exitCode |= await Testing.NavigatorQualityTests.Run(gallery.Dock, output);
                         exitCode |= await Testing.DockGuideTests.Run(gallery.Dock, output);
+                        exitCode |= await Testing.SplitterQualityTests.Run(gallery.Dock, output);
                     }
                     else if (string.IsNullOrEmpty(suite) || suite == "all")
                     {
@@ -60,6 +63,7 @@ public partial class App : Application
                         exitCode |= await Testing.VisualParityTests.Run(gallery.Dock, output);
                         exitCode |= await Testing.NavigatorQualityTests.Run(gallery.Dock, output);
                         exitCode |= await Testing.DockGuideTests.Run(gallery.Dock, output);
+                        exitCode |= await Testing.SplitterQualityTests.Run(gallery.Dock, output);
                     }
                     else throw new ArgumentException("Unknown UNODOCK_TEST_SUITE: " + suite);
                 }

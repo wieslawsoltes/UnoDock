@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "referenceRevision": "2c71faba5eecc1b6ae6cd3d269408e0df37715d8",
+  "probeRevision": "e206e9eece2bb49a61f88d1f71370b001fbc7c5f",
+  "runId": 35835395390,
+  "artifactId": 10739500300,
+  "artifactSha256": "d9a998416bca8e32dc861a2894da0da11cee2e92803f01c6bca2372a0e5fd191",
+  "observationSha256": "3b5c0716fd2d6367d3c589a374033865e0d057c1b9f0eb30133fb05c54c53751",
+  "input": "Public routed drag events; not native pointer acceptance. 40 then 15; completed reports 55. Original ignores synthetic Canceled flag."
+}

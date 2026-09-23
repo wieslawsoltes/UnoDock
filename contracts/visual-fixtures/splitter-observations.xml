@@ -1,0 +1,227 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<SplitterObservations input="public-routed-drag-events-not-pointer-acceptance">
+  <Scenario orientation="Horizontal" units="star-star" rtl="false" cancel="false" dragOpacity="0.5" dragBrush="#FF000000">
+    <State phase="initial" before="1" beforeUnit="Star" after="2" afterUnit="Star" beforePixels="331.33333333333337" afterPixels="662.66666666666663" />
+    <State phase="started" before="1" beforeUnit="Star" after="2" afterUnit="Star" beforePixels="331.33333333333337" afterPixels="662.66666666666663" />
+    <State phase="delta40" before="1" beforeUnit="Star" after="2" afterUnit="Star" beforePixels="331.33333333333337" afterPixels="662.66666666666663" />
+    <State phase="delta15" before="1" beforeUnit="Star" after="2" afterUnit="Star" beforePixels="331.33333333333337" afterPixels="662.66666666666663" />
+    <State phase="completed" before="1.0452716297786722" beforeUnit="Star" after="1.9547283702213276" afterUnit="Star" beforePixels="346.33333333333337" afterPixels="647.66666666666663" />
+  </Scenario>
+  <Scenario orientation="Horizontal" units="star-star" rtl="false" cancel="true" dragOpacity="0.5" dragBrush="#FF000000">
+    <State phase="initial" before="1" beforeUnit="Star" after="2" afterUnit="Star" beforePixels="331.33333333333337" afterPixels="662.66666666666663" />
+    <State phase="started" before="1" beforeUnit="Star" after="2" afterUnit="Star" beforePixels="331.33333333333337" afterPixels="662.66666666666663" />
+    <State phase="delta40" before="1" beforeUnit="Star" after="2" afterUnit="Star" beforePixels="331.33333333333337" afterPixels="662.66666666666663" />
+    <State phase="delta15" before="1" beforeUnit="Star" after="2" afterUnit="Star" beforePixels="331.33333333333337" afterPixels="662.66666666666663" />
+    <State phase="completed" before="1.0452716297786722" beforeUnit="Star" after="1.9547283702213276" afterUnit="Star" beforePixels="346.33333333333337" afterPixels="647.66666666666663" />
+  </Scenario>
+  <Scenario orientation="Horizontal" units="star-star" rtl="true" cancel="false" dragOpacity="0.5" dragBrush="#FF000000">
+    <State phase="initial" before="1" beforeUnit="Star" after="2" afterUnit="Star" beforePixels="331.33333333333337" afterPixels="662.66666666666663" />
+    <State phase="started" before="1" beforeUnit="Star" after="2" afterUnit="Star" beforePixels="331.33333333333337" afterPixels="662.66666666666663" />
+    <State phase="delta40" before="1" beforeUnit="Star" after="2" afterUnit="Star" beforePixels="331.33333333333337" afterPixels="662.66666666666663" />
+    <State phase="delta15" before="1" beforeUnit="Star" after="2" afterUnit="Star" beforePixels="331.33333333333337" afterPixels="662.66666666666663" />
+    <State phase="completed" before="1.0452716297786722" beforeUnit="Star" after="1.9547283702213276" afterUnit="Star" beforePixels="346.33333333333337" afterPixels="647.66666666666663" />
+  </Scenario>
+  <Scenario orientation="Horizontal" units="star-star" rtl="true" cancel="true" dragOpacity="0.5" dragBrush="#FF000000">
+    <State phase="initial" before="1" beforeUnit="Star" after="2" afterUnit="Star" beforePixels="331.33333333333337" afterPixels="662.66666666666663" />
+    <State phase="started" before="1" beforeUnit="Star" after="2" afterUnit="Star" beforePixels="331.33333333333337" afterPixels="662.66666666666663" />
+    <State phase="delta40" before="1" beforeUnit="Star" after="2" afterUnit="Star" beforePixels="331.33333333333337" afterPixels="662.66666666666663" />
+    <State phase="delta15" before="1" beforeUnit="Star" after="2" afterUnit="Star" beforePixels="331.33333333333337" afterPixels="662.66666666666663" />
+    <State phase="completed" before="1.0452716297786722" beforeUnit="Star" after="1.9547283702213276" afterUnit="Star" beforePixels="346.33333333333337" afterPixels="647.66666666666663" />
+  </Scenario>
+  <Scenario orientation="Vertical" units="star-star" rtl="false" cancel="false" dragOpacity="0.5" dragBrush="#FF000000">
+    <State phase="initial" before="1" beforeUnit="Star" after="2" afterUnit="Star" beforePixels="211.33333333333337" afterPixels="422.66666666666663" />
+    <State phase="started" before="1" beforeUnit="Star" after="2" afterUnit="Star" beforePixels="211.33333333333337" afterPixels="422.66666666666663" />
+    <State phase="delta40" before="1" beforeUnit="Star" after="2" afterUnit="Star" beforePixels="211.33333333333337" afterPixels="422.66666666666663" />
+    <State phase="delta15" before="1" beforeUnit="Star" after="2" afterUnit="Star" beforePixels="211.33333333333337" afterPixels="422.66666666666663" />
+    <State phase="completed" before="1.0709779179810728" beforeUnit="Star" after="1.929022082018927" afterUnit="Star" beforePixels="226.33333333333343" afterPixels="407.66666666666657" />
+  </Scenario>
+  <Scenario orientation="Vertical" units="star-star" rtl="false" cancel="true" dragOpacity="0.5" dragBrush="#FF000000">
+    <State phase="initial" before="1" beforeUnit="Star" after="2" afterUnit="Star" beforePixels="211.33333333333337" afterPixels="422.66666666666663" />
+    <State phase="started" before="1" beforeUnit="Star" after="2" afterUnit="Star" beforePixels="211.33333333333337" afterPixels="422.66666666666663" />
+    <State phase="delta40" before="1" beforeUnit="Star" after="2" afterUnit="Star" beforePixels="211.33333333333337" afterPixels="422.66666666666663" />
+    <State phase="delta15" before="1" beforeUnit="Star" after="2" afterUnit="Star" beforePixels="211.33333333333337" afterPixels="422.66666666666663" />
+    <State phase="completed" before="1.0709779179810728" beforeUnit="Star" after="1.929022082018927" afterUnit="Star" beforePixels="226.33333333333343" afterPixels="407.66666666666657" />
+  </Scenario>
+  <Scenario orientation="Vertical" units="star-star" rtl="true" cancel="false" dragOpacity="0.5" dragBrush="#FF000000">
+    <State phase="initial" before="1" beforeUnit="Star" after="2" afterUnit="Star" beforePixels="211.33333333333337" afterPixels="422.66666666666663" />
+    <State phase="started" before="1" beforeUnit="Star" after="2" afterUnit="Star" beforePixels="211.33333333333337" afterPixels="422.66666666666663" />
+    <State phase="delta40" before="1" beforeUnit="Star" after="2" afterUnit="Star" beforePixels="211.33333333333337" afterPixels="422.66666666666663" />
+    <State phase="delta15" before="1" beforeUnit="Star" after="2" afterUnit="Star" beforePixels="211.33333333333337" afterPixels="422.66666666666663" />
+    <State phase="completed" before="1.0709779179810728" beforeUnit="Star" after="1.929022082018927" afterUnit="Star" beforePixels="226.33333333333343" afterPixels="407.66666666666657" />
+  </Scenario>
+  <Scenario orientation="Vertical" units="star-star" rtl="true" cancel="true" dragOpacity="0.5" dragBrush="#FF000000">
+    <State phase="initial" before="1" beforeUnit="Star" after="2" afterUnit="Star" beforePixels="211.33333333333337" afterPixels="422.66666666666663" />
+    <State phase="started" before="1" beforeUnit="Star" after="2" afterUnit="Star" beforePixels="211.33333333333337" afterPixels="422.66666666666663" />
+    <State phase="delta40" before="1" beforeUnit="Star" after="2" afterUnit="Star" beforePixels="211.33333333333337" afterPixels="422.66666666666663" />
+    <State phase="delta15" before="1" beforeUnit="Star" after="2" afterUnit="Star" beforePixels="211.33333333333337" afterPixels="422.66666666666663" />
+    <State phase="completed" before="1.0709779179810728" beforeUnit="Star" after="1.929022082018927" afterUnit="Star" beforePixels="226.33333333333343" afterPixels="407.66666666666657" />
+  </Scenario>
+  <Scenario orientation="Horizontal" units="pixel-star" rtl="false" cancel="false" dragOpacity="0.5" dragBrush="#FF000000">
+    <State phase="initial" before="220" beforeUnit="Pixel" after="2" afterUnit="Star" beforePixels="220" afterPixels="774" />
+    <State phase="started" before="220" beforeUnit="Pixel" after="2" afterUnit="Star" beforePixels="220" afterPixels="774" />
+    <State phase="delta40" before="220" beforeUnit="Pixel" after="2" afterUnit="Star" beforePixels="220" afterPixels="774" />
+    <State phase="delta15" before="220" beforeUnit="Pixel" after="2" afterUnit="Star" beforePixels="220" afterPixels="774" />
+    <State phase="completed" before="235" beforeUnit="Pixel" after="0.76358148893360156" afterUnit="Star" beforePixels="235" afterPixels="759" />
+  </Scenario>
+  <Scenario orientation="Horizontal" units="pixel-star" rtl="false" cancel="true" dragOpacity="0.5" dragBrush="#FF000000">
+    <State phase="initial" before="220" beforeUnit="Pixel" after="2" afterUnit="Star" beforePixels="220" afterPixels="774" />
+    <State phase="started" before="220" beforeUnit="Pixel" after="2" afterUnit="Star" beforePixels="220" afterPixels="774" />
+    <State phase="delta40" before="220" beforeUnit="Pixel" after="2" afterUnit="Star" beforePixels="220" afterPixels="774" />
+    <State phase="delta15" before="220" beforeUnit="Pixel" after="2" afterUnit="Star" beforePixels="220" afterPixels="774" />
+    <State phase="completed" before="235" beforeUnit="Pixel" after="0.76358148893360156" afterUnit="Star" beforePixels="235" afterPixels="759" />
+  </Scenario>
+  <Scenario orientation="Horizontal" units="pixel-star" rtl="true" cancel="false" dragOpacity="0.5" dragBrush="#FF000000">
+    <State phase="initial" before="220" beforeUnit="Pixel" after="2" afterUnit="Star" beforePixels="220" afterPixels="774" />
+    <State phase="started" before="220" beforeUnit="Pixel" after="2" afterUnit="Star" beforePixels="220" afterPixels="774" />
+    <State phase="delta40" before="220" beforeUnit="Pixel" after="2" afterUnit="Star" beforePixels="220" afterPixels="774" />
+    <State phase="delta15" before="220" beforeUnit="Pixel" after="2" afterUnit="Star" beforePixels="220" afterPixels="774" />
+    <State phase="completed" before="235" beforeUnit="Pixel" after="0.76358148893360156" afterUnit="Star" beforePixels="235" afterPixels="759" />
+  </Scenario>
+  <Scenario orientation="Horizontal" units="pixel-star" rtl="true" cancel="true" dragOpacity="0.5" dragBrush="#FF000000">
+    <State phase="initial" before="220" beforeUnit="Pixel" after="2" afterUnit="Star" beforePixels="220" afterPixels="774" />
+    <State phase="started" before="220" beforeUnit="Pixel" after="2" afterUnit="Star" beforePixels="220" afterPixels="774" />
+    <State phase="delta40" before="220" beforeUnit="Pixel" after="2" afterUnit="Star" beforePixels="220" afterPixels="774" />
+    <State phase="delta15" before="220" beforeUnit="Pixel" after="2" afterUnit="Star" beforePixels="220" afterPixels="774" />
+    <State phase="completed" before="235" beforeUnit="Pixel" after="0.76358148893360156" afterUnit="Star" beforePixels="235" afterPixels="759" />
+  </Scenario>
+  <Scenario orientation="Vertical" units="pixel-star" rtl="false" cancel="false" dragOpacity="0.5" dragBrush="#FF000000">
+    <State phase="initial" before="220" beforeUnit="Pixel" after="2" afterUnit="Star" beforePixels="220" afterPixels="414" />
+    <State phase="started" before="220" beforeUnit="Pixel" after="2" afterUnit="Star" beforePixels="220" afterPixels="414" />
+    <State phase="delta40" before="220" beforeUnit="Pixel" after="2" afterUnit="Star" beforePixels="220" afterPixels="414" />
+    <State phase="delta15" before="220" beforeUnit="Pixel" after="2" afterUnit="Star" beforePixels="220" afterPixels="414" />
+    <State phase="completed" before="235" beforeUnit="Pixel" after="0.62933753943217663" afterUnit="Star" beforePixels="235" afterPixels="399" />
+  </Scenario>
+  <Scenario orientation="Vertical" units="pixel-star" rtl="false" cancel="true" dragOpacity="0.5" dragBrush="#FF000000">
+    <State phase="initial" before="220" beforeUnit="Pixel" after="2" afterUnit="Star" beforePixels="220" afterPixels="414" />
+    <State phase="started" before="220" beforeUnit="Pixel" after="2" afterUnit="Star" beforePixels="220" afterPixels="414" />
+    <State phase="delta40" before="220" beforeUnit="Pixel" after="2" afterUnit="Star" beforePixels="220" afterPixels="414" />
+    <State phase="delta15" before="220" beforeUnit="Pixel" after="2" afterUnit="Star" beforePixels="220" afterPixels="414" />
+    <State phase="completed" before="235" beforeUnit="Pixel" after="0.62933753943217663" afterUnit="Star" beforePixels="235" afterPixels="399" />
+  </Scenario>
+  <Scenario orientation="Vertical" units="pixel-star" rtl="true" cancel="false" dragOpacity="0.5" dragBrush="#FF000000">
+    <State phase="initial" before="220" beforeUnit="Pixel" after="2" afterUnit="Star" beforePixels="220" afterPixels="414" />
+    <State phase="started" before="220" beforeUnit="Pixel" after="2" afterUnit="Star" beforePixels="220" afterPixels="414" />
+    <State phase="delta40" before="220" beforeUnit="Pixel" after="2" afterUnit="Star" beforePixels="220" afterPixels="414" />
+    <State phase="delta15" before="220" beforeUnit="Pixel" after="2" afterUnit="Star" beforePixels="220" afterPixels="414" />
+    <State phase="completed" before="235" beforeUnit="Pixel" after="0.62933753943217663" afterUnit="Star" beforePixels="235" afterPixels="399" />
+  </Scenario>
+  <Scenario orientation="Vertical" units="pixel-star" rtl="true" cancel="true" dragOpacity="0.5" dragBrush="#FF000000">
+    <State phase="initial" before="220" beforeUnit="Pixel" after="2" afterUnit="Star" beforePixels="220" afterPixels="414" />
+    <State phase="started" before="220" beforeUnit="Pixel" after="2" afterUnit="Star" beforePixels="220" afterPixels="414" />
+    <State phase="delta40" before="220" beforeUnit="Pixel" after="2" afterUnit="Star" beforePixels="220" afterPixels="414" />
+    <State phase="delta15" before="220" beforeUnit="Pixel" after="2" afterUnit="Star" beforePixels="220" afterPixels="414" />
+    <State phase="completed" before="235" beforeUnit="Pixel" after="0.62933753943217663" afterUnit="Star" beforePixels="235" afterPixels="399" />
+  </Scenario>
+  <Scenario orientation="Horizontal" units="star-pixel" rtl="false" cancel="false" dragOpacity="0.5" dragBrush="#FF000000">
+    <State phase="initial" before="1" beforeUnit="Star" after="320" afterUnit="Pixel" beforePixels="674" afterPixels="320" />
+    <State phase="started" before="1" beforeUnit="Star" after="320" afterUnit="Pixel" beforePixels="674" afterPixels="320" />
+    <State phase="delta40" before="1" beforeUnit="Star" after="320" afterUnit="Pixel" beforePixels="674" afterPixels="320" />
+    <State phase="delta15" before="1" beforeUnit="Star" after="320" afterUnit="Pixel" beforePixels="674" afterPixels="320" />
+    <State phase="completed" before="0.693158953722334" beforeUnit="Star" after="305" afterUnit="Pixel" beforePixels="689" afterPixels="305" />
+  </Scenario>
+  <Scenario orientation="Horizontal" units="star-pixel" rtl="false" cancel="true" dragOpacity="0.5" dragBrush="#FF000000">
+    <State phase="initial" before="1" beforeUnit="Star" after="320" afterUnit="Pixel" beforePixels="674" afterPixels="320" />
+    <State phase="started" before="1" beforeUnit="Star" after="320" afterUnit="Pixel" beforePixels="674" afterPixels="320" />
+    <State phase="delta40" before="1" beforeUnit="Star" after="320" afterUnit="Pixel" beforePixels="674" afterPixels="320" />
+    <State phase="delta15" before="1" beforeUnit="Star" after="320" afterUnit="Pixel" beforePixels="674" afterPixels="320" />
+    <State phase="completed" before="0.693158953722334" beforeUnit="Star" after="305" afterUnit="Pixel" beforePixels="689" afterPixels="305" />
+  </Scenario>
+  <Scenario orientation="Horizontal" units="star-pixel" rtl="true" cancel="false" dragOpacity="0.5" dragBrush="#FF000000">
+    <State phase="initial" before="1" beforeUnit="Star" after="320" afterUnit="Pixel" beforePixels="674" afterPixels="320" />
+    <State phase="started" before="1" beforeUnit="Star" after="320" afterUnit="Pixel" beforePixels="674" afterPixels="320" />
+    <State phase="delta40" before="1" beforeUnit="Star" after="320" afterUnit="Pixel" beforePixels="674" afterPixels="320" />
+    <State phase="delta15" before="1" beforeUnit="Star" after="320" afterUnit="Pixel" beforePixels="674" afterPixels="320" />
+    <State phase="completed" before="0.693158953722334" beforeUnit="Star" after="305" afterUnit="Pixel" beforePixels="689" afterPixels="305" />
+  </Scenario>
+  <Scenario orientation="Horizontal" units="star-pixel" rtl="true" cancel="true" dragOpacity="0.5" dragBrush="#FF000000">
+    <State phase="initial" before="1" beforeUnit="Star" after="320" afterUnit="Pixel" beforePixels="674" afterPixels="320" />
+    <State phase="started" before="1" beforeUnit="Star" after="320" afterUnit="Pixel" beforePixels="674" afterPixels="320" />
+    <State phase="delta40" before="1" beforeUnit="Star" after="320" afterUnit="Pixel" beforePixels="674" afterPixels="320" />
+    <State phase="delta15" before="1" beforeUnit="Star" after="320" afterUnit="Pixel" beforePixels="674" afterPixels="320" />
+    <State phase="completed" before="0.693158953722334" beforeUnit="Star" after="305" afterUnit="Pixel" beforePixels="689" afterPixels="305" />
+  </Scenario>
+  <Scenario orientation="Vertical" units="star-pixel" rtl="false" cancel="false" dragOpacity="0.5" dragBrush="#FF000000">
+    <State phase="initial" before="1" beforeUnit="Star" after="320" afterUnit="Pixel" beforePixels="314" afterPixels="320" />
+    <State phase="started" before="1" beforeUnit="Star" after="320" afterUnit="Pixel" beforePixels="314" afterPixels="320" />
+    <State phase="delta40" before="1" beforeUnit="Star" after="320" afterUnit="Pixel" beforePixels="314" afterPixels="320" />
+    <State phase="delta15" before="1" beforeUnit="Star" after="320" afterUnit="Pixel" beforePixels="314" afterPixels="320" />
+    <State phase="completed" before="0.51892744479495267" beforeUnit="Star" after="305" afterUnit="Pixel" beforePixels="329" afterPixels="305" />
+  </Scenario>
+  <Scenario orientation="Vertical" units="star-pixel" rtl="false" cancel="true" dragOpacity="0.5" dragBrush="#FF000000">
+    <State phase="initial" before="1" beforeUnit="Star" after="320" afterUnit="Pixel" beforePixels="314" afterPixels="320" />
+    <State phase="started" before="1" beforeUnit="Star" after="320" afterUnit="Pixel" beforePixels="314" afterPixels="320" />
+    <State phase="delta40" before="1" beforeUnit="Star" after="320" afterUnit="Pixel" beforePixels="314" afterPixels="320" />
+    <State phase="delta15" before="1" beforeUnit="Star" after="320" afterUnit="Pixel" beforePixels="314" afterPixels="320" />
+    <State phase="completed" before="0.51892744479495267" beforeUnit="Star" after="305" afterUnit="Pixel" beforePixels="329" afterPixels="305" />
+  </Scenario>
+  <Scenario orientation="Vertical" units="star-pixel" rtl="true" cancel="false" dragOpacity="0.5" dragBrush="#FF000000">
+    <State phase="initial" before="1" beforeUnit="Star" after="320" afterUnit="Pixel" beforePixels="314" afterPixels="320" />
+    <State phase="started" before="1" beforeUnit="Star" after="320" afterUnit="Pixel" beforePixels="314" afterPixels="320" />
+    <State phase="delta40" before="1" beforeUnit="Star" after="320" afterUnit="Pixel" beforePixels="314" afterPixels="320" />
+    <State phase="delta15" before="1" beforeUnit="Star" after="320" afterUnit="Pixel" beforePixels="314" afterPixels="320" />
+    <State phase="completed" before="0.51892744479495267" beforeUnit="Star" after="305" afterUnit="Pixel" beforePixels="329" afterPixels="305" />
+  </Scenario>
+  <Scenario orientation="Vertical" units="star-pixel" rtl="true" cancel="true" dragOpacity="0.5" dragBrush="#FF000000">
+    <State phase="initial" before="1" beforeUnit="Star" after="320" afterUnit="Pixel" beforePixels="314" afterPixels="320" />
+    <State phase="started" before="1" beforeUnit="Star" after="320" afterUnit="Pixel" beforePixels="314" afterPixels="320" />
+    <State phase="delta40" before="1" beforeUnit="Star" after="320" afterUnit="Pixel" beforePixels="314" afterPixels="320" />
+    <State phase="delta15" before="1" beforeUnit="Star" after="320" afterUnit="Pixel" beforePixels="314" afterPixels="320" />
+    <State phase="completed" before="0.51892744479495267" beforeUnit="Star" after="305" afterUnit="Pixel" beforePixels="329" afterPixels="305" />
+  </Scenario>
+  <Scenario orientation="Horizontal" units="pixel-pixel" rtl="false" cancel="false" dragOpacity="0.5" dragBrush="#FF000000">
+    <State phase="initial" before="220" beforeUnit="Pixel" after="320" afterUnit="Pixel" beforePixels="220" afterPixels="320" />
+    <State phase="started" before="220" beforeUnit="Pixel" after="320" afterUnit="Pixel" beforePixels="220" afterPixels="320" />
+    <State phase="delta40" before="220" beforeUnit="Pixel" after="320" afterUnit="Pixel" beforePixels="220" afterPixels="320" />
+    <State phase="delta15" before="220" beforeUnit="Pixel" after="320" afterUnit="Pixel" beforePixels="220" afterPixels="320" />
+    <State phase="completed" before="235" beforeUnit="Pixel" after="305" afterUnit="Pixel" beforePixels="235" afterPixels="305" />
+  </Scenario>
+  <Scenario orientation="Horizontal" units="pixel-pixel" rtl="false" cancel="true" dragOpacity="0.5" dragBrush="#FF000000">
+    <State phase="initial" before="220" beforeUnit="Pixel" after="320" afterUnit="Pixel" beforePixels="220" afterPixels="320" />
+    <State phase="started" before="220" beforeUnit="Pixel" after="320" afterUnit="Pixel" beforePixels="220" afterPixels="320" />
+    <State phase="delta40" before="220" beforeUnit="Pixel" after="320" afterUnit="Pixel" beforePixels="220" afterPixels="320" />
+    <State phase="delta15" before="220" beforeUnit="Pixel" after="320" afterUnit="Pixel" beforePixels="220" afterPixels="320" />
+    <State phase="completed" before="235" beforeUnit="Pixel" after="305" afterUnit="Pixel" beforePixels="235" afterPixels="305" />
+  </Scenario>
+  <Scenario orientation="Horizontal" units="pixel-pixel" rtl="true" cancel="false" dragOpacity="0.5" dragBrush="#FF000000">
+    <State phase="initial" before="220" beforeUnit="Pixel" after="320" afterUnit="Pixel" beforePixels="220" afterPixels="320" />
+    <State phase="started" before="220" beforeUnit="Pixel" after="320" afterUnit="Pixel" beforePixels="220" afterPixels="320" />
+    <State phase="delta40" before="220" beforeUnit="Pixel" after="320" afterUnit="Pixel" beforePixels="220" afterPixels="320" />
+    <State phase="delta15" before="220" beforeUnit="Pixel" after="320" afterUnit="Pixel" beforePixels="220" afterPixels="320" />
+    <State phase="completed" before="235" beforeUnit="Pixel" after="305" afterUnit="Pixel" beforePixels="235" afterPixels="305" />
+  </Scenario>
+  <Scenario orientation="Horizontal" units="pixel-pixel" rtl="true" cancel="true" dragOpacity="0.5" dragBrush="#FF000000">
+    <State phase="initial" before="220" beforeUnit="Pixel" after="320" afterUnit="Pixel" beforePixels="220" afterPixels="320" />
+    <State phase="started" before="220" beforeUnit="Pixel" after="320" afterUnit="Pixel" beforePixels="220" afterPixels="320" />
+    <State phase="delta40" before="220" beforeUnit="Pixel" after="320" afterUnit="Pixel" beforePixels="220" afterPixels="320" />
+    <State phase="delta15" before="220" beforeUnit="Pixel" after="320" afterUnit="Pixel" beforePixels="220" afterPixels="320" />
+    <State phase="completed" before="235" beforeUnit="Pixel" after="305" afterUnit="Pixel" beforePixels="235" afterPixels="305" />
+  </Scenario>
+  <Scenario orientation="Vertical" units="pixel-pixel" rtl="false" cancel="false" dragOpacity="0.5" dragBrush="#FF000000">
+    <State phase="initial" before="220" beforeUnit="Pixel" after="320" afterUnit="Pixel" beforePixels="220" afterPixels="320" />
+    <State phase="started" before="220" beforeUnit="Pixel" after="320" afterUnit="Pixel" beforePixels="220" afterPixels="320" />
+    <State phase="delta40" before="220" beforeUnit="Pixel" after="320" afterUnit="Pixel" beforePixels="220" afterPixels="320" />
+    <State phase="delta15" before="220" beforeUnit="Pixel" after="320" afterUnit="Pixel" beforePixels="220" afterPixels="320" />
+    <State phase="completed" before="235" beforeUnit="Pixel" after="305" afterUnit="Pixel" beforePixels="235" afterPixels="305" />
+  </Scenario>
+  <Scenario orientation="Vertical" units="pixel-pixel" rtl="false" cancel="true" dragOpacity="0.5" dragBrush="#FF000000">
+    <State phase="initial" before="220" beforeUnit="Pixel" after="320" afterUnit="Pixel" beforePixels="220" afterPixels="320" />
+    <State phase="started" before="220" beforeUnit="Pixel" after="320" afterUnit="Pixel" beforePixels="220" afterPixels="320" />
+    <State phase="delta40" before="220" beforeUnit="Pixel" after="320" afterUnit="Pixel" beforePixels="220" afterPixels="320" />
+    <State phase="delta15" before="220" beforeUnit="Pixel" after="320" afterUnit="Pixel" beforePixels="220" afterPixels="320" />
+    <State phase="completed" before="235" beforeUnit="Pixel" after="305" afterUnit="Pixel" beforePixels="235" afterPixels="305" />
+  </Scenario>
+  <Scenario orientation="Vertical" units="pixel-pixel" rtl="true" cancel="false" dragOpacity="0.5" dragBrush="#FF000000">
+    <State phase="initial" before="220" beforeUnit="Pixel" after="320" afterUnit="Pixel" beforePixels="220" afterPixels="320" />
+    <State phase="started" before="220" beforeUnit="Pixel" after="320" afterUnit="Pixel" beforePixels="220" afterPixels="320" />
+    <State phase="delta40" before="220" beforeUnit="Pixel" after="320" afterUnit="Pixel" beforePixels="220" afterPixels="320" />
+    <State phase="delta15" before="220" beforeUnit="Pixel" after="320" afterUnit="Pixel" beforePixels="220" afterPixels="320" />
+    <State phase="completed" before="235" beforeUnit="Pixel" after="305" afterUnit="Pixel" beforePixels="235" afterPixels="305" />
+  </Scenario>
+  <Scenario orientation="Vertical" units="pixel-pixel" rtl="true" cancel="true" dragOpacity="0.5" dragBrush="#FF000000">
+    <State phase="initial" before="220" beforeUnit="Pixel" after="320" afterUnit="Pixel" beforePixels="220" afterPixels="320" />
+    <State phase="started" before="220" beforeUnit="Pixel" after="320" afterUnit="Pixel" beforePixels="220" afterPixels="320" />
+    <State phase="delta40" before="220" beforeUnit="Pixel" after="320" afterUnit="Pixel" beforePixels="220" afterPixels="320" />
+    <State phase="delta15" before="220" beforeUnit="Pixel" after="320" afterUnit="Pixel" beforePixels="220" afterPixels="320" />
+    <State phase="completed" before="235" beforeUnit="Pixel" after="305" afterUnit="Pixel" beforePixels="235" afterPixels="305" />
+  </Scenario>
+</SplitterObservations>

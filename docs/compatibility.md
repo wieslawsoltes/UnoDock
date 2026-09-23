@@ -1,174 +1,90 @@
 # Compatibility contract and remaining boundaries
 
-Preview 6 candidate: [protected input, selection and weak-source contracts](input-extensions.md)
-adds 31 mapped API matches (977/1,031). Those local results do not certify full parity
-or a source-built CI run. The source has not been pushed in the current session.
+**Preview 10 is not a certified 100% API, behavioral or visual replacement.** The
+migration target is source compatibility with explicit WPF-to-Uno/WinUI mappings,
+not WPF binary identity. Current sources and all earlier preview increments are
+committed; historical candidate/unpushed notes do not describe this checkpoint.
 
+## Implemented and exercised
 
-This preview is **not 100% API or feature compatible**. The migration target is source
-compatibility with explicit WPF-to-WinUI mappings, not WPF binary identity. Applications
-must validate their own layouts, commands, custom styles, input, accessibility and
-windowing paths before replacing an existing docking system.
+The independent implementation includes nested document/tool models, root ownership
+and cycle validation, selection and activation, docking/floating/auto-hide restoration,
+cancellable operations, MVVM source handling, retained content/focus, commands, XML
+persistence, native/in-surface hosts, scrolling headers, MRU navigation, input extension
+hooks and public window lifecycle hooks. Native X11/Win32 coordinates and Win32 message
+filtering have targeted real-host acceptance tests.
 
-## Preview 4 evidence
+Stock-style pane chrome and original geometry replays are described in
+[visual parity](visual-parity.md). The [navigator](navigator-quality.md) creates real
+selectable containers with bounded reveal and stable identities. [Docking guides](docking-guides.md)
+use retained independently drawn glyphs and the same validated plan for preview and
+execution, including projection into native floating clients. [Splitters](splitter-quality.md)
+now defer pane resizing until commit, render a moving ghost, preserve sizing units,
+validate reentrant callbacks and cancel safely on capture/lifecycle invalidation.
 
-The resolved gate now matches **929/1,031** entries: 833 declared members, 24 inherited
-members and 72 type-shape matches. All 105 reference type names exist. The remaining
-102 diagnostics comprise 46 missing members, 23 signature differences and 33 type-shape
-differences. There are 19 meaningful attribute differences. These are retained in the
-no-regression baseline; none has been treated as full compatibility merely because a
-mapping exists. The additional shell APIs are functional adapters with explicit
-platform boundaries described in [window-shell.md](window-shell.md).
+## Resolved API accounting
 
-## Preview 3 evidence (historical)
+The pinned reference is `2c71faba5eecc1b6ae6cd3d269408e0df37715d8`. Release metadata
+contains 105 public/protected type names and 1,031 declared entries; Debug and source
+profiles are recorded independently. All reference type names have counterparts,
+which does not imply equivalent inheritance or behavior.
 
-The resolved metadata gate matches 884/1,031 reference entries, with 147 unresolved
-signature/type diagnostics and 18 attribute differences. A reference/mapping-bound
-baseline rejects newly unresolved entries; it does not approve full parity. The prior increment
-added reentrancy-safe transitions/source reconciliation, lazy editor presenters,
-shared menus, model diagnostics and a gallery parity lab. Preview 3 adds input-tested Linux/X11
-native docking, destination-window previews, topmost-window occlusion, hidden-index
-header insertion and stationary-pointer edge scrolling. See interaction.md and parity-progress.md.
-
-## Implemented independently
-
-The solution contains an actual layout/model hierarchy, ownership/cycle validation,
-selection/activation, root/sides/hidden/floating collections, nested panels/panes,
-document/tool docking, float/dock restoration, auto-hide/pin groups, cancellable
-close/hide events, observable MVVM sources, content templates/styles, command adapters,
-XML persistence/content callbacks, retained editor presenters, split dividers,
-scrollable headers, context menus, in-surface floating hosts, desktop native-window
-composition, MRU navigation, independent light/dark palettes and an interactive gallery.
-
-The original public defaults and serialized fixtures have exposed and driven corrections
-to horizontal orientation defaults, nullable titles, floating/auto-hide default sizes,
-empty-pane capability values, the auto-hide timeout and mixed-orientation policy.
-Display-size fallbacks are kept separate from persisted zero-valued model defaults.
-Same-pane tab insertion uses boundary indices, avoiding forward-move off-by-one errors.
-
-`CanMove`, `CanRepositionItems` and position-sensitive mixed-orientation checks are shared
-between docking operations, command enablement and drag previews. These specific tests
-are implemented; exhaustive original behavioral equivalence is not asserted.
+The preview-9 baseline matches **977/1,031**: 881 declared members, 24 inherited
+counterparts and 72 type shapes. Remaining diagnostics are 9 missing members,
+12 signature differences and 33 type-shape differences; 18 attribute differences are
+reported separately. The current CI comparison is the authoritative count for a
+revision. No scanner/mapping/baseline rule is relaxed for visual or splitter increments.
+The regression gate rejects newly unresolved contracts; the full strict gate remains
+unsatisfied.
 
 ## Explicit framework mappings
 
-| WPF contract | UnoDock mapping and consequence |
+| Original contract | Port boundary |
 | --- | --- |
-| System.Windows UI types | Microsoft.UI.Xaml types; consumer source and XAML change |
-| Window-derived floating/navigator/overlay controls | ContentControl plus native-window composition or in-surface overlays |
-| HwndHost auto-hide | Managed ContentControl; no HWND message/native-host contract |
-| Thumb inheritance | ContentControl containing WinUI's sealed Thumb |
-| ContextMenu / MenuItem | MenuFlyout / MenuFlyoutItem |
-| RoutedEvent identity and bubbling | Explicit docking event IDs/handlers, not WPF routed-event infrastructure |
-| IValueConverter CultureInfo | CultureInfo overloads and WinUI language-string adapter |
-| IMultiValueConverter/MultiBinding | Independently implemented converter-binding adapter; not the full native WPF binding engine |
-| Binding.DoNothing | Adapter sentinel with distinct suppression behavior; use the converter-binding adapter rather than assuming native WinUI bindings implement WPF semantics |
-| WPF resources/templates | Require Uno/WinUI XAML translation |
-| Microsoft.Windows.Shell | Targeted system commands, metrics and managed/native chrome adapters |
-| RoutedCommand | Explicit-target ICommand adapter; not full WPF command routing or gesture bindings |
-| Freezable / WindowChrome inheritance | DependencyObject with Clone; no general freezing, animation or cross-thread transfer contract |
-| Win32 FilterMessage / HwndHost hooks | Still outstanding; native chrome uses supported window APIs rather than a WPF message-hook emulation |
+| System.Windows UI types | Microsoft.UI.Xaml equivalents; consumer source/XAML changes |
+| Window-derived controls | Composed window lifecycle/native or in-surface hosting |
+| WPF Thumb inheritance | WinUI sealed Thumb composition; public drag/cancel forwarding |
+| HwndHost auto-hide | Managed control, not a general HWND hosting contract |
+| ContextMenu/MenuItem | MenuFlyout/MenuFlyoutItem |
+| WPF routed commands/events | Explicit-target commands and control-local compatibility input stages |
+| IMultiValueConverter/MultiBinding | Independent converter-binding adapter, not a complete WPF binding engine |
+| Binding.DoNothing | Distinct adapter sentinel; native WinUI bindings do not acquire WPF semantics |
+| Resources/templates | Independently implemented Uno XAML; arbitrary WPF templates require migration |
+| Microsoft.Windows.Shell | Targeted system commands/metrics and managed/native chrome |
+| WindowChrome/Freezable | DependencyObject/Clone adapter, not general freezing/animation/thread transfer |
+| FilterMessage | Implemented native Win32 subclass hook for floating hosts; not all HWND APIs |
 
-## Evidence and its limits
+See [input extensions](input-extensions.md), [window lifecycle](window-lifecycle.md)
+and [window shell](window-shell.md) for exact extension and lifetime semantics.
 
-The pinned declaration scan has 996 entries. A separate resolved PE metadata scan
-records 105 exported types, 1,031 Release API entries and 1,020 Debug entries, including
-attributes, enum values, implicit public constructors and inheritance information.
-Both profiles are scanned twice and compared byte for byte. This addresses limitations
-of the initial syntax-only reference inventory; it does not complete the counterpart
-mapping or missing implementation APIs.
+## Evidence and limitations
 
-The suite contains 97 portable tests, 36 Uno runtime/control tests, 44
-interoperability/default/policy tests, 40 drop/menu/automation tests and 33 lifecycle
-tests, 25 interaction tests, 1,517 converter/binding cases and 16 coordinate tests, plus 36 shell/chrome cases
-(eight cases use opt-in server-generated pointer/keyboard input).
-The metadata gate has 23 additional Python regression tests. Interoperability cases consume 13 original public-serializer
-layouts and defaults for 13 original types. Original random container IDs are normalized
-without breaking PreviousContainerId links. No original algorithm is translated.
+The matrix has 120 portable core cases, 2,012 Uno/Linux runtime cases, a 243-case
+Windows subset and 23 Python comparator cases. Linux includes 32 opt-in XTEST input
+sequences. Actual JSON/JUnit and workflow conclusions establish what executed and
+passed on the exact revision; counts are not an equivalence score.
 
-Original import checks cover IDs, titles, capabilities, dimensions, timestamps,
-selection, hidden/auto-hide restoration, floating child element names and directional
-AddToLayout topology with/without Most. Invalid input is checked for atomic failure.
-The public-default tests check scalar CLR properties; the fixture also captures
-reference dependency-property metadata, whose complete cross-framework mapping is
-still outstanding.
+Original public probes supply 13 XML layouts, defaults, converter observations, pane
+and guide geometry, navigator client rendering and 32 splitter protocol scenarios.
+The observation method is labeled: synthetic routed events or Win32 moving messages
+are not represented as original end-to-end pointer input. Input tests on the port
+are reported separately. [Provenance](clean-room.md) records the declaration/metadata/
+public-observation boundary; this is not a legal opinion or a staffed two-team claim.
 
-## Remaining implementation and acceptance work
+Open differences include the navigator's staged direct selection setters (the original
+setter closes the host), cancellation behavior in the synthetic splitter completion
+protocol, inherited type shapes, protected hooks and attribute contracts. The port
+intentionally provides safe cancellation rather than reproducing unsafe observed
+synthetic behavior. Default navigator rows are not virtualized. Guide half-pane previews
+are not certified against every final constraint-resolved split rectangle.
 
-* Close the resolved comparison's remaining diagnostics: native message/Freezable
-  contracts, legacy protected input/focus/initialization slots, remaining template,
-  converter, type-shape and attribute mappings. Drop/overlay contracts and selection/
-  invoke peers are implemented in preview 2, but do not imply full WPF infrastructure
-  or comprehensive assistive-technology acceptance.
-* Native cross-window docking on non-X11 Skia hosts. Linux/X11 client transforms, input
-  capture, previews and stacking order are tested; native WinUI has coordinate conversion.
-  Skia Win32 client/screen conversion is implemented but still needs native input
-  acceptance. macOS/custom hosts need ICrossWindowCoordinates integration.
-  Native title-bar dragging, OS snapping, monitor/DPI transitions, owner activation and
-  every cross-window target are not validated across all hosts.
-* Broader original behavioral fixtures: event ordering/reentrancy, duplicate-content
-  policy, custom insertion strategies/source resets, converter edge cases, legacy XML
-  versions/custom extensions, and nested docking policy combinations.
-* Full keyboard parity, touch/pen delivery, screen-reader traversal, right-to-left
-  layout, localization breadth and pixel-level visual comparisons. Portable edge scrolling
-  is implemented, but exhaustive gesture/device combinations are not validated.
-* Full tab virtualization and workload-based performance parity. Retained content is
-  implemented, but that is not a performance-equivalence certificate.
-* Android/iOS sample heads and device tests, release signing and notarization.
+Further acceptance is required for arbitrary event ordering and templates, custom
+serialization extensions, nested/multi-star sizing, all drag/drop combinations,
+Windows native WinUI runtime, macOS runtime, browser input, mobile/touch/pen, full
+screen-reader and range-provider behavior, RTL variants, multi-monitor/DPI changes,
+IME, localization, signing/notarization and workload-level performance equivalence.
 
-NuGet publishing supports previews. Stable 1.0+ requires an owner-maintained explicit
-compatibility attestation bound to the source-tree fingerprint. No attestation claiming
-these boundaries are closed is included.
-
-
-## Preview 5 window/navigation increment
-
-The shared DockWindowControl supplies actual virtual lifecycle dispatch for floating
-windows, navigator and overlay composition. Protected initialization/closed/state hooks,
-Windows FilterMessage and two-list navigator template contracts now have implementations
-and regression coverage. Normal serialized bounds are independent of maximized/minimized
-presentation; delayed native snapshots and close callbacks are tied to the same live host.
-
-Current resolved metadata: 946/1,031 matched, 85 unresolved signature/type entries,
-18 separately reported attribute differences. The 33 remaining type-shape differences
-include deliberate framework composition differences, not missing type names. This
-increment does not supply WPF binary identity, complete routed input/command infrastructure,
-Freezable semantics or every original protected signature. Earlier checkpoint counts in
-this document describe those checkpoints, not the current gate.
-
-See window-lifecycle.md for implemented contracts, real-input coverage, template migration
-and remaining platform acceptance. Windows native-message cases run in their own CI
-runtime step; native WinUI package compilation remains a distinct validation boundary.
-
-## Preview 7 visual/behavior increment
-
-See [visual parity](visual-parity.md) for four original-geometry scenes, four independently
-captured single-tool auto-hide observations, 27 new runtime cases and remaining visual
-acceptance boundaries. Whole-pane auto-hide behavior stated by early prototypes is not
-the pinned original's behavior: one requested tool moves at a time, without an ineligible
-sibling veto. Compact tool tabs now sit below their content. Native RTL coordinate
-conversion includes the root transform. API difference counts are not changed by these
-behavioral/rendering corrections.
-
-## Preview 8 navigator increment
-
-The default navigator now materializes actual row containers for layout adapters,
-avoids source resets during navigation, and uses realized ScrollViewer geometry for
-selection reveal. Theme, label, density and model updates preserve row identity.
-Native-input and screenshot tests complement the earlier logical-selection tests.
-The additive NavigatorListBox is recommended for custom template parts on Uno.
-Original direct public selection setters were observed to close the native navigator;
-the port still stages those assignments until explicit commit. This difference remains
-open, as do arbitrary template virtualization and full inherited WPF contracts.
-See [navigator quality](navigator-quality.md) for precise evidence and limits.
-
-## Preview 9 guide acceptance
-
-The stock-style compass and workspace glyphs use public observed geometry and shared
-validated docking plans. `GuidesOnly` is the new default; applications relying on the
-preview-8 broad body/edge zones must select `GuidesAndEdges` or `EdgesOnly` explicitly.
-Four additional tool-as-tool compass targets are additive opt-in functionality. Native
-guide projection and neutral-client release behavior have targeted regression tests.
-See [docking-guides.md](docking-guides.md) for the reference message-probe method,
-geometry/pixel distinction, input coverage, custom template points and remaining limits.
-API comparison remains 977/1031 with 54 signature/type and 18 attribute differences.
+Preview NuGet packages may be built. Publishing requires configured credentials or
+trusted publishing and its own successful workflow. Stable 1.0+ requires an explicit
+source-tree-bound full-compatibility attestation; none is supplied. See
+[publishing](publishing.md) and [preview-10 validation](validation-preview10.md).
