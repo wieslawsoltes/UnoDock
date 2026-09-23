@@ -15,73 +15,37 @@ jobs:
         with:
           ref: work/dropdown-lifecycle-20260923
           fetch-depth: 0
-      - name: Apply exact reviewed context-request and acceptance changes
+      - name: Apply checked host-key and test-registration corrections
         run: |
           python3 - <<'PY'
           from pathlib import Path
           def change(name, old, new):
-              p = Path(name); text = p.read_text()
+              p=Path(name); text=p.read_text()
               if new in text: return
-              assert text.count(old) == 1, name
-              p.write_text(text.replace(old, new))
-          controls='src/UnoDock/Controls/DropDownControls.cs'
-          change(controls, '        PointerCanceled += (_, _) => ResetPointer();', '''        ContextRequested += (_, e) =>
-                  {
-                      if (e.Handled || !IsEnabled) return;
-                      if (e.TryGetPosition(this, out var position))
-                      {
-                          if (_suppressMouseRightTap) { e.Handled = true; return; }
-                          _session.Open(position);
-                      }
-                      else _session.Open();
-                      if (_session.IsRequested) e.Handled = true;
-                  };
-                  PointerCanceled += (_, _) => ResetPointer();''')
-          change('src/UnoDock/Internal/DropDownMenuSession.cs', '        var context = _context();', '        var context = menu is ContextMenuEx { MenuDataContext: { } explicitContext } ? explicitContext : _context();')
-          test='tests/UnoDock.VisualTests/DropDownQualityTests.cs'
-          change(test, '        internal int Downs, Ups;', '''        internal int Downs, Ups;
-                  internal string LastKey = "none";
-                  protected override void OnKeyDown(KeyRoutedEventArgs e)
-                  { LastKey = e.Key.ToString(); base.OnKeyDown(e); }''')
-          change(test, 'await Wait(() => t.View.IsLoaded); window.Activate(); t.View.Focus(FocusState.Keyboard); await Task.Delay(80);', '''await Wait(() => t.View.IsLoaded); window.Activate(); root.UpdateLayout(); await Task.Delay(80);
-                              Check.True(t.View.Focus(FocusState.Keyboard), "Context area refused keyboard focus.");
-                              await Wait(() => ReferenceEquals(FocusManager.GetFocusedElement(t.View.XamlRoot!), t.View));''')
-          change(test, '                    await Wait(() => t.Menu.IsOpen); input.Escape(); await Wait(() => !t.Menu.IsOpen);', '''                    try { await Wait(() => t.Menu.IsOpen); }
-                              catch (Exception error) { throw new InvalidOperationException("Application key did not open menu. Last native key: " + t.Area!.LastKey, error); }
-                              await Task.Delay(80); input.Escape();
-                              await Wait(() => !t.Menu.IsOpen);''')
-          change(test, '        try { return await tests.Run(output, "dropdown-quality"); }', '        DropDownTransitionTests.Register(tests, root, window);\n        try { return await tests.Run(output, "dropdown-quality"); }')
-          readme=Path('README.md')
-          text=readme.read_text().replace('**Version: 0.1.0-preview.12.', '**Version: 0.1.0-preview.13.')
-          header='## Current continuation: compact menus and safe context lifetimes'
-          addition='''## Preview 13: dropdown ownership and native input
-
-          Dropdown buttons and context areas now serialize opening, context assignment and
-          cleanup across application callbacks. Shared-menu handoff and immediate reopening
-          wait for native Closed dispatch to finish, including replacement menus in the same
-          UI thread. Native closing vetoes retain the current context and checked state.
-          Protected right-button hooks, keyboard/native context requests, and retained row
-          contexts run through the same lifecycle. The **Dropdown contracts** laboratory is
-          available from **Menu quality**. See [implementation and acceptance boundaries](docs/dropdown-quality.md).
-          Full parity remains unverified; consult actual CI results for the consumed revision.
-
-          ## Included: compact menus and safe context lifetimes'''
-          if header in text: text=text.replace(header,addition)
-          readme.write_text(text)
+              assert text.count(old)==1, name
+              p.write_text(text.replace(old,new))
+          old='''if (e.Key == Windows.System.VirtualKey.Application ||
+                      (e.Key == Windows.System.VirtualKey.F10 &&
+                       (InputKeyboardSource.GetKeyStateForCurrentThread(Windows.System.VirtualKey.Shift) & Windows.UI.Core.CoreVirtualKeyStates.Down) != 0))'''
+          change('src/UnoDock/Controls/DropDownControls.cs', old, 'if (DropDownKeyboard.IsContextRequest(this, e))')
+          change('tests/UnoDock.VisualTests/DropDownQualityTests.cs', '        DropDownTransitionTests.Register(tests, root, window);', '        DropDownTransitionTests.Register(tests, root, window);\n        DropDownKeyboardTests.Register(tests, root, window);')
+          p=Path('docs/dropdown-quality.md'); text=p.read_text().replace('three opt-in Linux XTEST cases.', 'six opt-in Linux XTEST cases.')
+          text=text.replace('The context-menu key and Shift+F10 are supported through keyboard and native', 'The pinned X11 host reports XK_Menu as VirtualKey.Menu, unlike its LeftMenu/RightMenu Alt keys. A host-checked adapter recognizes that distinction; native tests verify both Alt keys remain inert.\n\nThe context-menu key and Shift+F10 are supported through keyboard and native')
+          p.write_text(text)
           PY
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
-      - name: Compile complete SDK and XAML sample with warnings as errors
+      - name: Build complete SDK and XAML sample with warnings as errors
         run: dotnet build samples/UnoDock.Gallery -c Release -f net10.0-desktop -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0 -warnaserror
-      - name: Commit exact corrected sources and dispatch platform tests
+      - name: Commit exact corrected source and dispatch platform validation
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add src tests README.md
+          git add src tests docs
           git diff --cached --check
-          git diff --cached --quiet || (git commit -m 'fix: handle native context requests and verify deferred cancellation and close vetoes' && git push origin HEAD:work/dropdown-lifecycle-20260923)
+          git diff --cached --quiet || (git commit -m 'fix: recognize native X11 context-menu key without consuming Alt' && git push origin HEAD:work/dropdown-lifecycle-20260923)
           gh workflow run dropdown-acceptance.yml --ref work/dropdown-lifecycle-20260923
           gh workflow run ci.yml --ref work/dropdown-lifecycle-20260923
