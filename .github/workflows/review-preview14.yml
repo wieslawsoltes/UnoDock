@@ -1,0 +1,22 @@
+name: Review preview14 acceptance
+on:
+  push:
+    branches: [work/preview14-samples-namespaces]
+    paths: [.github/workflows/review-preview14.yml]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: '*runtime-test-results'
+          run-id: 35908100439
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/previous-results
+      - name: Print executed suite counts and failing assertion details
+        run: python3 tools/report-test-results.py "$RUNNER_TEMP/previous-results"
