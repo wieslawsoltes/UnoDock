@@ -43,6 +43,7 @@ internal static class Program
                         Walk(manager, manager, elements); new XDocument(elements).Save(Path.Combine(args[0], scenario + ".xml"));
                         Console.WriteLine("Captured public reference scene " + scenario);
                     }
+                    NavigatorObservations.Run(manager, window, args[0]);
                 }
                 catch (Exception error) { failure = 1; Console.Error.WriteLine(error); }
                 finally { window.Close(); app.Shutdown(); }
