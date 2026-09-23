@@ -21,16 +21,20 @@ jobs:
           dotnet-version: '10.0.x'
       - name: Portable regression and randomized tests
         run: dotnet run --project tests/UnoDock.Core.Tests -c Release -- artifacts/test-results
-      - name: Check generated adapters are reproducible
+      - name: Check generated adapters and namespace invariants
         run: |
           python3 tools/generate-property-adapters.py
           git diff --exit-code -- src/
+          python3 tests/metadata/test_namespace_migration.py
       - name: Scan implementation and report every declaration difference
         run: |
           dotnet run --project tools/ApiScan -- src/UnoDock artifacts/unodock-api
           python3 tools/audit-api.py artifacts/unodock-api.json
       - name: Resolve and compare public API metadata
         run: bash tools/check-metadata.sh
+      - name: Summarize executed portable cases
+        if: always()
+        run: python3 tools/report-test-results.py artifacts/test-results --output artifacts/core-summary.json
       - name: Archive exact checked-out sources
         run: |
           git archive --format=zip -o artifacts/UnoDock-source.zip HEAD
@@ -93,6 +97,10 @@ jobs:
           $process = Start-Process dotnet -ArgumentList $arguments -NoNewWindow -PassThru
           if (-not $process.WaitForExit(180000)) { $process.Kill($true); throw 'Native Windows runtime tests timed out.' }
           exit $process.ExitCode
+      - name: Summarize executed platform cases and failing assertions
+        if: always() && (runner.os == 'Linux' || runner.os == 'Windows')
+        shell: bash
+        run: python3 tools/report-test-results.py artifacts/test-results --output artifacts/test-results/execution-summary.json
       - uses: actions/upload-artifact@v4
         if: always() && (runner.os == 'Linux' || runner.os == 'Windows')
         with:
