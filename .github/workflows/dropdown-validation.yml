@@ -1,0 +1,63 @@
+name: Dropdown continuation acceptance
+on:
+  push:
+    branches: [work/dropdown-contracts-20260923]
+    paths-ignore: [.github/workflows/local-validation-export.yml]
+permissions:
+  contents: write
+concurrency:
+  group: dropdown-continuation
+  cancel-in-progress: true
+jobs:
+  accept:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: work/dropdown-contracts-20260923
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Wire the new suite and constrain owners to enabled Controls
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('src/UnoDock/Internal/DropDownMenuSession.cs')
+          text=p.read_text().replace('FrameworkElement Owner','Control Owner').replace('FrameworkElement owner','Control owner')
+          p.write_text(text)
+          p=Path('samples/UnoDock.Gallery/App.xaml.cs');text=p.read_text()
+          if 'suite == "dropdown-quality"' not in text:
+              text=text.replace('if (suite == "menu-quality")','if (suite == "dropdown-quality")\n                        exitCode = await Testing.DropDownQualityTests.Run(output);\n                    else if (suite == "menu-quality")')
+              old='exitCode |= await Testing.MenuContextLifetimeTests.Run(output);'
+              assert text.count(old)==2
+              text=text.replace(old, old+'\n                        exitCode |= await Testing.DropDownQualityTests.Run(output);')
+          p.write_text(text)
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/UnoDock/Internal/DropDownMenuSession.cs samples/UnoDock.Gallery/App.xaml.cs
+          git diff --cached --quiet || (git commit -m 'test: wire focused and full-platform dropdown acceptance' && git push origin HEAD:work/dropdown-contracts-20260923)
+      - name: Build actual SDK and XAML application
+        run: dotnet build samples/UnoDock.Gallery -c Release -f net10.0-desktop -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0 -warnaserror
+      - name: Install isolated display input dependencies
+        run: sudo apt-get update && sudo apt-get install -y xvfb libx11-6 libxi6 libxrandr2 libxcursor1 libfontconfig1 libgl1 libice6 libsm6 libxcb1 libxtst6
+      - name: Execute actual dropdown and native-input regressions
+        env:
+          UNODOCK_SELFTEST: '1'
+          UNODOCK_TEST_SUITE: dropdown-quality
+          UNODOCK_NATIVE_INPUT_TESTS: '1'
+          UNODOCK_TEST_RESULTS: ${{ github.workspace }}/artifacts/test-results
+        run: timeout 180s xvfb-run -a -s "-screen 0 2560x1440x24" dotnet run --project samples/UnoDock.Gallery -c Release -f net10.0-desktop --no-build -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0
+      - name: Record checked-out revision and portable tests
+        if: always()
+        run: |
+          mkdir -p artifacts
+          git rev-parse HEAD > artifacts/tested-revision.txt
+          git archive --format=zip -o artifacts/UnoDock-candidate-source.zip HEAD
+          dotnet run --project tests/UnoDock.Core.Tests -c Release -- artifacts/test-results
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dropdown-acceptance
+          path: artifacts/
