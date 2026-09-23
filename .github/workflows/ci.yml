@@ -53,8 +53,8 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
-      - name: Build actual Uno desktop application
-        run: dotnet build samples/UnoDock.Gallery -c Release -f net10.0-desktop -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0
+      - name: Build actual Uno desktop application with warnings as errors
+        run: dotnet build samples/UnoDock.Gallery -c Release -f net10.0-desktop -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0 -warnaserror
       - name: Install headless desktop dependencies
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y xvfb libx11-6 libxi6 libxrandr2 libxcursor1 libfontconfig1 libgl1 libice6 libsm6 libxcb1 libxtst6
@@ -65,7 +65,7 @@ jobs:
           UNODOCK_NATIVE_INPUT_TESTS: '1'
           UNODOCK_TEST_RESULTS: ${{ github.workspace }}/artifacts/test-results
         run: timeout 300s xvfb-run -a -s "-screen 0 2560x1440x24" dotnet run --project samples/UnoDock.Gallery -c Release -f net10.0-desktop --no-build -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0
-      - name: Run Windows lifecycle, HWND filter, input and visual tests
+      - name: Run Windows lifecycle, HWND filter, input, navigator and visual tests
         if: runner.os == 'Windows'
         shell: pwsh
         env:
