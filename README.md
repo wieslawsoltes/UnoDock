@@ -5,11 +5,28 @@
 
 Independent AvalonDock-style docking for **Uno Platform 6.7**, using the **`UnoDock`** namespace family and Uno/WinUI controls.
 
-**Version: 0.1.0-preview.14. Full API, behavioral and visual parity is not verified.**
+**Version: 0.1.0-preview.15. Full API, behavioral and visual parity is not verified.**
 The target is the pinned public AvalonDock repository and stock presentation, not
 separately licensed commercial themes. Framework mappings require source/XAML migration;
 this is not binary compatibility with WPF. The independently authored implementation is
 MIT-licensed and is not affiliated with or endorsed by Xceed or Uno Platform.
+
+## Preview 15: typed property inspection and safe editor ownership
+
+The classic sample now has native boolean and enum editors, color swatches, collapsible
+category bands, field descriptions and a resizable property-name column. Filtering,
+sorting and column resizing retain editors. Alignment, margin, padding, multiline input
+and wrapping are editable through validated, explicitly registered properties.
+
+Selection epochs prevent stale controls from editing a previous document. Deferred
+native TextChanged events cannot erase drafts; competing application edits cause a
+conflict instead of being overwritten. Unchanged numeric and brush values do not run
+setters, preserving round-trip precision and brush identity. Float/dock transitions
+retain the current inspector rows after the tree transaction settles. Theme selectors
+now reflect programmatic theme changes and compact combo values have more usable space.
+
+See [inspector implementation, tests and limits](docs/inspector-quality.md). The original
+API comparison is unchanged; this is sample/workflow progress, not an API percentage gain.
 
 ## Preview 14: UnoDock namespaces and classic samples
 
