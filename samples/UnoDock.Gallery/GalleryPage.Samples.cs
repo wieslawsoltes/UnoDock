@@ -27,10 +27,9 @@ public sealed partial class GalleryPage : IDisposable
         FontSize = 12;
         RequestedTheme = ElementTheme.Light;
         _sampleShell = new Grid();
-        foreach (var height in new[] { 28d, 36d, double.NaN, 23d })
+        foreach (var height in new[] { SampleChrome.MenuHeight, 36d, double.NaN, 23d })
             _sampleShell.RowDefinitions.Add(new() { Height = double.IsNaN(height) ? new(1, GridUnitType.Star) : new(height) });
-        var menu = new MenuBar { MinHeight = 0, Padding = new(2, 0, 2, 0), FontSize = 12 };
-        AutomationProperties.SetAutomationId(menu, "SampleMenu");
+        var menu = SampleChrome.CreateMenuBar();
         AddMenu("File", ("New document", "new", AddDocument), ("Save layout", "save", () => Run(Save)),
             ("Restore layout", "restore", () => Run(Restore)), ("Inspect layout XML", "xml", ShowXml));
         AddMenu("Layout", ("Float / Dock", "float", ToggleFloating), ("Auto-hide / Pin", "pin", TogglePin),
@@ -80,7 +79,7 @@ public sealed partial class GalleryPage : IDisposable
 
         void AddMenu(string title, params (string Label, string Id, Action Invoke)[] commands)
         {
-            var parent = new MenuBarItem { Title = title };
+            var parent = SampleChrome.CreateMenuItem(title);
             foreach (var command in commands)
             {
                 _sampleCommands.Add(command.Id, command.Invoke);
