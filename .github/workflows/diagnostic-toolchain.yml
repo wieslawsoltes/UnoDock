@@ -1,0 +1,36 @@
+name: Prepare offline regression toolchain
+on:
+  workflow_dispatch:
+  push:
+    paths: ['.github/workflows/diagnostic-toolchain.yml']
+permissions:
+  contents: read
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Build current gallery and prepare portable tests
+        run: |
+          dotnet build samples/UnoDock.Gallery -c Release -f net10.0-desktop -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0 -warnaserror
+          dotnet build tests/UnoDock.Core.Tests -c Release
+      - name: Export only public SDK and restored package binaries, never credentials
+        run: |
+          mkdir -p artifacts/toolchain
+          sdk=$(dotnet --version)
+          runtime=$(dotnet --list-runtimes | awk '$1 == "Microsoft.NETCore.App" && $2 ~ /^10\./ {print $2}' | sort -V | tail -1)
+          ref=$(ls "$DOTNET_ROOT/packs/Microsoft.NETCore.App.Ref" | grep '^10\.' | sort -V | tail -1)
+          tar -czf artifacts/toolchain/dotnet.tar.gz -C "$DOTNET_ROOT" dotnet host/fxr/"$runtime" shared/Microsoft.NETCore.App/"$runtime" sdk/"$sdk" packs/Microsoft.NETCore.App.Ref/"$ref" packs/Microsoft.NETCore.App.Host.linux-x64/"$ref"
+          tar -czf artifacts/toolchain/packages.tar.gz -C "$HOME/.nuget" packages
+          git rev-parse HEAD > artifacts/toolchain/source-revision.txt
+          sha256sum artifacts/toolchain/*.tar.gz > artifacts/toolchain/checksums.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: offline-regression-toolchain
+          path: artifacts/toolchain/
+          compression-level: 0
+          retention-days: 1
