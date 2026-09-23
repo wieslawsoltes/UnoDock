@@ -17,7 +17,7 @@ public sealed partial class GalleryPage : IDisposable
     private SamplePropertyInspector? _sampleInspector;
     private ComboBox? _samplePicker, _themePicker;
     private Grid? _sampleShell;
-    private bool _selectingSample, _pageDisposed;
+    private bool _selectingSample, _selectingTheme, _pageDisposed;
     internal SampleKind CurrentSample { get; private set; }
     internal SampleTheme CurrentSampleTheme { get; private set; }
     internal SamplePropertyInspector? PropertyInspector => _sampleInspector;
@@ -57,7 +57,7 @@ public sealed partial class GalleryPage : IDisposable
         toolbar.Children.Add(_samplePicker);
         toolbar.Children.Add(Label("Theme:"));
         _themePicker = Picker("ThemeSelector", new[] { "Generic", "Light", "Dark" }, 100);
-        _themePicker.SelectionChanged += (_, _) => { if (_themePicker.SelectedIndex >= 0) SetSampleTheme((SampleTheme)_themePicker.SelectedIndex); };
+        _themePicker.SelectionChanged += (_, _) => { if (!_selectingTheme && _themePicker.SelectedIndex >= 0) SetSampleTheme((SampleTheme)_themePicker.SelectedIndex); };
         toolbar.Children.Add(_themePicker);
         toolbar.Children.Add(new Border { Width = 1, Margin = new(2, 2, 2, 2), Background = SampleChrome.Color(0xb4b4b4) });
         Tool("New document", "new", "M 3,1 L 10,1 L 13,4 L 13,15 L 3,15 Z M 10,1 L 10,4 L 13,4 M 5,8 L 11,8 M 8,5 L 8,11");
@@ -100,7 +100,7 @@ public sealed partial class GalleryPage : IDisposable
         static TextBlock Label(string value) => new() { Text = value, VerticalAlignment = VerticalAlignment.Center, FontSize = 12 };
         static ComboBox Picker(string id, string[] items, double width)
         {
-            var box = new ComboBox { ItemsSource = items, Width = width, MinHeight = 0, Height = 27, Padding = new(6, 2, 24, 2), FontSize = 12 };
+            var box = new ComboBox { ItemsSource = items, Width = width, MinHeight = 0, Height = 27, Padding = new(6, 2, 0, 2), FontSize = 12 };
             AutomationProperties.SetAutomationId(box, id); return box;
         }
     }
@@ -114,6 +114,9 @@ public sealed partial class GalleryPage : IDisposable
     internal void SetSampleTheme(SampleTheme theme)
     {
         if (!Enum.IsDefined(theme)) throw new ArgumentOutOfRangeException(nameof(theme));
+        _selectingTheme = true;
+        try { if (_themePicker != null) _themePicker.SelectedIndex = (int)theme; }
+        finally { _selectingTheme = false; }
         CurrentSampleTheme = theme;
         var dark = theme == SampleTheme.Dark;
         RequestedTheme = dark ? ElementTheme.Dark : ElementTheme.Light;
@@ -164,7 +167,7 @@ public sealed partial class GalleryPage : IDisposable
                 case SampleKind.Binding: BindingDemo(); break;
             }
             if (_samplePicker != null) _samplePicker.SelectedIndex = (int)sample;
-            _status.Text = "Ready  |  Drag tabs to dock  |  Ctrl+Tab: switch  |  Ctrl+F4: close  |  UnoDock preview 14";
+            _status.Text = "Ready  |  Drag tabs to dock  |  Ctrl+Tab: switch  |  Ctrl+F4: close  |  UnoDock preview 15";
         }
         finally { _selectingSample = false; }
     }

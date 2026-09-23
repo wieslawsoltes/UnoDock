@@ -3,94 +3,69 @@
 [![Build and test](https://github.com/wieslawsoltes/UnoDock/actions/workflows/ci.yml/badge.svg)](https://github.com/wieslawsoltes/UnoDock/actions/workflows/ci.yml)
 [![Reference metadata](https://github.com/wieslawsoltes/UnoDock/actions/workflows/reference-metadata.yml/badge.svg)](https://github.com/wieslawsoltes/UnoDock/actions/workflows/reference-metadata.yml)
 
-Independent AvalonDock-style docking for **Uno Platform 6.7**, using the **`UnoDock`** namespace family and Uno/WinUI controls.
+Independent AvalonDock-style docking for **Uno Platform 6.7**, using **`UnoDock.*`**
+namespaces and Uno/WinUI controls.
 
-**Version: 0.1.0-preview.14. Full API, behavioral and visual parity is not verified.**
+**Version: 0.1.0-preview.15. Full API, behavioral and visual parity is not verified.**
 The target is the pinned public AvalonDock repository and stock presentation, not
-separately licensed commercial themes. Framework mappings require source/XAML migration;
-this is not binary compatibility with WPF. The independently authored implementation is
-MIT-licensed and is not affiliated with or endorsed by Xceed or Uno Platform.
+separately licensed commercial themes. This is not WPF binary compatibility. The
+independently authored implementation is MIT-licensed and is not affiliated with or
+endorsed by Xceed or Uno Platform.
 
-## Preview 14: UnoDock namespaces and classic samples
+## Preview 15: typed property inspection and safe editing
 
-**Breaking change:** product types now live in `UnoDock`, `UnoDock.Layout`,
-`UnoDock.Controls`, `UnoDock.Themes`, `UnoDock.Converters` and their corresponding
-subnamespaces. There are no deprecated Xceed aliases. Update C# imports and Uno XAML
-`using:` declarations; the assembly and package names stay `UnoDock` / `UnoDock.Core`.
-See [namespace migration](docs/namespace-migration.md).
+The classic sample now has native boolean checkboxes and named-enum selectors, color
+swatches, collapsible category bands, field descriptions and a resizable property-name
+column. Sorting, filtering and column resizing retain the field controls. Search reveals
+matching fields in collapsed categories; clearing it restores their expansion state.
+Alignment, margin, padding, multiline input and wrapping are editable through validated,
+explicitly registered properties.
 
-The default sample is now a compact, independently authored **classic docking** scene,
-inspired by the documented public AvalonDock example: Properties, two documents,
-Alarms/Journal, and Agenda/Contacts auto-hide rails. A native menu bar and compact sample
-and theme selectors replace the oversized banner and crowded laboratory toolbar.
-**IDE workspace**, **MVVM documents**, and all previous diagnostic laboratories remain
-available from the Samples and Diagnostics menus. The sample property inspector edits a
-whitelisted subset of real model/editor properties and validates input; it is not a
-complete port of Xceed PropertyGrid.
+Selection epochs prevent stale controls from editing a previous document. Draft detection
+reads current text rather than relying on deferred native TextChanged events. A competing
+application edit produces a conflict instead of being overwritten. Unchanged values do
+not run setters, preserving round-trip numeric precision and brush identity. Float/dock
+transactions retain the inspector rows after reparenting settles. Programmatic theme
+changes synchronize the visible selector; redundant padding no longer clips combo values.
 
-Large text now expands tool captions, document/tool tabs and auto-hide rails instead of
-keeping 12-point geometry. Default-density geometry is unchanged. Manager/grid
-initialization and document-tab-panel pointer-leave extension points run on the actual
-lifecycle/input path. Manager-owned-view enumeration takes a stable snapshot.
+The inspector is sample-owned, not a full Xceed PropertyGrid implementation. No original
+PropertyGrid templates, bodies, artwork or fonts were imported. This increment changes
+sample presentation and editing behavior, **not the normalized AvalonDock API match count**.
+See [inspector implementation, tests and limits](docs/inspector-quality.md).
 
-The original reference inventories and diagnostic allowlist remain unchanged. Explicit
-per-type namespace mappings document the deliberate source-breaking rename; they do not
-normalize virtual overrides, framework type shape or behavior. Original probes remain
-in the original namespace and are isolated from product packaging.
+## UnoDock namespaces and classic samples
 
-See [sample fidelity and acceptance](docs/sample-quality.md),
-[dropdown lifetime](docs/dropdown-quality.md), and [prior validation](docs/validation-preview13.md).
+**Breaking change since preview 14:** product types live in `UnoDock`, `UnoDock.Layout`,
+`UnoDock.Controls`, `UnoDock.Themes`, `UnoDock.Converters` and their subnamespaces. There
+are no old-namespace aliases or forwarding assemblies. Update imports and XAML `using:`
+declarations and recompile. Assembly/package names remain `UnoDock` and `UnoDock.Core`.
+Stable layout XML element names and application ContentId values do not change. See
+[namespace migration](docs/namespace-migration.md).
 
-## Included menus, visuals and interaction
+The default **Docking** sample independently recreates the documented public arrangement:
+Properties on the left, two documents in the center, Alarms/Journal on the right, and
+Agenda/Contacts auto-hide rails. A compact native menu bar, sample/theme selectors,
+vector toolbar and status bar occupy 87 DIPs. **IDE workspace**, **MVVM binding**, and
+all earlier feature laboratories remain available from Samples and Diagnostics.
 
-Compact document/tool menus match ten original public observations of command order,
-labels, enabled/collapsed states and 22-DIP rows. Menu and row identities survive refreshes.
-Command subscriptions are scoped to an opening, worker requeries are coalesced, and
-command/root identity is revalidated after callbacks. Bulk-close operations stay in their
-original workspace and guard reentrancy. Shared custom menus preserve styles, bindings
-and local values, including callback-driven replacement and removal during context cleanup.
-
-Compact pane chrome places document tabs above content and tool tabs below it, hides
-redundant single-tool strips, rotates side labels and retains custom templates. Auto-hide
-moves the requested tool and reveals on hover without activation. Flyouts reserve a
-separate resize gutter. Splitters show a bounded ghost and commit their preserved sizing
-units only on release. Cancellation and model/window changes invalidate stale work.
-
-Document/tool headers reorder, combine and split groups. Default GuidesOnly docking
-requires an explicit glyph or visible tab/caption target; GuidesAndEdges and EdgesOnly
-provide broad zones. The same validated plan drives preview, hit testing and drop.
-Native floating targets receive guides projected into their own clients. In-surface
-hosting is available through FloatingWindowMode.InSurface; other host environments can
-supply ICrossWindowCoordinates.
-
-Ctrl+Tab opens the navigator, Control release/Enter commits, Escape cancels, and Ctrl+F4
-closes the active document. Navigator collections and row containers retain identity with
-bounded selected-row reveal. Named ListBox parts remain supported; NavigatorListBox
-provides realized rows for FrameworkElement model adapters on the pinned Uno host.
-Default navigator rows are not virtualized. Retained editor presenters and weak focus
-records survive selection and docking. Protected input/focus hooks execute on operation
-paths, rather than merely receiving notifications after them.
-
-Window commands target explicit hosts. Managed/native chrome, normal/maximized bounds,
-close cancellation/reentrancy and Win32 message-filter lifetimes have targeted tests.
-These are not complete WPF Window, Freezable, HwndHost or routed-event implementations.
+Commands invoke actual document, docking, source-collection and serialization operations.
+The Properties inspector follows the last-focused document, supports Enter/blur commit
+and Escape cancellation, and validates values; it does not execute arbitrary reflected
+properties. Large-text density expands docking captions, tabs and rails. Theme changes
+retain the model and editor content. See [sample fidelity and acceptance](docs/sample-quality.md).
 
 ## Run the gallery
 
 Committed pins: **Uno.Sdk 6.7.30**, **Uno.WinUI 6.7.135**, **Uno.Templates 6.7.30**.
 `global.json` selects .NET 10 with latest-feature roll-forward. These are reproducible
-pins, not an assertion of the latest registry versions. Dependency upgrades are explicit.
+pins, not an assertion of the latest registry versions. Upgrades are explicit.
 
 ```bash
 dotnet run --project samples/UnoDock.Gallery -c Release -f net10.0-desktop \
   -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0
 ```
 
-The Diagnostics menu includes Window shell, Window lifecycle, Input extensions, Visual
-parity, Navigator quality, Docking guides, Splitter quality, Auto-hide quality and Menu
-quality. Open Dropdown contracts from Menu quality. The workbench demonstrates native
-and in-surface windows, capabilities/cancellation, source-bound editors, MRU navigation,
-large tab sets, RTL/density/themes, deferred resizing, XML persistence and command changes.
+The desktop head uses Uno Skia on Windows, macOS and Linux. Browser publishing:
 
 ```bash
 dotnet workload install wasm-tools
@@ -99,8 +74,8 @@ dotnet publish samples/UnoDock.Gallery -c Release -f net10.0-browserwasm \
   -o artifacts/browser
 ```
 
-The desktop head uses Uno Skia on Windows, macOS and Linux. Android/iOS gallery heads
-and device acceptance are not included. Browser publishing is not browser input testing.
+Android/iOS gallery heads and device acceptance are not included. Browser publishing is
+not browser runtime/input acceptance.
 
 ## Basic use
 
@@ -145,46 +120,78 @@ serializer.Serialize("workspace.xml");
 serializer.Deserialize("workspace.xml");
 ```
 
-Use `xmlns:dock="using:UnoDock"` and
-`xmlns:layout="using:UnoDock.Layout"` in Uno XAML. WPF namespace URIs,
-framework types, resource dictionaries and templates need explicit migration.
-Restoration constructs a detached layout and resolves content before replacing the
-active root. Bounded XML parsing rejects unsafe/unknown input; supplied XmlReader
-settings remain the caller's responsibility. Arbitrary CLR objects are not deserialized.
+Use `xmlns:dock="using:UnoDock"` and `xmlns:layout="using:UnoDock.Layout"` in Uno XAML.
+WPF namespace URIs, framework types, resource dictionaries and templates need migration.
+Restoration constructs a detached layout and resolves content before replacing the active
+root. Bounded XML parsing rejects unsafe/unknown input; supplied XmlReader settings remain
+the caller's responsibility. Arbitrary CLR objects are not deserialized.
 
-## Architecture, contracts and provenance
+## Docking, presentation and extensibility
+
+Nested panels and document/tool groups support header reordering, combining and splitting.
+GuidesOnly requires an explicit glyph or visible tab/caption target; GuidesAndEdges and
+EdgesOnly provide broad zones. The same validated plan drives preview, hit testing and
+drop. Native floating targets receive guides projected into their own clients. Use
+FloatingWindowMode.InSurface for managed hosting or supply ICrossWindowCoordinates for
+another host. Transformed detection regions conservatively enclose all four corners.
+
+Document tabs sit above content; tool tabs below. Redundant single-tool strips are hidden,
+side labels rotate, and custom title/header templates remain usable. Auto-hide moves the
+requested tool and reveals on hover without activation. Flyouts reserve a separate resize
+gutter. Splitters preview bounded geometry and commit preserved sizing units on release;
+cancellation and conflicting model/window changes invalidate stale work.
+
+Compact document/tool menus replay recorded original command order, labels, enabled and
+collapsed states, and row geometry. Menu rows retain identity through refreshes. Command
+subscriptions are scoped to openings, worker requeries coalesce, and callback-driven
+command/root replacement is revalidated. Bulk-close operations guard reentrancy and stay
+in their originating workspace. Shared custom menus preserve templates, bindings and
+application-owned context while cleaning temporary assignments.
+
+Ctrl+Tab opens the navigator, Control release/Enter commits, Escape cancels, and Ctrl+F4
+closes the active document. Navigator collections/containers retain identity with bounded
+selected-row reveal. Named ListBox parts remain supported; NavigatorListBox realizes rows
+for FrameworkElement model adapters on the pinned Uno host. Default rows are not virtualized.
+Retained editor presenters and weak focus records survive selection and docking.
+
+Window commands use explicit hosts. Managed/native chrome, normal/maximized bounds,
+close cancellation/reentrancy and Win32 message-filter lifetimes have targeted tests.
+Protected focus/input and initialization adapters run on the real operation path. These
+are not complete WPF Window, Freezable, HwndHost, logical-tree or routed-event implementations.
+
+## Architecture and deterministic contracts
 
 | Area | Projects |
 | --- | --- |
-| Portable geometry, coordinates, drag state and XML | `src/UnoDock.Core` |
+| Portable geometry, coordinates, drag state and bounded XML | `src/UnoDock.Core` |
 | Models, controls, native adapters, persistence and themes | `src/UnoDock` |
-| Interactive workbench and laboratories | `samples/UnoDock.Gallery` |
+| Interactive samples and laboratories | `samples/UnoDock.Gallery` |
 | Portable, real-host and visual acceptance | `tests/UnoDock.Core.Tests`, `tests/UnoDock.Runtime.Tests`, `tests/UnoDock.VisualTests` |
 | Syntax and resolved metadata inventories | `tools/ApiScan`, `tools/ApiMetadata` |
 | Independent original public observations | `tools/ReferenceProbe`, `tools/ReferenceVisualProbe`, `tools/ReferenceSampleProbe` |
 
 The original is pinned at **2c71faba5eecc1b6ae6cd3d269408e0df37715d8**. The syntax inventory
-has 996 declarations; resolved Release metadata has 105 type names and 1,031 entries,
-including attributes, enum/default values, constraints, constructors and inheritance.
-Repeated inventories must be byte-identical; unresolved types fail. Original implementation
-bodies, templates, resource definitions, artwork and font files are not copied into the
-product. Public protocol observations are distinguished from native input acceptance.
+has 996 declarations; resolved Release metadata has 105 exported type names and 1,031
+entries, including attributes, enum/default values, constraints and inheritance. Repeated
+inventories must be byte-identical; unresolved types fail.
 
-The preview-13 resolved regression comparison was **978/1,031**, with **53 signature/type entries**
-and **18 separately reported attribute differences** unresolved. Adding callable protected
-virtual input methods does not make them WPF overrides: that distinction remains visible.
-The comparator and diagnostic allowlist remain strict. Only explicit namespace mappings
-are added for the intentional rename; the baseline mapping digest is rebound accordingly. The full strict-parity gate
-remains unsatisfied; API counts do not measure whole-product feature completeness.
+The preview-14 resolved comparison is **978/1,031**, with **53 signature/type entries**
+and **18 separately reported attribute differences** unresolved. Preview 15 does not
+change product library declarations. Callable virtual adapters are not misreported as
+WPF overrides. Original inventories and diagnostic allowlist remain unchanged. Explicit
+per-type namespace mappings describe the rename, not a parity gain. The no-regression
+gate differs from the still-unsatisfied full strict-parity gate.
 
-Measured pane/guide geometry and menu row replays establish their specific scenes, not
-pixel identity. Fonts, glyph rasterization, arbitrary templates and non-client details
-differ. Original navigator setter semantics, framework inheritance, complete event
-ordering, custom serialization, accessibility, mobile/touch/pen, IME, multi-monitor DPI
-and workload-level performance equivalence remain open.
+Original bodies, templates, resource definitions, artwork and fonts are not copied into
+the product. Public protocol observations are distinguished from native input acceptance.
+Measured pane/guide geometry and menu replays establish their specific scenes, not pixel
+identity. Fonts, rasterization, arbitrary templates and non-client details differ. Original
+navigator setter semantics, framework inheritance, complete event ordering, custom
+serialization, accessibility, mobile/touch/pen, IME, multi-monitor DPI and workload-level
+performance equivalence remain open.
 
 See [architecture](docs/architecture.md), [provenance](docs/clean-room.md),
-[compatibility boundaries](docs/compatibility.md), [input extensions](docs/input-extensions.md),
+[compatibility](docs/compatibility.md), [input extensions](docs/input-extensions.md),
 [window lifecycle](docs/window-lifecycle.md), [window shell](docs/window-shell.md),
 [navigator](docs/navigator-quality.md), [guides](docs/docking-guides.md),
 [splitters](docs/splitter-quality.md), [auto-hide](docs/auto-hide-quality.md),
@@ -194,21 +201,24 @@ See [architecture](docs/architecture.md), [provenance](docs/clean-room.md),
 
 ```bash
 dotnet run --project tests/UnoDock.Core.Tests -c Release -- artifacts/test-results
-# Run in a desktop session, or prefix with xvfb-run -a on Linux:
+# In a desktop session, or prefixed by xvfb-run -a on Linux:
 UNODOCK_SELFTEST=1 dotnet run --project samples/UnoDock.Gallery -c Release \
   -f net10.0-desktop -p:UnoDockTargetFrameworks=net10.0-desktop \
   -p:UnoDockLibraryFrameworks=net10.0
 ```
 
-The registered matrix contains **2,335 core/Linux C# cases**, a **430-case Windows
-subset** and **23 Python comparator cases**. Linux opts into **48 XTEST scenarios** on
-a dedicated display. Platform cases overlap. Inspect JSON/JUnit reports and every CI
-job conclusion for the consumed revision. SDK/XAML desktop builds use warnings-as-errors.
+Actual JSON/JUnit reports, execution summaries and every CI job conclusion establish the
+counts and results for a consumed revision. Platform suites overlap. The new inspector
+suite registers 35 Linux / 33 Windows cases, including two opt-in XTEST scenarios; these
+are part of the platform totals, not additional independent cases. Eight namespace
+invariants and 23 metadata-comparator cases remain enabled. Run just the inspector with
+`UNODOCK_TEST_SUITE=inspector-quality`. Native input requires a dedicated test display
+and explicit `UNODOCK_NATIVE_INPUT_TESTS=1`.
 
 Normal input acceptance has no extra root-event observer. UNODOCK_INPUT_TRACE=1 enables
-bounded diagnostics. After a failing Linux run, CI can collect separate diagnostic evidence
-without replacing its original report or clearing the failure. Historical intermittent
-input behavior is recorded in [preview-12 validation](docs/validation-preview12.md).
+bounded diagnostics. Failed Linux acceptance may generate separate diagnostics without
+replacing its original report or clearing the failure. Desktop SDK/XAML builds use
+warnings-as-errors; package/browser warnings have separate accounting.
 
 Artifacts include exact source/revision/checksum, API inventories/differences, platform
 reports and PNG/XML captures, desktop/browser output and packages/symbols. X11/Win32

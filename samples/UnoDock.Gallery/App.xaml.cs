@@ -26,7 +26,9 @@ public partial class App : Application
                     await Task.Delay(300);
                     var output = Environment.GetEnvironmentVariable("UNODOCK_TEST_RESULTS") ?? "artifacts/test-results";
                     var suite = Environment.GetEnvironmentVariable("UNODOCK_TEST_SUITE");
-                    if (suite == "presentation-quality")
+                    if (suite == "inspector-quality")
+                        exitCode = await Testing.InspectorQualityTests.Run(output);
+                    else if (suite == "presentation-quality")
                         exitCode = await Testing.PresentationQualityTests.Run(output);
                     else if (suite == "sample-quality")
                         exitCode = await Testing.SampleQualityTests.Run(gallery, output);
@@ -64,6 +66,7 @@ public partial class App : Application
                         exitCode |= await Testing.DropDownQualityTests.Run(output);
                         exitCode |= await Testing.SampleQualityTests.Run(gallery, output);
                         exitCode |= await Testing.PresentationQualityTests.Run(output);
+                        exitCode |= await Testing.InspectorQualityTests.Run(output);
                     }
                     else if (string.IsNullOrEmpty(suite) || suite == "all")
                     {
@@ -87,6 +90,7 @@ public partial class App : Application
                         exitCode |= await Testing.DropDownQualityTests.Run(output);
                         exitCode |= await Testing.SampleQualityTests.Run(gallery, output);
                         exitCode |= await Testing.PresentationQualityTests.Run(output);
+                        exitCode |= await Testing.InspectorQualityTests.Run(output);
                     }
                     else throw new ArgumentException("Unknown UNODOCK_TEST_SUITE: " + suite);
                 }
