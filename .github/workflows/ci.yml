@@ -59,12 +59,28 @@ jobs:
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y xvfb libx11-6 libxi6 libxrandr2 libxcursor1 libfontconfig1 libgl1 libice6 libsm6 libxcb1 libxtst6
       - name: Run real Uno runtime and original-layout interoperability tests
+        id: linux_runtime
         if: runner.os == 'Linux'
         env:
           UNODOCK_SELFTEST: '1'
           UNODOCK_NATIVE_INPUT_TESTS: '1'
           UNODOCK_TEST_RESULTS: ${{ github.workspace }}/artifacts/test-results
         run: timeout 300s xvfb-run -a -s "-screen 0 2560x1440x24" dotnet run --project samples/UnoDock.Gallery -c Release -f net10.0-desktop --no-build -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0
+      - name: Capture diagnostic evidence after a failed Linux acceptance run
+        if: failure() && runner.os == 'Linux' && steps.linux_runtime.outcome == 'failure'
+        env:
+          UNODOCK_SELFTEST: '1'
+          UNODOCK_NATIVE_INPUT_TESTS: '1'
+          UNODOCK_INPUT_TRACE: '1'
+          UNODOCK_TEST_RESULTS: ${{ github.workspace }}/artifacts/diagnostics
+        # A diagnostic run never replaces or clears the original failing result.
+        run: timeout 300s xvfb-run -a -s "-screen 0 2560x1440x24" dotnet run --project samples/UnoDock.Gallery -c Release -f net10.0-desktop --no-build -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0
+      - uses: actions/upload-artifact@v4
+        if: failure() && runner.os == 'Linux' && steps.linux_runtime.outcome == 'failure'
+        with:
+          name: native-failure-diagnostics
+          path: artifacts/diagnostics/
+          if-no-files-found: warn
       - name: Run Windows lifecycle, HWND filter, input, navigator and visual tests
         if: runner.os == 'Windows'
         shell: pwsh

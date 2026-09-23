@@ -10,6 +10,10 @@ public static class InputRoutingTrace
 {
     public static async Task<int> Run(DockingManager host, string output)
     {
+        // Diagnostics must not influence the acceptance path merely by registering
+        // extra routed handlers. The normal run has no observer on the root.
+        if (Environment.GetEnvironmentVariable("UNODOCK_INPUT_TRACE") != "1")
+            return await InputExtensionTests.Run(host, output);
         var root = host.XamlRoot?.Content ?? throw new InvalidOperationException("Input test host is detached.");
         var records = new Queue<Record>(); var watch = Stopwatch.StartNew();
         PointerEventHandler pressed = (_, e) => Capture("pressed", e);
