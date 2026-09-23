@@ -39,6 +39,7 @@ internal static class NavigatorObservations
             try
             {
                 navigator.Show(); navigator.UpdateLayout();
+                var shown = navigator.IsVisible;
                 if (scenario == "navigator-tool") navigator.SelectedAnchorable = navigator.Anchorables.First();
                 else navigator.SelectedDocument = navigator.Documents.Last();
                 navigator.UpdateLayout(); navigator.Dispatcher.Invoke(DispatcherPriority.Render, new Action(() => { }));
@@ -52,7 +53,8 @@ internal static class NavigatorObservations
                 var scene = new XElement("Navigator", new XAttribute("name", scenario), new XAttribute("width", root.ActualWidth),
                     new XAttribute("height", root.ActualHeight), new XAttribute("windowWidth", navigator.ActualWidth),
                     new XAttribute("windowHeight", navigator.ActualHeight), new XAttribute("documentLabel", navigator.LayoutDocumentsLabel),
-                    new XAttribute("toolLabel", navigator.LayoutAnchorablesLabel));
+                    new XAttribute("toolLabel", navigator.LayoutAnchorablesLabel),
+                    new XAttribute("visibleBeforeSelection", shown), new XAttribute("visibleAfterSelection", navigator.IsVisible));
                 Walk(root, root, scene); new XDocument(scene).Save(Path.Combine(output, scenario + ".xml"));
                 Console.WriteLine("Captured public reference " + scenario);
             }
@@ -61,10 +63,10 @@ internal static class NavigatorObservations
     }
     private static void Walk(DependencyObject node, FrameworkElement root, XElement output)
     {
-        if (node is FrameworkElement element && element.IsVisible)
+        if (node is FrameworkElement element)
         {
             var bounds = element.TransformToAncestor(root).TransformBounds(new Rect(0, 0, element.ActualWidth, element.ActualHeight));
-            var row = new XElement("Element", new XAttribute("type", node.GetType().Name), new XAttribute("name", element.Name ?? ""),
+            var row = new XElement("Element", new XAttribute("type", node.GetType().Name), new XAttribute("name", element.Name ?? ""), new XAttribute("visibility", element.Visibility),
                 new XAttribute("x", bounds.X.ToString("R", CultureInfo.InvariantCulture)), new XAttribute("y", bounds.Y.ToString("R", CultureInfo.InvariantCulture)),
                 new XAttribute("width", bounds.Width.ToString("R", CultureInfo.InvariantCulture)), new XAttribute("height", bounds.Height.ToString("R", CultureInfo.InvariantCulture)));
             if (node is TextBlock text) { row.SetAttributeValue("text", text.Text); row.SetAttributeValue("fontSize", text.FontSize); row.SetAttributeValue("foreground", Brush(text.Foreground)); }
