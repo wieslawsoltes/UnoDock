@@ -1,0 +1,85 @@
+name: Integrate verified splitter implementation
+on:
+  workflow_dispatch:
+  push:
+    paths: ['.github/workflows/integrate-splitter.yml']
+permissions:
+  contents: write
+  actions: write
+concurrency:
+  group: integrate-splitter
+  cancel-in-progress: false
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Verify complete source patch and apply without overwriting concurrent changes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import base64, hashlib, json, lzma, os, pathlib, subprocess, urllib.request
+          shas = ['f33eb786ea3d7d50e33c392d5d6793cb9c46d23c', '1314d1faca7cb5a85c7fe7fc579d2c17755c5d7b', 'fa84d57bbff3d76d2662493fb97b05f70b829647', '6c17f72a668aab0091c62df6c255752fe1c71f9c']
+          pieces = []
+          for sha in shas:
+              request = urllib.request.Request(f'https://api.github.com/repos/{os.environ["GITHUB_REPOSITORY"]}/git/blobs/{sha}', headers={'Authorization': 'Bearer ' + os.environ['GH_TOKEN'], 'Accept': 'application/vnd.github+json'})
+              with urllib.request.urlopen(request, timeout=60) as response:
+                  blob = json.load(response)
+              value = base64.b64decode(blob['content'])
+              assert hashlib.sha1(b'blob ' + str(len(value)).encode() + b'\0' + value).hexdigest() == sha
+              pieces.append(value)
+          compressed = b''.join(pieces)
+          assert hashlib.sha256(compressed).hexdigest() == 'b2c2a07c23b36d709b85c8ba5a8031ff4a27203072ab05fa08254b1a109c46de'
+          patch = pathlib.Path(os.environ['RUNNER_TEMP']) / 'splitter.patch'
+          patch.write_bytes(lzma.decompress(compressed))
+          stats = subprocess.check_output(['git', 'apply', '--numstat', str(patch)], text=True)
+          names = [line.split('\t', 2)[2] for line in stats.splitlines()]
+          expected = {
+              'Directory.Build.props', 'README.md',
+              'contracts/visual-fixtures/splitter-observations.xml',
+              'contracts/visual-fixtures/splitter-provenance.json',
+              'docs/compatibility.md', 'docs/splitter-quality.md', 'docs/validation-preview10.md',
+              'samples/UnoDock.Gallery/App.xaml.cs', 'samples/UnoDock.Gallery/GalleryPage.cs',
+              'samples/UnoDock.Gallery/SplitterLab.cs',
+              'src/UnoDock/Controls/LayoutGridControl.Resize.cs',
+              'src/UnoDock/Controls/LayoutGridControl.cs',
+              'src/UnoDock/Controls/LayoutGridResizerControl.cs',
+              'tests/UnoDock.VisualTests/SplitterQualityTests.cs'
+          }
+          assert len(names) == 14 and set(names) == expected, names
+          subprocess.run(['git', 'apply', '--check', '--index', str(patch)], check=True)
+          subprocess.run(['git', 'apply', '--index', str(patch)], check=True)
+          print(stats)
+          PY
+      - name: Build complete SDK and XAML desktop application with warnings as errors
+        run: dotnet build samples/UnoDock.Gallery -c Release -f net10.0-desktop -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0 -warnaserror
+      - name: Run portable tests and deterministic API regression gate
+        run: |
+          dotnet run --project tests/UnoDock.Core.Tests -c Release -- artifacts/test-results
+          python3 tools/generate-property-adapters.py
+          git diff --exit-code -- src/
+          bash tools/check-metadata.sh
+          git diff --cached --check
+      - name: Commit implementation and dispatch full platform validation
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'feat: implement deferred splitter transactions, native cancellation and original sizing replays'
+          git push origin HEAD:main
+          git rev-parse HEAD > artifacts/integrated-revision.txt
+          gh workflow run ci.yml --ref main
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: splitter-integration-results
+          path: artifacts/
