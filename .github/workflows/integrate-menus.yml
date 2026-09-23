@@ -47,12 +47,19 @@ jobs:
               assert path.parts[0] in ('Directory.Build.props','README.md','docs','contracts','samples','src','tests')
           subprocess.run(['git','apply','--check','--index',str(patch)],check=True)
           subprocess.run(['git','apply','--index',str(patch)],check=True)
+          # SDK annotations require an explicit attached-root guard in this test.
+          test=pathlib.Path('tests/UnoDock.VisualTests/MenuQualityTests.cs')
+          old='FocusManager.GetFocusedElement(dock.XamlRoot) as MenuFlyoutItem;'
+          new='FocusManager.GetFocusedElement(dock.XamlRoot ?? throw new InvalidOperationException("Menu host is detached.")) as MenuFlyoutItem;'
+          text=test.read_text(); assert text.count(old)==1
+          test.write_text(text.replace(old,new))
+          subprocess.run(['git','add',str(test)],check=True)
           index=pathlib.Path(os.environ['RUNNER_TEMP'])/'menus-verify.index'
           index.write_bytes(pathlib.Path('.git/index').read_bytes())
           env=dict(os.environ,GIT_INDEX_FILE=str(index))
           subprocess.run(['git','update-index','--force-remove','.github/workflows/integrate-menus.yml'],env=env,check=True)
           tree=subprocess.check_output(['git','write-tree'],env=env,text=True).strip()
-          assert tree=='3cd4c2e4b844d26ac99bdf49dc9cf07b7c8e6987','Concurrent or unexpected source tree: '+tree
+          assert tree=='4d91e52a9ca5e8c657175b61974e5e711afe486c','Concurrent or unexpected source tree: '+tree
           print(stats)
           PY
       - name: Build complete SDK and XAML desktop sample with warnings as errors
