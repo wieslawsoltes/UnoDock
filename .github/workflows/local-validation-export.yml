@@ -16,23 +16,61 @@ jobs:
           dotnet-version: '10.0.x'
       - name: Build pinned generic Uno desktop
         run: dotnet build samples/UnoDock.Gallery -c Release -f net10.0-desktop -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0 -warnaserror
-      - name: Export SDK and package cache without credentials or repository data
+      - name: Export active tools without credentials or original-reference data
         shell: bash
         run: |
           set -euo pipefail
           root=$(dirname "$(readlink -f "$(which dotnet)")")
           sdk=$(dotnet --version)
           stage="$RUNNER_TEMP/validation"
-          mkdir -p "$stage/sdk" "$stage/nuget"
-          tar -cf "$stage/sdk/dotnet.tar" -C "$root" dotnet host shared packs sdk-manifests "sdk/$sdk"
-          tar -cf "$stage/nuget/packages.tar" -C "$HOME/.nuget" packages
+          mkdir -p "$stage"
+          cd "$root"
+          tar -czf "$stage/sdk.tar.gz" dotnet host/fxr/10.* shared/Microsoft.NETCore.App/10.* packs/Microsoft.NETCore.App.Ref/10.* packs/NETStandard.Library.Ref sdk-manifests "sdk/$sdk"
+          cd "$GITHUB_WORKSPACE"
+          python3 - <<'PY'
+          import json,pathlib,tarfile,os
+          packages=set()
+          for p in pathlib.Path('.').rglob('project.assets.json'):
+              data=json.loads(p.read_text())
+              for value in data['libraries'].values():
+                  if value['type']=='package': packages.add(value['path'])
+          root=pathlib.Path.home()/'.nuget/packages'
+          with tarfile.open(pathlib.Path(os.environ['RUNNER_TEMP'])/'validation/packages.tar.gz','w:gz') as tar:
+              for name in sorted(packages):
+                  tar.add(root/name,arcname='packages/'+name,filter=lambda i: None if i.name.endswith('.nupkg') else i)
+          PY
+          split -b 440M -d "$stage/packages.tar.gz" "$stage/packages-"
+          rm "$stage/packages.tar.gz"
       - uses: actions/upload-artifact@v4
         with:
-          name: local-dotnet-sdk
-          path: ${{ runner.temp }}/validation/sdk/
+          name: local-dotnet-sdk-small
+          path: ${{ runner.temp }}/validation/sdk.tar.gz
           retention-days: 1
+          compression-level: 0
       - uses: actions/upload-artifact@v4
         with:
-          name: local-uno-packages
-          path: ${{ runner.temp }}/validation/nuget/
+          name: local-packages-00
+          path: ${{ runner.temp }}/validation/packages-00
           retention-days: 1
+          compression-level: 0
+      - uses: actions/upload-artifact@v4
+        with:
+          name: local-packages-01
+          path: ${{ runner.temp }}/validation/packages-01
+          retention-days: 1
+          compression-level: 0
+          if-no-files-found: ignore
+      - uses: actions/upload-artifact@v4
+        with:
+          name: local-packages-02
+          path: ${{ runner.temp }}/validation/packages-02
+          retention-days: 1
+          compression-level: 0
+          if-no-files-found: ignore
+      - uses: actions/upload-artifact@v4
+        with:
+          name: local-packages-03
+          path: ${{ runner.temp }}/validation/packages-03
+          retention-days: 1
+          compression-level: 0
+          if-no-files-found: ignore
