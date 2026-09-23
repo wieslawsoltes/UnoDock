@@ -1,0 +1,9 @@
+{
+  "referenceRevision": "2c71faba5eecc1b6ae6cd3d269408e0df37715d8",
+  "probeRevision": "5298acd6024c134925286fc80b83b04608a17304",
+  "runId": 35825988138,
+  "artifactId": 10735490419,
+  "artifactSha256": "828f517484498b3ac29113be7a9804cc9c6427133d1afa926397767ccac5fbe1",
+  "method": "Public constructors/models, Win32 WM_ENTERSIZEMOVE/WM_MOVING/WM_MOVE; public arranged rectangles and pixels. NOT end-to-end pointer acceptance.",
+  "scope": "Document/tool dragging over a document pane at 1000x640 DIP, pinned stock theme, ordinary document group."
+}

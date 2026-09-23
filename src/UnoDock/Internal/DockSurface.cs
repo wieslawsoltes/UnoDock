@@ -5,7 +5,7 @@ using Xceed.Wpf.AvalonDock.Layout;
 
 namespace Xceed.Wpf.AvalonDock.Internal;
 
-internal sealed class DockSurface : Grid, IDisposable
+internal sealed partial class DockSurface : Grid, IDisposable
 {
     private readonly Grid _docked = new();
     private readonly Canvas _floats = new();
@@ -221,10 +221,8 @@ internal sealed class DockSurface : Grid, IDisposable
             if (current is UIElement { Visibility: Visibility.Collapsed }) return false;
         return true;
     }
-    internal DockDropPlan? GetDropPlan(LayoutContent content, Point point)
+    private IModelDropArea? FindDropArea(Point point)
     {
-        ArgumentNullException.ThrowIfNull(content);
-        if (!double.IsFinite(point.X) || !double.IsFinite(point.Y)) throw new ArgumentOutOfRangeException(nameof(point));
         // Prefer the most specific arranged area. A forbidden pane does not fall
         // through to a different root operation hidden underneath its preview.
         LayoutFloatingWindowControl? floating;
@@ -245,9 +243,20 @@ internal sealed class DockSurface : Grid, IDisposable
             .Where(a => a.DetectionRect.Width > 0 && a.DetectionRect.Height > 0 && a.DetectionRect.Contains(point))
             .OrderBy(a => a.Type == DropAreaType.DockingManager ? 1 : 0)
             .ThenBy(a => a.DetectionRect.Width * a.DetectionRect.Height).FirstOrDefault();
-        if (area?.Model is not ILayoutGroup target) return null;
+        return area;
+    }
+    internal DockDropPlan? GetDropPlan(LayoutContent content, Point point)
+    {
+        ArgumentNullException.ThrowIfNull(content);
+        if (!double.IsFinite(point.X) || !double.IsFinite(point.Y)) throw new ArgumentOutOfRangeException(nameof(point));
+        return ResolveDrop(content, point, out _);
+    }
+    private DockDropPlan? LegacyDropPlan(LayoutContent content, Point point, IModelDropArea area, bool headerOnly)
+    {
+        if (area.Model is not ILayoutGroup target) return null;
         var bounds = area.DetectionRect;
         var pane = area.Type != DropAreaType.DockingManager ? GetView(target) as LayoutCachePaneControl : null;
+        if (headerOnly && pane?.IsOverHeader(point, this) != true) return null;
         // A tab strip is an insertion surface, not the pane's top split zone.
         var position = pane?.IsOverHeader(point, this) == true ? DockPosition.Inside :
             DockSplitSolver.HitTest(new(bounds.X, bounds.Y, bounds.Width, bounds.Height), new(point.X, point.Y));
@@ -274,7 +283,7 @@ internal sealed class DockSurface : Grid, IDisposable
         if (!TryGetPoint(args, out var point)) { CancelDrag(); return; }
         if (!_drag.Move(args.Pointer.PointerId, new(point.X, point.Y), [])) return;
         _lastDragPoint = point;
-        ShowDragPreview(GetDropPlan(_dragContent, point));
+        UpdateDragAdorners(point);
         if (!_dragScrollTimer.IsEnabled) { _lastScrollTick = Stopwatch.GetTimestamp(); _dragScrollTimer.Start(); }
         args.Handled = true;
     }
@@ -287,11 +296,12 @@ internal sealed class DockSurface : Grid, IDisposable
         // matching move event. Never execute the last painted hover snapshot.
         _drag.Move(args.Pointer.PointerId, new(point.X, point.Y), []);
         var plan = GetDropPlan(content, point);
+        var overDockingClient = FindDropArea(point) != null;
         var committed = _drag.Commit(args.Pointer.PointerId);
         DetachDrag();
         if (!committed) return;
         if (plan != null) plan.Execute();
-        else if (!new DockRect(0, 0, ActualWidth, ActualHeight).Contains(new(point.X, point.Y)) && content.CanFloat)
+        else if (!overDockingClient && !new DockRect(0, 0, ActualWidth, ActualHeight).Contains(new(point.X, point.Y)) && content.CanFloat)
         { content.FloatingLeft = point.X; content.FloatingTop = point.Y; content.Float(); }
         args.Handled = true;
     }
@@ -328,15 +338,15 @@ internal sealed class DockSurface : Grid, IDisposable
     {
         if (_disposed || _dragContent == null || _drag.State != DockDragState.Dragging) { _dragScrollTimer.Stop(); return; }
         var now = Stopwatch.GetTimestamp(); var seconds = Stopwatch.GetElapsedTime(_lastScrollTick, now).TotalSeconds; _lastScrollTick = now;
-        var plan = GetDropPlan(_dragContent, _lastDragPoint);
-        if (plan?.CanExecute != true) { ShowDragPreview(null); return; }
+        var plan = UpdateDragAdorners(_lastDragPoint);
+        if (plan?.CanExecute != true) return;
         if (GetView(plan.Target) is not LayoutCachePaneControl pane) return;
         try
         {
             if (pane.ScrollHeaderAt(_lastDragPoint, this, seconds))
             {
                 pane.UpdateLayout(); // Insertion indices must use the newly scrolled geometry.
-                if (_dragContent != null) ShowDragPreview(GetDropPlan(_dragContent, _lastDragPoint));
+                if (_dragContent != null) UpdateDragAdorners(_lastDragPoint);
             }
         }
         catch (Exception error) when (DockCoordinates.IsUnavailable(error)) { CancelDrag(); }

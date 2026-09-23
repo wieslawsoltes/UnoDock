@@ -161,3 +161,14 @@ Original direct public selection setters were observed to close the native navig
 the port still stages those assignments until explicit commit. This difference remains
 open, as do arbitrary template virtualization and full inherited WPF contracts.
 See [navigator quality](navigator-quality.md) for precise evidence and limits.
+
+## Preview 9 guide acceptance
+
+The stock-style compass and workspace glyphs use public observed geometry and shared
+validated docking plans. `GuidesOnly` is the new default; applications relying on the
+preview-8 broad body/edge zones must select `GuidesAndEdges` or `EdgesOnly` explicitly.
+Four additional tool-as-tool compass targets are additive opt-in functionality. Native
+guide projection and neutral-client release behavior have targeted regression tests.
+See [docking-guides.md](docking-guides.md) for the reference message-probe method,
+geometry/pixel distinction, input coverage, custom template points and remaining limits.
+API comparison remains 977/1031 with 54 signature/type and 18 attribute differences.

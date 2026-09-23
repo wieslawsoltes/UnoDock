@@ -28,10 +28,16 @@ public static class InteractionTests
             var plan=host.GetDropPlan(docs[0],point);
             Check.True(plan != null);Check.Equal(DropTargetType.DocumentPaneDockInside,plan!.Type);Check.True(plan.InsertionIndex>=0);
         });
-        tests.Test("body center retains inside docking without header index", async () =>
+        tests.Test("edge compatibility mode retains body docking without header index", async () =>
         {
-            var docs=await Setup(host,4);var point=At(Pane(host),Surface(host),.5,.65);
-            var plan=host.GetDropPlan(docs[0],point);Check.True(plan != null);Check.Equal(-1,plan!.InsertionIndex);
+            var previous = host.DockingGuideMode;
+            try
+            {
+                host.DockingGuideMode = DockingGuideMode.GuidesAndEdges;
+                var docs=await Setup(host,4);var point=At(Pane(host),Surface(host),.5,.65);
+                var plan=host.GetDropPlan(docs[0],point);Check.True(plan != null);Check.Equal(-1,plan!.InsertionIndex);
+            }
+            finally { host.DockingGuideMode = previous; }
         });
         tests.Test("hidden models do not shift visible insertion indices", async () =>
         {

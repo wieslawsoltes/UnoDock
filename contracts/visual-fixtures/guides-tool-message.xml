@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Overlay name="guides-tool" method="public-native-message-sequence-not-pointer-acceptance" width="1000" height="640">
+  <Element type="Canvas" name="PART_DropTargetsContainer" x="0" y="0" width="1000" height="640" />
+  <Element type="Grid" name="PART_DockingManagerDropTargets" x="0" y="0" width="1000" height="640" />
+  <Element type="Image" name="PART_DockingManagerDropTargetLeft" x="0" y="305.5" width="32" height="29" />
+  <Element type="Image" name="PART_DockingManagerDropTargetRight" x="968" y="305.5" width="32" height="29" />
+  <Element type="Image" name="PART_DockingManagerDropTargetBottom" x="485.5" y="608" width="29" height="32" />
+  <Element type="Image" name="PART_DockingManagerDropTargetTop" x="485.5" y="0" width="29" height="32" />
+  <Element type="Grid" name="PART_DocumentPaneDropTargets" x="206" y="0" width="794" height="640" />
+  <Element type="Grid" name="" x="559" y="276" width="88" height="88" />
+  <Element type="Image" name="" x="559" y="276" width="87.999999999999986" height="87.999999999999986" />
+  <Element type="Border" name="PART_DocumentPaneDropTargetTop" x="588.33333333333326" y="276" width="29.333333333333336" height="29.333333333333329" />
+  <Element type="Image" name="" x="591.49839496612549" y="277.66485182444256" width="23.003210067749023" height="26.003629684448242" />
+  <Element type="Border" name="PART_DocumentPaneDropTargetRight" x="617.66666666666674" y="305.33333333333331" width="29.333333333333332" height="29.333333333333336" />
+  <Element type="Image" name="" x="619.33151849110914" y="308.99846458435059" width="26.003629684448242" height="22.003070831298828" />
+  <Element type="Border" name="PART_DocumentPaneDropTargetBottom" x="588.33333333333326" y="334.66666666666669" width="29.333333333333336" height="29.333333333333332" />
+  <Element type="Image" name="" x="591.49839496612549" y="336.33151849110919" width="23.003210067749023" height="26.003629684448242" />
+  <Element type="Border" name="PART_DocumentPaneDropTargetLeft" x="559" y="305.33333333333331" width="29.333333333333329" height="29.333333333333336" />
+  <Element type="Image" name="" x="560.66485182444262" y="308.49839496612549" width="26.003629684448242" height="23.003210067749023" />
+  <Element type="Border" name="PART_DocumentPaneDropTargetInto" x="588.33333333333326" y="305.33333333333331" width="29.333333333333336" height="29.333333333333336" />
+  <Element type="Image" name="" x="590.498254776001" y="307.498254776001" width="25.003490447998047" height="25.003490447998047" />
+</Overlay>

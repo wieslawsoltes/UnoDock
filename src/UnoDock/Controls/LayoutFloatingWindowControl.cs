@@ -229,6 +229,18 @@ public abstract class LayoutFloatingWindowControl : DockWindowControl, ILayoutCo
         try { _dropOverlay.ShowPreview(plan, DockCoordinates.Bounds(coordinateOwner, plan.PreviewRect, _dropOverlay, Model.Root?.Manager?.CrossWindowCoordinates), accent); }
         catch (Exception e) when (DockCoordinates.IsUnavailable(e)) { _dropOverlay.Hide(); }
     }
+    internal void ShowDropGuides(IReadOnlyList<DockGuideTarget> guides, DockDropPlan? plan, FrameworkElement coordinateOwner, DockingManager manager)
+    {
+        try
+        {
+            var local = guides.Select(g => new DockGuideTarget(g.Plan, DockCoordinates.Bounds(coordinateOwner,
+                g.DetectionRect, _dropOverlay, manager.CrossWindowCoordinates))).ToArray();
+            Rect? preview = null;
+            if (plan != null) preview = DockCoordinates.Bounds(coordinateOwner, plan.PreviewRect, _dropOverlay, manager.CrossWindowCoordinates);
+            _dropOverlay.ShowGuides(local, plan, manager, preview);
+        }
+        catch (Exception e) when (DockCoordinates.IsUnavailable(e)) { _dropOverlay.Hide(); }
+    }
     internal void HideDropPreview() => _dropOverlay.Hide();
     internal void ShowNative()
     {

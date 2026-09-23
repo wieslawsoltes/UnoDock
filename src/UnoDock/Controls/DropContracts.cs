@@ -171,32 +171,3 @@ public class OverlayWindowDropTarget
     public DropTargetType Type => Plan.Type;
     public bool Drop() => Plan.Execute();
 }
-/// <summary>Non-activating, hit-test-transparent overlay hosted in the application's visual tree.
-/// No WPF Window identity or HWND ownership is implied by this portable implementation.</summary>
-public class OverlayWindow : DockWindowControl
-{
-    private readonly Canvas _canvas = new();
-    private readonly Border _preview = new() { BorderThickness = new(2), Opacity = .35 };
-    public DockDropPlan? CurrentPlan { get; private set; }
-    public bool IsOpen => Visibility == Visibility.Visible && CurrentPlan != null;
-    public OverlayWindow()
-    {
-        IsHitTestVisible = false; IsTabStop = false; Visibility = Visibility.Collapsed;
-        HorizontalContentAlignment = HorizontalAlignment.Stretch; VerticalContentAlignment = VerticalAlignment.Stretch;
-        _canvas.Children.Add(_preview); Content = _canvas;
-    }
-    public void ShowPreview(DockDropPlan? plan, Brush accent)
-        => ShowPreview(plan, plan?.PreviewRect ?? default, accent);
-    internal void ShowPreview(DockDropPlan? plan, Rect rect, Brush accent)
-    {
-        ArgumentNullException.ThrowIfNull(accent);
-        if (plan?.CanExecute != true) { Hide(); return; }
-        CurrentPlan = plan;
-        Canvas.SetLeft(_preview, rect.X); Canvas.SetTop(_preview, rect.Y);
-        _preview.Width = rect.Width; _preview.Height = rect.Height; _preview.Background = accent; _preview.BorderBrush = accent;
-        Visibility = Visibility.Visible;
-    }
-    public void Hide() { CurrentPlan = null; Visibility = Visibility.Collapsed; }
-    public void Close() { var args = new CancelEventArgs(); OnClosing(args); if (!args.Cancel) Hide(); }
-    protected override void OnClosing(CancelEventArgs e) => base.OnClosing(e);
-}

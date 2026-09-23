@@ -6,33 +6,37 @@
 Independent AvalonDock-style docking for **Uno Platform 6.7**, retaining familiar
 `Xceed.Wpf.AvalonDock` namespaces while using Uno/WinUI controls.
 
-**Status: 0.1.0-preview.8. Full AvalonDock compatibility is not yet verified.** API shape,
+**Status: 0.1.0-preview.9. Full AvalonDock compatibility is not yet verified.** API shape,
 behavior, appearance, platform coverage and performance are separate acceptance areas.
 The target is the pinned public repository and its stock theme, not separately licensed
 commercial themes. The independent implementation is MIT-licensed and is not affiliated
 with or endorsed by Xceed or Uno Platform.
 
-## Preview 8
+## Preview 9
 
-The navigator now creates real selectable rows for FrameworkElement-based model adapters,
-retains item collections and row containers during navigation, reveals off-screen selections
-through the actual ScrollViewer, and revalidates deferred work after cancellation,
-retemplating or layout replacement. Its stock-style presentation has compact tool/document
-columns, independent title/description lines, live labels and coherent light/dark palettes.
-The new **Navigator quality** laboratory offers 3/40/200-document workspaces, RTL and
-larger-font settings. It adds **43 Linux / 41 Windows cases** with real rendered rows,
-scrolling, callbacks, palette combinations and five screenshot scenes.
+The drag overlay now displays independently rendered stock-style docking glyphs:
+an 88-DIP pane compass and rectangular workspace-edge guides measured from original
+public observations. The same validated drop plans drive the visuals, hit rectangles
+and released-pointer operation. Default `GuidesOnly` input requires an explicit glyph
+or visible tab/caption insertion target; `GuidesAndEdges` and `EdgesOnly` preserve
+preview-8 broad zones. Extra tool-as-tool guides are opt-in rather than presented as
+the original stock default.
 
-This builds on compact pane chrome, per-item auto-hide/pin restoration, retained editors,
-native/in-surface floating windows, lifecycle/input extension hooks, HWND filtering,
-MRU navigation, XML interoperability and command/source handling. The three inherited
-Dispose warnings are explicitly resolved for their respective targets; unsupported
-ListBox selection-mode/scroll methods are no longer called. Desktop CI now treats
-build warnings as errors on Linux, Windows and macOS.
+Native floating targets receive projected guides in their own client. A neutral drop
+in another native client no longer accidentally creates a floating window. Glyphs are
+non-activating, retain their containers through hover/theme changes, honor capabilities
+and cancellable docking, and clean up on capture cancellation. The **Docking guides**
+laboratory demonstrates policy, density, RTL, palette, permissions and native/in-surface
+workspaces.
 
-See [navigator implementation and limits](docs/navigator-quality.md),
-[preview-8 validation scope](docs/validation-preview8.md), and the complete
-[compatibility boundaries](docs/compatibility.md).
+The new suites add 23 portable cases (30,000 randomized layouts) and 43 Linux / 40
+Windows guide cases, including live original-geometry replays, native client projection
+and three real XTEST sequences. The original guide observations use an explicitly
+labeled public Win32 message sequence; they are not original end-to-end pointer tests.
+No original templates, Path.Data, artwork or font files are copied into the library.
+
+See [docking guides, migration and validation scope](docs/docking-guides.md),
+[navigator quality](docs/navigator-quality.md), and [compatibility boundaries](docs/compatibility.md).
 
 ## Solution and pinned toolchain
 
@@ -41,7 +45,7 @@ See [navigator implementation and limits](docs/navigator-quality.md),
 | `src/UnoDock.Core` | Portable constrained sizing, resizing, coordinates, drag state and bounded XML snapshots |
 | `src/UnoDock` | Layout models, docking manager, controls, native adapters, persistence and independent themes |
 | `samples/UnoDock.Gallery` | Interactive workbench, editors, tool panes, MVVM and feature laboratories |
-| `tests/UnoDock.Core.Tests` | 97 portable cases, including randomized geometry and caption-region probes |
+| `tests/UnoDock.Core.Tests` | 120 portable cases, including randomized geometry and caption-region probes |
 | `tests/UnoDock.Runtime.Tests` | Model/control, original-layout, source, converter, input and native-window tests |
 | `tests/UnoDock.VisualTests` | Original-geometry replay, live rendering, navigator and PNG/XML capture |
 | `tools/ApiScan` / `tools/ApiMetadata` | Deterministic syntax and resolved PE-metadata inventories |
@@ -59,7 +63,7 @@ dotnet run --project samples/UnoDock.Gallery -c Release -f net10.0-desktop \
 
 The desktop head uses Uno's Skia hosts on Windows, macOS and Linux. Toolbar laboratories
 include **Window shell**, **Window lifecycle**, **Input extensions**, **Visual parity**
-and **Navigator quality**. Existing editors preserve content and focus across docking.
+**Navigator quality** and **Docking guides**. Existing editors preserve content and focus across docking.
 For the browser head:
 
 ```bash
@@ -184,8 +188,8 @@ UNODOCK_SELFTEST=1 dotnet run --project samples/UnoDock.Gallery -c Release \
   -p:UnoDockLibraryFrameworks=net10.0
 ```
 
-The configured test matrix has **2,006 core/Linux C# cases**, a **150-case Windows
-subset**, and **23 Python comparator cases**. Linux enables 22 native XTEST scenarios
+The configured test matrix has **2,072 core/Linux C# cases**, a **190-case Windows
+subset**, and **23 Python comparator cases**. Linux enables 25 native XTEST scenarios
 in CI. Platform totals overlap. JSON/JUnit results and workflow conclusions, not the
 matrix size alone, establish what passed for a particular revision.
 

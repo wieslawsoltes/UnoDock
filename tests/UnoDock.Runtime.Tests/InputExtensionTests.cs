@@ -301,8 +301,9 @@ public static class InputExtensionTests
                     tab.IsEnabled = true;
                 });
             });
-            tests.Test("XTEST release override vetoes a real docking operation", async () =>
+            tests.Test("XTEST release override vetoes a real edge-compatibility docking operation", async () =>
             {
+                var guideMode = host.DockingGuideMode; host.DockingGuideMode = DockingGuideMode.GuidesAndEdges;
                 var old = host.Layout; var a = new LayoutDocument { Title = "stay" }; var b = new LayoutDocument { Title = "drag" };
                 var pane = new LayoutDocumentPane(a); pane.Children.Add(b); host.FloatingWindowMode = FloatingWindowMode.InSurface;
                 host.Layout = new() { RootPanel = new(pane) }; host.Refresh(); host.UpdateLayout(); await Task.Delay(80);
@@ -324,7 +325,7 @@ public static class InputExtensionTests
                     probe.ReleaseVeto = false; await input.Begin(probe, new(30, 12)); await input.Drop(control, new(control.ActualWidth / 2, control.ActualHeight - 10));
                     Check.False(ReferenceEquals(pane, b.Parent));
                 }
-                finally { host.Layout = old; host.Refresh(); await Task.Delay(80); }
+                finally { host.DockingGuideMode = guideMode; host.Layout = old; host.Refresh(); await Task.Delay(80); }
             });
         }
         return await tests.Run(output, "input-extensions");
