@@ -245,18 +245,24 @@ internal sealed class DropDownMenuSession
                 var awaitingNativeClose = active.WasShown || menu.IsOpen;
                 if (active.ShowStarted)
                 {
-                    // Each attempt invalidates callbacks belonging to a previous
-                    // cancelled or failed Hide, including synchronous retries.
-                    slot.CloseGeneration++;
-                    slot.Queue.Closing.Add(slot); slot.ClosingArguments = null;
-                    Attempt(menu.Hide);
-                    if (menu.IsOpen && (failures != null || slot.ClosingArguments?.Cancel == true))
+                    slot.Queue.Closing.Add(slot);
+                    // Releasing a scope from native Closed is NOT another Hide.
+                    // Its existing completion ticket must stay valid; the native
+                    // control will not emit a second Closed for an already closed
+                    // menu. Only an actual Hide/preparation abort starts an epoch.
+                    if (menu.IsOpen || !active.WasShown)
                     {
-                        retained = true; _active = active; _wanted = true; active.Subscribe();
-                        QueueAfterClosed(menu, slot); Attempt(() => _state(true));
-                        if (failures?.Count == 1) ExceptionDispatchInfo.Capture(failures[0]).Throw();
-                        if (failures != null) throw new AggregateException("Native closing and state restoration failed.", failures);
-                        return false;
+                        slot.CloseGeneration++;
+                        slot.ClosingArguments = null;
+                        Attempt(menu.Hide);
+                        if (menu.IsOpen && (failures != null || slot.ClosingArguments?.Cancel == true))
+                        {
+                            retained = true; _active = active; _wanted = true; active.Subscribe();
+                            QueueAfterClosed(menu, slot); Attempt(() => _state(true));
+                            if (failures?.Count == 1) ExceptionDispatchInfo.Capture(failures[0]).Throw();
+                            if (failures != null) throw new AggregateException("Native closing and state restoration failed.", failures);
+                            return false;
+                        }
                     }
                     if (!awaitingNativeClose && !menu.IsOpen) QueueAfterClosed(menu, slot);
                 }
