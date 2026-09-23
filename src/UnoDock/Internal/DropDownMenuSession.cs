@@ -7,12 +7,17 @@ namespace Xceed.Wpf.AvalonDock.Internal;
 /// checked state and native Show/Hide are all application-callback boundaries.</summary>
 internal sealed class DropDownMenuSession
 {
-    private sealed class Slot { internal WeakReference<DropDownMenuSession>? Owner; }
+    private sealed class Slot
+    {
+        internal WeakReference<DropDownMenuSession>? Owner, WaitingOwner;
+        internal long WaitingRevision;
+        internal bool Closing, ResumeQueued;
+    }
     private sealed class Opening(MenuFlyout menu, XamlRoot root)
     {
         internal readonly MenuFlyout Menu = menu;
         internal readonly XamlRoot Root = root;
-        internal bool ContextAssigned, ShowStarted;
+        internal bool ContextAssigned, ShowStarted, WasShown;
         internal object? Context;
         internal EventHandler<object>? Preparing, Opened, Closed;
     }
@@ -36,6 +41,37 @@ internal sealed class DropDownMenuSession
     internal void Close() => Request(false);
     internal void Refresh() { if (_wanted || _active != null) Request(_wanted); }
     private bool CanOpen => _owner.IsEnabled && _owner.IsLoaded && _owner.XamlRoot != null;
+
+    private static Slot GetSlot(MenuFlyout menu) => Owners.GetValue(menu, key =>
+    {
+        var slot = new Slot();
+        // The retained delegate references only its menu and weak owner slots.
+        // Native IsOpen may become false before Closed, and ShowAt may be ignored
+        // until the entire Closed callback returns. Do not rehost inside Closed.
+        key.Closed += (_, _) =>
+        {
+            if (key.IsOpen) return;
+            slot.Closing = true;
+            QueueAfterClosed(key, slot);
+        };
+        return slot;
+    });
+    private static void QueueAfterClosed(MenuFlyout menu, Slot slot)
+    {
+        if (slot.ResumeQueued) return;
+        slot.ResumeQueued = true;
+        if (!menu.DispatcherQueue.TryEnqueue(() =>
+        {
+            slot.ResumeQueued = false; slot.Closing = false;
+            var pending = slot.WaitingOwner; var revision = slot.WaitingRevision;
+            slot.WaitingOwner = null;
+            if (pending?.TryGetTarget(out var owner) == true && owner._wanted && owner._revision == revision &&
+                ReferenceEquals(owner._menu(), menu)) owner.Request(true);
+        }))
+        { slot.ResumeQueued = false; slot.Closing = false; slot.WaitingOwner = null; }
+    }
+    private void WaitForClose(Slot slot)
+    { slot.WaitingOwner = new(this); slot.WaitingRevision = _revision; _state(false); }
 
     private void Request(bool wanted)
     {
@@ -76,20 +112,22 @@ internal sealed class DropDownMenuSession
             if (revision == _revision) _state(false);
             return;
         }
-        if (_active is { } previous && (!ReferenceEquals(previous.Menu, menu) || !ReferenceEquals(previous.Root, _owner.XamlRoot)))
+        if (_active is { } previous && (!ReferenceEquals(previous.Menu, menu) || !ReferenceEquals(previous.Root, _owner.XamlRoot) ||
+            (previous.WasShown && !previous.Menu.IsOpen)))
         {
             Release();
             if (revision != _revision) return;
         }
         if (_active == null)
         {
-            var slot = Owners.GetOrCreateValue(menu);
+            var slot = GetSlot(menu);
+            if (slot.Closing) { WaitForClose(slot); return; }
             if (slot.Owner?.TryGetTarget(out var current) == true && !ReferenceEquals(current, this))
             {
                 current.Close();
                 if (revision != _revision) return;
-                // A second trigger can arrive from the prior owner's cleanup.
-                // Allow one dispatcher retry after that callback stack unwinds.
+                if (slot.Closing) { WaitForClose(slot); return; }
+                // A second trigger can arrive while preparation invokes user code.
                 if (slot.Owner?.TryGetTarget(out current) == true && !ReferenceEquals(current, this))
                 { Defer(revision); return; }
             }
@@ -97,9 +135,9 @@ internal sealed class DropDownMenuSession
             _active = active; slot.Owner = new(this);
             active.Preparing = (_, _) =>
             {
-                // ContextMenuEx generates its rows from ItemsSource in Opening.
-                // Its explicit MenuDataContext has precedence; otherwise apply
-                // the trigger context to the newly generated rows as well.
+                // The source container generates its rows during Opening. Apply
+                // trigger context to the new rows only in the absence of an
+                // explicit context declared by the menu itself.
                 if (ReferenceEquals(_active, active) && _wanted &&
                     menu is ContextMenuEx { ItemsSource: not null, MenuDataContext: null })
                     MenuContext.Apply(menu, _context());
@@ -107,13 +145,13 @@ internal sealed class DropDownMenuSession
             active.Opened = (_, _) =>
             {
                 if (!ReferenceEquals(_active, active)) return;
+                active.WasShown = true;
                 if (!_wanted || !CanOpen || !ReferenceEquals(_menu(), menu) || !ReferenceEquals(_owner.XamlRoot, active.Root))
                 { Close(); return; }
                 Refresh();
             };
             active.Closed = (_, _) =>
             {
-                // A late event cannot tear down a replacement opening.
                 if (ReferenceEquals(_active, active) && !menu.IsOpen) Close();
             };
             menu.Opening += active.Preparing; menu.Opened += active.Opened; menu.Closed += active.Closed;
@@ -122,7 +160,6 @@ internal sealed class DropDownMenuSession
         var context = _context();
         if (!opening.ContextAssigned || !ReferenceEquals(opening.Context, context))
         {
-            // Record ownership BEFORE DataContextChanged can replace or close it.
             opening.ContextAssigned = true; opening.Context = context;
             MenuContext.Apply(menu, context);
             if (revision != _revision || !ReferenceEquals(_active, opening)) return;
@@ -134,6 +171,7 @@ internal sealed class DropDownMenuSession
             opening.ShowStarted = true;
             if (_position is { } point) menu.ShowAt(_owner, new FlyoutShowOptions { Position = point });
             else menu.ShowAt(_owner);
+            opening.WasShown |= menu.IsOpen;
         }
         if (revision == _revision && ReferenceEquals(_active, opening)) _state(menu.IsOpen);
     }
@@ -157,19 +195,27 @@ internal sealed class DropDownMenuSession
         _active = null;
         var menu = active.Menu;
         menu.Opening -= active.Preparing; menu.Opened -= active.Opened; menu.Closed -= active.Closed;
-        var slot = Owners.GetOrCreateValue(menu);
+        var slot = GetSlot(menu);
         var owns = slot.Owner?.TryGetTarget(out var owner) == true && ReferenceEquals(owner, this);
         List<Exception>? failures = null;
         void Attempt(Action action)
         { try { action(); } catch (Exception error) { (failures ??= []).Add(error); } }
         try
         {
-            // Do not release the shared lease until cleanup AND native Hide
-            // finish. A reentrant new owner must not lose its context to us.
             if (owns)
             {
+                var awaitingNativeClose = active.WasShown || menu.IsOpen;
+                // Gate BEFORE cleanup callbacks can request another owner. Keep
+                // it gated beyond Hide until native Closed has finished dispatch.
+                if (active.ShowStarted) slot.Closing = true;
                 Attempt(() => MenuContext.Clear(menu));
-                if (active.ShowStarted) Attempt(menu.Hide);
+                if (active.ShowStarted)
+                {
+                    Attempt(menu.Hide);
+                    // A preparation cancelled before actual native showing has
+                    // no Closed event; unwind its callbacks once before retrying.
+                    if (!awaitingNativeClose && !menu.IsOpen) QueueAfterClosed(menu, slot);
+                }
             }
             Attempt(() => _state(false));
         }
