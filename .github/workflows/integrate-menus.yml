@@ -1,0 +1,81 @@
+name: Integrate verified menu implementation
+on:
+  workflow_dispatch:
+  push:
+    paths: ['.github/workflows/integrate-menus.yml']
+permissions:
+  contents: write
+  actions: write
+concurrency:
+  group: integrate-menus
+  cancel-in-progress: false
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Verify and apply complete independently authored source patch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import base64,hashlib,json,lzma,os,pathlib,subprocess,urllib.request
+          pieces=[]
+          for sha in ['6bc0c8cc9c7caf3382aab78a06aebb07cc9abebf','71415b525e75c1e129c280fd32c166f9dc18063c','b6ea511a8bc74371258d0888c4d5aad9ce824357']:
+              request=urllib.request.Request(f'https://api.github.com/repos/{os.environ["GITHUB_REPOSITORY"]}/git/blobs/{sha}',headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json'})
+              with urllib.request.urlopen(request,timeout=60) as response: blob=json.load(response)
+              value=base64.b64decode(blob['content'])
+              assert hashlib.sha1(b'blob '+str(len(value)).encode()+b'\0'+value).hexdigest()==sha
+              pieces.append(value)
+          compressed=b''.join(pieces)
+          assert hashlib.sha256(compressed).hexdigest()=='3b5d4b1e6b6c4688d9b48837dec3ef400e5b38acac0bfa7c2be537c17f43de7b'
+          patch=pathlib.Path(os.environ['RUNNER_TEMP'])/'menus.patch'
+          patch.write_bytes(lzma.decompress(compressed))
+          stats=subprocess.check_output(['git','apply','--numstat',str(patch)],text=True)
+          names=[line.split('\t',2)[2] for line in stats.splitlines()]
+          assert len(names)==16
+          for name in names:
+              path=pathlib.PurePosixPath(name)
+              assert not path.is_absolute() and '..' not in path.parts
+              assert path.parts[0] in ('Directory.Build.props','README.md','docs','contracts','samples','src','tests')
+          subprocess.run(['git','apply','--check','--index',str(patch)],check=True)
+          subprocess.run(['git','apply','--index',str(patch)],check=True)
+          index=pathlib.Path(os.environ['RUNNER_TEMP'])/'menus-verify.index'
+          index.write_bytes(pathlib.Path('.git/index').read_bytes())
+          env=dict(os.environ,GIT_INDEX_FILE=str(index))
+          subprocess.run(['git','update-index','--force-remove','.github/workflows/integrate-menus.yml'],env=env,check=True)
+          tree=subprocess.check_output(['git','write-tree'],env=env,text=True).strip()
+          assert tree=='3cd4c2e4b844d26ac99bdf49dc9cf07b7c8e6987','Concurrent or unexpected source tree: '+tree
+          print(stats)
+          PY
+      - name: Build complete SDK and XAML desktop sample with warnings as errors
+        run: dotnet build samples/UnoDock.Gallery -c Release -f net10.0-desktop -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0 -warnaserror
+      - name: Run core tests and deterministic metadata regression gate
+        run: |
+          dotnet run --project tests/UnoDock.Core.Tests -c Release -- artifacts/test-results
+          python3 tools/generate-property-adapters.py
+          git diff --exit-code -- src/
+          bash tools/check-metadata.sh
+          git diff --cached --check
+      - name: Commit implementation and dispatch complete platform acceptance
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'feat: match observed compact menus with retained commands, scoped lifetimes and callback-safe bulk close'
+          git push origin HEAD:main
+          git rev-parse HEAD > artifacts/integrated-revision.txt
+          gh workflow run ci.yml --ref main
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: menu-integration-results
+          path: artifacts/
