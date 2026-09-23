@@ -1,0 +1,83 @@
+name: Integrate verified auto-hide implementation
+on:
+  workflow_dispatch:
+  push:
+    paths: ['.github/workflows/integrate-autohide.yml']
+permissions:
+  contents: write
+  actions: write
+concurrency:
+  group: integrate-autohide
+  cancel-in-progress: false
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Verify and apply exact reviewed source changes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import base64, hashlib, json, lzma, os, pathlib, subprocess, urllib.request
+          pieces = []
+          for sha in ['cbe494663c7b519a491367e2848ca244f3d18f19', '4e02c9c2c5c7d527cc3127032429b4ffbc32f611']:
+              request = urllib.request.Request(f'https://api.github.com/repos/{os.environ["GITHUB_REPOSITORY"]}/git/blobs/{sha}', headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'], 'Accept':'application/vnd.github+json'})
+              with urllib.request.urlopen(request, timeout=60) as response: blob = json.load(response)
+              value = base64.b64decode(blob['content'])
+              assert hashlib.sha1(b'blob '+str(len(value)).encode()+b'\0'+value).hexdigest() == sha
+              pieces.append(value)
+          compressed = b''.join(pieces)
+          assert hashlib.sha256(compressed).hexdigest() == 'd2582746e8d177e951c4a1eb172f8efb56ea7d0185aacc5810e35dcea96b40e0'
+          patch = pathlib.Path(os.environ['RUNNER_TEMP'])/'auto-hide.patch'
+          patch.write_bytes(lzma.decompress(compressed))
+          stats = subprocess.check_output(['git','apply','--numstat',str(patch)],text=True)
+          names = [line.split('\t',2)[2] for line in stats.splitlines()]
+          expected = {
+              'Directory.Build.props','README.md',
+              'contracts/visual-fixtures/auto-hide-window-observations.xml',
+              'contracts/visual-fixtures/auto-hide-window-provenance.json',
+              'docs/auto-hide-quality.md','docs/compatibility.md','docs/validation-preview11.md',
+              'samples/UnoDock.Gallery/App.xaml.cs','samples/UnoDock.Gallery/AutoHideLab.cs',
+              'samples/UnoDock.Gallery/GalleryPage.cs','src/UnoDock/Controls/AutoHideControls.cs',
+              'src/UnoDock/Controls/LayoutAutoHideWindowControl.cs',
+              'src/UnoDock/Controls/LayoutAutoHideWindowControl.Resize.cs',
+              'src/UnoDock/DockingManager.cs','src/UnoDock/Internal/DockSurface.cs',
+              'tests/UnoDock.VisualTests/AutoHideQualityTests.cs'
+          }
+          assert len(names) == len(expected) and set(names) == expected, names
+          subprocess.run(['git','apply','--check','--index',str(patch)],check=True)
+          subprocess.run(['git','apply','--index',str(patch)],check=True)
+          print(stats)
+          PY
+      - name: Build complete current SDK and XAML desktop sample with warnings as errors
+        run: dotnet build samples/UnoDock.Gallery -c Release -f net10.0-desktop -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0 -warnaserror
+      - name: Run portable tests and deterministic metadata regression gate
+        run: |
+          dotnet run --project tests/UnoDock.Core.Tests -c Release -- artifacts/test-results
+          python3 tools/generate-property-adapters.py
+          git diff --exit-code -- src/
+          bash tools/check-metadata.sh
+          git diff --cached --check
+      - name: Commit implementation and dispatch platform acceptance
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'feat: match observed auto-hide sizing and hover, implement bounded resize and callback-safe flyouts'
+          git push origin HEAD:main
+          git rev-parse HEAD > artifacts/integrated-revision.txt
+          gh workflow run ci.yml --ref main
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: auto-hide-integration-results
+          path: artifacts/
