@@ -53,13 +53,12 @@ public class DropArea<T> : IDropArea, IModelDropArea where T : FrameworkElement
     {
         DetectionRect = default;
         if (AreaElement.XamlRoot == null || _relativeTo.XamlRoot == null || AreaElement.Visibility != Visibility.Visible || AreaElement.ActualWidth <= 0 || AreaElement.ActualHeight <= 0) return;
-        if (ReferenceEquals(AreaElement.XamlRoot, _relativeTo.XamlRoot))
-        {
-            DetectionRect = AreaElement.TransformToVisual(_relativeTo).TransformBounds(new Rect(0, 0, AreaElement.ActualWidth, AreaElement.ActualHeight));
-            return;
-        }
         var converter = ((IModelDropArea)this).Manager?.CrossWindowCoordinates;
-        try { DetectionRect = DockCoordinates.Bounds(AreaElement, new Rect(0, 0, AreaElement.ActualWidth, AreaElement.ActualHeight), _relativeTo, converter); }
+        try
+        {
+            DetectionRect = DockCoordinates.Bounds(AreaElement,
+                new Rect(0, 0, AreaElement.ActualWidth, AreaElement.ActualHeight), _relativeTo, converter);
+        }
         catch (Exception e) when (DockCoordinates.IsUnavailable(e)) { DetectionRect = default; }
     }
 }
@@ -106,7 +105,8 @@ public sealed class DockDropPlan
             <= DropTargetType.DockingManagerDockBottom => ReferenceEquals(target, root.RootPanel),
             <= DropTargetType.DocumentPaneDockInside => target is LayoutDocumentPane,
             DropTargetType.DocumentPaneGroupDockInside => target is LayoutDocumentPaneGroup,
-            <= DropTargetType.AnchorablePaneDockInside => target is LayoutAnchorablePane && content is LayoutAnchorable,
+            <= DropTargetType.AnchorablePaneDockBottom => target is LayoutAnchorablePane && content is LayoutAnchorable,
+            DropTargetType.AnchorablePaneDockInside => target is LayoutAnchorablePane && content is LayoutAnchorable,
             _ => target is LayoutDocumentPane && content is LayoutAnchorable
         };
         if (!validType) return null;
