@@ -1,0 +1,87 @@
+name: Integrate preview18 accessibility sources
+on:
+  push:
+    branches: [work/preview18-accessibility-quality]
+    paths: [.github/workflows/integrate-preview18.yml]
+permissions:
+  contents: write
+  actions: write
+concurrency:
+  group: integrate-preview18
+  cancel-in-progress: false
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: work/preview18-accessibility-quality
+          fetch-depth: 0
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Apply exact independently authored product sources without replacing concurrent work
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git merge-base --is-ancestor 5b6d22ff9d64c58f7845a9aecf727b68237ca362 HEAD
+          git diff --exit-code 5b6d22ff9d64c58f7845a9aecf727b68237ca362 HEAD -- src samples tests contracts docs tools Directory.Build.props README.md
+          python3 - <<'PY'
+          import base64,hashlib,json,lzma,os,pathlib,subprocess
+          shas=['1829f394f6ef5395be1e168b494e77b204b7f233','2eaf7450531381c365e7fad8b30c5b1dc2ada499','407ae9a5800f301dfc9159c2e3653fee9338e95c','c52f75a1c45ce45e7e7b4982610785a3a3d7ce3d','a0c319bb96602958d8d079d05a07afcaddcae1ef']
+          pieces=[]
+          for sha in shas:
+              data=json.loads(subprocess.check_output(['gh','api',f'repos/{os.environ["GITHUB_REPOSITORY"]}/git/blobs/{sha}']))
+              content=base64.b64decode(data['content'])
+              assert hashlib.sha1(b'blob '+str(len(content)).encode()+b'\0'+content).hexdigest()==sha
+              pieces.append(content)
+          packed=b''.join(pieces)
+          assert len(packed)==19072
+          assert hashlib.sha256(packed).hexdigest()=='f744b32ea59c0bbfcde3230d22497b9d792694d31718dbc8c126f5cc274e707d'
+          content=lzma.decompress(packed)
+          assert hashlib.sha256(content).hexdigest()=='174da35749ab46bdf98721bebe6c492d8c63fc789f44a47087f1ad1d0c63a71a'
+          patch=pathlib.Path(os.environ['RUNNER_TEMP'])/'preview18.patch'
+          patch.write_bytes(content)
+          stats=subprocess.check_output(['git','apply','--numstat',str(patch)],text=True)
+          names=[line.split('\t',2)[2] for line in stats.splitlines()]
+          expected={'Directory.Build.props','README.md','docs/accessibility-quality.md','docs/compatibility.md',
+              'samples/UnoDock.Gallery/App.xaml.cs','samples/UnoDock.Gallery/SplitterLab.cs',
+              'src/UnoDock/Controls/LayoutAutomationPeers.cs','src/UnoDock/Controls/LayoutCachePaneControl.Selection.cs',
+              'src/UnoDock/Controls/LayoutGridControl.Automation.cs','src/UnoDock/Controls/LayoutGridControl.Resize.cs',
+              'src/UnoDock/Controls/LayoutGridControl.cs','src/UnoDock/Controls/LayoutGridResizerControl.Automation.cs',
+              'src/UnoDock/Controls/LayoutGridResizerControl.cs','src/UnoDock/Controls/LayoutPaneControls.cs',
+              'src/UnoDock/Controls/LayoutTabItemBase.Automation.cs','tests/UnoDock.VisualTests/AccessibilityQualityTests.cs'}
+          assert len(names)==16 and set(names)==expected
+          subprocess.run(['git','apply','--check','--index',str(patch)],check=True)
+          subprocess.run(['git','apply','--index',str(patch)],check=True)
+          index=pathlib.Path(os.environ['RUNNER_TEMP'])/'preview18-verify.index'
+          index.write_bytes(pathlib.Path('.git/index').read_bytes())
+          env=dict(os.environ,GIT_INDEX_FILE=str(index))
+          subprocess.run(['git','update-index','--force-remove','.github/workflows/integrate-preview18.yml'],env=env,check=True)
+          tree=subprocess.check_output(['git','write-tree'],env=env,text=True).strip()
+          assert tree=='ddc560587cf9dfc6642691efd3ccda5d108b16e6','Unexpected complete product tree: '+tree
+          print(stats)
+          print('Verified complete source tree: '+tree)
+          PY
+      - name: Build complete Uno desktop SDK and XAML with warnings as errors
+        run: dotnet build samples/UnoDock.Gallery -c Release -f net10.0-desktop -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0 -warnaserror
+      - name: Run portable tests and deterministic metadata regression gate
+        run: |
+          dotnet run --project tests/UnoDock.Core.Tests -c Release -- artifacts/test-results
+          python3 tools/generate-property-adapters.py
+          git diff --exit-code -- src/
+          bash tools/check-metadata.sh
+          git diff --cached --check
+      - name: Commit verified product sources to the continuation branch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'feat: add guarded splitter range automation, tab provider contracts and visible native keyboard focus'
+          git push origin HEAD:work/preview18-accessibility-quality
+          git rev-parse HEAD > artifacts/integrated-revision.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: preview18-integration-results
+          path: artifacts/
