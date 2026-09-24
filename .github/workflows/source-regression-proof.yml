@@ -1,0 +1,84 @@
+name: Source reconciliation regression proof
+on:
+  push:
+    branches: [work/preview17-regression-evidence]
+    paths: ['.github/workflows/source-regression-proof.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  prove:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      PRODUCT_REVISION: ca03af24bfe78012f43fecde87739936fdc4931a
+      BASELINE_REVISION: f3fe686c5b77f2a6e6bcba6f2f84933a1ee0f92d
+      UNODOCK_SELFTEST: '1'
+      UNODOCK_NATIVE_INPUT_TESTS: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ca03af24bfe78012f43fecde87739936fdc4931a
+          fetch-depth: 0
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Install isolated display dependencies
+        run: sudo apt-get update && sudo apt-get install -y xvfb libx11-6 libxi6 libxrandr2 libxcursor1 libfontconfig1 libgl1 libice6 libsm6 libxcb1 libxtst6
+      - name: Build and run the new implementation
+        run: |
+          mkdir -p artifacts/after
+          dotnet build samples/UnoDock.Gallery -c Release -f net10.0-desktop -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0 -warnaserror
+          for suite in source-ownership source-identity; do
+            UNODOCK_TEST_SUITE="$suite" UNODOCK_TEST_RESULTS="$PWD/artifacts/after" timeout 120s xvfb-run -a -s '-screen 0 2560x1440x24' dotnet run --project samples/UnoDock.Gallery -c Release -f net10.0-desktop --no-build -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0
+          done
+      - name: Roll back only the reconciliation file and run identical tests
+        run: |
+          mkdir -p artifacts/before
+          git show "$BASELINE_REVISION:src/UnoDock/DockingManager.Sources.cs" > src/UnoDock/DockingManager.Sources.cs
+          dotnet build samples/UnoDock.Gallery -c Release -f net10.0-desktop -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0 -warnaserror
+          for suite in source-ownership source-identity; do
+            result=0
+            UNODOCK_TEST_SUITE="$suite" UNODOCK_TEST_RESULTS="$PWD/artifacts/before" timeout 120s xvfb-run -a -s '-screen 0 2560x1440x24' dotnet run --project samples/UnoDock.Gallery -c Release -f net10.0-desktop --no-build -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0 || result=$?
+            # Test failures are expected only for this explicitly labeled rollback.
+            # A timeout/crash is not evidence that a regression assertion failed.
+            test "$result" = 1
+          done
+      - name: Reconcile individual reports and prove failures are removed
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,subprocess,xml.etree.ElementTree as ET
+          result={'schema':1,'productRevision':os.environ['PRODUCT_REVISION'],'baselineFileRevision':os.environ['BASELINE_REVISION'],'scope':'Only DockingManager.Sources.cs was rolled back; all tests and other product files are identical.','suites':[]}
+          for suite in ('source-ownership','source-identity'):
+              def read(folder):
+                  p=pathlib.Path('artifacts')/folder/suite
+                  cases=json.loads(p.with_suffix('.json').read_text())
+                  xml=ET.parse(p.with_suffix('.xml')).getroot()
+                  rows=xml.findall('testcase')
+                  assert len(rows)==len(cases)==int(xml.get('tests'))
+                  assert len({c['Name'] for c in cases})==len(cases)
+                  for row,case in zip(rows,cases):
+                      assert row.get('name')==case['Name']
+                      assert (row.find('failure') is not None)==(case['Error'] is not None)
+                      assert row.find('skipped') is None and row.find('error') is None
+                  return cases
+              before,after=read('before'),read('after')
+              assert [c['Name'] for c in before]==[c['Name'] for c in after]
+              failures=[c['Name'] for c in before if c['Error'] is not None]
+              assert failures and not any(c['Error'] is not None for c in after)
+              result['suites'].append({'name':suite,'cases':len(after),'baselineFailures':len(failures),'newFailures':0,'regressionsProven':failures})
+          path='src/UnoDock/DockingManager.Sources.cs'
+          result['sourceSha256']={name:hashlib.sha256(subprocess.check_output(['git','show',os.environ[variable]+':'+path])).hexdigest() for name,variable in [('before','BASELINE_REVISION'),('after','PRODUCT_REVISION')]}
+          assert result['sourceSha256']['before']!=result['sourceSha256']['after']
+          pathlib.Path('artifacts/regression-proof.json').write_text(json.dumps(result,indent=2)+'\n')
+          print(json.dumps(result,indent=2))
+          PY
+      - name: Restore checked-out source without modifying the repository
+        if: always()
+        run: git restore src/UnoDock/DockingManager.Sources.cs && git diff --exit-code
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: source-regression-proof
+          path: artifacts/
+          if-no-files-found: error
