@@ -1,0 +1,83 @@
+name: Integrate preview16 MVVM workspace
+on:
+  push:
+    branches: [work/preview16-mvvm-workspace]
+    paths: [.github/workflows/integrate-preview16.yml]
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: write
+concurrency:
+  group: integrate-preview16
+  cancel-in-progress: false
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: work/preview16-mvvm-workspace
+          fetch-depth: 0
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Wire reviewed sample and tests without changing reference contracts
+        run: |
+          python3 - <<'PY'
+          import hashlib,pathlib,json,subprocess
+          roots=('contracts','tools/ReferenceProbe','tools/ReferenceVisualProbe','tools/ReferenceSampleProbe')
+          manifest={str(p):hashlib.sha256(p.read_bytes()).hexdigest() for root in roots for p in pathlib.Path(root).rglob('*') if p.is_file()}
+          if '<Version>0.1.0-preview.15</Version>' in pathlib.Path('Directory.Build.props').read_text():
+              subprocess.run(['python3','tools/wire-preview16.py'],check=True)
+          for name,digest in manifest.items(): assert hashlib.sha256(pathlib.Path(name).read_bytes()).hexdigest()==digest,name
+          PY
+          git diff --check
+      - name: Build real Uno desktop and compiled XAML with warnings as errors
+        run: dotnet build samples/UnoDock.Gallery -c Release -f net10.0-desktop -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0 -warnaserror
+      - name: Execute core and deterministic contract gates
+        run: |
+          dotnet run --project tests/UnoDock.Core.Tests -c Release -- artifacts/test-results
+          python3 tools/generate-property-adapters.py
+          git diff --exit-code -- src/UnoDock/DockingManager.Properties.g.cs src/UnoDock/Controls/LayoutItem.Properties.g.cs
+          python3 tests/metadata/test_namespace_migration.py
+          bash tools/check-metadata.sh
+      - name: Commit successfully built product source edits
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src samples tests Directory.Build.props README.md docs
+          if ! git diff --cached --quiet; then
+            git commit -m 'feat: wire validated MVVM workspace, source membership and guarded restore into gallery acceptance'
+            git push origin HEAD:work/preview16-mvvm-workspace
+          fi
+          git rev-parse HEAD > artifacts/integrated-revision.txt
+      - name: Install native X11 test dependencies
+        run: sudo apt-get update && sudo apt-get install -y xvfb libx11-6 libxi6 libxrandr2 libxcursor1 libfontconfig1 libgl1 libice6 libsm6 libxcb1 libxtst6
+      - name: Run actual restore ownership and rendered MVVM suites
+        env:
+          UNODOCK_SELFTEST: '1'
+          UNODOCK_NATIVE_INPUT_TESTS: '1'
+          UNODOCK_TEST_RESULTS: ${{ github.workspace }}/artifacts/test-results
+        run: |
+          result=0
+          for suite in restore-ownership mvvm-workspace; do
+            UNODOCK_TEST_SUITE="$suite" timeout 180s xvfb-run -a -s '-screen 0 2560x1440x24' dotnet run --project samples/UnoDock.Gallery -c Release -f net10.0-desktop --no-build -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0 || result=1
+          done
+          exit "$result"
+      - name: Dispatch complete platform acceptance
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run ci.yml --ref work/preview16-mvvm-workspace
+      - name: Report executed assertions and exact source revision
+        if: always()
+        run: |
+          python3 tools/report-test-results.py artifacts/test-results --output artifacts/test-results/execution-summary.json
+          git archive --format=zip -o artifacts/UnoDock-source.zip HEAD
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: preview16-integration-results
+          path: artifacts/
