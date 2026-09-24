@@ -1,0 +1,47 @@
+name: Integrate navigator ownership continuation
+on:
+  push:
+    branches: [work/preview19-navigator-ownership]
+    paths: [.github/workflows/integrate-preview19.yml]
+permissions:
+  contents: write
+concurrency:
+  group: integrate-preview19
+  cancel-in-progress: false
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: work/preview19-navigator-ownership
+          fetch-depth: 0
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Apply checked product refactoring
+        run: |
+          python3 tools/integrate-preview19.py
+          python3 tools/generate-property-adapters.py
+          git diff --check
+      - name: Build SDK and XAML desktop with warnings as errors
+        run: dotnet build samples/UnoDock.Gallery -c Release -f net10.0-desktop -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0 -warnaserror
+      - name: Run core, namespace and metadata regression checks
+        run: |
+          dotnet run --project tests/UnoDock.Core.Tests -c Release -- artifacts/test-results
+          python3 tests/metadata/test_namespace_migration.py
+          bash tools/check-metadata.sh
+      - name: Commit product refactoring without workflow changes
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src samples Directory.Build.props README.md
+          git diff --cached --check
+          git commit -m 'fix: fence navigator activation and presentation across application callbacks'
+          git push origin HEAD:work/preview19-navigator-ownership
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: preview19-integration-results
+          path: artifacts/
