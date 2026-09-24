@@ -1,5 +1,5 @@
 <Application x:Class="UnoDock.Gallery.App" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
- xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:controls="using:UnoDock.Controls">
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:controls="using:UnoDock.Controls" xmlns:gallery="using:UnoDock.Gallery">
  <Application.Resources>
   <ResourceDictionary>
    <ResourceDictionary.MergedDictionaries><XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" /></ResourceDictionary.MergedDictionaries>
@@ -12,6 +12,14 @@
    <Style x:Key="NoteItemStyle" TargetType="controls:LayoutItem">
     <Setter Property="Title" Value="{Binding Title}"/><Setter Property="ContentId" Value="{Binding ContentId}"/>
    </Style>
+   <DataTemplate x:Key="WorkspaceDocumentTemplate"><gallery:MvvmDocumentEditor /></DataTemplate>
+   <DataTemplate x:Key="WorkspaceToolTemplate"><gallery:MvvmToolPresenter /></DataTemplate>
+   <DataTemplate x:Key="WorkspaceFileTemplate">
+    <StackPanel Orientation="Horizontal" Spacing="6">
+     <Path Data="M 2,1 L 9,1 L 12,4 L 12,15 L 2,15 Z M 9,1 L 9,4 L 12,4 M 4,8 L 10,8 M 4,11 L 10,11" Stroke="{ThemeResource TextFillColorPrimaryBrush}" StrokeThickness="1" Width="14" Height="16" />
+     <TextBlock Text="{Binding Title}" FontSize="12" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+    </StackPanel>
+   </DataTemplate>
   </ResourceDictionary>
  </Application.Resources>
 </Application>

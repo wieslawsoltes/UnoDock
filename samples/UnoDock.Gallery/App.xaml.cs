@@ -26,7 +26,11 @@ public partial class App : Application
                     await Task.Delay(300);
                     var output = Environment.GetEnvironmentVariable("UNODOCK_TEST_RESULTS") ?? "artifacts/test-results";
                     var suite = Environment.GetEnvironmentVariable("UNODOCK_TEST_SUITE");
-                    if (suite == "inspector-quality")
+                    if (suite == "mvvm-workspace")
+                        exitCode = await Testing.MvvmWorkspaceTests.Run(output);
+                    else if (suite == "restore-ownership")
+                        exitCode = await Testing.RestoreOwnershipTests.Run(output);
+                    else if (suite == "inspector-quality")
                         exitCode = await Testing.InspectorQualityTests.Run(output);
                     else if (suite == "presentation-quality")
                         exitCode = await Testing.PresentationQualityTests.Run(output);
@@ -67,6 +71,8 @@ public partial class App : Application
                         exitCode |= await Testing.SampleQualityTests.Run(gallery, output);
                         exitCode |= await Testing.PresentationQualityTests.Run(output);
                         exitCode |= await Testing.InspectorQualityTests.Run(output);
+                        exitCode |= await Testing.RestoreOwnershipTests.Run(output);
+                        exitCode |= await Testing.MvvmWorkspaceTests.Run(output);
                     }
                     else if (string.IsNullOrEmpty(suite) || suite == "all")
                     {
@@ -91,6 +97,8 @@ public partial class App : Application
                         exitCode |= await Testing.SampleQualityTests.Run(gallery, output);
                         exitCode |= await Testing.PresentationQualityTests.Run(output);
                         exitCode |= await Testing.InspectorQualityTests.Run(output);
+                        exitCode |= await Testing.RestoreOwnershipTests.Run(output);
+                        exitCode |= await Testing.MvvmWorkspaceTests.Run(output);
                     }
                     else throw new ArgumentException("Unknown UNODOCK_TEST_SUITE: " + suite);
                 }

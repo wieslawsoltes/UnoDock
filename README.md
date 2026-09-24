@@ -6,11 +6,30 @@
 Independent AvalonDock-style docking for **Uno Platform 6.7**, using **`UnoDock.*`**
 namespaces and Uno/WinUI controls.
 
-**Version: 0.1.0-preview.15. Full API, behavioral and visual parity is not verified.**
+**Version: 0.1.0-preview.16. Full API, behavioral and visual parity is not verified.**
 The target is the pinned public AvalonDock repository and stock presentation, not
 separately licensed commercial themes. This is not WPF binary compatibility. The
 independently authored implementation is MIT-licensed and is not affiliated with or
 endorsed by Xceed or Uno Platform.
+
+## Preview 16: MVVM workspace and guarded layout restoration
+
+The **MVVM binding** sample now has a source-backed file catalogue, observable open
+documents and tool windows, compact editors, dirty tab titles, save/revert/close
+commands, close protection, and layout capture/restore by stable identity. Save writes
+application-owned text separately from layout XML. Edits made during an asynchronous
+save remain dirty. Closing a tab keeps its buffer available for reopening in Workspace.
+The existing classic Docking sample and its reference geometry checks remain unchanged.
+
+The library serializer now serializes restore ownership per manager, rejects reentry
+from user readers and callbacks, detects replaced/disposed workspaces, and preserves
+both primary and cleanup errors. It does not overwrite a callback's replacement root.
+Public/protected API mappings and original reference inventories are not relaxed.
+
+See [MVVM workspace and restore boundaries](docs/mvvm-workspace.md). This is not a
+pixel-identical recreation of a commercial sample, an arbitrary file editor, or a fix
+for every platform's binding-valued style setter behavior. The new sample uses explicit
+public adapter bindings and ordinary compiled Uno content templates.
 
 ## Preview 15: typed property inspection and safe editing
 
