@@ -21,6 +21,7 @@
     <Compile Include="../../tests/UnoDock.Runtime.Tests/InteropTests.cs" Link="Testing/InteropTests.cs" />
     <Compile Include="../../tests/UnoDock.Runtime.Tests/ParityTests.cs" Link="Testing/ParityTests.cs" />
     <Compile Include="../../tests/UnoDock.Runtime.Tests/LifecycleTests.cs" Link="Testing/LifecycleTests.cs" />
+    <Compile Include="../../tests/UnoDock.Runtime.Tests/RestoreOwnershipTests.cs" Link="Testing/RestoreOwnershipTests.cs" />
     <Compile Include="../../tests/UnoDock.Runtime.Tests/InteractionTests.cs" Link="Testing/InteractionTests.cs" />
     <Compile Include="../../tests/UnoDock.Runtime.Tests/X11TestInput.cs" Link="Testing/X11TestInput.cs" />
     <Compile Include="../../tests/UnoDock.Runtime.Tests/WindowCoordinateTests*.cs" Link="Testing/%(Filename)%(Extension)" />
