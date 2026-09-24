@@ -1,0 +1,64 @@
+name: Verify preview16 delivery
+on:
+  workflow_dispatch:
+  push:
+    branches: [work/preview16-validation-evidence]
+    paths: ['.github/workflows/verify-preview16.yml', 'tools/verify-preview16.py']
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: preview16-delivery
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      GH_TOKEN: ${{ github.token }}
+      ACCEPTANCE_RUN: '35979338359'
+      EXPECTED_REVISION: f3fe686c5b77f2a6e6bcba6f2f84933a1ee0f92d
+      REFERENCE_RUN: '35914057506'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: work/preview16-validation-evidence
+          fetch-depth: 0
+      - name: Require successful completion of the exact merged-revision CI run
+        run: |
+          python3 - <<'PY'
+          import json,os,subprocess,time
+          for attempt in range(60):
+              run=json.loads(subprocess.check_output(['gh','api',f'repos/{os.environ["GITHUB_REPOSITORY"]}/actions/runs/{os.environ["ACCEPTANCE_RUN"]}']))
+              if run['head_sha'] != os.environ['EXPECTED_REVISION']:
+                  raise SystemExit('Acceptance run identifies another source revision')
+              if run['status'] == 'completed':
+                  if run['conclusion'] != 'success':
+                      raise SystemExit('Product acceptance failed: '+str(run['conclusion']))
+                  break
+              print('Exact main acceptance is '+run['status'],flush=True)
+              time.sleep(10)
+          else:
+              raise SystemExit('The bounded acceptance completion wait expired')
+          PY
+      - name: Verify source blobs, package attribution, actual cases and original sample geometry
+        run: python3 tools/verify-preview16.py
+      - name: Report verified acceptance and geometry without inferring pixel equivalence
+        run: |
+          python3 - <<'PY'
+          import json,pathlib
+          report=json.loads(pathlib.Path('delivery/verification.json').read_text())
+          print(json.dumps({k:v for k,v in report.items() if k!='suites'},indent=2))
+          geometry=json.loads(pathlib.Path('evidence/sample-geometry-comparison.json').read_text())
+          print('ORIGINAL SAMPLE GEOMETRY '+json.dumps(geometry,sort_keys=True))
+          for platform,suites in report['suites'].items():
+              for suite in suites:
+                  if 'mvvm' in suite['file'] or 'restore' in suite['file']:
+                      print(platform+' '+json.dumps(suite,sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: UnoDock-0.1.0-preview.16-delivery
+          path: delivery/
+          if-no-files-found: error
+          compression-level: 0
