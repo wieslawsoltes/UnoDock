@@ -157,42 +157,6 @@ internal sealed partial class DockSurface : Grid, IDisposable
         if (_autoHide == null || _autoHide.RetainOpen) return;
         CloseAutoHide();
     }
-    internal void ShowNavigator(NavigatorWindow navigator)
-    {
-        if (_navigator != null) { _navigator.Advance(InputState.ShiftDown ? -1 : 1); return; }
-        var generation = ++_navigatorGeneration;
-        // A shortcut can originate in a separate native floating XamlRoot.
-        Microsoft.Windows.Shell.WindowRegistry.Find(Manager)?.Activate();
-        _navigator = navigator; _flyouts.Children.Add(navigator); _flyouts.IsHitTestVisible = true; navigator.Initialize();
-        navigator.HorizontalAlignment = HorizontalAlignment.Center; navigator.VerticalAlignment = VerticalAlignment.Center;
-        if (!navigator.Focus(FocusState.Programmatic)) DispatcherQueue.TryEnqueue(() =>
-        {
-            if (!_disposed && ReferenceEquals(_navigator, navigator) && generation == _navigatorGeneration)
-                navigator.Focus(FocusState.Programmatic);
-        });
-    }
-    internal void CloseNavigator(bool commit)
-    {
-        if (_navigator == null) return;
-        var navigator = _navigator; _navigator = null; var generation = ++_navigatorGeneration;
-        navigator.EndSession();
-        _flyouts.Children.Remove(navigator); _flyouts.IsHitTestVisible = _autoHide?.Visibility == Visibility.Visible;
-        if (commit) navigator.CommitSelection();
-        var root = Manager.Layout; var active = root.ActiveContent;
-        if (_disposed || active == null || !ReferenceEquals(active.Root, root)) return;
-        Manager.Refresh();
-        var item = Manager.GetLayoutItemFromModel(active);
-        if (active is LayoutAnchorable { IsAutoHidden: true } tool) OpenAutoHide(tool);
-        var floating = Manager.FloatingWindows.FirstOrDefault(w => ReferenceEquals(w.Model, active.FindParent<LayoutFloatingWindow>()));
-        floating?.Activate();
-        if (item.RestoreEditorFocus()) return;
-        DispatcherQueue.TryEnqueue(() =>
-        {
-            if (!_disposed && _navigator == null && _navigatorGeneration == generation &&
-                ReferenceEquals(Manager.Layout, root) && ReferenceEquals(root.ActiveContent, active))
-                item.RestoreEditorFocus();
-        });
-    }
     internal void BeginDrag(LayoutContent content, FrameworkElement source, PointerRoutedEventArgs args)
     {
         if (!DockOperations.CanMove(content) || content.FindParent<LayoutFloatingWindow>() is { } f && Manager.FloatingWindows.Any(w => ReferenceEquals(w.Model, f) && w.IsContentImmutable)) return;

@@ -77,15 +77,22 @@ public partial class NavigatorWindow : DockWindowControl
                 var item = container.Content as LayoutItem ?? container.DataContext as LayoutItem;
                 // Never activate the previous selection after tapping a stale container.
                 if (!Eligible(item)) return;
-                Select(item); _manager.Surface?.CloseNavigator(true); e.Handled = true; return;
+                var session = _sessionVersion;
+                Select(item);
+                if (session == _sessionVersion && ReferenceEquals(_selected, item) && Eligible(item))
+                    CloseNavigatorForInput(true);
+                e.Handled = true; return;
             }
     }
     internal void Initialize()
     {
-        EnsureInitialized(); EndSession();
+        EnsureInitialized(); EndSession(); _activationSession++;
         _selected = _lastDocument = _lastAnchorable = null;
         _sessionRoot = _manager.Layout; _sessionRoot.Updated += ModelUpdated;
-        _manager.LayoutChanged += LayoutReplaced;
+        var subscribedSession = _sessionVersion;
+        _sessionLayoutChanged = (sender, args) =>
+        { if (subscribedSession == _sessionVersion) LayoutReplaced(sender, args); };
+        _manager.LayoutChanged += _sessionLayoutChanged;
         var modelOrder = EnumerateItems().ToArray();
         _ordered = SortItems(modelOrder).ToArray(); Reindex(modelOrder);
         var session = _sessionVersion;
@@ -127,7 +134,9 @@ public partial class NavigatorWindow : DockWindowControl
     }
     private void LayoutReplaced(object? sender, EventArgs e)
     {
-        _manager.Surface?.CloseNavigator(false); EndSession();
+        var session = _sessionVersion;
+        CloseNavigatorForInput(false);
+        if (session == _sessionVersion) EndSession();
     }
     private void ModelUpdated(object? sender, EventArgs e)
     {
@@ -250,18 +259,13 @@ public partial class NavigatorWindow : DockWindowControl
         RefreshItems(); var group = SelectedGroup;
         if (group.Length > 0) Select(group[last ? group.Length - 1 : 0]);
     }
-    internal void CommitSelection()
-    {
-        var selected = _selected;
-        if (!Eligible(selected)) return;
-        var command = selected!.ActivateCommand;
-        if (command?.CanExecute(null) == true) command.Execute(null);
-    }
     internal void EndSession()
     {
         _sessionVersion++; _refreshQueued = _itemsDirty = false; CancelReveal();
         if (_sessionRoot != null) _sessionRoot.Updated -= ModelUpdated;
-        _sessionRoot = null; _manager.LayoutChanged -= LayoutReplaced;
+        _sessionRoot = null;
+        if (_sessionLayoutChanged != null) _manager.LayoutChanged -= _sessionLayoutChanged;
+        _sessionLayoutChanged = null;
     }
     protected override void OnPreviewKeyDown(KeyRoutedEventArgs e)
     { base.OnPreviewKeyDown(e); if (!e.Handled) HandleNavigatorKeyDown(e); }
@@ -278,8 +282,8 @@ public partial class NavigatorWindow : DockWindowControl
             case Windows.System.VirtualKey.End: SelectBoundary(true); break;
             case Windows.System.VirtualKey.Left: SelectGroup(FlowDirection == FlowDirection.RightToLeft); break;
             case Windows.System.VirtualKey.Right: SelectGroup(FlowDirection != FlowDirection.RightToLeft); break;
-            case Windows.System.VirtualKey.Enter: _manager.Surface?.CloseNavigator(true); break;
-            case Windows.System.VirtualKey.Escape: _manager.Surface?.CloseNavigator(false); break;
+            case Windows.System.VirtualKey.Enter: CloseNavigatorForInput(true); break;
+            case Windows.System.VirtualKey.Escape: CloseNavigatorForInput(false); break;
             default: return;
         }
         e.Handled = true;
@@ -291,6 +295,6 @@ public partial class NavigatorWindow : DockWindowControl
     private void HandleNavigatorKeyUp(KeyRoutedEventArgs e)
     {
         if (e.Key is Windows.System.VirtualKey.Control or Windows.System.VirtualKey.LeftControl or Windows.System.VirtualKey.RightControl)
-        { _manager.Surface?.CloseNavigator(true); e.Handled = true; }
+        { CloseNavigatorForInput(true); e.Handled = true; }
     }
 }

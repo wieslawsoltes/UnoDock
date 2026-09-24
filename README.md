@@ -6,11 +6,22 @@
 Independent AvalonDock-style docking for **Uno Platform 6.7**, using **`UnoDock.*`**
 namespaces and Uno/WinUI controls.
 
-**Version: 0.1.0-preview.18. Full API, behavioral and visual parity is not verified.**
+**Version: 0.1.0-preview.19. Full API, behavioral and visual parity is not verified.**
 The target is the pinned public AvalonDock repository and stock presentation, not
 separately licensed commercial themes. This is not WPF binary compatibility. The
 independently authored implementation is MIT-licensed and is not affiliated with or
 endorsed by Xceed or Uno Platform.
+
+## Preview 19: navigator activation and focus ownership
+
+Navigator commits now revalidate selection, command and layout ownership after
+application CanExecute callbacks. Cancelled/stale controls cannot later activate
+retained selections or dismiss replacement navigators. Reentrant opening/closing
+callbacks cannot steal a newer session's focus, and initialization failures release
+their own host reservations. The Navigator laboratory has compact themed buttons,
+live activation status and a real command-veto policy. Existing preview semantics,
+reference data and API diagnostics remain unchanged. See
+[navigator activation contracts and remaining setter difference](docs/navigator-activation.md).
 
 ## Preview 18
 

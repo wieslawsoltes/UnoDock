@@ -24,7 +24,11 @@ public abstract class DockInputControl : ContentControl
         PointerExited += (_, e) => Dispatch(e, OnMouseLeave);
         PointerCanceled += (_, e) => CancelInput(e.Pointer.PointerId);
         PointerCaptureLost += Cancelled;
-        Unloaded += (_, _) => CancelAllInput();
+        Unloaded += (_, _) =>
+        {
+            _lastFocus = _incomingOldFocus = _incomingNewFocus = null;
+            CancelAllInput();
+        };
         IsEnabledChanged += (_, _) => { if (!IsEnabled) CancelAllInput(); };
         GettingFocus += (_, e) =>
         {
@@ -39,9 +43,18 @@ public abstract class DockInputControl : ContentControl
         };
         GotFocus += (_, e) =>
         {
+            // Native GotFocus can be queued after focus already moved elsewhere.
+            // In particular, removing a navigator momentarily focuses a tool header
+            // before the requested editor receives focus. That obsolete header event
+            // must not activate its pane after the editor has become current.
+            if (!IsLoaded || !IsEnabled || XamlRoot is not { } root) return;
+            var current = FocusManager.GetFocusedElement(root) as DependencyObject;
+            var ownsFocus = false;
+            for (var node = current; node != null; node = VisualTreeHelper.GetParent(node))
+                if (ReferenceEquals(node, this)) { ownsFocus = true; break; }
+            if (!ownsFocus) return;
             DependencyObject? previous = null;
             _lastFocus?.TryGetTarget(out previous);
-            var current = XamlRoot == null ? e.OriginalSource as DependencyObject : FocusManager.GetFocusedElement(XamlRoot) as DependencyObject;
             if (_incomingNewFocus?.TryGetTarget(out var expected) == true && ReferenceEquals(expected, current))
                 _incomingOldFocus?.TryGetTarget(out previous);
             _incomingOldFocus = null; _incomingNewFocus = null;
