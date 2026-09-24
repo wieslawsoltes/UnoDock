@@ -25,7 +25,7 @@ public sealed class MvvmDocumentEditor : UserControl
             HorizontalAlignment = HorizontalAlignment.Stretch, VerticalAlignment = VerticalAlignment.Stretch
         };
         AutomationProperties.SetAutomationId(Editor, "MvvmEditorText");
-        Editor.SetBinding(TextBox.TextProperty, new Binding { Path = new(nameof(WorkspaceDocument.Text)), Mode = BindingMode.TwoWay, UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged });
+        Editor.SetBinding(TextBox.TextProperty, new Binding { Path = new(nameof(WorkspaceDocument.EditorText)), Mode = BindingMode.TwoWay, UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged });
         Editor.SetBinding(TextBox.IsReadOnlyProperty, new Binding { Path = new(nameof(WorkspaceDocument.IsReadOnly)), Mode = BindingMode.OneWay });
         Grid.SetRow(Editor, 1); grid.Children.Add(Editor);
         var footer = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, Margin = new(7, 3, 7, 3) };
