@@ -38,6 +38,22 @@ or a callback's replacement workspace. Deferred focus work uses the same fence.
 Pointer commit revalidates the clicked row after selection callbacks; it does not
 commit whichever other row an application callback selected instead.
 
+The first Windows acceptance run exposed an additional focus-routing defect. Closing
+a navigator momentarily focused a tool header, then correctly activated and focused
+the requested document editor. A delayed native GotFocus event from that obsolete
+tool header subsequently activated the tool again, even though FocusManager already
+reported the document editor. An isolated Linux trace reproduced the same sequence.
+
+DockInputControl now verifies actual visual focus ownership, attachment and enabled
+state before invoking OnGotKeyboardFocus. It does not synthesize, replay or swallow
+native framework events; it declines to present a stale event as a current docking
+focus notification. Valid descendant focus still reaches derived hooks. Weak focus
+history is cleared on unloading. This addresses the actual asynchronous event path,
+not by adding delays or forcing activation again after arbitrary application callbacks.
+The focus-ownership suite covers request bursts, LTR/RTL, programmatic/keyboard/pointer
+focus states, disabling, root replacement and valid tool focus. Pointer-state Focus
+calls are not claimed as native pointer-input tests.
+
 ## Sample and acceptance
 
 Diagnostics -> Navigator retains 3/40/200-document scenarios and adds compact themed
@@ -47,12 +63,14 @@ blocked. Enter/Control release still closes the navigator, but a false CanExecut
 leaves the active editor unchanged. Reset detaches the former commands and model
 observers. Existing classic/workspace/MVVM samples and UnoDock.* namespaces remain.
 
-The navigator-commit suite is registered in full Linux and selected Windows acceptance.
-It exercises direct and surface-closing paths for document and tool selections,
-callbacks, cancellation, reinitialization, exceptions and actual focus. Native XTEST
-Enter/Escape cases are opt-in on the CI display. Actual JSON/JUnit results establish
-executed totals; configured tests alone are not a pass claim. Original observations,
-metadata inventories, mappings and diagnostic allowlists are unchanged.
+The navigator-commit, navigator-sample and focus-ownership suites are registered in
+full Linux and selected Windows acceptance. They exercise direct and surface-closing
+paths for document and tool selections, callbacks, cancellation, reinitialization,
+exceptions and actual focus. Native XTEST Enter/Escape and sample policy cases are
+opt-in on the CI display. Actual JSON/JUnit results establish executed totals;
+configured tests alone are not a pass claim. Original observations, metadata
+inventories, mappings, diagnostic allowlists and earlier tests remain unchanged.
+Validation in this continuation runs in GitHub Actions, not a local runtime harness.
 
 ## Explicit remaining boundary
 
