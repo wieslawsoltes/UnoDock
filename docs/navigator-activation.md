@@ -70,7 +70,11 @@ exceptions and actual focus. Native XTEST Enter/Escape and sample policy cases a
 opt-in on the CI display. Actual JSON/JUnit results establish executed totals;
 configured tests alone are not a pass claim. Original observations, metadata
 inventories, mappings, diagnostic allowlists and earlier tests remain unchanged.
-Validation in this continuation runs in GitHub Actions, not a local runtime harness.
+
+Validation uses fresh SDK/XAML builds and real Uno/X11 execution locally, followed
+by the full GitHub Actions platform workflow. The local SDK recovery omits unused
+framework-pack downloads and the apphost only; it compiles the current XAML and
+runs the resulting desktop DLL, not previously generated gallery code.
 
 ## Explicit remaining boundary
 
@@ -86,3 +90,25 @@ pixel-equivalence evidence. No original implementation bodies, templates, artwor
 fonts were imported. Public contract guidance:
 https://xceed.com/documentation/xceed-toolkit-plus-for-wpf/Xceed.Wpf.AvalonDock~Xceed.Wpf.AvalonDock.Controls.NavigatorWindow.html
 https://learn.microsoft.com/en-us/windows/windows-app-sdk/api/winrt/microsoft.ui.xaml.dependencyobject.registerpropertychangedcallback
+
+## Bounded native test-host lifetime
+
+Each navigator transaction case creates and disposes its own DockingManager,
+models, editors and navigator, but all cases share one real native window. They
+do not share a docking tree, selection session, command or event subscription.
+Native-window creation, closure and rehosting remain covered by the separate
+window-lifecycle and coordinate suites.
+
+This is important for the pinned Uno 6.7.135 X11 host. The initial per-case-window
+run was killed before it could write its complete test report. An isolated
+diagnostic with forced collection found old docking managers and navigators
+collectible, while native Window instances and renderer memory remained retained.
+Reversing content-clear/Close order did not eliminate that retention. The test
+fixture now bounds native shell allocation instead of retrying on a larger
+runner, skipping cases, forcing GC in production or asserting a platform memory
+leak has been fixed. The host-level retention remains an explicit limitation.
+
+The Enter/Escape cases establish input focus by an actual native click on the
+navigator's empty border before sending keys. Merely calling Control.Focus sets
+XAML focus but does not establish where a window-manager-free Xvfb display sends
+its hardware input. The click does not hit a row or bypass the keyboard handler.

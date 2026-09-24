@@ -15,6 +15,12 @@ internal static class NavigatorCommitTests
     internal static async Task<int> Run(string output)
     {
         var tests = new TestRunner();
+        // These are navigator transaction tests, not native-window creation tests.
+        // Keep one real shell and replace/dispose the complete docking tree per case.
+        // The pinned X11 host retains closed native renderer state; one shell per
+        // mutation exhausted CI memory before later suites could execute.
+        var window = new Window { Title = "UnoDock navigator commit acceptance" };
+        window.AppWindow.Resize(new() { Width = 1100, Height = 800 });
         var mutations = new (string Name, Action<Fixture> Mutate)[]
         {
             ("disabled target", f => f.Target.IsEnabled = false),
@@ -185,26 +191,40 @@ internal static class NavigatorCommitTests
         {
             Add("XTEST: Enter commits the selected document through the guarded close", false, async f =>
             {
-                using var input = new X11TestInput(); f.Nav.Focus(FocusState.Keyboard); await Task.Delay(60);
+                using var input = new X11TestInput(); await FocusForNativeKeys(f.Nav, input);
                 input.KeyPress(0xff0d); await Wait(() => f.Current == null);
                 Check.Same(f.Target, f.Host.Layout.ActiveContent);
             });
             Add("XTEST: Escape closes without invoking selected activation", false, async f =>
             {
                 var executed = 0; f.Item.ActivateCommand = new ProbeCommand(() => executed++, () => true);
-                using var input = new X11TestInput(); f.Nav.Focus(FocusState.Keyboard); await Task.Delay(60);
+                using var input = new X11TestInput(); await FocusForNativeKeys(f.Nav, input);
                 input.Escape(); await Wait(() => f.Current == null); Check.Equal(0, executed); Check.Same(f.A, f.Host.Layout.ActiveContent);
             });
         }
-        return await tests.Run(output, "navigator-commit");
+        try { return await tests.Run(output, "navigator-commit"); }
+        finally { window.Content = null; window.Close(); }
 
         void Add(string name, bool tool, Func<Fixture, Task> body) => tests.Test(name, async () =>
         {
-            using var fixture = new Fixture(tool);
+            using var fixture = new Fixture(tool, window);
             await Wait(() => fixture.Host.IsLoaded && fixture.Host.ActualWidth > 0);
             fixture.Show(); await Ready(fixture.Nav); fixture.SelectTarget();
             await body(fixture);
         });
+    }
+
+    private static async Task FocusForNativeKeys(NavigatorWindow navigator, X11TestInput input)
+    {
+        // Establish native input focus in this shell, not just XAML focus. Xvfb
+        // has no window manager to honour an activation request; the pointer may
+        // still be over the other application's main window after previous cases.
+        // Hit only the empty outer border, never a selectable row.
+        input.MoveTo(navigator, new(2, 2));
+        input.Press(); input.Release();
+        await Task.Delay(50);
+        Check.True(navigator.Focus(FocusState.Keyboard));
+        await Task.Delay(50);
     }
 
     private static LayoutRoot Replacement() => new() { RootPanel = new(new LayoutDocumentPane(new LayoutDocument { ContentId = "replacement", Title = "Replacement" })) };
@@ -250,14 +270,13 @@ internal static class NavigatorCommitTests
         internal LayoutItem Item => Host.GetLayoutItemFromModel(Target);
         internal NavigatorWindow? Current => typeof(DockingManager).GetProperty("Surface", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(Host) is { } surface
             ? surface.GetType().GetField("_navigator", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(surface) as NavigatorWindow : null;
-        internal Fixture(bool tool)
+        internal Fixture(bool tool, Window window)
         {
             Target = tool ? Tool : B;
             _documents = new(A); _documents.Children.Add(B); _tools = new(Tool) { DockWidth = new(200) };
             var panel = new LayoutPanel(_tools); panel.Children.Add(_documents); Root = new() { RootPanel = panel };
             Host.Layout = Root; A.IsActive = true;
-            _window = new() { Content = Host, Title = "UnoDock navigator commit acceptance" };
-            _window.AppWindow.Resize(new() { Width = 1100, Height = 800 }); _window.Activate();
+            _window = window; _window.Content = Host; _window.Activate();
         }
         internal void Show() { Nav = new(Host); Surface(Host, "ShowNavigator", Nav); }
         internal void SelectTarget()
@@ -265,6 +284,10 @@ internal static class NavigatorCommitTests
         internal void Remove() { if (Target is LayoutDocument doc) _documents.Children.Remove(doc); else _tools.Children.Remove((LayoutAnchorable)Target); }
         internal void Insert() { if (Target is LayoutDocument doc) _documents.Children.Add(doc); else _tools.Children.Add((LayoutAnchorable)Target); }
         internal void Commit(bool close) { if (close) Surface(Host, "CloseNavigator", true); else Call(Nav, "CommitSelection"); }
-        public void Dispose() { Host.Dispose(); _window.Content = null; _window.Close(); }
+        public void Dispose()
+        {
+            try { Host.Dispose(); }
+            finally { if (ReferenceEquals(_window.Content, Host)) _window.Content = null; }
+        }
     }
 }
