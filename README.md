@@ -6,11 +6,28 @@
 Independent AvalonDock-style docking for **Uno Platform 6.7**, using **`UnoDock.*`**
 namespaces and Uno/WinUI controls.
 
-**Version: 0.1.0-preview.16. Full API, behavioral and visual parity is not verified.**
+**Version: 0.1.0-preview.17. Full API, behavioral and visual parity is not verified.**
 The target is the pinned public AvalonDock repository and stock presentation, not
 separately licensed commercial themes. This is not WPF binary compatibility. The
 independently authored implementation is MIT-licensed and is not affiliated with or
 endorsed by Xceed or Uno Platform.
+
+## Preview 17: source ownership and compact MVVM chrome
+
+Source reconciliation now validates the complete source/root/strategy generation across
+user enumeration, descriptors and insertion callbacks. Replaced sources cannot publish
+stale models or invoke stale AfterInsert hooks. Source removal cannot detach a model
+moved to another manager or repurposed by application Content replacement. Tracking is
+reserved before callbacks so a throwing insertion does not leave an untracked orphan;
+aborted unattached candidates can be retried. Foreign direct model ownership is rejected
+before either source is mutated. Both sources are still snapshotted before removals.
+
+The MVVM editor now uses compact themed command buttons in a 31-DIP command bar and a
+23-DIP status bar. Commands, bindings, editors and drafts survive theme changes. Native
+Save/Revert input acceptance and new generic/light/dark/RTL geometry captures accompany
+source callback regressions. The classic sample and original observations are unchanged.
+See [source ownership and sample acceptance](docs/source-ownership.md). Full original
+callback ordering, concurrent collection safety and pixel equivalence are not asserted.
 
 ## Preview 16: MVVM workspace and guarded layout restoration
 
@@ -194,12 +211,11 @@ has 996 declarations; resolved Release metadata has 105 exported type names and 
 entries, including attributes, enum/default values, constraints and inheritance. Repeated
 inventories must be byte-identical; unresolved types fail.
 
-The preview-14 resolved comparison is **978/1,031**, with **53 signature/type entries**
-and **18 separately reported attribute differences** unresolved. Preview 15 does not
-change product library declarations. Callable virtual adapters are not misreported as
-WPF overrides. Original inventories and diagnostic allowlist remain unchanged. Explicit
-per-type namespace mappings describe the rename, not a parity gain. The no-regression
-gate differs from the still-unsatisfied full strict-parity gate.
+The resolved comparison is **978/1,031**, with **53 signature/type entries** and
+**18 separately reported attribute differences** unresolved. Callable virtual adapters
+are not misreported as WPF overrides. Original inventories and diagnostic allowlist
+remain unchanged. Explicit per-type namespace mappings describe the rename, not a parity
+gain. The no-regression gate differs from the still-unsatisfied full strict-parity gate.
 
 Original bodies, templates, resource definitions, artwork and fonts are not copied into
 the product. Public protocol observations are distinguished from native input acceptance.
@@ -227,12 +243,12 @@ UNODOCK_SELFTEST=1 dotnet run --project samples/UnoDock.Gallery -c Release \
 ```
 
 Actual JSON/JUnit reports, execution summaries and every CI job conclusion establish the
-counts and results for a consumed revision. Platform suites overlap. The new inspector
+counts and results for a consumed revision. Platform suites overlap. The inspector
 suite registers 35 Linux / 33 Windows cases, including two opt-in XTEST scenarios; these
 are part of the platform totals, not additional independent cases. Eight namespace
-invariants and 23 metadata-comparator cases remain enabled. Run just the inspector with
-`UNODOCK_TEST_SUITE=inspector-quality`. Native input requires a dedicated test display
-and explicit `UNODOCK_NATIVE_INPUT_TESTS=1`.
+invariants and 23 metadata-comparator cases remain enabled. Standalone selectors include
+`UNODOCK_TEST_SUITE=inspector-quality`, `source-ownership` and `mvvm-chrome`. Native input
+requires a dedicated test display and explicit `UNODOCK_NATIVE_INPUT_TESTS=1`.
 
 Normal input acceptance has no extra root-event observer. UNODOCK_INPUT_TRACE=1 enables
 bounded diagnostics. Failed Linux acceptance may generate separate diagnostics without

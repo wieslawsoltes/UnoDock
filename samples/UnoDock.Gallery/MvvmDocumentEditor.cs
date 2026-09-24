@@ -5,18 +5,22 @@ namespace UnoDock.Gallery;
 
 public sealed class MvvmDocumentEditor : UserControl
 {
+    private readonly List<SampleButton> _commands = [];
+    private readonly Border _commandFrame = new();
+    private readonly Border _statusFrame = new();
     internal TextBox Editor { get; }
     public MvvmDocumentEditor()
     {
         var grid = new Grid();
-        grid.RowDefinitions.Add(new() { Height = GridLength.Auto });
+        grid.RowDefinitions.Add(new() { Height = new(31) });
         grid.RowDefinitions.Add(new() { Height = new(1, GridUnitType.Star) });
-        grid.RowDefinitions.Add(new() { Height = GridLength.Auto });
+        grid.RowDefinitions.Add(new() { Height = new(23) });
         var toolbar = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4, Margin = new(5, 3, 5, 3) };
         Command("Save", nameof(WorkspaceDocument.SaveCommand), "MvvmEditorSave");
         Command("Revert", nameof(WorkspaceDocument.RevertCommand), "MvvmEditorRevert");
         Command("Close", nameof(WorkspaceDocument.CloseCommand), "MvvmEditorClose");
-        grid.Children.Add(toolbar);
+        _commandFrame.Child = toolbar; _commandFrame.BorderThickness = new(0, 0, 0, 1);
+        AutomationProperties.SetAutomationId(_commandFrame, "MvvmEditorCommandBar"); grid.Children.Add(_commandFrame);
         Editor = new TextBox
         {
             AcceptsReturn = true, TextWrapping = TextWrapping.NoWrap,
@@ -31,18 +35,35 @@ public sealed class MvvmDocumentEditor : UserControl
         var footer = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, Margin = new(7, 3, 7, 3) };
         footer.Children.Add(new TextBlock { Text = "Lines", FontSize = 11 }); Value(nameof(WorkspaceDocument.LineCount));
         footer.Children.Add(new TextBlock { Text = "  Characters", FontSize = 11 }); Value(nameof(WorkspaceDocument.CharacterCount));
-        Grid.SetRow(footer, 2); grid.Children.Add(footer); Content = grid;
+        _statusFrame.Child = footer; _statusFrame.BorderThickness = new(0, 1, 0, 0);
+        AutomationProperties.SetAutomationId(_statusFrame, "MvvmEditorStatusBar");
+        Grid.SetRow(_statusFrame, 2); grid.Children.Add(_statusFrame); Content = grid;
+        // Control-local subscriptions do not retain a document or recreate its view
+        // when native reparenting or an inherited theme changes.
+        Loaded += (_, _) => UpdateChrome();
+        ActualThemeChanged += (_, _) => UpdateChrome();
+        UpdateChrome();
         void Command(string title, string property, string id)
         {
-            var button = new Button { Content = title, FontSize = 12, MinHeight = 24, Padding = new(7, 2, 7, 2) };
+            var button = new SampleButton { Content = title, Height = 24, Padding = new(8, 1, 8, 1) };
             button.SetBinding(Button.CommandProperty, new Binding { Path = new(property), Mode = BindingMode.OneWay });
-            AutomationProperties.SetAutomationId(button, id); toolbar.Children.Add(button);
+            AutomationProperties.SetAutomationId(button, id); AutomationProperties.SetName(button, title);
+            ToolTipService.SetToolTip(button, title); _commands.Add(button); toolbar.Children.Add(button);
         }
         void Value(string property)
         {
             var text = new TextBlock { FontSize = 11 };
             text.SetBinding(TextBlock.TextProperty, new Binding { Path = new(property) }); footer.Children.Add(text);
         }
+    }
+    private void UpdateChrome()
+    {
+        var dark = ActualTheme == ElementTheme.Dark;
+        var palette = SampleChrome.Default(dark);
+        Foreground = palette.Foreground;
+        foreach (var command in _commands) command.Configure(palette);
+        _commandFrame.Background = _statusFrame.Background = SampleChrome.Color(dark ? 0x2d2d30u : 0xf5f5f5u);
+        _commandFrame.BorderBrush = _statusFrame.BorderBrush = SampleChrome.Color(dark ? 0x454545u : 0xd4d4d4u);
     }
 }
 
@@ -61,9 +82,6 @@ public sealed class MvvmToolPresenter : ContentControl
         if (ReferenceEquals(Content, view)) return;
         if (view != null)
         {
-            // The view belongs to a WorkspaceTool created by this sample. Restore
-            // may create a new template container; transfer that owned view without
-            // rebuilding its list, selection or scroll state.
             switch (VisualTreeHelper.GetParent(view))
             {
                 case ContentPresenter parent when ReferenceEquals(parent.Content, view): parent.Content = null; break;
