@@ -152,6 +152,7 @@ public sealed partial class GalleryPage : IDisposable
     {
         if (!Enum.IsDefined(sample)) throw new ArgumentOutOfRangeException(nameof(sample));
         ObjectDisposedException.ThrowIf(_pageDisposed, this);
+        ++_workspaceEpoch; ++_restoreRequest; StopMvvmWorkspace();
         _sampleInspector?.Dispose(); _sampleInspector = null;
         _selectingSample = true;
         try
@@ -167,7 +168,7 @@ public sealed partial class GalleryPage : IDisposable
                 case SampleKind.Binding: BindingDemo(); break;
             }
             if (_samplePicker != null) _samplePicker.SelectedIndex = (int)sample;
-            _status.Text = "Ready  |  Drag tabs to dock  |  Ctrl+Tab: switch  |  Ctrl+F4: close  |  UnoDock preview 15";
+            _status.Text = "Ready  |  Drag tabs to dock  |  Ctrl+Tab: switch  |  Ctrl+F4: close  |  UnoDock preview 16";
         }
         finally { _selectingSample = false; }
     }
@@ -212,6 +213,7 @@ public sealed partial class GalleryPage : IDisposable
     }
     internal void RestoreSample(string xml)
     {
+        if (_mvvmWorkspace?.IsCurrent == true) { _mvvmWorkspace.RestoreLayout(xml); return; }
         var serializer = new XmlLayoutSerializer(Dock);
         serializer.LayoutSerializationCallback += (_, e) =>
         {
@@ -222,6 +224,7 @@ public sealed partial class GalleryPage : IDisposable
     public new void Dispose()
     {
         if (_pageDisposed) return;
+        ++_workspaceEpoch; ++_restoreRequest; StopMvvmWorkspace();
         _pageDisposed = true; _sampleInspector?.Dispose(); _sampleInspector = null;
         Dock.Dispose(); _content.Clear(); _sampleCommands.Clear();
     }

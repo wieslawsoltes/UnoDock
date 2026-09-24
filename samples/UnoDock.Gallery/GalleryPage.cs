@@ -91,31 +91,35 @@ public sealed partial class GalleryPage : Page
     }
     private void AddDocument()
     {
+        if (_mvvmWorkspace?.IsCurrent == true) { _mvvmWorkspace.NewDocument(); return; }
         if (Dock.DocumentsSource != null) { _notes.Add(new("note-" + _nextDocument, "Note " + _nextDocument++, "An observable source insertion.")); return; }
         var number = _nextDocument++; var document = Document("document-" + number, $"Document {number}.txt", Editor("Start writing here…"));
         var pane = Dock.Layout.LastFocusedDocument?.Parent as LayoutDocumentPane ?? Dock.Layout.Descendents().OfType<LayoutDocumentPane>().First(); pane.Children.Add(document); document.IsActive = true;
     }
     private void Split(DockPosition position) { if (Dock.Layout.ActiveContent is { Parent: ILayoutGroup group } content) DockOperations.Dock(content, group, position); }
     private void ShowXml()
-    { using var text = new StringWriter(); new XmlLayoutSerializer(Dock).Serialize(text); var doc = Document("xml-" + _nextDocument++, "Layout.xml", Editor(text.ToString())); Dock.Layout.Descendents().OfType<LayoutDocumentPane>().First().Children.Add(doc); doc.IsActive = true; }
-    private async Task Save()
     {
+        if (_mvvmWorkspace?.IsCurrent == true)
+        {
+            var xml = _mvvmWorkspace.CaptureLayout();
+            var document = _mvvmWorkspace.NewDocument(); document.Name = "Layout.xml"; document.Text = xml;
+            return;
+        }
         using var text = new StringWriter(); new XmlLayoutSerializer(Dock).Serialize(text);
-        var file = await ApplicationData.Current.LocalFolder.CreateFileAsync("workspace.xml", CreationCollisionOption.ReplaceExisting); await FileIO.WriteTextAsync(file, text.ToString()); Log("Layout saved to application storage.");
+        var doc = Document("xml-" + _nextDocument++, "Layout.xml", Editor(text.ToString()));
+        Dock.Layout.Descendents().OfType<LayoutDocumentPane>().First().Children.Add(doc); doc.IsActive = true;
     }
-    private async Task Restore()
-    {
-        var file = await ApplicationData.Current.LocalFolder.GetFileAsync("workspace.xml"); var xml = await FileIO.ReadTextAsync(file); var serializer = new XmlLayoutSerializer(Dock);
-        serializer.LayoutSerializationCallback += (_, e) => { if (e.Model.ContentId != null && _content.TryGetValue(e.Model.ContentId, out var content)) e.Content = content; else if (e.Content == null) e.Content = Editor("Restored content placeholder for " + e.Model.ContentId); };
-        serializer.Deserialize(new StringReader(xml)); Log("Layout restored atomically.");
-    }
+    private async Task Save() => await SaveWorkspaceLayoutAsync();
+    private async Task Restore() => await RestoreWorkspaceLayoutAsync();
     private void BindingDemo()
     {
-        using var batch = Dock.BeginLayoutUpdate(); Dock.DocumentsSource = null; Dock.Layout = new(); Dock.LayoutItemTemplate = (DataTemplate)Application.Current.Resources["NoteTemplate"]; Dock.LayoutItemContainerStyle = (Style)Application.Current.Resources["NoteItemStyle"];
-        _notes.Clear(); _notes.Add(new("mvvm-1", "Observable notes", "This editor is bound to a view model. Add a document to mutate the observable source.")); _notes.Add(new("mvvm-2", "Two-way binding", "Edit this note, switch tabs, and return. The model and presenter are retained.")); Dock.DocumentsSource = _notes; Log("MVVM mode: DocumentsSource + LayoutItemContainerStyle + LayoutItemTemplate.");
+        StopMvvmWorkspace();
+        _mvvmWorkspace = new MvvmWorkspace(Dock, Log);
+        Log("MVVM workspace: observable documents and tools, retained buffers, guarded commands and storage.");
     }
     private void Stress()
     {
+        if (_mvvmWorkspace?.IsCurrent == true) { _mvvmWorkspace.AddDocuments(1000); return; }
         using var batch = Dock.BeginLayoutUpdate(); using var tree = Dock.Layout.BeginUpdate();
         var pane = Dock.Layout.Descendents().OfType<LayoutDocumentPane>().First();
         for (var i = 0; i < 1000; i++) pane.Children.Add(Document("stress-" + _nextDocument, "Tab " + _nextDocument++, "Lazy document content " + i));

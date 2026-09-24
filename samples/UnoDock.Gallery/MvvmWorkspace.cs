@@ -11,6 +11,7 @@ public sealed class MvvmWorkspace : INotifyPropertyChanged, IDisposable
 {
     private readonly DockingManager _dock;
     private readonly IWorkspaceStorage _storage;
+    private readonly WorkspaceTemplateSelector _templates = new();
     private readonly Action<string> _log;
     private readonly ObservableCollection<WorkspaceDocument> _files = [];
     private readonly ObservableCollection<WorkspaceTool> _tools = [];
@@ -30,7 +31,7 @@ public sealed class MvvmWorkspace : INotifyPropertyChanged, IDisposable
         _newCommand = new(() => NewDocument(), () => IsCurrent);
         _saveAllCommand = new(() => Observe(SaveAllAsync()), () => IsCurrent && Documents.Any(d => d.IsDirty && !d.IsSaving));
         _closeCommand = new(() => { if (ActiveDocument != null) CloseDocument(ActiveDocument); }, () => IsCurrent && ActiveDocument?.IsOpen == true && !ActiveDocument.IsSaving);
-        _saveLayoutCommand = new(() => { _savedLayout = CaptureLayout(); Status = "Layout snapshot captured; document buffers remain application-owned."; _restoreLayoutCommand.Refresh(); }, () => IsCurrent);
+        _saveLayoutCommand = new(() => { _savedLayout = CaptureLayout(); Status = "Layout snapshot captured; document buffers remain application-owned."; _restoreLayoutCommand?.Refresh(); }, () => IsCurrent);
         _restoreLayoutCommand = new(() => RestoreLayout(_savedLayout), () => IsCurrent && _savedLayout.Length != 0);
         var first = CreateDocument("Welcome.md", "# UnoDock MVVM workspace\n\nThese documents are view models, not controls.\nEdit a buffer to mark its tab dirty. Save writes application-owned text to local storage.\n\nUse Workspace to reopen a closed document, and the toolbar to capture and restore docking layout.\nDirty buffers are protected from closing by default.\n");
         var second = CreateDocument("Workspace.cs", "using UnoDock;\nusing UnoDock.Layout;\n\n// Observable documents, retained editors and explicit public bindings.\n// Float a tab, edit it, dock it back, then save or revert the buffer.\nvar manager = new DockingManager();\n");
@@ -46,7 +47,7 @@ public sealed class MvvmWorkspace : INotifyPropertyChanged, IDisposable
             _dock.DocumentsSource = null; _dock.AnchorablesSource = null;
             _dock.LayoutItemContainerStyle = null;
             _dock.LayoutItemTemplate = null;
-            _dock.LayoutItemTemplateSelector = new WorkspaceTemplateSelector();
+            _dock.LayoutItemTemplateSelector = _templates;
             var documents = new LayoutDocumentPane();
             foreach (var document in Documents) documents.Children.Add(new LayoutDocument { ContentId = document.ContentId, Title = document.Title, Content = document });
             var left = new LayoutAnchorablePane(Tool(explorer)) { DockWidth = new(210), DockMinWidth = 130 };
@@ -59,6 +60,7 @@ public sealed class MvvmWorkspace : INotifyPropertyChanged, IDisposable
         }
         _dock.LayoutChanged += LayoutChanged; _dock.ActiveContentChanged += ActiveChanged;
         _dock.DocumentClosing += DocumentClosing; _dock.DocumentClosed += DocumentClosed;
+        Documents.CollectionChanged += DocumentsChanged;
         ConnectRoot(); OpenDocument(first);
     }
 
@@ -248,6 +250,34 @@ public sealed class MvvmWorkspace : INotifyPropertyChanged, IDisposable
     }
     private void SetActive(WorkspaceDocument? document)
     { if (ReferenceEquals(_activeDocument, document)) return; _activeDocument = document; Changed(nameof(ActiveDocument)); _closeCommand.Refresh(); }
+    private void DocumentsChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+    {
+        if (!IsCurrent) return;
+        foreach (var document in _files.ToArray())
+        {
+            if (!IsCurrent) return;
+            document.IsOpen = Documents.Contains(document);
+        }
+        if (!IsCurrent) return;
+        SynchronizeBindings(); ActiveChanged(this, EventArgs.Empty);
+        _saveAllCommand.Refresh(); _closeCommand.Refresh();
+    }
+    internal void AddDocuments(int count)
+    {
+        EnsureCurrent();
+        if (count < 1 || count > 10000) throw new ArgumentOutOfRangeException(nameof(count));
+        WorkspaceDocument? last = null;
+        using (var batch = _dock.BeginLayoutUpdate())
+        {
+            for (var i = 0; i < count; i++)
+            {
+                EnsureCurrent();
+                last = CreateDocument("Document " + _nextId + ".txt", "Lazy source-backed document " + _nextId);
+                Documents.Add(last);
+            }
+        }
+        if (last != null && IsCurrent) OpenDocument(last);
+    }
     private void DocumentChanged(object? sender, PropertyChangedEventArgs e)
     { if (IsCurrent) { _saveAllCommand.Refresh(); _closeCommand.Refresh(); } }
     private void EnsureCurrent() { if (!IsCurrent) throw new InvalidOperationException("This MVVM workspace is no longer attached to its docking sources."); }
@@ -296,12 +326,14 @@ public sealed class MvvmWorkspace : INotifyPropertyChanged, IDisposable
     public void Dispose()
     {
         if (_disposed) return; _disposed = true;
+        Documents.CollectionChanged -= DocumentsChanged;
         _dock.LayoutChanged -= LayoutChanged; _dock.ActiveContentChanged -= ActiveChanged;
         _dock.DocumentClosing -= DocumentClosing; _dock.DocumentClosed -= DocumentClosed;
         if (_root != null) _root.Updated -= RootUpdated; _root = null;
         foreach (var model in _bindings.Keys.ToArray()) ReleaseBinding(model);
         foreach (var document in _files) { document.PropertyChanged -= DocumentChanged; document.DetachCommands(); }
         _newCommand.Detach(); _saveAllCommand.Detach(); _closeCommand.Detach(); _saveLayoutCommand.Detach(); _restoreLayoutCommand.Detach();
+        if (ReferenceEquals(_dock.LayoutItemTemplateSelector, _templates)) _dock.LayoutItemTemplateSelector = null;
         PropertyChanged = null;
     }
 }
@@ -315,6 +347,11 @@ public sealed class WorkspaceTool(string contentId, string title, FrameworkEleme
 }
 internal sealed class WorkspaceTemplateSelector : DataTemplateSelector
 {
-    protected override DataTemplate SelectTemplateCore(object item) => (DataTemplate)Application.Current.Resources[item is WorkspaceDocument ? "WorkspaceDocumentTemplate" : "WorkspaceToolTemplate"];
+    protected override DataTemplate SelectTemplateCore(object item) => item switch
+    {
+        WorkspaceDocument => (DataTemplate)Application.Current.Resources["WorkspaceDocumentTemplate"],
+        WorkspaceTool => (DataTemplate)Application.Current.Resources["WorkspaceToolTemplate"],
+        _ => null!
+    };
     protected override DataTemplate SelectTemplateCore(object item, DependencyObject container) => SelectTemplateCore(item);
 }

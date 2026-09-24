@@ -14,6 +14,7 @@ public sealed class WorkspaceDocument : INotifyPropertyChanged, IDockContent
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(contentId);
         if (contentId.Any(c => !char.IsAsciiLetterOrDigit(c) && c != '-')) throw new ArgumentException("Document IDs must be safe storage names.", nameof(contentId));
+        ArgumentException.ThrowIfNullOrWhiteSpace(name); ArgumentNullException.ThrowIfNull(text);
         ContentId = contentId; _name = name; _text = _savedText = text;
         _save = new(save, () => IsOpen && IsDirty && !IsSaving);
         _revert = new(revert, () => IsOpen && IsDirty && !IsSaving);
@@ -79,7 +80,14 @@ internal sealed class LocalWorkspaceStorage : IWorkspaceStorage
         var folder = await ApplicationData.Current.LocalFolder.CreateFolderAsync("mvvm-documents", CreationCollisionOption.OpenIfExists);
         // IDs are validated by WorkspaceDocument. The content is application-owned
         // text; display names never become paths or overwrite arbitrary user files.
-        var file = await folder.CreateFileAsync(contentId + ".txt", CreationCollisionOption.ReplaceExisting);
-        await FileIO.WriteTextAsync(file, text);
+        StorageFile? temporary = null;
+        try
+        {
+            temporary = await folder.CreateFileAsync(contentId + "-" + Guid.NewGuid().ToString("N") + ".tmp", CreationCollisionOption.FailIfExists);
+            await FileIO.WriteTextAsync(temporary, text);
+            await temporary.RenameAsync(contentId + ".txt", NameCollisionOption.ReplaceExisting);
+            temporary = null;
+        }
+        finally { if (temporary != null) await temporary.DeleteAsync(); }
     }
 }

@@ -185,9 +185,12 @@ public static class RestoreOwnershipTests
         return tests.Run(output, "restore-ownership");
     }
     private static LayoutDocument[] Documents(DockingManager manager) => manager.Layout.Descendents().OfType<LayoutDocument>().ToArray();
-    private static DockingManager Workspace() => new() { Layout = new() { RootPanel = new LayoutPanel(new LayoutDocumentPane(
-        new LayoutDocument { ContentId = "first", Title = "First", Content = new object() },
-        new LayoutDocument { ContentId = "second", Title = "Second", Content = new object() })) } };
+    private static DockingManager Workspace()
+    {
+        var pane = new LayoutDocumentPane(new LayoutDocument { ContentId = "first", Title = "First", Content = new object() });
+        pane.Children.Add(new LayoutDocument { ContentId = "second", Title = "Second", Content = new object() });
+        return new() { Layout = new() { RootPanel = new LayoutPanel(pane) } };
+    }
     private static string Capture(DockingManager manager) { using var text = new StringWriter(); new XmlLayoutSerializer(manager).Serialize(text); return text.ToString(); }
     private sealed class ReplacingSerializer(DockingManager manager, LayoutRoot replacement) : XmlLayoutSerializer(manager)
     { protected override void FixupLayout(LayoutRoot layout) => Manager.Layout = replacement; }
