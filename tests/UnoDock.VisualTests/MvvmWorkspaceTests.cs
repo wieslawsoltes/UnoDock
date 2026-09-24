@@ -12,6 +12,7 @@ internal static class MvvmWorkspaceTests
     internal static async Task<int> Run(string output)
     {
         var tests = new TestRunner();
+        WorkspaceTextTests.Register(tests);
         using var dock = new DockingManager { Width = 1000, Height = 640, FontSize = 12, FloatingWindowMode = FloatingWindowMode.InSurface };
         var window = new Window { Content = dock, Title = "UnoDock MVVM acceptance" };
         window.AppWindow.Resize(new() { Width = 1100, Height = 800 }); window.Activate();
@@ -29,10 +30,58 @@ internal static class MvvmWorkspaceTests
             });
             Add("MVVM: compiled template realizes the actual editable view", async (workspace, _) =>
             {
-                var document = workspace.Documents[0]; var editor = Editor(document); Check.Equal(document.Text, editor.Editor.Text);
+                var document = workspace.Documents[0]; var initial = document.Text; var editor = Editor(document);
+                // The view is CR-based; application text must retain its LF bytes.
+                // Assert both contracts, not equality between different projections.
+                Check.Equal(document.EditorText, editor.Editor.Text);
+                Check.Same(initial, document.Text); Check.False(document.IsDirty);
                 editor.Editor.Text = "native dependency-property edit\nsecond line";
-                await Wait(() => document.Text == editor.Editor.Text); Check.True(document.IsDirty); Check.Equal(2, document.LineCount);
+                await Wait(() => document.Text == "native dependency-property edit\nsecond line");
+                Check.Equal("native dependency-property edit\rsecond line", editor.Editor.Text);
+                Check.True(document.IsDirty); Check.Equal(2, document.LineCount);
             });
+            foreach (var delimiter in new[] { "\n", "\r\n", "\r" })
+            {
+                var label = delimiter.Replace("\r", "CR", StringComparison.Ordinal).Replace("\n", "LF", StringComparison.Ordinal);
+                Add("MVVM: native edit, save and revert preserve " + label, async (workspace, store) =>
+                {
+                    var document = workspace.Documents[0]; var editor = Editor(document);
+                    var original = "alpha" + delimiter + "beta" + delimiter;
+                    document.Text = original; document.AcceptSaved(original); await Settle();
+                    Check.Equal("alpha\rbeta\r", editor.Editor.Text); Check.Same(original, document.Text); Check.False(document.IsDirty);
+                    editor.Editor.Text = "alpha\rbeta+\r";
+                    var expected = "alpha" + delimiter + "beta+" + delimiter;
+                    await Wait(() => document.Text == expected);
+                    Check.True(await workspace.SaveAsync(document)); Check.Equal(expected, store.Writes.Single().Text); Check.False(document.IsDirty);
+                    editor.Editor.Text = "temporary"; await Wait(() => document.Text == "temporary");
+                    workspace.RevertDocument(document); await Settle();
+                    Check.Equal(expected, document.Text); Check.Equal("alpha\rbeta+\r", editor.Editor.Text); Check.False(document.IsDirty);
+                });
+            }
+            Add("MVVM: mixed endings survive realization, tab switches and XML restore", async (workspace, _) =>
+            {
+                var document = workspace.Documents[0]; const string original = "alpha\r\nbeta\ngamma\rdelta\r\n";
+                document.Text = original; document.AcceptSaved(original); await Settle();
+                Check.Equal("alpha\rbeta\rgamma\rdelta\r", Editor(document).Editor.Text);
+                workspace.OpenDocument(workspace.Documents[1]); await Settle(); workspace.OpenDocument(document); await Settle();
+                workspace.RestoreLayout(workspace.CaptureLayout()); await Settle();
+                Check.Same(original, document.Text); Check.False(document.IsDirty);
+                Check.Equal("alpha\rbeta\rgamma\rdelta\r", Editor(document).Editor.Text);
+            });
+            foreach (var seam in new[]
+            {
+                (Name: "leading", Original: "a\nb\rc", Edited: "a\rb\r\rc", Expected: "a\nb\r\r\nc"),
+                (Name: "trailing", Original: "a\rb\nc", Edited: "a\rx\r\rc", Expected: "a\rx\r\r\nc"),
+                (Name: "deletion", Original: "a\nb\rcX\nd", Edited: "a\rb\r\rd", Expected: "a\nb\r\r\nd")
+            })
+                Add("MVVM: mixed delimiter splice keeps both logical lines: " + seam.Name, async (workspace, store) =>
+                {
+                    var document = workspace.Documents[0]; document.Text = seam.Original; document.AcceptSaved(seam.Original); await Settle();
+                    Editor(document).Editor.Text = seam.Edited;
+                    await Wait(() => document.Text == seam.Expected);
+                    Check.Equal(seam.Edited, document.EditorText); Check.Equal(seam.Edited, Editor(document).Editor.Text);
+                    Check.True(await workspace.SaveAsync(document)); Check.Equal(seam.Expected, store.Writes.Single().Text);
+                });
             Add("MVVM: dirty title reaches model adapter and rendered tab", async (workspace, _) =>
             {
                 var document = workspace.Documents[0]; document.Text += "new edit";

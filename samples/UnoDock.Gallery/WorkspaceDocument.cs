@@ -8,6 +8,7 @@ namespace UnoDock.Gallery;
 public sealed class WorkspaceDocument : INotifyPropertyChanged, IDockContent
 {
     private string _name, _text, _savedText;
+    private string? _editorText;
     private bool _isReadOnly, _isSaving, _isOpen;
     private readonly WorkspaceCommand _save, _revert, _close;
     internal WorkspaceDocument(string contentId, string name, string text, Action save, Action revert, Action close)
@@ -34,7 +35,11 @@ public sealed class WorkspaceDocument : INotifyPropertyChanged, IDockContent
         set
         {
             ArgumentNullException.ThrowIfNull(value); if (value == _text) return;
-            _text = value; Changed(); Changed(nameof(EditorText)); Changed(nameof(IsDirty)); Changed(nameof(Title));
+            _text = value;
+            // Invalidate before notifying: reentrant observers must read the new
+            // projection. Ordinary binding reads do not rescan an unchanged buffer.
+            _editorText = null;
+            Changed(); Changed(nameof(EditorText)); Changed(nameof(IsDirty)); Changed(nameof(Title));
             Changed(nameof(CharacterCount)); Changed(nameof(LineCount)); RefreshCommands();
         }
     }
@@ -42,7 +47,7 @@ public sealed class WorkspaceDocument : INotifyPropertyChanged, IDockContent
     /// not rewrite the original buffer or mark the document dirty.</summary>
     public string EditorText
     {
-        get => WorkspaceTextProjection.ForEditor(_text);
+        get => _editorText ??= WorkspaceTextProjection.ForEditor(_text);
         set => Text = WorkspaceTextProjection.ApplyEditorEdit(_text, value);
     }
     public bool IsDirty => !string.Equals(_savedText, _text, StringComparison.Ordinal);

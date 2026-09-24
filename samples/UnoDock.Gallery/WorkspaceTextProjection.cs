@@ -1,9 +1,12 @@
+using System.Text;
+
 namespace UnoDock.Gallery;
 
 /// <summary>Separates a TextBox's CR-based editing view from exact application text.
 /// Unedited text is retained verbatim. A changed contiguous region uses the first
-/// existing line delimiter, while the unchanged prefix/suffix retain mixed endings.
-/// This is a text projection, not a byte encoding or an arbitrary diff engine.</summary>
+/// existing line delimiter, while unchanged prefix/suffix spans retain mixed endings.
+/// A CR is inserted at a splice that would otherwise join two logical breaks into
+/// one CRLF. This is a UTF16 text projection, not a byte encoding or arbitrary diff.</summary>
 internal static class WorkspaceTextProjection
 {
     internal static string ForEditor(string text)
@@ -26,11 +29,27 @@ internal static class WorkspaceTextProjection
         var right = OriginalOffset(original, before.Length - suffix);
         var inserted = after.Substring(prefix, after.Length - prefix - suffix)
             .Replace("\r", PreferredDelimiter(original), StringComparison.Ordinal);
-        return string.Concat(original.AsSpan(0, left), inserted.AsSpan(), original.AsSpan(right));
+
+        // Projection is not homomorphic at CR|LF concatenation boundaries. Those
+        // characters came from distinct logical breaks, not a single CRLF token.
+        // Preserve both untouched spans and disambiguate only the affected seam.
+        var leadingSeam = left > 0 && original[left - 1] == '\r' && inserted.Length > 0 && inserted[0] == '\n';
+        var trailingSeam = right < original.Length && original[right] == '\n' &&
+            (inserted.Length > 0 ? inserted[^1] == '\r' : left > 0 && original[left - 1] == '\r');
+        if (!leadingSeam && !trailingSeam)
+            return string.Concat(original.AsSpan(0, left), inserted.AsSpan(), original.AsSpan(right));
+        var result = new StringBuilder();
+        result.Append(original, 0, left);
+        if (leadingSeam) result.Append('\r');
+        result.Append(inserted);
+        if (trailingSeam) result.Append('\r');
+        result.Append(original, right, original.Length - right);
+        return result.ToString();
     }
 
     internal static int CountLines(string text)
     {
+        ArgumentNullException.ThrowIfNull(text);
         var count = 1;
         for (var i = 0; i < text.Length; i++)
         {
