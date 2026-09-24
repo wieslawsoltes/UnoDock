@@ -12,11 +12,10 @@ internal sealed partial class DockSurface
         ArgumentNullException.ThrowIfNull(navigator);
         if (!DispatcherQueue.HasThreadAccess) throw new InvalidOperationException("Navigator presentation requires its owning UI thread.");
         if (!ReferenceEquals(navigator.OwnerManager, Manager)) throw new ArgumentException("The navigator belongs to another docking manager.", nameof(navigator));
+        if (navigator.IsSelectionWindowClosed) throw new InvalidOperationException("A closed navigator cannot be shown again.");
         if (_disposed || !Manager.IsEnabled) return;
         if (_navigator is { } existing)
         {
-            // Activation/Loaded callbacks may arrive while the new host is being
-            // reserved. Do not navigate arrays belonging to a previous session.
             if (existing.HasSelectionSession) existing.Advance(InputState.ShiftDown ? -1 : 1);
             return;
         }
@@ -27,7 +26,6 @@ internal sealed partial class DockSurface
             ReferenceEquals(Manager.Layout, root) && ReferenceEquals(root.Manager, Manager);
         try
         {
-            // Native activation can synchronously execute arbitrary focus handlers.
             Microsoft.Windows.Shell.WindowRegistry.Find(Manager)?.Activate();
             if (!Current()) return;
             navigator.HorizontalAlignment = HorizontalAlignment.Center;
@@ -55,9 +53,6 @@ internal sealed partial class DockSurface
         }
         finally
         {
-            // A root replacement before the session listener is installed, or an
-            // initialization callback ending that session, releases this reservation.
-            // A replacement navigator is never removed by this obsolete opening.
             if (OwnsNavigator(navigator) && generation == _navigatorGeneration &&
                 (!navigator.HasSelectionSession || !ReferenceEquals(Manager.Layout, root) || !ReferenceEquals(root.Manager, Manager)))
                 CloseNavigator(false);
@@ -68,26 +63,57 @@ internal sealed partial class DockSurface
     {
         if (!DispatcherQueue.HasThreadAccess) throw new InvalidOperationException("Navigator presentation requires its owning UI thread.");
         if (_navigator is not { } navigator) return;
-        // A layout-replacement callback must not appropriate the new workspace's
-        // focus. An uninitialized opening has no editor-focus restoration to perform.
         var root = navigator.SelectionSessionRoot;
         _navigator = null;
         var generation = ++_navigatorGeneration;
         bool Current() => root != null && !_disposed && _navigator == null && _navigatorGeneration == generation &&
             ReferenceEquals(Manager.Layout, root) && ReferenceEquals(root.Manager, Manager);
         var activate = commit ? navigator.CaptureSelectionCommit(Current, true) : null;
+        DetachNavigator(navigator);
+        if (!Current()) return;
+        activate?.Invoke();
+        RestoreNavigatorFocus(root, Current);
+    }
+
+    internal void CommitDirectNavigatorSelection(NavigatorWindow navigator, bool closeWindow, Func<bool> ownsSelection)
+    {
+        if (!DispatcherQueue.HasThreadAccess) throw new InvalidOperationException("Navigator presentation requires its owning UI thread.");
+        if (!OwnsNavigator(navigator) || navigator.SelectionSessionRoot is not { } root) return;
+        var generation = _navigatorGeneration;
+        var detached = false;
+        bool Current() => ownsSelection() && !_disposed && _navigatorGeneration == generation &&
+            ReferenceEquals(Manager.Layout, root) && ReferenceEquals(root.Manager, Manager) &&
+            (detached ? _navigator == null : OwnsNavigator(navigator) && navigator.HasSelectionSession);
+        navigator.CommitDirectSelection(Current, () =>
+        {
+            // Documents hide without Closing/Closed. Tools follow the cancellable
+            // lifecycle. A veto retains the view, but (as observed) still permits
+            // activation while the same request and workspace remain valid.
+            if (closeWindow && !navigator.RequestSelectionClose()) return;
+            if (!Current()) return;
+            _navigator = null;
+            generation = ++_navigatorGeneration;
+            detached = true;
+            DetachNavigator(navigator);
+            if (closeWindow) navigator.CompleteSelectionClose();
+        });
+        if (detached) RestoreNavigatorFocus(root, Current);
+    }
+
+    private void DetachNavigator(NavigatorWindow navigator)
+    {
         try { navigator.EndSession(); }
         finally
         {
             try { _flyouts.Children.Remove(navigator); }
             finally { _flyouts.IsHitTestVisible = _navigator != null || _autoHide?.Visibility == Visibility.Visible; }
         }
-        // The removed control's Unloaded callback may have shown another navigator
-        // or replaced the workspace. Neither that host nor its focus belongs to us.
-        if (!Current()) return;
-        activate?.Invoke();
-        if (root == null || !Current() || root.ActiveContent is not { } active || !ReferenceEquals(active.Root, root)) return;
-        bool CurrentFocus() => Current() && ReferenceEquals(root.ActiveContent, active) && ReferenceEquals(active.Root, root) && active.IsEnabled;
+    }
+
+    private void RestoreNavigatorFocus(LayoutRoot? root, Func<bool> ownsOperation)
+    {
+        if (root == null || !ownsOperation() || root.ActiveContent is not { } active || !ReferenceEquals(active.Root, root)) return;
+        bool CurrentFocus() => ownsOperation() && ReferenceEquals(root.ActiveContent, active) && ReferenceEquals(active.Root, root) && active.IsEnabled;
         Manager.Refresh();
         if (!CurrentFocus()) return;
         var item = Manager.GetLayoutItemFromModel(active);

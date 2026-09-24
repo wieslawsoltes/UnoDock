@@ -1,0 +1,76 @@
+name: Prepare preview20 navigator selection
+on:
+  push:
+    branches: [work/preview20-navigator-selection]
+    paths: [.github/workflows/prepare-preview20.yml]
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: prepare-preview20
+  cancel-in-progress: false
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: work/preview20-navigator-selection
+          fetch-depth: 0
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Apply checked preview migration and verified original observations
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git merge-base --is-ancestor b007cd14d9165107d37044faec1ab49b3b3e94bc HEAD
+          gh api repos/wieslawsoltes/UnoDock/actions/artifacts/10823916978/zip > "$RUNNER_TEMP/navigator-reference.zip"
+          python3 tools/prepare-preview20.py "$RUNNER_TEMP/navigator-reference.zip"
+          python3 - <<'PY'
+          from pathlib import Path
+          test=Path('tests/UnoDock.VisualTests/NavigatorSelectionTests.cs')
+          text=test.read_text(); assert text.count('CancelEventHandler ')==2
+          test.write_text(text.replace('CancelEventHandler ', 'EventHandler<CancelEventArgs> '))
+          source=Path('src/UnoDock/Controls/NavigatorWindow.cs')
+          text=source.read_text()
+          anchor='        finally { _selecting = false; _hasPendingSelection = false; _pendingSelection = null; }'
+          assert text.count(anchor)==1
+          text=text.replace(anchor, '        catch { _hasDirectSelection = false; _directSelection = null; throw; }\n'+anchor)
+          source.write_text(text)
+          PY
+          python3 tools/generate-property-adapters.py
+          python3 tests/metadata/test_namespace_migration.py
+          python3 tests/metadata/test_metadata.py
+          git diff --check
+      - name: Persist prepared product sources without modifying workflows
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src tests samples docs contracts README.md Directory.Build.props
+          git diff --cached --check
+          git commit -m 'feat: separate direct navigator activation from preview and replay original selection contracts'
+          git push origin HEAD:work/preview20-navigator-selection
+          mkdir -p artifacts
+          git rev-parse HEAD > artifacts/prepared-revision.txt
+      - name: Build actual Uno desktop SDK and XAML with warnings as errors
+        run: dotnet build samples/UnoDock.Gallery -c Release -f net10.0-desktop -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0 -warnaserror
+      - name: Install native runtime test dependencies
+        run: sudo apt-get update && sudo apt-get install -y xvfb libx11-6 libxi6 libxrandr2 libxcursor1 libfontconfig1 libgl1 libice6 libsm6 libxcb1 libxtst6
+      - name: Execute focused navigator acceptance on real Uno X11
+        env:
+          UNODOCK_SELFTEST: '1'
+          UNODOCK_NATIVE_INPUT_TESTS: '1'
+          UNODOCK_TEST_SUITE: navigator-quality
+          UNODOCK_TEST_RESULTS: ${{ github.workspace }}/artifacts/test-results
+        run: timeout 180s xvfb-run -a -s "-screen 0 2560x1440x24" dotnet run --project samples/UnoDock.Gallery -c Release -f net10.0-desktop --no-build -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0
+      - name: Report executed tests
+        if: always()
+        run: python3 tools/report-test-results.py artifacts/test-results --output artifacts/execution-summary.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: preview20-preparation
+          path: artifacts/
+          if-no-files-found: error

@@ -18,8 +18,6 @@ public partial class NavigatorWindow
         if (surface?.OwnsNavigator(this) == true) surface.CloseNavigator(commit);
     }
 
-    // Direct in-session commits are used by the control's integration hooks. A
-    // detached/cancelled instance must never authorize a later activation.
     internal void CommitSelection()
     {
         if (_committingSelection) return;
@@ -27,11 +25,22 @@ public partial class NavigatorWindow
         CaptureSelectionCommit(() => session == _sessionVersion, false)?.Invoke();
     }
 
-    /// <summary>Capture a one-use activation intent before the surface removes the
-    /// navigator. The surface supplies its own closing-generation fence, so the
-    /// normal Unloaded/EndSession sequence does not invalidate an authorized close,
-    /// but cancellation, a replacement navigator or a new session always does.</summary>
-    internal Action? CaptureSelectionCommit(Func<bool> ownsOperation, bool afterDetach)
+    /// <summary>Capture a one-use activation before removing the view. The surface
+    /// supplies its closing-generation fence; ordinary EndSession does not revoke
+    /// that authorized close, but a replacement session or workspace does.</summary>
+    internal Action? CaptureSelectionCommit(Func<bool> ownsOperation, bool afterDetach) =>
+        CaptureActivation(ownsOperation, afterDetach, null);
+
+    /// <summary>Direct property assignment checks CanExecute while still visible.
+    /// A veto/query failure must not dismiss the navigator. Successful queries run
+    /// the category-specific hide/close stage before the guarded command executes.</summary>
+    internal void CommitDirectSelection(Func<bool> ownsOperation, Action prepareExecution)
+    {
+        ArgumentNullException.ThrowIfNull(prepareExecution);
+        CaptureActivation(ownsOperation, false, prepareExecution)?.Invoke();
+    }
+
+    private Action? CaptureActivation(Func<bool> ownsOperation, bool afterDetach, Action? prepareExecution)
     {
         ArgumentNullException.ThrowIfNull(ownsOperation);
         if (!DispatcherQueue.HasThreadAccess) throw new InvalidOperationException("Navigator activation requires its owning UI thread.");
@@ -59,8 +68,14 @@ public partial class NavigatorWindow
                     !ReferenceEquals(_manager.Surface, surface) || !ReferenceEquals(_manager.Layout, root) ||
                     !ReferenceEquals(root.Manager, _manager) || !ReferenceEquals(model.Root, root) ||
                     !ReferenceEquals(model.Parent, parent) || !ReferenceEquals(item.LayoutElement, model) ||
-                    !ReferenceEquals(item.ActivateCommand, command) || !Eligible(model) ||
-                    (afterDetach ? _sessionRoot != null : !ReferenceEquals(_sessionRoot, root))) return false;
+                    !ReferenceEquals(item.ActivateCommand, command) || !Eligible(model)) return false;
+                // The direct caller fences both sides of its own detach. Explicit
+                // keyboard/host commits keep their original strict attachment rule.
+                if (prepareExecution == null)
+                {
+                    if (afterDetach ? _sessionRoot != null : !ReferenceEquals(_sessionRoot, root)) return false;
+                }
+                else if (_sessionRoot != null && !ReferenceEquals(_sessionRoot, root)) return false;
                 if (!container.Children.Any(child => ReferenceEquals(child, model))) return false;
                 return ReferenceEquals(_manager.GetLayoutItemFromModel(model), item);
             }
@@ -80,9 +95,10 @@ public partial class NavigatorWindow
                 commandToken = item.RegisterPropertyChangedCallback(LayoutItem.ActivateCommandProperty, (_, _) => invalidated = true);
                 enabledToken = RegisterPropertyChangedCallback(IsEnabledProperty, (_, _) => invalidated = true);
                 managerEnabledToken = _manager.RegisterPropertyChangedCallback(IsEnabledProperty, (_, _) => invalidated = true);
-                // CanExecute is application code, not a pure predicate. The second
-                // check includes ABA changes observed while that callback ran.
-                if (Current() && command.CanExecute(null) && Current()) command.Execute(null);
+                if (!Current() || !command.CanExecute(null) || !Current()) return;
+                prepareExecution?.Invoke();
+                // Closing/Closed/Unloaded callbacks are application code too.
+                if (Current()) command.Execute(null);
             }
             finally
             {
