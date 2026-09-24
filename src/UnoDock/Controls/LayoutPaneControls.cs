@@ -151,7 +151,7 @@ public class LayoutAnchorablePaneControl : LayoutCachePaneControl, ILayoutContro
     protected override void OnGotKeyboardFocus(DockKeyboardFocusChangedEventArgs e) { if (!e.Handled) ActivateSelection(); base.OnGotKeyboardFocus(e); }
 }
 
-public abstract class LayoutTabItemBase : DockInputControl
+public abstract partial class LayoutTabItemBase : DockInputControl
 {
     public static readonly DependencyProperty ModelProperty = DependencyProperty.Register(nameof(Model), typeof(LayoutContent), typeof(LayoutTabItemBase), new PropertyMetadata(null, (d, e) => ((LayoutTabItemBase)d).OnModelChanged(e)));
     public static readonly DependencyProperty LayoutItemProperty = DependencyProperty.Register(nameof(LayoutItem), typeof(LayoutItem), typeof(LayoutTabItemBase), new PropertyMetadata(null));
@@ -173,16 +173,17 @@ public abstract class LayoutTabItemBase : DockInputControl
         _label.MinWidth = 44; _label.MaxWidth = 260; _label.Padding = new Thickness(1, 0, 1, 0); _label.HorizontalContentAlignment = HorizontalAlignment.Left; _label.HorizontalAlignment = HorizontalAlignment.Stretch; _label.VerticalAlignment = VerticalAlignment.Stretch;
         _label.DoubleTapped += (_, _) => { if (Model?.IsFloating == true) Model.Dock(); else Model?.Float(); };
         _close = DockChrome.Icon(DockGlyph.Close, () => { if (Model != null) DockVisuals.CloseOrHide(Model); }, "Close tab");
-        Grid.SetColumn(_close, 1); _chrome.Children.Add(_label); _chrome.Children.Add(_close); Content = _chrome;
+        Grid.SetColumn(_close, 1); _chrome.Children.Add(_label); _chrome.Children.Add(_close); Content = _chrome; InitializeTabAutomation();
     }
     protected virtual void OnModelChanged(DependencyPropertyChangedEventArgs e)
     {
         if (e.OldValue is LayoutContent old) old.PropertyChanged -= ModelChanged;
         if (e.NewValue is LayoutContent model) model.PropertyChanged += ModelChanged;
         if (Model?.Root?.Manager is { } manager) Update(manager);
+        QueueAutomationRefresh();
     }
     protected void SetLayoutItem(LayoutItem value) => SetValue(LayoutItemProperty, value);
-    private void ModelChanged(object? sender, PropertyChangedEventArgs e) { if (_manager != null) Update(_manager); }
+    private void ModelChanged(object? sender, PropertyChangedEventArgs e) { if (_manager != null) Update(_manager); QueueAutomationRefresh(); }
     internal override FrameworkElement DockCaptureElement => _label;
     private void ActivateFromKeyboard()
     {
@@ -225,6 +226,7 @@ public abstract class LayoutTabItemBase : DockInputControl
         _icon.Source = template == null ? Model.IconSource as ImageSource : null;
         _icon.Visibility = _icon.Source == null ? Visibility.Collapsed : Visibility.Visible;
         _label.IsEnabled = Model.IsEnabled;
+        _close.IsEnabled = Model.IsEnabled;
         var palette = DockChrome.Palette(manager);
         var tool = Model is LayoutAnchorable && Model.Parent is not LayoutDocumentPane;
         _label.Configure(palette); _close.Configure(palette);

@@ -56,7 +56,8 @@ public partial class App : Application
                         ("mvvm-workspace", true, () => Testing.MvvmWorkspaceTests.Run(output)),
                         ("source-ownership", true, () => Testing.SourceOwnershipTests.Run(output)),
                         ("source-identity", true, () => Testing.SourceIdentityTests.Run(output)),
-                        ("mvvm-chrome", true, () => Testing.MvvmChromeTests.Run(output))
+                        ("mvvm-chrome", true, () => Testing.MvvmChromeTests.Run(output)),
+                        ("accessibility-quality", true, () => Testing.AccessibilityQualityTests.Run(output))
                     };
                     var selected = suites.Where(s => string.IsNullOrEmpty(requested) || requested == "all" ||
                         (requested == "windows-acceptance" ? s.Windows : s.Name == requested)).ToArray();
