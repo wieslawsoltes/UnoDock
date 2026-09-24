@@ -2,14 +2,14 @@ name: Integrate preview16 MVVM workspace
 on:
   push:
     branches: [work/preview16-mvvm-workspace]
-    paths: [.github/workflows/integrate-preview16.yml]
+    paths: ['.github/workflows/integrate-preview16.yml', 'src/**', 'samples/**', 'tests/**', 'tools/wire-preview16.py']
   workflow_dispatch:
 permissions:
   contents: write
   actions: write
 concurrency:
   group: integrate-preview16
-  cancel-in-progress: false
+  cancel-in-progress: true
 jobs:
   integrate:
     runs-on: ubuntu-latest
@@ -25,7 +25,7 @@ jobs:
       - name: Wire reviewed sample and tests without changing reference contracts
         run: |
           python3 - <<'PY'
-          import hashlib,pathlib,json,subprocess
+          import hashlib,pathlib,subprocess
           roots=('contracts','tools/ReferenceProbe','tools/ReferenceVisualProbe','tools/ReferenceSampleProbe')
           manifest={str(p):hashlib.sha256(p.read_bytes()).hexdigest() for root in roots for p in pathlib.Path(root).rglob('*') if p.is_file()}
           if '<Version>0.1.0-preview.15</Version>' in pathlib.Path('Directory.Build.props').read_text():
@@ -34,7 +34,10 @@ jobs:
           PY
           git diff --check
       - name: Build real Uno desktop and compiled XAML with warnings as errors
-        run: dotnet build samples/UnoDock.Gallery -c Release -f net10.0-desktop -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0 -warnaserror
+        run: |
+          mkdir -p artifacts
+          set -o pipefail
+          dotnet build samples/UnoDock.Gallery -c Release -f net10.0-desktop -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0 -warnaserror 2>&1 | tee artifacts/build.log
       - name: Execute core and deterministic contract gates
         run: |
           dotnet run --project tests/UnoDock.Core.Tests -c Release -- artifacts/test-results
