@@ -38,7 +38,8 @@ public sealed partial class GalleryPage
         Add("3 documents", "three", () => Populate(3));
         Add("40 documents", "forty", () => Populate(40));
         Add("200 documents", "many", () => Populate(200));
-        var policy = Add("Block activation", "policy", () => { blocked = !blocked; UpdatePolicy(); });
+        SampleButton? policy = null;
+        policy = Add("Block activation", "policy", () => { blocked = !blocked; UpdatePolicy(); });
         Add("Light / dark", "theme", () =>
         {
             manager.RequestedTheme = manager.RequestedTheme == ElementTheme.Dark ? ElementTheme.Light : ElementTheme.Dark;
@@ -73,6 +74,7 @@ public sealed partial class GalleryPage
 
         void UpdatePolicy()
         {
+            if (policy == null) return;
             policy.Content = blocked ? "Allow activation" : "Block activation";
             AutomationProperties.SetName(policy, policy.Content as string ?? "Activation policy");
             foreach (var command in activationCommands) command.Refresh();

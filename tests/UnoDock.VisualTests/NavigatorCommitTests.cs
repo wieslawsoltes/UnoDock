@@ -19,7 +19,7 @@ internal static class NavigatorCommitTests
         {
             ("disabled target", f => f.Target.IsEnabled = false),
             ("disabled target ABA", f => { f.Target.IsEnabled = false; f.Target.IsEnabled = true; }),
-            ("hidden target", f => { if (f.Target is LayoutDocument doc) doc.IsVisible = false; else ((LayoutAnchorable)f.Target).Hide(); }),
+            ("closed document or hidden tool", f => { if (f.Target is LayoutDocument doc) doc.Close(); else ((LayoutAnchorable)f.Target).Hide(); }),
             ("removed target", f => f.Remove()),
             ("reinserted target ABA", f => { f.Remove(); f.Insert(); }),
             ("replaced workspace", f => f.Host.Layout = Replacement()),
