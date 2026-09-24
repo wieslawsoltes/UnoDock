@@ -13,7 +13,7 @@ public abstract class LayoutSerializer
 {
     private static readonly ConditionalWeakTable<DockingManager, RestoreState> Restores = new();
     private sealed class RestoreState { internal int Active; }
-    private sealed record PreviousContent(object? Content, object? IconSource, object? ToolTip);
+    private sealed record PreviousContent(object? Content, Microsoft.UI.Xaml.Media.ImageSource? IconSource, object? ToolTip);
     private IDisposable? _transaction;
     private RestoreState? _state;
     private LayoutRoot? _original;
@@ -98,7 +98,11 @@ public abstract class LayoutSerializer
             if (!ReferenceEquals(content.Root, layout)) continue;
             if (args.Cancel) { content.Parent?.RemoveChild(content); continue; }
             content.Content = args.Content;
+            EnsureCurrentRestore();
+            if (!ReferenceEquals(content.Root, layout)) continue;
             content.IconSource = previous?.IconSource;
+            EnsureCurrentRestore();
+            if (!ReferenceEquals(content.Root, layout)) continue;
             content.ToolTip = previous?.ToolTip;
             EnsureCurrentRestore();
         }
