@@ -25,82 +25,43 @@ public partial class App : Application
                 {
                     await Task.Delay(300);
                     var output = Environment.GetEnvironmentVariable("UNODOCK_TEST_RESULTS") ?? "artifacts/test-results";
-                    var suite = Environment.GetEnvironmentVariable("UNODOCK_TEST_SUITE");
-                    if (suite == "mvvm-workspace")
-                        exitCode = await Testing.MvvmWorkspaceTests.Run(output);
-                    else if (suite == "restore-ownership")
-                        exitCode = await Testing.RestoreOwnershipTests.Run(output);
-                    else if (suite == "inspector-quality")
-                        exitCode = await Testing.InspectorQualityTests.Run(output);
-                    else if (suite == "presentation-quality")
-                        exitCode = await Testing.PresentationQualityTests.Run(output);
-                    else if (suite == "sample-quality")
-                        exitCode = await Testing.SampleQualityTests.Run(gallery, output);
-                    else if (suite == "dropdown-quality")
-                        exitCode = await Testing.DropDownQualityTests.Run(output);
-                    else if (suite == "menu-quality")
-                        exitCode = await Testing.MenuQualityTests.Run(gallery.Dock, output);
-                    else if (suite == "menu-context-lifetime")
-                        exitCode = await Testing.MenuContextLifetimeTests.Run(output);
-                    else if (suite == "auto-hide-quality")
-                        exitCode = await Testing.AutoHideQualityTests.Run(gallery.Dock, output);
-                    else if (suite == "splitter-quality")
-                        exitCode = await Testing.SplitterQualityTests.Run(gallery.Dock, output);
-                    else if (suite == "docking-guides")
-                        exitCode = await Testing.DockGuideTests.Run(gallery.Dock, output);
-                    else if (suite == "window-lifecycle")
-                        exitCode = await Testing.WindowLifecycleTests.Run(gallery.Dock, output);
-                    else if (suite == "navigator-quality")
-                        exitCode = await Testing.NavigatorQualityTests.Run(gallery.Dock, output);
-                    else if (suite == "visual-parity")
-                        exitCode = await Testing.VisualParityTests.Run(gallery.Dock, output);
-                    else if (suite == "input-extensions")
-                        exitCode = await Testing.InputRoutingTrace.Run(gallery.Dock, output);
-                    else if (suite == "windows-acceptance")
+                    var requested = Environment.GetEnvironmentVariable("UNODOCK_TEST_SUITE");
+                    // One ordered registry keeps standalone selectors and platform
+                    // acceptance on the same code path. Windows flags preserve the
+                    // existing selected-host scope; false is not a passed test.
+                    var suites = new (string Name, bool Windows, Func<Task<int>> Run)[]
                     {
-                        exitCode = await Testing.WindowLifecycleTests.Run(gallery.Dock, output);
-                        exitCode |= await Testing.InputRoutingTrace.Run(gallery.Dock, output);
-                        exitCode |= await Testing.VisualParityTests.Run(gallery.Dock, output);
-                        exitCode |= await Testing.NavigatorQualityTests.Run(gallery.Dock, output);
-                        exitCode |= await Testing.DockGuideTests.Run(gallery.Dock, output);
-                        exitCode |= await Testing.SplitterQualityTests.Run(gallery.Dock, output);
-                        exitCode |= await Testing.AutoHideQualityTests.Run(gallery.Dock, output);
-                        exitCode |= await Testing.MenuQualityTests.Run(gallery.Dock, output);
-                        exitCode |= await Testing.MenuContextLifetimeTests.Run(output);
-                        exitCode |= await Testing.DropDownQualityTests.Run(output);
-                        exitCode |= await Testing.SampleQualityTests.Run(gallery, output);
-                        exitCode |= await Testing.PresentationQualityTests.Run(output);
-                        exitCode |= await Testing.InspectorQualityTests.Run(output);
-                        exitCode |= await Testing.RestoreOwnershipTests.Run(output);
-                        exitCode |= await Testing.MvvmWorkspaceTests.Run(output);
-                    }
-                    else if (string.IsNullOrEmpty(suite) || suite == "all")
-                    {
-                        exitCode = await Testing.RuntimeTests.Run(gallery.Dock, output);
-                        exitCode |= await Testing.InteropTests.Run(output);
-                        exitCode |= await Testing.ParityTests.Run(gallery.Dock, output);
-                        exitCode |= await Testing.LifecycleTests.Run(gallery.Dock, output);
-                        exitCode |= await Testing.InteractionTests.Run(gallery.Dock, output);
-                        exitCode |= await Testing.ConverterTests.Run(output);
-                        exitCode |= await Testing.WindowCoordinateTests.Run(output, gallery.Dock);
-                        exitCode |= await Testing.ShellTests.Run(output, gallery.Dock);
-                        exitCode |= await Testing.WindowLifecycleTests.Run(gallery.Dock, output);
-                        exitCode |= await Testing.InputRoutingTrace.Run(gallery.Dock, output);
-                        exitCode |= await Testing.VisualParityTests.Run(gallery.Dock, output);
-                        exitCode |= await Testing.NavigatorQualityTests.Run(gallery.Dock, output);
-                        exitCode |= await Testing.DockGuideTests.Run(gallery.Dock, output);
-                        exitCode |= await Testing.SplitterQualityTests.Run(gallery.Dock, output);
-                        exitCode |= await Testing.AutoHideQualityTests.Run(gallery.Dock, output);
-                        exitCode |= await Testing.MenuQualityTests.Run(gallery.Dock, output);
-                        exitCode |= await Testing.MenuContextLifetimeTests.Run(output);
-                        exitCode |= await Testing.DropDownQualityTests.Run(output);
-                        exitCode |= await Testing.SampleQualityTests.Run(gallery, output);
-                        exitCode |= await Testing.PresentationQualityTests.Run(output);
-                        exitCode |= await Testing.InspectorQualityTests.Run(output);
-                        exitCode |= await Testing.RestoreOwnershipTests.Run(output);
-                        exitCode |= await Testing.MvvmWorkspaceTests.Run(output);
-                    }
-                    else throw new ArgumentException("Unknown UNODOCK_TEST_SUITE: " + suite);
+                        ("runtime", false, () => Testing.RuntimeTests.Run(gallery.Dock, output)),
+                        ("interop", false, () => Testing.InteropTests.Run(output)),
+                        ("parity", false, () => Testing.ParityTests.Run(gallery.Dock, output)),
+                        ("lifecycle", false, () => Testing.LifecycleTests.Run(gallery.Dock, output)),
+                        ("interaction", false, () => Testing.InteractionTests.Run(gallery.Dock, output)),
+                        ("converters", false, () => Testing.ConverterTests.Run(output)),
+                        ("window-coordinates", false, () => Testing.WindowCoordinateTests.Run(output, gallery.Dock)),
+                        ("shell", false, () => Testing.ShellTests.Run(output, gallery.Dock)),
+                        ("window-lifecycle", true, () => Testing.WindowLifecycleTests.Run(gallery.Dock, output)),
+                        ("input-extensions", true, () => Testing.InputRoutingTrace.Run(gallery.Dock, output)),
+                        ("visual-parity", true, () => Testing.VisualParityTests.Run(gallery.Dock, output)),
+                        ("navigator-quality", true, () => Testing.NavigatorQualityTests.Run(gallery.Dock, output)),
+                        ("docking-guides", true, () => Testing.DockGuideTests.Run(gallery.Dock, output)),
+                        ("splitter-quality", true, () => Testing.SplitterQualityTests.Run(gallery.Dock, output)),
+                        ("auto-hide-quality", true, () => Testing.AutoHideQualityTests.Run(gallery.Dock, output)),
+                        ("menu-quality", true, () => Testing.MenuQualityTests.Run(gallery.Dock, output)),
+                        ("menu-context-lifetime", true, () => Testing.MenuContextLifetimeTests.Run(output)),
+                        ("dropdown-quality", true, () => Testing.DropDownQualityTests.Run(output)),
+                        ("sample-quality", true, () => Testing.SampleQualityTests.Run(gallery, output)),
+                        ("presentation-quality", true, () => Testing.PresentationQualityTests.Run(output)),
+                        ("inspector-quality", true, () => Testing.InspectorQualityTests.Run(output)),
+                        ("restore-ownership", true, () => Testing.RestoreOwnershipTests.Run(output)),
+                        ("mvvm-workspace", true, () => Testing.MvvmWorkspaceTests.Run(output)),
+                        ("source-ownership", true, () => Testing.SourceOwnershipTests.Run(output)),
+                        ("mvvm-chrome", true, () => Testing.MvvmChromeTests.Run(output))
+                    };
+                    var selected = suites.Where(s => string.IsNullOrEmpty(requested) || requested == "all" ||
+                        (requested == "windows-acceptance" ? s.Windows : s.Name == requested)).ToArray();
+                    if (selected.Length == 0) throw new ArgumentException("Unknown UNODOCK_TEST_SUITE: " + requested);
+                    exitCode = 0;
+                    foreach (var suite in selected) exitCode |= await suite.Run();
                 }
                 catch (Exception e) { exitCode = 2; Console.Error.WriteLine(e); }
                 finally

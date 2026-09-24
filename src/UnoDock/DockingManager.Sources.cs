@@ -23,7 +23,6 @@ public partial class DockingManager
         if (_disposed) return;
         void Deliver()
         {
-            // Events queued by replaced/disposed subscriptions cannot reach new sources.
             if (!_disposed && (ReferenceEquals(observer, _documentObserver) || ReferenceEquals(observer, _anchorableObserver)))
                 ((UnoDock.Compatibility.IWeakEventListener)this).ReceiveWeakEvent(typeof(INotifyCollectionChanged), sender, e);
         }
@@ -32,6 +31,9 @@ public partial class DockingManager
     }
     private bool _sourcesDirty;
     private int _sourceDispatchPending;
+    private long _sourceRevision;
+    private sealed record SourcePass(LayoutRoot Root, IEnumerable? Documents, IEnumerable? Anchorables, ILayoutUpdateStrategy? Strategy, long Revision);
+
     internal void SourceChanged()
     {
         if (DispatcherQueue?.HasThreadAccess == false)
@@ -43,74 +45,171 @@ public partial class DockingManager
         }
         ReconcileSources();
     }
+    private bool IsCurrent(SourcePass pass) => !_disposed && _sourceRevision == pass.Revision &&
+        ReferenceEquals(Layout, pass.Root) && ReferenceEquals(_attachedLayout, pass.Root) && ReferenceEquals(pass.Root.Manager, this) &&
+        ReferenceEquals(DocumentsSource, pass.Documents) && ReferenceEquals(AnchorablesSource, pass.Anchorables) &&
+        ReferenceEquals(LayoutUpdateStrategy, pass.Strategy);
+
     private void ReconcileSources()
     {
         if (_disposed) return;
+        // A notification invalidates an in-flight pass even when collection/root
+        // identity ends up unchanged (remove/re-add, replace/restore and Reset).
+        unchecked { _sourceRevision++; }
         _sourcesDirty = true;
         if (_suspendSources > 0 || _reconcilingSources) return;
         _reconcilingSources = true;
         try
         {
-            for (var pass = 0; _sourcesDirty; pass++)
+            for (var attempt = 0; _sourcesDirty && !_disposed; attempt++)
             {
-                if (pass == 64) throw new InvalidOperationException("Docking source callbacks did not converge after 64 reconciliation passes.");
+                if (attempt == 64) throw new InvalidOperationException("Docking source callbacks did not converge after 64 reconciliation passes.");
                 _sourcesDirty = false;
-                var root = Layout;
-                // Enumerating user sequences may run user code or throw. Snapshot both
-                // before removing anything from either collection.
-                var documents = Snapshot(DocumentsSource);
-                var anchorables = Snapshot(AnchorablesSource);
-                if (!ReferenceEquals(Layout, root)) { _sourcesDirty = true; continue; }
-                using var batch = root.BeginUpdate();
-                Reconcile(root, documents, _documents, true);
-                if (ReferenceEquals(Layout, root)) Reconcile(root, anchorables, _anchorables, false);
-                else _sourcesDirty = true;
+                var pass = new SourcePass(Layout, DocumentsSource, AnchorablesSource, LayoutUpdateStrategy, _sourceRevision);
+                if (!IsCurrent(pass)) return;
+                var documents = SnapshotSource(pass.Documents, pass);
+                if (!IsCurrent(pass)) { _sourcesDirty = true; continue; }
+                var anchorables = SnapshotSource(pass.Anchorables, pass);
+                if (!IsCurrent(pass)) { _sourcesDirty = true; continue; }
+                // Neither source is mutated if enumeration or preflight fails.
+                ValidateDirectModels(pass.Root, documents, true);
+                ValidateDirectModels(pass.Root, anchorables, false);
+                using (pass.Root.BeginUpdate())
+                {
+                    Reconcile(pass, documents, _documents, true);
+                    if (IsCurrent(pass)) Reconcile(pass, anchorables, _anchorables, false);
+                }
+                if (!IsCurrent(pass)) _sourcesDirty = true;
             }
         }
         finally { _reconcilingSources = false; }
     }
-    private static object[] Snapshot(IEnumerable? source) => source?.Cast<object>().Where(o => o != null).Distinct(ReferenceEqualityComparer.Instance).ToArray() ?? [];
-    private void Reconcile(LayoutRoot root, object[] values, List<SourceEntry> entries, bool documents)
+    private object[] SnapshotSource(IEnumerable? source, SourcePass pass)
     {
+        if (source == null) return [];
+        var values = new List<object>();
+        var seen = new HashSet<object>(ReferenceEqualityComparer.Instance);
+        var iterator = source.GetEnumerator();
+        try
+        {
+            while (IsCurrent(pass))
+            {
+                var more = iterator.MoveNext();
+                if (!IsCurrent(pass) || !more) break;
+                var value = iterator.Current;
+                if (!IsCurrent(pass)) break;
+                if (value != null && seen.Add(value)) values.Add(value);
+            }
+        }
+        finally { (iterator as IDisposable)?.Dispose(); }
+        return values.ToArray();
+    }
+    private static void ValidateDirectModels(LayoutRoot root, object[] values, bool documents)
+    {
+        foreach (var value in values)
+        {
+            LayoutContent? model = documents ? value as LayoutDocument : value as LayoutAnchorable;
+            if (model?.Parent != null && !ReferenceEquals(model.Root, root))
+                throw new InvalidOperationException("A source model already belongs to another layout. Detach it explicitly before transferring ownership.");
+        }
+    }
+    private static bool OwnsEntry(LayoutRoot root, SourceEntry entry) =>
+        (entry.Model.Parent == null || ReferenceEquals(entry.Model.Root, root)) &&
+        (ReferenceEquals(entry.Model, entry.Value) || ReferenceEquals(entry.Model.Content, entry.Value));
+
+    private void Reconcile(SourcePass pass, object[] values, List<SourceEntry> entries, bool documents)
+    {
+        var root = pass.Root;
+        // Application reparenting or Content replacement ends this source's removal
+        // authority. In particular, never RemoveChild from a different manager.
+        entries.RemoveAll(entry => !OwnsEntry(root, entry));
         var wanted = new HashSet<object>(values, ReferenceEqualityComparer.Instance);
         foreach (var entry in entries.Where(e => !wanted.Contains(e.Value)).ToArray())
         {
-            if (!ReferenceEquals(Layout, root)) return;
-            entry.Model.Parent?.RemoveChild(entry.Model);
-            entries.Remove(entry);
+            if (!IsCurrent(pass)) return;
+            entries.Remove(entry); // Reserve removal before invoking model callbacks.
+            // A direct model and its payload can name the same existing model.
+            // Dropping one alias must not close the model still named by the other.
+            var stillNamed = wanted.Contains(entry.Model) || entry.Model.Content is { } content && wanted.Contains(content);
+            if (!stillNamed && OwnsEntry(root, entry) && ReferenceEquals(entry.Model.Root, root))
+                entry.Model.Parent?.RemoveChild(entry.Model);
         }
+        if (!IsCurrent(pass)) return;
         var tracked = new HashSet<object>(entries.Select(e => e.Value), ReferenceEqualityComparer.Instance);
         var models = new Dictionary<object, LayoutContent>(ReferenceEqualityComparer.Instance);
         foreach (var model in root.Descendents().OfType<LayoutContent>())
             if (model.Content is { } value && (documents ? model is LayoutDocument : model is LayoutAnchorable)) models.TryAdd(value, model);
         foreach (var value in values)
         {
-            if (!ReferenceEquals(Layout, root)) return;
+            if (!IsCurrent(pass)) return;
             if (!tracked.Add(value)) continue;
             models.TryGetValue(value, out var existing);
-            var descriptor = value as IDockContent;
             LayoutContent model = existing ?? (documents ? value as LayoutDocument ?? new LayoutDocument() : value as LayoutAnchorable ?? new LayoutAnchorable());
-            if (existing == null)
+            var entry = new SourceEntry(value, model);
+            entries.Add(entry); // A throwing AfterInsert still leaves removable tracking.
+            var accepted = false;
+            try
             {
-                if (!ReferenceEquals(model, value)) { model.Content = value; model.Title = descriptor?.Title ?? value.ToString(); }
-                model.ContentId ??= descriptor?.ContentId;
-                if (model.Parent == null)
+                if (existing == null)
                 {
-                    if (model is LayoutAnchorable a) DockOperations.AddAnchorable(root, a, AnchorableShowStrategy.Right);
-                    else
+                    if (!ReferenceEquals(model, value))
                     {
-                        var pane = root.RootPanel.Descendents().OfType<LayoutDocumentPane>().FirstOrDefault();
-                        if (pane == null) { pane = new(); root.RootPanel.Children.Add(pane); }
-                        var strategy = LayoutUpdateStrategy;
-                        var handled = strategy?.BeforeInsertDocument(root, (LayoutDocument)model, pane) == true;
-                        if (!ReferenceEquals(Layout, root) || !ReferenceEquals(pane.Root, root)) return;
-                        if (!handled && model.Parent == null) pane.Children.Add(model);
-                        if (ReferenceEquals(model.Root, root)) strategy?.AfterInsertDocument(root, (LayoutDocument)model);
+                        var descriptor = value as IDockContent;
+                        var title = descriptor?.Title;
+                        if (!IsCurrent(pass)) continue;
+                        title ??= value.ToString();
+                        if (!IsCurrent(pass)) continue;
+                        var id = descriptor?.ContentId;
+                        if (!IsCurrent(pass)) continue;
+                        model.Content = value;
+                        if (!IsCurrent(pass)) continue;
+                        model.Title = title;
+                        if (!IsCurrent(pass)) continue;
+                        model.ContentId ??= id;
+                        if (!IsCurrent(pass)) continue;
                     }
+                    if (model.Parent == null) InsertSourceModel(pass, model);
                 }
+                accepted = IsCurrent(pass);
+                if (accepted && ReferenceEquals(model.Root, root) && model.Content is { } content) models.TryAdd(content, model);
             }
-            if (!ReferenceEquals(Layout, root)) return;
-            entries.Add(new(value, model));
+            finally
+            {
+                // Retry an aborted unplaced model; retain an already attached one so
+                // removal after a throwing callback cannot leave a source-owned orphan.
+                if (!accepted && model.Parent == null) entries.Remove(entry);
+            }
+        }
+    }
+    private void InsertSourceModel(SourcePass pass, LayoutContent model)
+    {
+        var root = pass.Root;
+        if (model is LayoutDocument document)
+        {
+            var pane = root.RootPanel.Descendents().OfType<LayoutDocumentPane>().FirstOrDefault();
+            if (pane == null)
+            {
+                pane = new(); root.RootPanel.Children.Add(pane);
+                if (!IsCurrent(pass)) return;
+            }
+            var handled = pass.Strategy?.BeforeInsertDocument(root, document, pane) == true;
+            if (!IsCurrent(pass)) return;
+            if (!handled && document.Parent == null && ReferenceEquals(pane.Root, root)) pane.Children.Add(document);
+            if (IsCurrent(pass) && ReferenceEquals(document.Root, root)) pass.Strategy?.AfterInsertDocument(root, document);
+        }
+        else if (model is LayoutAnchorable anchorable)
+        {
+            var pane = root.RootPanel.Descendents().OfType<LayoutAnchorablePane>().FirstOrDefault(p => p.GetSide() == AnchorSide.Right);
+            if (pane == null)
+            {
+                pane = new(); DockOperations.AddAtRoot(root, pane, AnchorSide.Right);
+                if (!IsCurrent(pass)) return;
+            }
+            var handled = pass.Strategy?.BeforeInsertAnchorable(root, anchorable, pane) == true;
+            if (!IsCurrent(pass)) return;
+            if (!handled && anchorable.Parent == null && ReferenceEquals(pane.Root, root)) pane.Children.Add(anchorable);
+            if (IsCurrent(pass) && ReferenceEquals(anchorable.Root, root)) pass.Strategy?.AfterInsertAnchorable(root, anchorable);
+            if (IsCurrent(pass) && ReferenceEquals(anchorable.Root, root)) anchorable.IsSelected = true;
         }
     }
 }
