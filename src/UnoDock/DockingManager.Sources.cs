@@ -116,6 +116,13 @@ public partial class DockingManager
     private static bool OwnsEntry(LayoutRoot root, SourceEntry entry) =>
         (entry.Model.Parent == null || ReferenceEquals(entry.Model.Root, root)) &&
         (ReferenceEquals(entry.Model, entry.Value) || ReferenceEquals(entry.Model.Content, entry.Value));
+    private static void ForgetEntry(List<SourceEntry> entries, SourceEntry entry)
+    {
+        // SourceEntry is a record: List.Remove would evaluate payload Equals while
+        // scanning other entries. Tracking must never invoke application equality.
+        for (var index = 0; index < entries.Count; index++)
+            if (ReferenceEquals(entries[index], entry)) { entries.RemoveAt(index); return; }
+    }
 
     private void Reconcile(SourcePass pass, object[] values, List<SourceEntry> entries, bool documents)
     {
@@ -127,7 +134,7 @@ public partial class DockingManager
         foreach (var entry in entries.Where(e => !wanted.Contains(e.Value)).ToArray())
         {
             if (!IsCurrent(pass)) return;
-            entries.Remove(entry); // Reserve removal before invoking model callbacks.
+            ForgetEntry(entries, entry);
             // A direct model and its payload can name the same existing model.
             // Dropping one alias must not close the model still named by the other.
             var stillNamed = wanted.Contains(entry.Model) || entry.Model.Content is { } content && wanted.Contains(content);
@@ -168,7 +175,8 @@ public partial class DockingManager
                         model.ContentId ??= id;
                         if (!IsCurrent(pass)) continue;
                     }
-                    if (model.Parent == null) InsertSourceModel(pass, model);
+                    if (model.Parent == null && !InsertSourceModel(pass, model))
+                    { _sourcesDirty = true; return; }
                 }
                 accepted = IsCurrent(pass);
                 if (accepted && ReferenceEquals(model.Root, root) && model.Content is { } content) models.TryAdd(content, model);
@@ -177,11 +185,11 @@ public partial class DockingManager
             {
                 // Retry an aborted unplaced model; retain an already attached one so
                 // removal after a throwing callback cannot leave a source-owned orphan.
-                if (!accepted && model.Parent == null) entries.Remove(entry);
+                if (!accepted && model.Parent == null) ForgetEntry(entries, entry);
             }
         }
     }
-    private void InsertSourceModel(SourcePass pass, LayoutContent model)
+    private bool InsertSourceModel(SourcePass pass, LayoutContent model)
     {
         var root = pass.Root;
         if (model is LayoutDocument document)
@@ -190,11 +198,15 @@ public partial class DockingManager
             if (pane == null)
             {
                 pane = new(); root.RootPanel.Children.Add(pane);
-                if (!IsCurrent(pass)) return;
+                if (!IsCurrent(pass)) return false;
             }
             var handled = pass.Strategy?.BeforeInsertDocument(root, document, pane) == true;
-            if (!IsCurrent(pass)) return;
-            if (!handled && document.Parent == null && ReferenceEquals(pane.Root, root)) pane.Children.Add(document);
+            if (!IsCurrent(pass)) return false;
+            if (!handled && document.Parent == null)
+            {
+                if (!ReferenceEquals(pane.Root, root)) return false;
+                pane.Children.Add(document);
+            }
             if (IsCurrent(pass) && ReferenceEquals(document.Root, root)) pass.Strategy?.AfterInsertDocument(root, document);
         }
         else if (model is LayoutAnchorable anchorable)
@@ -203,13 +215,18 @@ public partial class DockingManager
             if (pane == null)
             {
                 pane = new(); DockOperations.AddAtRoot(root, pane, AnchorSide.Right);
-                if (!IsCurrent(pass)) return;
+                if (!IsCurrent(pass)) return false;
             }
             var handled = pass.Strategy?.BeforeInsertAnchorable(root, anchorable, pane) == true;
-            if (!IsCurrent(pass)) return;
-            if (!handled && anchorable.Parent == null && ReferenceEquals(pane.Root, root)) pane.Children.Add(anchorable);
+            if (!IsCurrent(pass)) return false;
+            if (!handled && anchorable.Parent == null)
+            {
+                if (!ReferenceEquals(pane.Root, root)) return false;
+                pane.Children.Add(anchorable);
+            }
             if (IsCurrent(pass) && ReferenceEquals(anchorable.Root, root)) pass.Strategy?.AfterInsertAnchorable(root, anchorable);
             if (IsCurrent(pass) && ReferenceEquals(anchorable.Root, root)) anchorable.IsSelected = true;
         }
+        return IsCurrent(pass);
     }
 }

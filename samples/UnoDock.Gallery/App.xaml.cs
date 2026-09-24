@@ -55,6 +55,7 @@ public partial class App : Application
                         ("restore-ownership", true, () => Testing.RestoreOwnershipTests.Run(output)),
                         ("mvvm-workspace", true, () => Testing.MvvmWorkspaceTests.Run(output)),
                         ("source-ownership", true, () => Testing.SourceOwnershipTests.Run(output)),
+                        ("source-identity", true, () => Testing.SourceIdentityTests.Run(output)),
                         ("mvvm-chrome", true, () => Testing.MvvmChromeTests.Run(output))
                     };
                     var selected = suites.Where(s => string.IsNullOrEmpty(requested) || requested == "all" ||
