@@ -55,10 +55,11 @@ internal sealed partial class DockSurface
         }
         finally
         {
-            // Root replacement before Initialize has installed its own listener
-            // must release this reservation too. Never remove a newer navigator.
+            // A root replacement before the session listener is installed, or an
+            // initialization callback ending that session, releases this reservation.
+            // A replacement navigator is never removed by this obsolete opening.
             if (OwnsNavigator(navigator) && generation == _navigatorGeneration &&
-                (!ReferenceEquals(Manager.Layout, root) || !ReferenceEquals(root.Manager, Manager)))
+                (!navigator.HasSelectionSession || !ReferenceEquals(Manager.Layout, root) || !ReferenceEquals(root.Manager, Manager)))
                 CloseNavigator(false);
         }
     }
@@ -67,10 +68,12 @@ internal sealed partial class DockSurface
     {
         if (!DispatcherQueue.HasThreadAccess) throw new InvalidOperationException("Navigator presentation requires its owning UI thread.");
         if (_navigator is not { } navigator) return;
-        var root = Manager.Layout;
+        // A layout-replacement callback must not appropriate the new workspace's
+        // focus. An uninitialized opening has no editor-focus restoration to perform.
+        var root = navigator.SelectionSessionRoot;
         _navigator = null;
         var generation = ++_navigatorGeneration;
-        bool Current() => !_disposed && _navigator == null && _navigatorGeneration == generation &&
+        bool Current() => root != null && !_disposed && _navigator == null && _navigatorGeneration == generation &&
             ReferenceEquals(Manager.Layout, root) && ReferenceEquals(root.Manager, Manager);
         var activate = commit ? navigator.CaptureSelectionCommit(Current, true) : null;
         try { navigator.EndSession(); }
@@ -83,7 +86,7 @@ internal sealed partial class DockSurface
         // or replaced the workspace. Neither that host nor its focus belongs to us.
         if (!Current()) return;
         activate?.Invoke();
-        if (!Current() || root.ActiveContent is not { } active || !ReferenceEquals(active.Root, root)) return;
+        if (root == null || !Current() || root.ActiveContent is not { } active || !ReferenceEquals(active.Root, root)) return;
         bool CurrentFocus() => Current() && ReferenceEquals(root.ActiveContent, active) && ReferenceEquals(active.Root, root) && active.IsEnabled;
         Manager.Refresh();
         if (!CurrentFocus()) return;

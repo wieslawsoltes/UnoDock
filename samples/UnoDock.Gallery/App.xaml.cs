@@ -44,6 +44,7 @@ public partial class App : Application
                         ("visual-parity", true, () => Testing.VisualParityTests.Run(gallery.Dock, output)),
                         ("navigator-quality", true, () => Testing.NavigatorQualityTests.Run(gallery.Dock, output)),
                         ("navigator-commit", true, () => Testing.NavigatorCommitTests.Run(output)),
+                        ("navigator-sample", true, () => Testing.NavigatorSampleTests.Run(output)),
                         ("docking-guides", true, () => Testing.DockGuideTests.Run(gallery.Dock, output)),
                         ("splitter-quality", true, () => Testing.SplitterQualityTests.Run(gallery.Dock, output)),
                         ("auto-hide-quality", true, () => Testing.AutoHideQualityTests.Run(gallery.Dock, output)),

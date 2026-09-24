@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using UnoDock.Internal;
 using UnoDock.Layout;
 
 namespace UnoDock.Controls;
@@ -11,6 +10,7 @@ public partial class NavigatorWindow
     private EventHandler? _sessionLayoutChanged;
     internal DockingManager OwnerManager => _manager;
     internal bool HasSelectionSession => _sessionRoot != null;
+    internal LayoutRoot? SelectionSessionRoot => _sessionRoot;
 
     private void CloseNavigatorForInput(bool commit)
     {
