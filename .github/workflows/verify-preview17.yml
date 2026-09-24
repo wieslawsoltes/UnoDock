@@ -1,0 +1,51 @@
+name: Verify preview17 delivery
+on:
+  workflow_dispatch:
+  push:
+    branches: [work/preview17-validation-evidence]
+    paths: ['.github/workflows/verify-preview17.yml', 'tools/verify-preview17.py']
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: preview17-delivery
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      GH_TOKEN: ${{ github.token }}
+      ACCEPTANCE_RUN: '35989703054'
+      EXPECTED_REVISION: 5b6d22ff9d64c58f7845a9aecf727b68237ca362
+      REFERENCE_RUN: '35914057506'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: work/preview17-validation-evidence
+          fetch-depth: 0
+      - name: Require successful completion of exact merged main CI
+        run: |
+          python3 - <<'PY'
+          import json,os,subprocess,time
+          for attempt in range(60):
+              run=json.loads(subprocess.check_output(['gh','api',f'repos/{os.environ["GITHUB_REPOSITORY"]}/actions/runs/{os.environ["ACCEPTANCE_RUN"]}']))
+              if run['head_sha'] != os.environ['EXPECTED_REVISION']:
+                  raise SystemExit('Wrong acceptance revision')
+              if run['status'] == 'completed':
+                  if run['conclusion'] != 'success':
+                      raise SystemExit('Acceptance failed: '+str(run['conclusion']))
+                  break
+              print('Exact main CI is '+run['status'],flush=True)
+              time.sleep(10)
+          else:
+              raise SystemExit('Bounded acceptance wait expired')
+          PY
+      - name: Verify sources, packages, case rosters, rollback proof and classic geometry
+        run: python3 tools/verify-preview17.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: UnoDock-0.1.0-preview.17-delivery
+          path: delivery/
+          if-no-files-found: error
+          compression-level: 0
