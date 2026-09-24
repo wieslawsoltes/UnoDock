@@ -1,5 +1,7 @@
 using System.Reflection;
 using Microsoft.UI.Xaml.Automation;
+using Microsoft.UI.Xaml.Automation.Peers;
+using Microsoft.UI.Xaml.Automation.Provider;
 using UnoDock.Controls;
 using UnoDock.Gallery;
 using UnoDock.Layout;
@@ -15,8 +17,9 @@ internal static class NavigatorSampleTests
         Add("navigator sample: compact real controls and command status are realized", async (page, panel, manager) =>
         {
             var buttons = panel.FindVisualChildren<SampleButton>().ToArray();
-            Check.Equal(9, buttons.Length);
+            Check.Equal(11, buttons.Length);
             Check.True(buttons.All(button => button.ActualHeight > 0 && button.ActualHeight <= 25));
+            Check.Equal(11, buttons.Select(AutomationProperties.GetAutomationId).Distinct(StringComparer.Ordinal).Count());
             Check.Equal(3, manager.Layout.Descendents().OfType<LayoutDocument>().Count());
             foreach (var model in manager.Layout.Descendents().OfType<LayoutDocument>())
             {
@@ -32,6 +35,54 @@ internal static class NavigatorSampleTests
             Check.True(Status(panel).Contains("Committed: 1", StringComparison.Ordinal));
             var path = Path.Combine(output, "visuals", "navigator-activation-sample.png");
             Directory.CreateDirectory(Path.GetDirectoryName(path)!); await VisualCapture.Save(panel, path);
+        });
+        Add("navigator sample: property buttons retain a vetoed selection then hide documents and close tools", async (_, panel, manager) =>
+        {
+            var active = manager.Layout.ActiveContent;
+            await Invoke("policy");
+            await Invoke("assign-document");
+            await Wait(() => Current(manager) is { IsLoaded: true, ActualHeight: > 0 });
+            var navigator = Current(manager)!;
+            Check.Same(active, manager.Layout.ActiveContent);
+            Check.True(Status(panel).Contains("Committed: 0", StringComparison.Ordinal));
+            var list = navigator.FindVisualChildren<ListBox>().Single(l => l.Name == "PART_DocumentListBox");
+            Check.Same(navigator.SelectedDocument, list.SelectedItem);
+            Check.True(list.ContainerFromItem(navigator.SelectedDocument) is FrameworkElement { ActualHeight: > 0 });
+            var closing = 0; var closed = 0;
+            navigator.Closing += (_, _) => closing++;
+            navigator.Closed += (_, _) => closed++;
+            await VisualCapture.Save(panel, Path.Combine(output, "visuals", "navigator-direct-sample-veto.png"));
+            await Invoke("policy");
+            var target = navigator.Documents.First(item => !ReferenceEquals(item, navigator.SelectedDocument)).LayoutElement;
+            await Invoke("assign-document");
+            await Wait(() => Current(manager) == null);
+            Check.Equal(0, closing); Check.Equal(0, closed);
+            Check.Same(target, manager.Layout.ActiveContent);
+            Check.True(Status(panel).Contains("Committed: 1", StringComparison.Ordinal));
+            await ReadyEditor(panel, target);
+            await Invoke("open");
+            await Wait(() => Current(manager) is { IsLoaded: true, ActualHeight: > 0 });
+            navigator = Current(manager)!;
+            navigator.Closing += (_, _) => closing++;
+            navigator.Closed += (_, _) => closed++;
+            var tool = navigator.Anchorables.Last().LayoutElement;
+            await Invoke("assign-tool");
+            await Wait(() => Current(manager) == null);
+            Check.Equal(1, closing); Check.Equal(1, closed);
+            Check.Same(tool, manager.Layout.ActiveContent);
+            Check.True(Status(panel).Contains("Committed: 2", StringComparison.Ordinal));
+
+            async Task Invoke(string id)
+            {
+                var button = panel.FindVisualChildren<SampleButton>().Single(b => AutomationProperties.GetAutomationId(b) == "NavigatorLab-" + id);
+                Check.True(button.IsEnabled);
+                var peer = FrameworkElementAutomationPeer.CreatePeerForElement(button)
+                    ?? throw new InvalidOperationException("Sample button has no native automation peer.");
+                var provider = peer.GetPattern(PatternInterface.Invoke) as IInvokeProvider
+                    ?? throw new InvalidOperationException("Sample button does not expose Invoke.");
+                provider.Invoke();
+                await Task.Delay(80); panel.UpdateLayout();
+            }
         });
         Add("navigator sample: command activation retains the realized editor and unsaved buffer", async (_, panel, manager) =>
         {
@@ -132,8 +183,6 @@ internal static class NavigatorSampleTests
         var editor = model.Content as TextBox ?? throw new InvalidOperationException("Sample model has no editor.");
         await Wait(() => editor.IsLoaded && editor.ActualWidth > 0 && editor.ActualHeight > 0);
         panel.UpdateLayout();
-        // RenderTargetBitmap captures the last composition, not pending model/DP
-        // notifications. Keep the settled content/status in the inspected image.
         await Task.Delay(50);
         Check.True(panel.FindVisualChildren<TextBox>().Any(view => ReferenceEquals(view, editor)),
             "Active model editor is not attached to the actual sample tree.");

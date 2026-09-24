@@ -35,8 +35,6 @@ public sealed partial class GalleryPage
             status.Foreground = SampleChrome.Default(dark).Foreground;
         }
         Add("Open navigator", "open", manager.OpenNavigator);
-        Add("Assign document", "assign-document", () => AssignSelection(false));
-        Add("Assign tool", "assign-tool", () => AssignSelection(true));
         Add("3 documents", "three", () => Populate(3));
         Add("40 documents", "forty", () => Populate(40));
         Add("200 documents", "many", () => Populate(200));
@@ -51,6 +49,10 @@ public sealed partial class GalleryPage
         Add("RTL / LTR", "direction", () => { manager.FlowDirection = manager.FlowDirection == FlowDirection.LeftToRight ? FlowDirection.RightToLeft : FlowDirection.LeftToRight; manager.Refresh(); });
         Add("20 pt", "large", () => { manager.Resources["UnoDock.FontSize"] = 20d; manager.Refresh(); });
         Add("12 pt", "normal", () => { manager.Resources.Remove("UnoDock.FontSize"); manager.Refresh(); });
+        // Keep the previous commands in their established positions. Additional
+        // property-operation examples are reachable by horizontal toolbar scrolling.
+        Add("Assign document", "assign-document", () => AssignSelection(false));
+        Add("Assign tool", "assign-tool", () => AssignSelection(true));
         var bar = new ScrollViewer { Content = commands, HorizontalScrollBarVisibility = ScrollBarVisibility.Auto, VerticalScrollBarVisibility = ScrollBarVisibility.Disabled };
         var help = new TextBlock { FontSize = 12, Margin = new(8, 2, 8, 6), TextWrapping = TextWrapping.Wrap,
             Text = "Ctrl+Tab previews without activating. Up/Down, Home/End and Left/Right navigate; Enter or Control release commits, Escape cancels. Block activation demonstrates a real CanExecute veto. Assign document/tool uses the public selection property: an allowed document hides, a tool closes, and a veto keeps the list open. Edits remain in their existing buffers." };
