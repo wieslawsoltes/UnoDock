@@ -1,0 +1,87 @@
+name: Diagnose navigator activation focus
+on:
+  push:
+    branches: [work/preview19-validation-evidence]
+    paths: [.github/workflows/diagnose-preview19.yml]
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 0a19dce44af9871e2f14c233a69bfa712b5f22aa
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Add diagnostic observations without changing acceptance expectations
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('tests/UnoDock.VisualTests/NavigatorCommitTests.cs')
+          text=p.read_text()
+          old='''            f.Commit(true); await Task.Delay(100);
+                      Check.Same(f.Target, f.Host.Layout.ActiveContent);'''
+          # The production fixture indent is twelve spaces, not the YAML indent.
+          old='            f.Commit(true); await Task.Delay(100);\n            Check.Same(f.Target, f.Host.Layout.ActiveContent);'
+          new='''            void Snapshot(string phase)
+                      {
+                          Console.WriteLine("FOCUS TRACE " + phase + " active=" + f.Host.Layout.ActiveContent?.ContentId + " selected=" + f.Target.IsSelected + " nav=" + f.Current?.SelectedDocument?.ContentId);
+                          for (var node = FocusManager.GetFocusedElement(f.Host.XamlRoot!) as DependencyObject; node != null; node = VisualTreeHelper.GetParent(node))
+                              Console.WriteLine("FOCUS NODE " + node.GetType().Name + " " + (node is TextBox box ? box.Text : ""));
+                      }
+                      f.A.PropertyChanged += (_, e) => { if (e.PropertyName == "IsActive") { Snapshot("A active changed"); Console.WriteLine(Environment.StackTrace); } };
+                      f.B.PropertyChanged += (_, e) => { if (e.PropertyName == "IsActive") { Snapshot("B active changed"); Console.WriteLine(Environment.StackTrace); } };
+                      f.Host.GotFocus += (_, _) => Snapshot("GotFocus");
+                      Snapshot("before close"); f.Commit(true); Snapshot("immediate close"); await Task.Delay(100); Snapshot("settled close");
+                      Check.Same(f.Target, f.Host.Layout.ActiveContent);'''
+          assert text.count(old)==1
+          p.write_text(text.replace(old,new))
+          p=Path('src/UnoDock/Controls/NavigatorWindow.Commit.cs')
+          text=p.read_text()
+          old='                if (Current() && command.CanExecute(null) && Current()) command.Execute(null);'
+          new='''                var before = Current(); var allowed = before && command.CanExecute(null); var after = allowed && Current();
+                          Console.WriteLine($"COMMIT TRACE {model.ContentId} {command.GetType().Name} before={before} can={allowed} after={after} selected={selection}/{_selectionVersion} session={activationSession}/{_activationSession} invalid={invalidated} enabled={IsEnabled}/{_manager.IsEnabled} owns={ownsOperation()} adapter={ReferenceEquals(_manager.GetLayoutItemFromModel(model), item)} command={ReferenceEquals(item.ActivateCommand, command)} detached={_sessionRoot==null} active={root.ActiveContent?.ContentId}");
+                          if (after) command.Execute(null);
+                          Console.WriteLine("COMMIT AFTER active=" + root.ActiveContent?.ContentId);'''
+          assert text.count(old)==1
+          p.write_text(text.replace(old,new))
+          PY
+      - name: Build diagnostic SDK/XAML host
+        run: dotnet build samples/UnoDock.Gallery -c Release -f net10.0-desktop -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0 -warnaserror
+      - name: Install Linux host dependencies
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y xvfb libx11-6 libxi6 libxrandr2 libxcursor1 libfontconfig1 libgl1 libice6 libsm6 libxcb1 libxtst6
+      - name: Run isolated navigator cases on Linux
+        if: runner.os == 'Linux'
+        env:
+          UNODOCK_SELFTEST: '1'
+          UNODOCK_TEST_SUITE: navigator-commit
+        run: timeout 120s xvfb-run -a -s "-screen 0 2560x1440x24" dotnet run --project samples/UnoDock.Gallery -c Release -f net10.0-desktop --no-build -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0
+      - name: Run isolated navigator cases on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          UNODOCK_SELFTEST: '1'
+          UNODOCK_TEST_SUITE: navigator-commit
+        run: |
+          $arguments = @('run','--project','samples/UnoDock.Gallery','-c','Release','-f','net10.0-desktop','--no-build','-p:UnoDockTargetFrameworks=net10.0-desktop','-p:UnoDockLibraryFrameworks=net10.0')
+          $process = Start-Process dotnet -ArgumentList $arguments -NoNewWindow -PassThru
+          if (-not $process.WaitForExit(120000)) { $process.Kill($true); throw 'Diagnostic timed out' }
+          exit $process.ExitCode
+      - name: Summarize executed reports
+        if: always()
+        shell: bash
+        run: python3 tools/report-test-results.py artifacts/test-results
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: navigator-focus-diagnostic-${{ runner.os }}
+          path: artifacts/test-results/
