@@ -1,0 +1,324 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<NavigatorSelectionObservations schema="1" method="public-and-protected-api-only">
+  <Case name="document/default">
+    <State phase="before" visible="true" closed="false" active="d0" document="d1" tool="null" />
+    <Step name="first" exception="none">
+      <Event>document-enter:d2</Event>
+      <Event>active:d2</Event>
+      <Event>document-exit</Event>
+      <State phase="immediate" visible="false" closed="false" active="d2" document="d2" tool="null" />
+    </Step>
+    <State phase="settled" visible="false" closed="false" active="d2" document="d2" tool="null" />
+  </Case>
+  <Case name="document/setvalue">
+    <State phase="before" visible="true" closed="false" active="d0" document="d1" tool="null" />
+    <Step name="first" exception="none">
+      <Event>document-enter:d2</Event>
+      <Event>active:d2</Event>
+      <Event>document-exit</Event>
+      <State phase="immediate" visible="false" closed="false" active="d2" document="d2" tool="null" />
+    </Step>
+    <State phase="settled" visible="false" closed="false" active="d2" document="d2" tool="null" />
+  </Case>
+  <Case name="document/null">
+    <State phase="before" visible="true" closed="false" active="d0" document="d1" tool="null" />
+    <Step name="first" exception="none">
+      <Event>document-enter:null</Event>
+      <Event>document-exit</Event>
+      <State phase="immediate" visible="true" closed="false" active="d0" document="null" tool="null" />
+    </Step>
+    <State phase="settled" visible="true" closed="false" active="d0" document="null" tool="null" />
+  </Case>
+  <Case name="document/same">
+    <State phase="before" visible="true" closed="false" active="d0" document="d1" tool="null" />
+    <Step name="first" exception="none">
+      <State phase="immediate" visible="true" closed="false" active="d0" document="d1" tool="null" />
+    </Step>
+    <State phase="settled" visible="true" closed="false" active="d0" document="d1" tool="null" />
+  </Case>
+  <Case name="document/veto">
+    <State phase="before" visible="true" closed="false" active="d0" document="d1" tool="null" />
+    <Step name="first" exception="none">
+      <Event>document-enter:d2</Event>
+      <Event>query</Event>
+      <Event>document-exit</Event>
+      <State phase="immediate" visible="true" closed="false" active="d0" document="d2" tool="null" />
+    </Step>
+    <State phase="settled" visible="true" closed="false" active="d0" document="d2" tool="null" />
+  </Case>
+  <Case name="document/noop">
+    <State phase="before" visible="true" closed="false" active="d0" document="d1" tool="null" />
+    <Step name="first" exception="none">
+      <Event>document-enter:d2</Event>
+      <Event>query</Event>
+      <Event>execute</Event>
+      <Event>document-exit</Event>
+      <State phase="immediate" visible="false" closed="false" active="d0" document="d2" tool="null" />
+    </Step>
+    <State phase="settled" visible="false" closed="false" active="d0" document="d2" tool="null" />
+  </Case>
+  <Case name="document/disabled">
+    <State phase="before" visible="true" closed="false" active="d0" document="d1" tool="null" />
+    <Step name="first" exception="none">
+      <Event>document-enter:d2</Event>
+      <Event>active:d2</Event>
+      <Event>document-exit</Event>
+      <State phase="immediate" visible="false" closed="false" active="d2" document="d2" tool="null" />
+    </Step>
+    <State phase="settled" visible="false" closed="false" active="d2" document="d2" tool="null" />
+  </Case>
+  <Case name="document/closing-veto">
+    <State phase="before" visible="true" closed="false" active="d0" document="d1" tool="null" />
+    <Step name="first" exception="none">
+      <Event>document-enter:d2</Event>
+      <Event>active:d2</Event>
+      <Event>document-exit</Event>
+      <State phase="immediate" visible="false" closed="false" active="d2" document="d2" tool="null" />
+    </Step>
+    <Step name="same-again" exception="none">
+      <State phase="immediate" visible="false" closed="false" active="d2" document="d2" tool="null" />
+    </Step>
+    <State phase="settled" visible="false" closed="false" active="d2" document="d2" tool="null" />
+  </Case>
+  <Case name="document/closing-reselect">
+    <State phase="before" visible="true" closed="false" active="d0" document="d1" tool="null" />
+    <Step name="first" exception="none">
+      <Event>document-enter:d2</Event>
+      <Event>active:d2</Event>
+      <Event>document-exit</Event>
+      <State phase="immediate" visible="false" closed="false" active="d2" document="d2" tool="null" />
+    </Step>
+    <State phase="settled" visible="false" closed="false" active="d2" document="d2" tool="null" />
+  </Case>
+  <Case name="document/query-reselect">
+    <State phase="before" visible="true" closed="false" active="d0" document="d1" tool="null" />
+    <Step name="first" exception="none">
+      <Event>document-enter:d2</Event>
+      <Event>query</Event>
+      <Event>query-reselect</Event>
+      <Event>document-enter:d1</Event>
+      <Event>active:d1</Event>
+      <Event>document-exit</Event>
+      <Event>document-exit</Event>
+      <State phase="immediate" visible="false" closed="false" active="d1" document="d1" tool="null" />
+    </Step>
+    <State phase="settled" visible="false" closed="false" active="d1" document="d1" tool="null" />
+  </Case>
+  <Case name="document/execute-reselect">
+    <State phase="before" visible="true" closed="false" active="d0" document="d1" tool="null" />
+    <Step name="first" exception="none">
+      <Event>document-enter:d2</Event>
+      <Event>query</Event>
+      <Event>execute</Event>
+      <Event>execute-reselect</Event>
+      <Event>document-enter:d1</Event>
+      <Event>active:d1</Event>
+      <Event>document-exit</Event>
+      <Event>document-exit</Event>
+      <State phase="immediate" visible="false" closed="false" active="d1" document="d1" tool="null" />
+    </Step>
+    <State phase="settled" visible="false" closed="false" active="d1" document="d1" tool="null" />
+  </Case>
+  <Case name="document/query-throws">
+    <State phase="before" visible="true" closed="false" active="d0" document="d1" tool="null" />
+    <Step name="first" exception="System.ApplicationException">
+      <Event>document-enter:d2</Event>
+      <Event>query</Event>
+      <Event>document-exit</Event>
+      <State phase="immediate" visible="true" closed="false" active="d0" document="d2" tool="null" />
+    </Step>
+    <State phase="settled" visible="true" closed="false" active="d0" document="d2" tool="null" />
+  </Case>
+  <Case name="document/execute-throws">
+    <State phase="before" visible="true" closed="false" active="d0" document="d1" tool="null" />
+    <Step name="first" exception="System.ApplicationException">
+      <Event>document-enter:d2</Event>
+      <Event>query</Event>
+      <Event>execute</Event>
+      <Event>document-exit</Event>
+      <State phase="immediate" visible="false" closed="false" active="d0" document="d2" tool="null" />
+    </Step>
+    <State phase="settled" visible="false" closed="false" active="d0" document="d2" tool="null" />
+  </Case>
+  <Case name="document/closed-repeat">
+    <State phase="before" visible="true" closed="false" active="d0" document="d1" tool="null" />
+    <Step name="first" exception="none">
+      <Event>document-enter:d2</Event>
+      <Event>active:d2</Event>
+      <Event>document-exit</Event>
+      <State phase="immediate" visible="false" closed="false" active="d2" document="d2" tool="null" />
+    </Step>
+    <Step name="same-again" exception="none">
+      <State phase="immediate" visible="false" closed="false" active="d2" document="d2" tool="null" />
+    </Step>
+    <State phase="settled" visible="false" closed="false" active="d2" document="d2" tool="null" />
+  </Case>
+  <Case name="tool/default">
+    <State phase="before" visible="true" closed="false" active="d0" document="d1" tool="null" />
+    <Step name="first" exception="none">
+      <Event>tool-enter:t2</Event>
+      <Event>closing</Event>
+      <Event>closed</Event>
+      <Event>active:t2</Event>
+      <Event>tool-exit</Event>
+      <State phase="immediate" visible="false" closed="true" active="t2" document="d1" tool="t2" />
+    </Step>
+    <State phase="settled" visible="false" closed="true" active="t2" document="d1" tool="t2" />
+  </Case>
+  <Case name="tool/setvalue">
+    <State phase="before" visible="true" closed="false" active="d0" document="d1" tool="null" />
+    <Step name="first" exception="none">
+      <Event>tool-enter:t2</Event>
+      <Event>closing</Event>
+      <Event>closed</Event>
+      <Event>active:t2</Event>
+      <Event>tool-exit</Event>
+      <State phase="immediate" visible="false" closed="true" active="t2" document="d1" tool="t2" />
+    </Step>
+    <State phase="settled" visible="false" closed="true" active="t2" document="d1" tool="t2" />
+  </Case>
+  <Case name="tool/null">
+    <State phase="before" visible="true" closed="false" active="d0" document="d1" tool="null" />
+    <Step name="first" exception="none">
+      <State phase="immediate" visible="true" closed="false" active="d0" document="d1" tool="null" />
+    </Step>
+    <State phase="settled" visible="true" closed="false" active="d0" document="d1" tool="null" />
+  </Case>
+  <Case name="tool/same">
+    <State phase="before" visible="true" closed="false" active="d0" document="d1" tool="null" />
+    <Step name="first" exception="none">
+      <State phase="immediate" visible="true" closed="false" active="d0" document="d1" tool="null" />
+    </Step>
+    <State phase="settled" visible="true" closed="false" active="d0" document="d1" tool="null" />
+  </Case>
+  <Case name="tool/veto">
+    <State phase="before" visible="true" closed="false" active="d0" document="d1" tool="null" />
+    <Step name="first" exception="none">
+      <Event>tool-enter:t2</Event>
+      <Event>query</Event>
+      <Event>tool-exit</Event>
+      <State phase="immediate" visible="true" closed="false" active="d0" document="d1" tool="t2" />
+    </Step>
+    <State phase="settled" visible="true" closed="false" active="d0" document="d1" tool="t2" />
+  </Case>
+  <Case name="tool/noop">
+    <State phase="before" visible="true" closed="false" active="d0" document="d1" tool="null" />
+    <Step name="first" exception="none">
+      <Event>tool-enter:t2</Event>
+      <Event>query</Event>
+      <Event>closing</Event>
+      <Event>closed</Event>
+      <Event>execute</Event>
+      <Event>tool-exit</Event>
+      <State phase="immediate" visible="false" closed="true" active="d0" document="d1" tool="t2" />
+    </Step>
+    <State phase="settled" visible="false" closed="true" active="d0" document="d1" tool="t2" />
+  </Case>
+  <Case name="tool/disabled">
+    <State phase="before" visible="true" closed="false" active="d0" document="d1" tool="null" />
+    <Step name="first" exception="none">
+      <Event>tool-enter:t2</Event>
+      <Event>closing</Event>
+      <Event>closed</Event>
+      <Event>active:t2</Event>
+      <Event>tool-exit</Event>
+      <State phase="immediate" visible="false" closed="true" active="t2" document="d1" tool="t2" />
+    </Step>
+    <State phase="settled" visible="false" closed="true" active="t2" document="d1" tool="t2" />
+  </Case>
+  <Case name="tool/closing-veto">
+    <State phase="before" visible="true" closed="false" active="d0" document="d1" tool="null" />
+    <Step name="first" exception="none">
+      <Event>tool-enter:t2</Event>
+      <Event>closing</Event>
+      <Event>cancel-close</Event>
+      <Event>active:t2</Event>
+      <Event>tool-exit</Event>
+      <State phase="immediate" visible="true" closed="false" active="t2" document="d1" tool="t2" />
+    </Step>
+    <Step name="same-again" exception="none">
+      <State phase="immediate" visible="true" closed="false" active="t2" document="d1" tool="t2" />
+    </Step>
+    <State phase="settled" visible="true" closed="false" active="t2" document="d1" tool="t2" />
+  </Case>
+  <Case name="tool/closing-reselect">
+    <State phase="before" visible="true" closed="false" active="d0" document="d1" tool="null" />
+    <Step name="first" exception="none">
+      <Event>tool-enter:t2</Event>
+      <Event>closing</Event>
+      <Event>closing-reselect</Event>
+      <Event>closed</Event>
+      <Event>active:t2</Event>
+      <Event>tool-exit</Event>
+      <State phase="immediate" visible="false" closed="true" active="t2" document="d1" tool="t2" />
+    </Step>
+    <State phase="settled" visible="false" closed="true" active="t2" document="d1" tool="t2" />
+  </Case>
+  <Case name="tool/query-reselect">
+    <State phase="before" visible="true" closed="false" active="d0" document="d1" tool="null" />
+    <Step name="first" exception="none">
+      <Event>tool-enter:t2</Event>
+      <Event>query</Event>
+      <Event>query-reselect</Event>
+      <Event>closing</Event>
+      <Event>closed</Event>
+      <Event>execute</Event>
+      <Event>active:t2</Event>
+      <Event>tool-exit</Event>
+      <State phase="immediate" visible="false" closed="true" active="t2" document="d1" tool="t2" />
+    </Step>
+    <State phase="settled" visible="false" closed="true" active="t2" document="d1" tool="t2" />
+  </Case>
+  <Case name="tool/execute-reselect">
+    <State phase="before" visible="true" closed="false" active="d0" document="d1" tool="null" />
+    <Step name="first" exception="none">
+      <Event>tool-enter:t2</Event>
+      <Event>query</Event>
+      <Event>closing</Event>
+      <Event>closed</Event>
+      <Event>execute</Event>
+      <Event>execute-reselect</Event>
+      <Event>tool-exit</Event>
+      <State phase="immediate" visible="false" closed="true" active="d0" document="d1" tool="t2" />
+    </Step>
+    <State phase="settled" visible="false" closed="true" active="d0" document="d1" tool="t2" />
+  </Case>
+  <Case name="tool/query-throws">
+    <State phase="before" visible="true" closed="false" active="d0" document="d1" tool="null" />
+    <Step name="first" exception="System.ApplicationException">
+      <Event>tool-enter:t2</Event>
+      <Event>query</Event>
+      <Event>tool-exit</Event>
+      <State phase="immediate" visible="true" closed="false" active="d0" document="d1" tool="t2" />
+    </Step>
+    <State phase="settled" visible="true" closed="false" active="d0" document="d1" tool="t2" />
+  </Case>
+  <Case name="tool/execute-throws">
+    <State phase="before" visible="true" closed="false" active="d0" document="d1" tool="null" />
+    <Step name="first" exception="System.ApplicationException">
+      <Event>tool-enter:t2</Event>
+      <Event>query</Event>
+      <Event>closing</Event>
+      <Event>closed</Event>
+      <Event>execute</Event>
+      <Event>tool-exit</Event>
+      <State phase="immediate" visible="false" closed="true" active="d0" document="d1" tool="t2" />
+    </Step>
+    <State phase="settled" visible="false" closed="true" active="d0" document="d1" tool="t2" />
+  </Case>
+  <Case name="tool/closed-repeat">
+    <State phase="before" visible="true" closed="false" active="d0" document="d1" tool="null" />
+    <Step name="first" exception="none">
+      <Event>tool-enter:t2</Event>
+      <Event>closing</Event>
+      <Event>closed</Event>
+      <Event>active:t2</Event>
+      <Event>tool-exit</Event>
+      <State phase="immediate" visible="false" closed="true" active="t2" document="d1" tool="t2" />
+    </Step>
+    <Step name="same-again" exception="none">
+      <State phase="immediate" visible="false" closed="true" active="t2" document="d1" tool="t2" />
+    </Step>
+    <State phase="settled" visible="false" closed="true" active="t2" document="d1" tool="t2" />
+  </Case>
+</NavigatorSelectionObservations>

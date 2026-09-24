@@ -35,6 +35,8 @@ public sealed partial class GalleryPage
             status.Foreground = SampleChrome.Default(dark).Foreground;
         }
         Add("Open navigator", "open", manager.OpenNavigator);
+        Add("Assign document", "assign-document", () => AssignSelection(false));
+        Add("Assign tool", "assign-tool", () => AssignSelection(true));
         Add("3 documents", "three", () => Populate(3));
         Add("40 documents", "forty", () => Populate(40));
         Add("200 documents", "many", () => Populate(200));
@@ -51,7 +53,7 @@ public sealed partial class GalleryPage
         Add("12 pt", "normal", () => { manager.Resources.Remove("UnoDock.FontSize"); manager.Refresh(); });
         var bar = new ScrollViewer { Content = commands, HorizontalScrollBarVisibility = ScrollBarVisibility.Auto, VerticalScrollBarVisibility = ScrollBarVisibility.Disabled };
         var help = new TextBlock { FontSize = 12, Margin = new(8, 2, 8, 6), TextWrapping = TextWrapping.Wrap,
-            Text = "Ctrl+Tab previews without activating. Up/Down, Home/End and Left/Right navigate; Enter or Control release commits, Escape cancels. Block activation demonstrates a real CanExecute veto. Edits remain in their existing buffers." };
+            Text = "Ctrl+Tab previews without activating. Up/Down, Home/End and Left/Right navigate; Enter or Control release commits, Escape cancels. Block activation demonstrates a real CanExecute veto. Assign document/tool uses the public selection property: an allowed document hides, a tool closes, and a veto keeps the list open. Edits remain in their existing buffers." };
         panel.Children.Add(bar); Grid.SetRow(help, 1); panel.Children.Add(help); Grid.SetRow(manager, 2); panel.Children.Add(manager);
         Grid.SetRow(status, 3); panel.Children.Add(status);
         Populate(3); Paint();
@@ -103,6 +105,15 @@ public sealed partial class GalleryPage
                     () => !blocked && model.IsEnabled && ReferenceEquals(model.Root, manager.Layout));
                 activationCommands.Add(command); manager.GetLayoutItemFromModel(model).ActivateCommand = command;
             }
+            UpdateStatus();
+        }
+        void AssignSelection(bool tool)
+        {
+            var navigator = manager.FindVisualChildren<NavigatorWindow>().FirstOrDefault();
+            if (navigator == null) { manager.OpenNavigator(); navigator = manager.FindVisualChildren<NavigatorWindow>().FirstOrDefault(); }
+            if (navigator == null) return;
+            if (tool) navigator.SelectedAnchorable = navigator.Anchorables.LastOrDefault();
+            else navigator.SelectedDocument = navigator.Documents.FirstOrDefault(item => !ReferenceEquals(item, navigator.SelectedDocument));
             UpdateStatus();
         }
         SampleButton Add(string title, string id, Action action)

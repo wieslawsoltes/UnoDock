@@ -1,5 +1,15 @@
 # UnoDock
 
+## Preview 20: direct navigator selection
+
+`SelectedDocument` and `SelectedAnchorable` assignments now request activation rather
+than just highlighting a row. The observed document path hides without Closing/Closed;
+the tool path uses cancellable Closing followed by Closed. Command vetoes keep the
+navigator visible. For programmatic preview without activation, use the additive
+`PreviewDocument(item)` / `PreviewAnchorable(item)` methods. Keyboard preview is unchanged.
+See [exact behavior, independent observations and safety differences](docs/navigator-selection.md).
+
+
 [![Build and test](https://github.com/wieslawsoltes/UnoDock/actions/workflows/ci.yml/badge.svg)](https://github.com/wieslawsoltes/UnoDock/actions/workflows/ci.yml)
 [![Reference metadata](https://github.com/wieslawsoltes/UnoDock/actions/workflows/reference-metadata.yml/badge.svg)](https://github.com/wieslawsoltes/UnoDock/actions/workflows/reference-metadata.yml)
 

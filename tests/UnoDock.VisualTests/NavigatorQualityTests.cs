@@ -76,14 +76,14 @@ public static class NavigatorQualityTests
         tests.Test("removal during queued refresh preserves the final selection", async () =>
         {
             using var f = new Fixture(host); var nav = f.Show(); await Ready(nav);
-            nav.SelectedDocument = nav.Documents[0]; f.Pane.Children.Remove((LayoutDocument)nav.SelectedDocument.LayoutElement);
-            var survivor = nav.Documents.Last(); nav.SelectedDocument = survivor;
+            nav.PreviewDocument(nav.Documents[0]); f.Pane.Children.Remove((LayoutDocument)nav.SelectedDocument!.LayoutElement);
+            var survivor = nav.Documents.Last(); nav.PreviewDocument(survivor);
             await Until(() => nav.Documents.Length == 2); Check.Same(survivor, nav.SelectedDocument);
         });
         tests.Test("title and description update without rebuilding selected row", async () =>
         {
-            using var f = new Fixture(host); var nav = f.Show(); await Ready(nav); nav.SelectedDocument = nav.Documents[0];
-            var row = List(nav, true).ContainerFromItem(nav.SelectedDocument); var model = (LayoutDocument)nav.SelectedDocument.LayoutElement;
+            using var f = new Fixture(host); var nav = f.Show(); await Ready(nav); nav.PreviewDocument(nav.Documents[0]);
+            var row = List(nav, true).ContainerFromItem(nav.SelectedDocument); var model = (LayoutDocument)nav.SelectedDocument!.LayoutElement;
             model.Title = "Changed title"; model.Description = "Changed description"; await Tick();
             Check.Equal("Changed title", Field<TextBlock>(nav, "_selectionTitle").Text);
             Check.Equal("Changed description", Field<TextBlock>(nav, "_selectionDescription").Text);
@@ -91,9 +91,9 @@ public static class NavigatorQualityTests
         });
         tests.Test("selecting a tool clears a previous document description", async () =>
         {
-            using var f = new Fixture(host); var nav = f.Show(); await Ready(nav); nav.SelectedDocument = nav.Documents[0];
+            using var f = new Fixture(host); var nav = f.Show(); await Ready(nav); nav.PreviewDocument(nav.Documents[0]);
             Check.True(Field<TextBlock>(nav, "_selectionDescription").Text.Length > 0);
-            nav.SelectedAnchorable = nav.Anchorables.First(); Check.Equal("", Field<TextBlock>(nav, "_selectionDescription").Text);
+            nav.PreviewAnchorable(nav.Anchorables.First()); Check.Equal("", Field<TextBlock>(nav, "_selectionDescription").Text);
         });
         tests.Test("all items removed gives coherent empty selection", async () =>
         {
@@ -110,42 +110,42 @@ public static class NavigatorQualityTests
         tests.Test("group boundaries stay within selected category", async () =>
         {
             using var f = new Fixture(host); var nav = f.Show(); await Ready(nav);
-            nav.SelectedDocument = nav.Documents[1]; Call(nav, "SelectBoundary", true); Check.Same(nav.Documents[^1], nav.SelectedDocument);
+            nav.PreviewDocument(nav.Documents[1]); Call(nav, "SelectBoundary", true); Check.Same(nav.Documents[^1], nav.SelectedDocument);
             Call(nav, "SelectBoundary", false); Check.Same(nav.Documents[0], nav.SelectedDocument);
-            nav.SelectedAnchorable = nav.Anchorables.First(); Call(nav, "SelectBoundary", true); Check.Same(nav.Anchorables.Last(), nav.SelectedAnchorable);
+            nav.PreviewAnchorable(nav.Anchorables.First()); Call(nav, "SelectBoundary", true); Check.Same(nav.Anchorables.Last(), nav.SelectedAnchorable);
         });
         tests.Test("category switch restores its last explicitly selected item", async () =>
         {
             using var f = new Fixture(host); var nav = f.Show(); await Ready(nav);
-            var doc = nav.Documents[^1]; var tool = nav.Anchorables.Last(); nav.SelectedDocument = doc; nav.SelectedAnchorable = tool;
+            var doc = nav.Documents[^1]; var tool = nav.Anchorables.Last(); nav.PreviewDocument(doc); nav.PreviewAnchorable(tool);
             Call(nav, "SelectGroup", true); Check.Same(doc, nav.SelectedDocument);
             Call(nav, "SelectGroup", false); Check.Same(tool, nav.SelectedAnchorable);
         });
         tests.Test("selection callback redirection converges before returning", async () =>
         {
             using var f = new Fixture(host); var nav = f.Show(); await Ready(nav);
-            nav.SelectedDocument = nav.Documents[0]; var target = nav.Documents[1]; var redirected = nav.Documents[2];
+            nav.PreviewDocument(nav.Documents[0]); var target = nav.Documents[1]; var redirected = nav.Documents[2];
             var token = nav.RegisterPropertyChangedCallback(NavigatorWindow.SelectedDocumentProperty, (_, _) =>
-            { if (ReferenceEquals(nav.SelectedDocument, target)) nav.SelectedDocument = redirected; });
-            try { nav.SelectedDocument = target; Check.Same(redirected, nav.SelectedDocument); Check.Same(redirected, List(nav, true).SelectedItem); }
+            { if (ReferenceEquals(nav.SelectedDocument, target)) nav.PreviewDocument(redirected); });
+            try { nav.PreviewDocument(target); Check.Same(redirected, nav.SelectedDocument); Check.Same(redirected, List(nav, true).SelectedItem); }
             finally { nav.UnregisterPropertyChangedCallback(NavigatorWindow.SelectedDocumentProperty, token); }
         });
         tests.Test("published selection callback can switch category", async () =>
         {
-            using var f = new Fixture(host); var nav = f.Show(); await Ready(nav); nav.SelectedDocument = nav.Documents[0];
+            using var f = new Fixture(host); var nav = f.Show(); await Ready(nav); nav.PreviewDocument(nav.Documents[0]);
             var tool = nav.Anchorables.Last(); var target = nav.Documents[1];
             var token = nav.RegisterPropertyChangedCallback(NavigatorWindow.SelectedDocumentProperty, (_, _) =>
-            { if (ReferenceEquals(nav.SelectedDocument, target)) nav.SelectedAnchorable = tool; });
-            try { nav.SelectedDocument = target; Check.Same(tool, nav.SelectedAnchorable); Check.True(nav.SelectedDocument == null); Check.Same(tool, List(nav, false).SelectedItem); }
+            { if (ReferenceEquals(nav.SelectedDocument, target)) nav.PreviewAnchorable(tool); });
+            try { nav.PreviewDocument(target); Check.Same(tool, nav.SelectedAnchorable); Check.True(nav.SelectedDocument == null); Check.Same(tool, List(nav, false).SelectedItem); }
             finally { nav.UnregisterPropertyChangedCallback(NavigatorWindow.SelectedDocumentProperty, token); }
         });
         tests.Test("throwing selection observer does not poison the next request", async () =>
         {
-            using var f = new Fixture(host); var nav = f.Show(); await Ready(nav); nav.SelectedDocument = nav.Documents[0];
+            using var f = new Fixture(host); var nav = f.Show(); await Ready(nav); nav.PreviewDocument(nav.Documents[0]);
             var token = nav.RegisterPropertyChangedCallback(NavigatorWindow.SelectedDocumentProperty, (_, _) => throw new InvalidOperationException("test observer"));
-            try { Check.Throws<InvalidOperationException>(() => nav.SelectedDocument = nav.Documents[1]); }
+            try { Check.Throws<InvalidOperationException>(() => nav.PreviewDocument(nav.Documents[1])); }
             finally { nav.UnregisterPropertyChangedCallback(NavigatorWindow.SelectedDocumentProperty, token); }
-            nav.SelectedDocument = nav.Documents[2]; Check.Same(nav.Documents[2], List(nav, true).SelectedItem); Check.True(nav.SelectedAnchorable == null);
+            nav.PreviewDocument(nav.Documents[2]); Check.Same(nav.Documents[2], List(nav, true).SelectedItem); Check.True(nav.SelectedAnchorable == null);
         });
         tests.Test("list-publication callback cannot initialize a replaced layout", async () =>
         {
@@ -157,25 +157,25 @@ public static class NavigatorQualityTests
         });
         tests.Test("far document selection scrolls a realized row into view", async () =>
         {
-            using var f = new Fixture(host, 100); var nav = f.Show(); await Ready(nav); nav.SelectedDocument = nav.Documents[^1];
+            using var f = new Fixture(host, 100); var nav = f.Show(); await Ready(nav); nav.PreviewDocument(nav.Documents[^1]);
             await Until(() => FullyVisible(List(nav, true), nav.SelectedDocument!));
             Check.True(Scroll(List(nav, true)).VerticalOffset > 0);
         });
         tests.Test("rapid selection discards stale reveal requests", async () =>
         {
             using var f = new Fixture(host, 80); var nav = f.Show(); await Ready(nav);
-            nav.SelectedDocument = nav.Documents[^1]; nav.SelectedDocument = nav.Documents[20]; nav.SelectedDocument = nav.Documents[0];
+            nav.PreviewDocument(nav.Documents[^1]); nav.PreviewDocument(nav.Documents[20]); nav.PreviewDocument(nav.Documents[0]);
             await Until(() => FullyVisible(List(nav, true), nav.Documents[0])); await Tick(); Check.Near(0, Scroll(List(nav, true)).VerticalOffset, 1);
         });
         tests.Test("navigation to first row scrolls back from the bottom", async () =>
         {
-            using var f = new Fixture(host, 60); var nav = f.Show(); await Ready(nav); nav.SelectedDocument = nav.Documents[^1];
+            using var f = new Fixture(host, 60); var nav = f.Show(); await Ready(nav); nav.PreviewDocument(nav.Documents[^1]);
             await Until(() => FullyVisible(List(nav, true), nav.SelectedDocument!)); Call(nav, "SelectBoundary", false);
             await Until(() => FullyVisible(List(nav, true), nav.Documents[0])); Check.Near(0, Scroll(List(nav, true)).VerticalOffset, 1);
         });
         tests.Test("unrelated refresh does not undo a user's scroll offset", async () =>
         {
-            using var f = new Fixture(host, 60); var nav = f.Show(); await Ready(nav); nav.SelectedDocument = nav.Documents[0]; await Tick();
+            using var f = new Fixture(host, 60); var nav = f.Show(); await Ready(nav); nav.PreviewDocument(nav.Documents[0]); await Tick();
             var scroll = Scroll(List(nav, true)); scroll.ChangeView(null, 180, null, true); await Until(() => Math.Abs(scroll.VerticalOffset - 180) < 1);
             f.Docs[0].Description = "No selection change"; host.Refresh(); await Tick(); Check.Near(180, scroll.VerticalOffset, 1);
         });
@@ -183,12 +183,12 @@ public static class NavigatorQualityTests
         {
             using var f = new Fixture(host, 60); var nav = f.Show(); await Ready(nav);
             var scroll = Scroll(List(nav, true)); var offset = scroll.VerticalOffset;
-            nav.SelectedDocument = nav.Documents[^1]; Call(nav, "EndSession"); await Tick(); Check.Near(offset, scroll.VerticalOffset, 1);
+            nav.PreviewDocument(nav.Documents[^1]); Call(nav, "EndSession"); await Tick(); Check.Near(offset, scroll.VerticalOffset, 1);
         });
         tests.Test("disabled pending target is filtered before reveal or commit", async () =>
         {
             using var f = new Fixture(host, 40); var nav = f.Show(); await Ready(nav); var target = nav.Documents[^1];
-            nav.SelectedDocument = target; target.LayoutElement.IsEnabled = false; await Until(() => !nav.Documents.Contains(target));
+            nav.PreviewDocument(target); target.LayoutElement.IsEnabled = false; await Until(() => !nav.Documents.Contains(target));
             Check.False(ReferenceEquals(target, nav.SelectedDocument)); Call(nav, "CommitSelection"); Check.False(ReferenceEquals(target.LayoutElement, host.Layout.ActiveContent));
         });
         tests.Test("custom named ListBox parts retain their own templates", async () =>
@@ -196,14 +196,14 @@ public static class NavigatorQualityTests
             using var f = new Fixture(host, 12); var nav = new NavigatorWindow(host) { Template = CustomTemplate() };
             f.Show(nav); await Ready(nav); var list = List(nav, true); var template = list.Template;
             Check.False(ReferenceEquals(list, Field<ListBox>(nav, "_defaultDocuments")));
-            nav.SelectedDocument = nav.Documents[^1]; host.Refresh(); await Tick(); Check.Same(template, list.Template);
+            nav.PreviewDocument(nav.Documents[^1]); host.Refresh(); await Tick(); Check.Same(template, list.Template);
             Check.Same(nav.SelectedDocument, list.SelectedItem);
         });
         tests.Test("old template list no longer drives selection after replacement", async () =>
         {
             using var f = new Fixture(host); var nav = new NavigatorWindow(host) { Template = CustomTemplate() };
             f.Show(nav); await Ready(nav); var old = List(nav, true); nav.Template = CustomTemplate(); nav.ApplyTemplate(); await Ready(nav);
-            Check.False(ReferenceEquals(old, List(nav, true))); nav.SelectedDocument = nav.Documents[0]; old.SelectedItem = nav.Documents[2];
+            Check.False(ReferenceEquals(old, List(nav, true))); nav.PreviewDocument(nav.Documents[0]); old.SelectedItem = nav.Documents[2];
             Check.Same(nav.Documents[0], nav.SelectedDocument);
         });
         tests.Test("navigator theme update retains rows and both collections", async () =>
@@ -228,7 +228,7 @@ public static class NavigatorQualityTests
         });
         tests.Test("larger font density remeasures rows and separates both detail lines", async () =>
         {
-            using var f = new Fixture(host); var nav = f.Show(); await Ready(nav); nav.SelectedDocument = nav.Documents[0];
+            using var f = new Fixture(host); var nav = f.Show(); await Ready(nav); nav.PreviewDocument(nav.Documents[0]);
             host.Resources["UnoDock.FontSize"] = 20d;
             try
             {
@@ -243,7 +243,7 @@ public static class NavigatorQualityTests
         });
         tests.Test("long details do not widen the list-sized popup", async () =>
         {
-            using var f = new Fixture(host); var nav = f.Show(); await Ready(nav); nav.SelectedDocument = nav.Documents[0]; await Tick(); var width = nav.ActualWidth;
+            using var f = new Fixture(host); var nav = f.Show(); await Ready(nav); nav.PreviewDocument(nav.Documents[0]); await Tick(); var width = nav.ActualWidth;
             ((LayoutDocument)nav.SelectedDocument!.LayoutElement).Description = new string('W', 800); await Tick(); nav.UpdateLayout();
             Check.Near(width, nav.ActualWidth, 1); Check.True(nav.ActualWidth < 500);
         });
@@ -281,7 +281,7 @@ public static class NavigatorQualityTests
                 var nav = new NavigatorWindow(host) { FlowDirection = scenario == "navigator-rtl" ? FlowDirection.RightToLeft : FlowDirection.LeftToRight };
                 if (scenario == "navigator-dark") host.RequestedTheme = ElementTheme.Dark;
                 f.Show(nav); await Ready(nav);
-                if (scenario == "navigator-tool") nav.SelectedAnchorable = nav.Anchorables.First(); else nav.SelectedDocument = nav.Documents.Last();
+                if (scenario == "navigator-tool") nav.PreviewAnchorable(nav.Anchorables.First()); else nav.PreviewDocument(nav.Documents.Last());
                 await Tick(); nav.UpdateLayout();
                 var path = Path.Combine(output, "visuals", scenario);
                 var expectedText = scenario == "navigator-dark" ? Microsoft.UI.ColorHelper.FromArgb(255, 242, 242, 242) : Microsoft.UI.Colors.Black;
@@ -295,7 +295,7 @@ public static class NavigatorQualityTests
         {
             tests.Test("XTEST End and Home reveal actual navigator rows", async () =>
             {
-                using var f = new Fixture(host, 60); var nav = f.Show(); await Ready(nav); nav.SelectedDocument = nav.Documents[0]; nav.Focus(FocusState.Programmatic);
+                using var f = new Fixture(host, 60); var nav = f.Show(); await Ready(nav); nav.PreviewDocument(nav.Documents[0]); nav.Focus(FocusState.Programmatic);
                 using var input = new X11TestInput(); input.KeyPress(0xff57); // End
                 await Until(() => ReferenceEquals(nav.SelectedDocument, nav.Documents[^1]) && FullyVisible(List(nav, true), nav.Documents[^1]));
                 input.KeyPress(0xff50); // Home
@@ -303,12 +303,13 @@ public static class NavigatorQualityTests
             });
             tests.Test("XTEST clicking a realized row commits that item not the previous selection", async () =>
             {
-                using var f = new Fixture(host); var nav = f.Show(); await Ready(nav); nav.SelectedDocument = nav.Documents[0];
+                using var f = new Fixture(host); var nav = f.Show(); await Ready(nav); nav.PreviewDocument(nav.Documents[0]);
                 var target = nav.Documents[^1]; var row = (FrameworkElement)List(nav, true).ContainerFromItem(target);
                 using var input = new X11TestInput(); input.MoveTo(row, new(row.ActualWidth / 2, row.ActualHeight / 2)); await Tick();
                 input.Press(); await Task.Delay(50); input.Release(); await Until(() => ReferenceEquals(host.Layout.ActiveContent, target.LayoutElement));
             });
         }
+        NavigatorSelectionTests.Register(tests, host, output);
         return await tests.Run(output, "navigator-quality");
     }
     private sealed class Fixture : IDisposable

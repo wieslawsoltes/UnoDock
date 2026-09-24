@@ -203,27 +203,27 @@ public static class WindowLifecycleTests
             f.B.IsActive = true; f.A.LastActivationTimeStamp = new(2020, 3, 3); f.B.LastActivationTimeStamp = new(2020, 2, 2); f.Tool.LastActivationTimeStamp = new(2020, 1, 1);
             var nav = f.Navigator(); await Tick(); Check.Same(f.Tool, nav.SelectedAnchorable!.LayoutElement);
         });
-        Live("navigator selection dependency properties are mutually exclusive", async f =>
+        Live("navigator preview operations publish mutually exclusive dependency properties", async f =>
         {
-            var nav = f.Navigator(); await Tick(); nav.SelectedAnchorable = nav.Anchorables.Single(); Check.True(nav.SelectedDocument == null);
-            nav.SelectedDocument = nav.Documents[0]; Check.True(nav.SelectedAnchorable == null);
-            nav.SelectedDocument = null; Check.True(nav.SelectedDocument == null); Check.True(nav.SelectedAnchorable == null);
+            var nav = f.Navigator(); await Tick(); nav.PreviewAnchorable(nav.Anchorables.Single()); Check.True(nav.SelectedDocument == null);
+            nav.PreviewDocument(nav.Documents[0]); Check.True(nav.SelectedAnchorable == null);
+            nav.PreviewDocument(null); Check.True(nav.SelectedDocument == null); Check.True(nav.SelectedAnchorable == null);
         });
         Live("navigator rejects foreign-manager selected items", async f =>
         {
-            var nav = f.Navigator(); await Tick(); nav.SelectedDocument = nav.Documents[0]; var selected = nav.SelectedDocument;
+            var nav = f.Navigator(); await Tick(); nav.PreviewDocument(nav.Documents[0]); var selected = nav.SelectedDocument;
             using var other = new DockingManager(); var document = new LayoutDocument(); other.Layout = Root(new LayoutDocumentPane(document));
-            nav.SelectedDocument = (LayoutDocumentItem)other.GetLayoutItemFromModel(document); Check.Same(selected, nav.SelectedDocument);
+            nav.PreviewDocument((LayoutDocumentItem)other.GetLayoutItemFromModel(document)); Check.Same(selected, nav.SelectedDocument);
         });
         Live("removing a selected navigator item never activates detached content", async f =>
         {
-            var nav = f.Navigator(); await Tick(); nav.SelectedDocument = nav.Documents.Single(i => ReferenceEquals(i.LayoutElement, f.A));
+            var nav = f.Navigator(); await Tick(); nav.PreviewDocument(nav.Documents.Single(i => ReferenceEquals(i.LayoutElement, f.A)));
             f.A.Close(); Call(nav, "CommitSelection"); Check.True(f.A.Root == null); Check.False(ReferenceEquals(f.A, host.Layout.ActiveContent));
             await Tick(); Check.Equal(1, nav.Documents.Length);
         });
         Live("disabling a selected navigator item is checked at commit time", async f =>
         {
-            var nav = f.Navigator(); await Tick(); nav.SelectedDocument = nav.Documents.Single(i => ReferenceEquals(i.LayoutElement, f.A));
+            var nav = f.Navigator(); await Tick(); nav.PreviewDocument(nav.Documents.Single(i => ReferenceEquals(i.LayoutElement, f.A)));
             f.A.IsEnabled = false; Call(nav, "CommitSelection"); Check.False(ReferenceEquals(f.A, host.Layout.ActiveContent));
         });
         Live("session MRU order does not reshuffle on activation timestamps", async f =>
@@ -264,7 +264,7 @@ public static class WindowLifecycleTests
         {
             f.A.IsActive = true; host.Refresh(); await Tick(); Check.True(f.EditorA2.Focus(FocusState.Programmatic));
             f.B.IsActive = true; host.Refresh(); await Tick(); Check.True(f.EditorB.Focus(FocusState.Programmatic));
-            var nav = f.Navigator(); await Tick(); nav.SelectedDocument = nav.Documents.Single(d => ReferenceEquals(d.LayoutElement, f.A));
+            var nav = f.Navigator(); await Tick(); nav.PreviewDocument(nav.Documents.Single(d => ReferenceEquals(d.LayoutElement, f.A)));
             CallSurface(host, "CloseNavigator", true); await Tick(); Check.Same(f.A, host.Layout.ActiveContent);
             Check.True(ReferenceEquals(f.EditorA2, FocusManager.GetFocusedElement(host.XamlRoot!)),
                 "Expected retained second editor, focused: " + (FocusManager.GetFocusedElement(host.XamlRoot!) as TextBox)?.Text);
@@ -272,7 +272,7 @@ public static class WindowLifecycleTests
         Live("navigator respects activation command CanExecute", async f =>
         {
             var nav = f.Navigator(); await Tick(); var item = nav.Documents.Single(i => ReferenceEquals(i.LayoutElement, f.B));
-            item.ActivateCommand = new DisabledCommand(); nav.SelectedDocument = item; CallSurface(host, "CloseNavigator", true);
+            item.ActivateCommand = new DisabledCommand(); nav.PreviewDocument(item); CallSurface(host, "CloseNavigator", true);
             Check.Same(f.A, host.Layout.ActiveContent);
         });
         Live("navigator supports original named ListBox template parts", async f =>

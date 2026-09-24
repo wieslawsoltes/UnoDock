@@ -1,3 +1,7 @@
+> Preview20 update: the historical direct-setter boundary below is superseded for
+> active-session assignment by [navigator-selection.md](navigator-selection.md).
+> Explicit keyboard preview/commit remains distinct from property assignment.
+
 # Navigator activation ownership (preview 19)
 
 The navigator previews a model adapter, but activation is application code. A

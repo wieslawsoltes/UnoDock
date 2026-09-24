@@ -45,7 +45,7 @@ internal static class NavigatorSelectionTests
                         else if (scenario != "noop") original.Execute(null);
                     });
                 }
-                CancelEventHandler closing = (_, e) =>
+                EventHandler<CancelEventArgs> closing = (_, e) =>
                 {
                     if (scenario == "closing-veto") { e.Cancel = true; f.Trace.Add("cancel-close"); }
                     if (scenario == "closing-reselect") { f.Trace.Add("closing-reselect"); f.Nav.SelectedDocument = f.Document(1); }
@@ -171,7 +171,7 @@ internal static class NavigatorSelectionTests
         tests.Test("direct selection: closing handler exception leaves a usable live session", async () =>
         {
             using var f = new Fixture(host); await f.Show(); var failure = new ApplicationException("closing");
-            CancelEventHandler handler = (_, _) => throw failure;
+            EventHandler<CancelEventArgs> handler = (_, _) => throw failure;
             f.Nav.Closing += handler; Exception? observed = null;
             try { f.Assign(true); } catch (Exception e) { observed = e; } finally { f.Nav.Closing -= handler; }
             Check.Same(failure, observed); Check.True(f.Visible); Check.False(f.Closed);
@@ -213,7 +213,7 @@ internal static class NavigatorSelectionTests
                 var row = list.ContainerFromItem(f.Target(false)) as FrameworkElement;
                 Check.True(row is { ActualWidth: > 0, ActualHeight: > 0 }); Check.Same(f.Target(false), list.SelectedItem); Check.True(f.Visible);
                 Directory.CreateDirectory(Path.Combine(output, "visuals"));
-                await UnoDock.VisualValidation.VisualCapture.Save(host, Path.Combine(output, "visuals", "navigator-direct-veto-" + (rtl ? "rtl" : "ltr") + ".png"));
+                await VisualCapture.Save(host, Path.Combine(output, "visuals", "navigator-direct-veto-" + (rtl ? "rtl" : "ltr") + ".png"));
             });
     }
 
@@ -259,7 +259,7 @@ internal static class NavigatorSelectionTests
             Nav.PreviewDocument(Document(1)); Host.UpdateLayout(); await Task.Delay(30);
         }
         internal LayoutDocumentItem Document(int index) => (LayoutDocumentItem)Host.GetLayoutItemFromModel(Docs[index]);
-        internal LayoutItem Target(bool tool) => Host.GetLayoutItemFromModel(tool ? ToolModels[2] : Docs[2] as LayoutContent ?? throw new InvalidOperationException());
+        internal LayoutItem Target(bool tool) => Host.GetLayoutItemFromModel(tool ? (LayoutContent)ToolModels[2] : Docs[2]);
         internal void Assign(bool tool)
         { if (tool) Nav.SelectedAnchorable = (LayoutAnchorableItem)Target(true); else Nav.SelectedDocument = Document(2); }
         private void Active(object? sender, EventArgs e) => Log("active:" + Id(Host.Layout.ActiveContent));

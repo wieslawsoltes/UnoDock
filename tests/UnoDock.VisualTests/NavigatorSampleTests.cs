@@ -78,13 +78,13 @@ internal static class NavigatorSampleTests
                 var target = manager.Layout.Descendents().OfType<LayoutDocument>().Last();
                 await Click("policy"); Check.True(Status(panel).Contains("blocked by command", StringComparison.Ordinal));
                 await Click("open"); await Wait(() => Current(manager) is { IsLoaded: true, ActualHeight: > 0 });
-                var nav = Current(manager)!; nav.SelectedDocument = (LayoutDocumentItem)manager.GetLayoutItemFromModel(target);
+                var nav = Current(manager)!; nav.PreviewDocument((LayoutDocumentItem)manager.GetLayoutItemFromModel(target));
                 nav.Focus(FocusState.Keyboard); await Task.Delay(50); input.KeyPress(0xff0d);
                 await Wait(() => Current(manager) == null); Check.Same(original, manager.Layout.ActiveContent);
                 Check.True(Status(panel).Contains("Committed: 0", StringComparison.Ordinal));
                 await Click("policy"); await Click("open");
                 await Wait(() => Current(manager) is { IsLoaded: true, ActualHeight: > 0 });
-                nav = Current(manager)!; nav.SelectedDocument = (LayoutDocumentItem)manager.GetLayoutItemFromModel(target);
+                nav = Current(manager)!; nav.PreviewDocument((LayoutDocumentItem)manager.GetLayoutItemFromModel(target));
                 nav.Focus(FocusState.Keyboard); await Task.Delay(50); input.KeyPress(0xff0d);
                 await Wait(() => Current(manager) == null && ReferenceEquals(manager.Layout.ActiveContent, target));
                 Check.True(Status(panel).Contains("Committed: 1", StringComparison.Ordinal));

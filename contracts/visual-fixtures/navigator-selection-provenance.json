@@ -1,0 +1,12 @@
+{
+  "referenceRevision": "2c71faba5eecc1b6ae6cd3d269408e0df37715d8",
+  "method": "public-and-protected-api-only",
+  "cases": 28,
+  "file": "navigator-selection-observations.xml",
+  "sha256": "9696e9722db99ce00d7c271d0507e38ad5273c1507c9cecde9a79b63dda241ef",
+  "probeRevision": "b007cd14d9165107d37044faec1ab49b3b3e94bc",
+  "byteIdentical": true,
+  "runId": 36032890549,
+  "artifactId": 10823916978,
+  "artifactSha256": "dbc5bab116edbcb388fcb662f07446896cf3de3fb4f83e533c8243cb40d8a1a5"
+}

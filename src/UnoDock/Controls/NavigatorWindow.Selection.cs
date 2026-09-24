@@ -38,7 +38,7 @@ public partial class NavigatorWindow
         if (!DispatcherQueue.HasThreadAccess) throw new InvalidOperationException("Navigator selection requires its owning UI thread.");
         // Ignore only our own current publication. A different value assigned by
         // an application callback is a real request, even during publication.
-        var published = document ? _selected as LayoutDocumentItem : _selected as LayoutAnchorableItem as LayoutItem;
+        LayoutItem? published = document ? _selected as LayoutDocumentItem : _selected as LayoutAnchorableItem;
         if (_publishing && ReferenceEquals(e.NewValue, published)) return;
         _directSelectionVersion++;
         _directSelection = e.NewValue as LayoutItem;

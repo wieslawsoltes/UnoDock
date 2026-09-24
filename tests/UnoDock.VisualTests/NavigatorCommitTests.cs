@@ -32,8 +32,8 @@ internal static class NavigatorCommitTests
             ("replaced workspace ABA", f => { f.Host.Layout = Replacement(); f.Host.Layout = f.Root; }),
             ("replaced command", f => f.Item.ActivateCommand = new ProbeCommand(() => { }, () => true)),
             ("replaced command ABA", f => { var command = f.Item.ActivateCommand; f.Item.ActivateCommand = null; f.Item.ActivateCommand = command; }),
-            ("changed preview", f => f.Nav.SelectedDocument = (LayoutDocumentItem)f.Host.GetLayoutItemFromModel(f.A)),
-            ("changed preview ABA", f => { f.Nav.SelectedDocument = (LayoutDocumentItem)f.Host.GetLayoutItemFromModel(f.A); f.SelectTarget(); }),
+            ("changed preview", f => f.Nav.PreviewDocument((LayoutDocumentItem)f.Host.GetLayoutItemFromModel(f.A))),
+            ("changed preview ABA", f => { f.Nav.PreviewDocument((LayoutDocumentItem)f.Host.GetLayoutItemFromModel(f.A)); f.SelectTarget(); }),
             ("disabled manager", f => f.Host.IsEnabled = false),
             ("disabled manager ABA", f => { f.Host.IsEnabled = false; f.Host.IsEnabled = true; }),
             ("disabled navigator ABA", f => { f.Nav.IsEnabled = false; f.Nav.IsEnabled = true; }),
@@ -280,7 +280,7 @@ internal static class NavigatorCommitTests
         }
         internal void Show() { Nav = new(Host); Surface(Host, "ShowNavigator", Nav); }
         internal void SelectTarget()
-        { if (Item is LayoutDocumentItem doc) Nav.SelectedDocument = doc; else Nav.SelectedAnchorable = (LayoutAnchorableItem)Item; }
+        { if (Item is LayoutDocumentItem doc) Nav.PreviewDocument(doc); else Nav.PreviewAnchorable((LayoutAnchorableItem)Item); }
         internal void Remove() { if (Target is LayoutDocument doc) _documents.Children.Remove(doc); else _tools.Children.Remove((LayoutAnchorable)Target); }
         internal void Insert() { if (Target is LayoutDocument doc) _documents.Children.Add(doc); else _tools.Children.Add((LayoutAnchorable)Target); }
         internal void Commit(bool close) { if (close) Surface(Host, "CloseNavigator", true); else Call(Nav, "CommitSelection"); }
