@@ -27,22 +27,30 @@ public sealed class WorkspaceDocument : INotifyPropertyChanged, IDockContent
         set { ArgumentException.ThrowIfNullOrWhiteSpace(value); if (_name == value) return; _name = value; Changed(); Changed(nameof(Title)); }
     }
     public string Title => IsDirty ? Name + " *" : Name;
+    /// <summary>Exact application text, including original line-delimiter choices.</summary>
     public string Text
     {
         get => _text;
         set
         {
             ArgumentNullException.ThrowIfNull(value); if (value == _text) return;
-            _text = value; Changed(); Changed(nameof(IsDirty)); Changed(nameof(Title));
+            _text = value; Changed(); Changed(nameof(EditorText)); Changed(nameof(IsDirty)); Changed(nameof(Title));
             Changed(nameof(CharacterCount)); Changed(nameof(LineCount)); RefreshCommands();
         }
+    }
+    /// <summary>CR-based native editing projection. No-op native synchronization must
+    /// not rewrite the original buffer or mark the document dirty.</summary>
+    public string EditorText
+    {
+        get => WorkspaceTextProjection.ForEditor(_text);
+        set => Text = WorkspaceTextProjection.ApplyEditorEdit(_text, value);
     }
     public bool IsDirty => !string.Equals(_savedText, _text, StringComparison.Ordinal);
     public bool IsReadOnly { get => _isReadOnly; set { if (_isReadOnly == value) return; _isReadOnly = value; Changed(); } }
     public bool IsSaving { get => _isSaving; internal set { if (_isSaving == value) return; _isSaving = value; Changed(); RefreshCommands(); } }
     public bool IsOpen { get => _isOpen; internal set { if (_isOpen == value) return; _isOpen = value; Changed(); RefreshCommands(); } }
     public int CharacterCount => _text.Length;
-    public int LineCount => 1 + _text.Count(c => c == '\n');
+    public int LineCount => WorkspaceTextProjection.CountLines(_text);
     public ICommand SaveCommand => _save;
     public ICommand RevertCommand => _revert;
     public ICommand CloseCommand => _close;
