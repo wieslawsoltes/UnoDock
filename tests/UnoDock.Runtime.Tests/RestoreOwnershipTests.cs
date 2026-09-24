@@ -1,10 +1,8 @@
 using System.Collections;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Text;
 using UnoDock.Layout;
 using UnoDock.Layout.Serialization;
-using LayoutPanel = UnoDock.Layout.LayoutPanel;
 
 namespace UnoDock.Testing;
 
@@ -115,6 +113,27 @@ public static class RestoreOwnershipTests
             serializer.LayoutSerializationCallback += (_, e) => { if (e.Model.ContentId == "first") { e.Model.Content = sentinel; pane.Children.Add((LayoutDocument)e.Model); } };
             serializer.Deserialize(new StringReader(Capture(manager)));
             Check.Same(sentinel, pane.Children.Single().Content); Check.Equal(1, Documents(manager).Length);
+        });
+        tests.Test("restore: content setter may transfer ownership without later icon or tooltip writes", () =>
+        {
+            using var manager = Workspace(); using var other = new DockingManager();
+            var pane = new LayoutDocumentPane(); other.Layout.RootPanel.Children.Add(pane);
+            var icon = new Microsoft.UI.Xaml.Media.Imaging.BitmapImage(); var tooltip = new object();
+            var serializer = new XmlLayoutSerializer(manager);
+            serializer.LayoutSerializationCallback += (_, e) =>
+            {
+                if (e.Model.ContentId != "first") return;
+                var moved = false;
+                e.Model.PropertyChanged += (_, change) =>
+                {
+                    if (moved || change.PropertyName != nameof(LayoutContent.Content)) return;
+                    moved = true; e.Model.IconSource = icon; e.Model.ToolTip = tooltip;
+                    pane.Children.Add((LayoutDocument)e.Model);
+                };
+            };
+            serializer.Deserialize(new StringReader(Capture(manager)));
+            Check.Same(icon, pane.Children.Single().IconSource); Check.Same(tooltip, pane.Children.Single().ToolTip);
+            Check.Equal(1, Documents(manager).Length);
         });
         tests.Test("restore: observable source adopts restored models without duplicate content", () =>
         {
