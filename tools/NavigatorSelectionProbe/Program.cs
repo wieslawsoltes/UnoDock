@@ -35,8 +35,10 @@ internal static class Program
                     foreach (var tool in new[] { false, true })
                     foreach (var scenario in new[] { "default", "setvalue", "null", "same", "veto", "noop", "disabled",
                         "closing-veto", "closing-reselect", "query-reselect", "execute-reselect", "query-throws", "execute-throws", "closed-repeat" })
+                    {
                         result.Add(Observe(manager, owner, tool, scenario));
-                    new XDocument(result).Save(Path.Combine(args[0], "navigator-selection-observations.xml"));
+                        new XDocument(result).Save(Path.Combine(args[0], "navigator-selection-observations.xml"));
+                    }
                     Console.WriteLine("Observed " + result.Elements("Case").Count() + " public navigator setter cases.");
                 }
                 catch (Exception error) { failure = 1; Console.Error.WriteLine(error); }
@@ -151,9 +153,9 @@ internal static class Program
     private static XElement Snapshot(string phase, DockingManager manager, NavigatorWindow nav, bool closed) =>
         new XElement("State", new XAttribute("phase", phase), new XAttribute("visible", nav.IsVisible),
             new XAttribute("closed", closed), new XAttribute("active", Id(manager.Layout.ActiveContent)),
-            new XAttribute("document", nav.SelectedDocument == null ? "null" : nav.SelectedDocument.ContentId),
-            new XAttribute("tool", nav.SelectedAnchorable == null ? "null" : nav.SelectedAnchorable.ContentId));
-    private static string Id(LayoutContent content) => content == null ? "null" : content.ContentId;
+            new XAttribute("document", Id(nav.SelectedDocument?.LayoutElement)),
+            new XAttribute("tool", Id(nav.SelectedAnchorable?.LayoutElement)));
+    private static string Id(LayoutContent content) => content == null ? "null" : content.ContentId ?? "unset-id";
     private static void Set(NavigatorWindow nav, LayoutItem item)
     {
         if (item is LayoutAnchorableItem tool) nav.SelectedAnchorable = tool;
@@ -175,13 +177,13 @@ internal static class Program
         internal ObservedNavigator(DockingManager manager) : base(manager) { }
         protected override void OnSelectedDocumentChanged(DependencyPropertyChangedEventArgs e)
         {
-            Trace?.Invoke("document-enter:" + ((e.NewValue as LayoutDocumentItem)?.ContentId ?? "null"));
+            Trace?.Invoke("document-enter:" + Id((e.NewValue as LayoutDocumentItem)?.LayoutElement));
             try { base.OnSelectedDocumentChanged(e); }
             finally { Trace?.Invoke("document-exit"); }
         }
         protected override void OnSelectedAnchorableChanged(DependencyPropertyChangedEventArgs e)
         {
-            Trace?.Invoke("tool-enter:" + ((e.NewValue as LayoutAnchorableItem)?.ContentId ?? "null"));
+            Trace?.Invoke("tool-enter:" + Id((e.NewValue as LayoutAnchorableItem)?.LayoutElement));
             try { base.OnSelectedAnchorableChanged(e); }
             finally { Trace?.Invoke("tool-exit"); }
         }
