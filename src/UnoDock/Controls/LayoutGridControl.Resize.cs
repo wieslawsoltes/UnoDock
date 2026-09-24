@@ -12,6 +12,7 @@ public abstract partial class LayoutGridControl<T>
         double BeforePixels, double AfterPixels, double MinBefore, double MinAfter, ILayoutPanelElement[] Order, Canvas Adorner, Border Ghost)
     {
         internal double Displacement { get; set; }
+        internal bool AbsolutePixels { get; set; }
     }
     private void BeginResize(LayoutGridResizerControl splitter, int index)
     {
@@ -87,7 +88,13 @@ public abstract partial class LayoutGridControl<T>
         var totalPixels = s.BeforePixels + s.AfterPixels;
         // Preserve the original star ratio plus the requested displacement. Rebuilding
         // the ratio from rounded device-aligned grid pixels causes a jump at drag start.
-        var starDelta = bothStars ? (s.BeforeLength.Value + s.AfterLength.Value) * s.Displacement / totalPixels : 0;
+        // Numeric automation requests an absolute arranged size, not a pointer delta.
+        // Anchor its star ratio to the requested pixels so prior arrange rounding
+        // does not accumulate across successive absolute commands. Pointer/arrow
+        // operations retain the original-observed weight-plus-displacement rule.
+        var starDelta = bothStars ? s.AbsolutePixels
+            ? (s.BeforeLength.Value + s.AfterLength.Value) * pair.Before / totalPixels - s.BeforeLength.Value
+            : (s.BeforeLength.Value + s.AfterLength.Value) * s.Displacement / totalPixels : 0;
         var a = s.BeforeLength.IsStar ? new GridLength(bothStars ? Math.Max(0, s.BeforeLength.Value + starDelta) : pair.Before / totalPixels, GridUnitType.Star) : new GridLength(pair.Before);
         var b = s.AfterLength.IsStar ? new GridLength(bothStars ? Math.Max(0, s.AfterLength.Value - starDelta) : pair.After / totalPixels, GridUnitType.Star) : new GridLength(pair.After);
         using var batch = s.Root.BeginUpdate();
@@ -124,9 +131,10 @@ public abstract partial class LayoutGridControl<T>
             if (failures != null) throw new AggregateException("Resize rollback observers failed.", failures);
         }
     }
-    private void ResizeOnce(LayoutGridResizerControl splitter, int index, double delta)
+    private void ResizeOnce(LayoutGridResizerControl splitter, int index, double delta, bool absolutePixels = false)
     {
         BeginResize(splitter, index);
+        if (_resize is { } session) session.AbsolutePixels = absolutePixels;
         try { PreviewResize(splitter, delta); EndResize(splitter, false); }
         finally { CancelResize(); }
     }

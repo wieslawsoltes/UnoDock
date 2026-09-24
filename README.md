@@ -6,11 +6,21 @@
 Independent AvalonDock-style docking for **Uno Platform 6.7**, using **`UnoDock.*`**
 namespaces and Uno/WinUI controls.
 
-**Version: 0.1.0-preview.17. Full API, behavioral and visual parity is not verified.**
+**Version: 0.1.0-preview.18. Full API, behavioral and visual parity is not verified.**
 The target is the pinned public AvalonDock repository and stock presentation, not
 separately licensed commercial themes. This is not WPF binary compatibility. The
 independently authored implementation is MIT-licensed and is not affiliated with or
 endorsed by Xceed or Uno Platform.
+
+## Preview 18
+
+Docking splitters now expose a guarded RangeValue automation provider in DIPs,
+Home/End and PageUp/PageDown keys, and a visible keyboard-focus cue that does not
+change layout dimensions. The Splitter quality laboratory has live numeric range
+inspection and real provider-driven resize controls. Tab providers respect current
+activation commands, single-selection rules, current ownership, labels and focus.
+See [automation and keyboard contracts](docs/accessibility-quality.md). The earlier
+source-ownership and compact MVVM improvements remain included.
 
 ## Preview 17: source ownership and compact MVVM chrome
 

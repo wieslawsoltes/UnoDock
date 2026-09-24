@@ -1,6 +1,6 @@
 # Compatibility contract and remaining boundaries
 
-**Preview 12 is not a certified 100% API, behavioral or visual replacement.** The
+**Preview 18 is not a certified 100% API, behavioral or visual replacement.** The
 migration target is source compatibility with explicit WPF-to-Uno/WinUI mappings,
 not WPF binary identity. Current sources and all earlier preview increments are
 committed; historical candidate/unpushed notes do not describe this checkpoint.
@@ -42,8 +42,8 @@ profiles are recorded independently. All reference type names have counterparts,
 which does not imply equivalent inheritance or behavior.
 
 The current resolved comparison matches **978/1,031**: 883 declared members, 23 inherited
-counterparts and 72 type shapes. Remaining diagnostics are 9 missing members,
-11 signature differences and 33 type-shape differences; 18 attribute differences are
+counterparts and 72 type shapes. Remaining diagnostics are 3 missing members,
+17 signature differences and 33 type-shape differences; 18 attribute differences are
 reported separately. The current CI comparison is the authoritative count for a
 revision. No scanner/mapping/baseline rule is relaxed for visual or splitter increments.
 The regression gate rejects newly unresolved contracts; the full strict gate remains
@@ -71,10 +71,11 @@ and [window shell](window-shell.md) for exact extension and lifetime semantics.
 
 ## Evidence and limitations
 
-The matrix has 120 portable core cases, 2,143 Uno/Linux runtime cases, a 364-case
-Windows subset and 23 Python comparator cases. Linux includes 42 opt-in XTEST input
-sequences. Actual JSON/JUnit and workflow conclusions establish what executed and
-passed on the exact revision; counts are not an equivalence score.
+The matrix contains portable core tests, actual Uno/Linux runtime tests, selected
+Windows runtime tests, metadata comparator tests and namespace migration invariants.
+All earlier suites are retained in the ordered registry. Actual JSON/JUnit and
+workflow conclusions establish what executed and passed on the exact revision;
+counts are not an equivalence score.
 
 Original public probes supply 13 XML layouts, defaults, converter observations, pane
 and guide geometry, navigator client rendering, 32 splitter protocol scenarios and
@@ -90,6 +91,10 @@ protocol, inherited type shapes, protected hooks and attribute contracts. The po
 intentionally provides safe cancellation rather than reproducing unsafe observed
 synthetic behavior. Default navigator rows are not virtualized. Guide half-pane previews
 are not certified against every final constraint-resolved split rectangle.
+
+[Automation and keyboard contracts](accessibility-quality.md) now include guarded
+splitter RangeValue providers and command-aware tab selection/focus. Provider-level
+tests are distinct from out-of-process UIA and screen-reader acceptance.
 
 Further acceptance is required for arbitrary event ordering and templates, custom
 serialization extensions, nested/multi-star sizing, all drag/drop combinations,

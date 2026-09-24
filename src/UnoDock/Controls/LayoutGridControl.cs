@@ -18,12 +18,13 @@ public abstract partial class LayoutGridControl<T> : Grid, ILayoutControl, IRefr
         _group = model ?? throw new ArgumentNullException(nameof(model));
         Loaded += (_, _) =>
         {
+            AttachResizeObservers();
             if (_initialized) return;
             _initialized = true;
             OnInitialized(EventArgs.Empty);
         };
-        Unloaded += (_, _) => CancelResize();
-        SizeChanged += (_, _) => CancelResize();
+        Unloaded += (_, _) => { try { CancelResize(); } finally { DetachResizeObservers(); } };
+        SizeChanged += (_, _) => { CancelResize(); RefreshResizeAutomation(); };
         RegisterPropertyChangedCallback(FlowDirectionProperty, (_, _) => CancelResize());
     }
     /// <summary>Control-local initialization after construction, once per view.</summary>
@@ -42,6 +43,7 @@ public abstract partial class LayoutGridControl<T> : Grid, ILayoutControl, IRefr
         if (!_displayed.SequenceEqual(models, ReferenceEqualityComparer.Instance) || _lastOrientation != Orientation || thickness != _lastThickness)
         {
             CancelResize();
+            DetachResizeObservers();
             foreach (var view in Children.ToArray()) if (view is not LayoutGridResizerControl) VisualParenting.Detach(view);
             Children.Clear(); ColumnDefinitions.Clear(); RowDefinitions.Clear();
             _displayed = models; _lastOrientation = Orientation; _lastThickness = thickness;
@@ -59,13 +61,16 @@ public abstract partial class LayoutGridControl<T> : Grid, ILayoutControl, IRefr
                     resize.ResizePreview += (_, delta) => PreviewResize(resize, delta);
                     resize.ResizeFinished += (_, canceled) => EndResize(resize, canceled);
                     resize.ResizeBy += (_, delta) => ResizeOnce(resize, index, delta);
+                    resize.ReadAutomationRange = () => ReadResizeRange(resize, index);
+                    resize.WriteAutomationValue = value => ResizeToValue(resize, index, value);
                     SetColumn(resize, horizontal ? i * 2 + 1 : 0); SetRow(resize, horizontal ? 0 : i * 2 + 1); Children.Add(resize);
                 }
             }
         }
+        AttachResizeObservers();
         Background = DockChrome.Palette(surface.Manager).Header;
         foreach (var splitter in Children.OfType<LayoutGridResizerControl>())
-            splitter.Background = DockChrome.Palette(surface.Manager).Header;
+            { var palette = DockChrome.Palette(surface.Manager); splitter.Background = palette.Header; splitter.ConfigureAutomation(palette); }
         for (var i = 0; i < models.Length; i++)
         {
             var pos = models[i] as ILayoutPositionableElement;

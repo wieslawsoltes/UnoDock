@@ -67,6 +67,7 @@ public partial class LayoutCachePaneControl
             if (tab.LayoutItem?.ExistingView is { } view)
                 view.Visibility = ReferenceEquals(model, Selector?.SelectedContent) ? Visibility.Visible : Visibility.Collapsed;
         base.OnSelectionChanged(e);
+        QueueSelectionAutomation();
     }
     protected override IEnumerator LogicalChildren => _content.Children.ToArray().GetEnumerator();
     protected void ActivateSelection()

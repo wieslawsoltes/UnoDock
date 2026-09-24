@@ -6,7 +6,7 @@ using Windows.System;
 namespace UnoDock.Controls;
 
 /// <summary>Composes WinUI's sealed Thumb while retaining explicit drag lifetime and cancellation.</summary>
-public class LayoutGridResizerControl : ContentControl
+public partial class LayoutGridResizerControl : ContentControl
 {
     public static readonly DependencyProperty BackgroundWhileDraggingProperty = DependencyProperty.Register(nameof(BackgroundWhileDragging), typeof(Brush), typeof(LayoutGridResizerControl), new PropertyMetadata(null));
     public static readonly DependencyProperty OpacityWhileDraggingProperty = DependencyProperty.Register(nameof(OpacityWhileDragging), typeof(double), typeof(LayoutGridResizerControl), new PropertyMetadata(.5d));
@@ -43,7 +43,7 @@ public class LayoutGridResizerControl : ContentControl
         AutomationProperties.SetName(this, "Resize docked panes");
         _thumb = new Thumb { IsTabStop = false, Template = DockChrome.ThumbTemplate, Background = DockChrome.Transparent,
             HorizontalAlignment = HorizontalAlignment.Stretch, VerticalAlignment = VerticalAlignment.Stretch };
-        var chrome = new Grid(); chrome.Children.Add(_thumb); chrome.Children.Add(_feedback); Content = chrome;
+        var chrome = new Grid(); chrome.Children.Add(_thumb); chrome.Children.Add(_feedback); Content = chrome; InitializeAutomation(chrome);
         _thumb.DragStarted += (_, e) =>
         {
             try { if (_pendingCompletion is { } previous) CompleteNativeDrag(previous); BeginResize(); DragStarted?.Invoke(this, e); }
@@ -104,7 +104,7 @@ public class LayoutGridResizerControl : ContentControl
     internal void BeginResize()
     {
         if (_dragging || _ending || !IsEnabled) return;
-        _generation++; _dragging = true;
+        _generation++; _dragging = true; RefreshAutomation();
         try
         {
             ResizeStarted?.Invoke(this, EventArgs.Empty);
@@ -129,7 +129,7 @@ public class LayoutGridResizerControl : ContentControl
         _dragging = false; _ending = true; _pointer = null; _coordinateSpace = null;
         _feedback.Visibility = Visibility.Collapsed;
         try { ResizeFinished?.Invoke(this, canceled); }
-        finally { _ending = false; }
+        finally { _ending = false; RefreshAutomation(); }
     }
     /// <summary>Abandons the pending preview without changing persisted pane lengths.</summary>
     public void CancelDrag()
@@ -142,6 +142,7 @@ public class LayoutGridResizerControl : ContentControl
         if (!IsEnabled) return false;
         if (key == VirtualKey.Escape && IsDragging) { CancelDrag(); return true; }
         if (IsDragging) return false;
+        if (ResizeBoundaryFromKey(key)) return true;
         var delta = Horizontal ? key switch { VirtualKey.Left => -10, VirtualKey.Right => 10, _ => 0 } :
             key switch { VirtualKey.Up => -10, VirtualKey.Down => 10, _ => 0 };
         if (delta == 0) return false;
