@@ -15,7 +15,7 @@ def replace_once(old, new):
     assert text.count(old) == 1, old
     text = text.replace(old, new)
 replace_once("VERSION = '0.1.0-preview.16'", "VERSION = '0.1.0-preview.19'")
-replace_once("{'restore-ownership.xml', 'mvvm-workspace.xml'}", "{'restore-ownership.xml', 'mvvm-workspace.xml', 'navigator-commit.xml', 'navigator-sample.xml'}")
+replace_once("{'restore-ownership.xml', 'mvvm-workspace.xml'}", "{'restore-ownership.xml', 'mvvm-workspace.xml', 'navigator-commit.xml', 'navigator-sample.xml', 'focus-ownership.xml'}")
 replace_once("root / 'verify-preview16.py'", "root / 'verify-preview19.py'")
 replace_once("    manifest['verified'] = True", """    # No reference/mapping or pre-existing acceptance assertion is relaxed.
     previous = 'ec84d7d5ba6ac4be1829cc8c1c6d5369d7569521'
