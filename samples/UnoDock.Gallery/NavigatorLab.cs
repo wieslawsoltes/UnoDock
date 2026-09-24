@@ -89,7 +89,7 @@ public sealed partial class GalleryPage
             for (var i = 0; i < count; i++) documents.Children.Add(new LayoutDocument
             {
                 ContentId = "navigator-editor:" + i, Title = $"Document {i:D3}.cs", Description = $"Project / Source / Document {i:D3}.cs",
-                Content = new TextBox { Text = $"// Document {i:D3}\n// Edit, switch to another document, then return here.", AcceptsReturn = true, TextWrapping = TextWrapping.Wrap, Padding = new(14) }
+                Content = new TextBox { AcceptsReturn = true, Text = WorkspaceTextProjection.ForEditor($"// Document {i:D3}\n// Edit, switch to another document, then return here."), TextWrapping = TextWrapping.Wrap, Padding = new(14) }
             });
             var tools = new LayoutAnchorablePane { DockWidth = new(200) };
             foreach (var title in new[] { "Solution Explorer", "Properties", "Output" })

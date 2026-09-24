@@ -112,3 +112,12 @@ The Enter/Escape cases establish input focus by an actual native click on the
 navigator's empty border before sending keys. Merely calling Control.Focus sets
 XAML focus but does not establish where a window-manager-free Xvfb display sends
 its hardware input. The click does not hit a row or bypass the keyboard handler.
+
+Sample capture checks now require the activated TextBox to be attached and arranged
+before snapshotting. They verify the retained editor/draft across two custom-command
+activations and actual visible RTL navigator row containers without changing the
+active model. Multiline editing is enabled before assigning CR-projected seed
+text, so native single-line coercion cannot truncate the second comment. The
+regression checks both logical lines and native text representation. This affects
+only sample-owned text, not conversion of a user file. The sample images cover
+settled light, dark and open-RTL states.
