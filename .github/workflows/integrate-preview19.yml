@@ -23,6 +23,15 @@ jobs:
       - name: Apply checked product refactoring
         run: |
           python3 tools/integrate-preview19.py
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('tests/UnoDock.VisualTests/NavigatorCommitTests.cs')
+          text = p.read_text()
+          old = '("hidden target", f => { if (f.Target is LayoutDocument doc) doc.IsVisible = false; else ((LayoutAnchorable)f.Target).Hide(); })'
+          new = '("closed document or hidden tool", f => { if (f.Target is LayoutDocument doc) doc.Close(); else ((LayoutAnchorable)f.Target).Hide(); })'
+          assert text.count(old) == 1
+          p.write_text(text.replace(old, new))
+          PY
           python3 tools/generate-property-adapters.py
           git diff --check
       - name: Build SDK and XAML desktop with warnings as errors
@@ -36,7 +45,7 @@ jobs:
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add src samples Directory.Build.props README.md
+          git add src samples tests Directory.Build.props README.md
           git diff --cached --check
           git commit -m 'fix: fence navigator activation and presentation across application callbacks'
           git push origin HEAD:work/preview19-navigator-ownership
