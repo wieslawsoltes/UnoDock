@@ -1,0 +1,52 @@
+name: Inspect model regression results
+on:
+  push:
+    branches: [work/preview24-format-worker]
+    paths: [.github/workflows/inspect-model-results.yml]
+permissions:
+  actions: read
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 36181042593
+          github-token: ${{ github.token }}
+          name: runtime-test-results
+          path: results/linux
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 36181042593
+          github-token: ${{ github.token }}
+          name: windows-runtime-test-results
+          path: results/windows
+      - name: Report exact failures and terminal native diagnostics
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json, xml.etree.ElementTree as ET
+          for platform in ('linux', 'windows'):
+              root = Path('results') / platform
+              print('PLATFORM', platform)
+              record = json.loads((root / 'isolated-execution.json').read_text())
+              totals = [0, 0, 0]
+              for path in root.glob('*.xml'):
+                  for case in ET.parse(path).getroot().iter('testcase'):
+                      totals[0] += 1
+                      if case.find('failure') is not None or case.find('error') is not None:
+                          totals[1] += 1
+                          print('ASSERTION FAILURE', path.name, case.get('name'), ET.tostring(case, encoding='unicode')[:2500])
+                      if case.find('skipped') is not None: totals[2] += 1
+              print('TOTAL executed/failed/skipped', totals)
+              print('PLANNED', len(record['planned']), 'COMPLETED', len(record['completed']))
+              for item in record['completed']:
+                  if item.get('error'):
+                      print('PROCESS FAILURE', json.dumps(item))
+                      path = root / (item['suite'] + '.log')
+                      if path.exists():
+                          lines = path.read_text(errors='replace').splitlines()
+                          print('\n'.join(lines[-70:]))
+          PY
