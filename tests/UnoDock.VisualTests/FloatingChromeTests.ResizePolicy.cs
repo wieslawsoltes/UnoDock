@@ -343,10 +343,8 @@ internal static partial class FloatingChromeTests
                 var grip = f.Grip(ChromeHit.BottomRight);
                 var down = new Point(grip.ActualWidth / 2, grip.ActualHeight / 2);
                 var ownerPoint = input.OwnerPoint(grip, down, f.Manager);
-                input.MoveTo(grip, down);
-                await Task.Delay(60);
-                input.Press();
-                await Task.Delay(60);
+                await input.PressOn(grip, down);
+                await Wait(() => f.Control.IsResizing);
                 Check.True(f.Control.IsResizing);
                 f.Control.MinWidth = 200;
                 Check.False(f.Control.IsResizing);

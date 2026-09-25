@@ -131,6 +131,16 @@ public partial class LayoutGridResizerControl : ContentControl
             var point = e.GetCurrentPoint(_coordinateSpace).Position;
             UpdateResize(Horizontal ? point.X - _origin.X : point.Y - _origin.Y);
         }), true);
+        // A captured Thumb is not guaranteed to raise DragCompleted when a
+        // host revokes its pointer capture. Handle the routed loss directly.
+        // Ordinary button-up loss is left to the existing release fence.
+        _thumb.AddHandler(PointerCaptureLostEvent, new PointerEventHandler((_, e) =>
+        {
+            if (_dragging && _pointer == e.Pointer.PointerId && e.GetCurrentPoint(_thumb).Properties.IsLeftButtonPressed)
+            {
+                CancelDrag();
+            }
+        }), true);
         Unloaded += (_, _) => CancelDrag();
         IsEnabledChanged += (_, _) =>
         {

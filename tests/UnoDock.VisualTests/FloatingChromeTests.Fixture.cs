@@ -172,6 +172,13 @@ internal static partial class FloatingChromeTests
 
         internal async Task Click(FrameworkElement e)
         {
+            await PressOn(e);
+            await Task.Delay(50);
+            Release();
+        }
+
+        internal async Task PressOn(FrameworkElement e, Point? point = null)
+        {
             // Presenter state can precede both WM configure and XAML arrange.
             // Wait for an actual full-size custom client and stable button screen
             // geometry BEFORE injecting exactly one click. Never retry input.
@@ -184,7 +191,7 @@ internal static partial class FloatingChromeTests
             {
                 var bounds = FloatingChromeProbe.Bounds(window);
                 var scale = client.XamlRoot!.RasterizationScale;
-                var local = new Point(e.ActualWidth / 2, e.ActualHeight / 2);
+                var local = point ?? new Point(e.ActualWidth / 2, e.ActualHeight / 2);
                 var screen = ScreenPoint(e, local);
                 var arranged = e.IsLoaded && e.ActualWidth > 0 && e.ActualHeight > 0 && Math.Abs(client.ActualWidth * scale - bounds.Width) <= 1 && Math.Abs(client.ActualHeight * scale - bounds.Height) <= 1;
                 stable = arranged && previous == screen && previousBounds == bounds ? stable + 1 : 0;
@@ -197,8 +204,6 @@ internal static partial class FloatingChromeTests
                     if (ScreenPoint(e, local) == screen && FloatingChromeProbe.Bounds(window) == bounds)
                     {
                         Press();
-                        await Task.Delay(50);
-                        Release();
                         return;
                     }
 

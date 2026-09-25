@@ -604,8 +604,23 @@ public static class DockGuideTests
                 }
 
                 var native = dock.FloatingWindows.Single(w => w.NativeWindow != null);
-                await Task.Delay(100);
-                native.UpdateLayout();
+                native.NativeWindow!.Activate();
+                Rect? previous = null;
+                var stable = 0;
+                while (stable < 3)
+                {
+                    if (DateTime.UtcNow >= deadline)
+                        throw new TimeoutException("Native guide frame did not finish arranging.");
+                    native.UpdateLayout();
+                    var frame = FloatingChromeProbe.Bounds(native.NativeWindow!);
+                    var scale = native.XamlRoot!.RasterizationScale;
+                    var arranged = native.IsLoaded && native.NativeWindow!.AppWindow.IsVisible && Math.Abs(native.ActualWidth * scale - frame.Width) <= 1 && Math.Abs(native.ActualHeight * scale - frame.Height) <= 1 && native.FindVisualChildren<LayoutAnchorablePaneControl>().Any(pane => pane.IsLoaded && pane.ActualWidth > 0 && pane.ActualHeight > 0);
+                    var current = new Rect(frame.X, frame.Y, frame.Width, frame.Height);
+                    stable = arranged && previous == current ? stable + 1 : 0;
+                    previous = current;
+                    await Task.Delay(25);
+                }
+
                 await action(source, target, native, coordinates);
             }
             finally
