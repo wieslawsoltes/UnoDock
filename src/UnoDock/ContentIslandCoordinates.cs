@@ -4,9 +4,12 @@ public sealed class ContentIslandCoordinates : ICrossWindowCoordinates
 {
     public Point Translate(FrameworkElement source, Point sourcePoint, FrameworkElement destination)
     {
-        ArgumentNullException.ThrowIfNull(source); ArgumentNullException.ThrowIfNull(destination);
-        if (source.XamlRoot == null || destination.XamlRoot == null) throw new InvalidOperationException("Both visual roots must be loaded.");
-        if (ReferenceEquals(source.XamlRoot, destination.XamlRoot)) return source.TransformToVisual(destination).TransformPoint(sourcePoint);
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(destination);
+        if (source.XamlRoot == null || destination.XamlRoot == null)
+            throw new InvalidOperationException("Both visual roots must be loaded.");
+        if (ReferenceEquals(source.XamlRoot, destination.XamlRoot))
+            return source.TransformToVisual(destination).TransformPoint(sourcePoint);
 #if WINDOWS
         var from = Microsoft.UI.Content.ContentCoordinateConverter.CreateForWindowId(source.XamlRoot.ContentIslandEnvironment.AppWindowId);
         var to = Microsoft.UI.Content.ContentCoordinateConverter.CreateForWindowId(destination.XamlRoot.ContentIslandEnvironment.AppWindowId);

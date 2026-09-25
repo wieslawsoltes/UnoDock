@@ -18,6 +18,10 @@ internal sealed class LocalWorkspaceStorage : IWorkspaceStorage
             await temporary.RenameAsync(contentId + ".txt", NameCollisionOption.ReplaceExisting);
             temporary = null;
         }
-        finally { if (temporary != null) await temporary.DeleteAsync(); }
+        finally
+        {
+            if (temporary != null)
+                await temporary.DeleteAsync();
+        }
     }
 }

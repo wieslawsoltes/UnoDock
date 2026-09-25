@@ -4,7 +4,6 @@ using Microsoft.UI.Xaml.Automation.Provider;
 using UnoDock.Layout;
 
 namespace UnoDock.Controls;
-
 public sealed class LayoutTabAutomationPeer(LayoutTabItemBase owner) : FrameworkElementAutomationPeer(owner), ISelectionItemProvider, IInvokeProvider
 {
     private string? _lastName = Explicit(AutomationProperties.GetName(owner), owner.Model?.Title ?? "");
@@ -22,24 +21,28 @@ public sealed class LayoutTabAutomationPeer(LayoutTabItemBase owner) : Framework
     protected override bool HasKeyboardFocusCore() => owner.AutomationHasFocus;
     protected override void SetFocusCore()
     {
-        if (!owner.FocusFromAutomation()) throw new InvalidOperationException("The tab cannot receive keyboard focus.");
+        if (!owner.FocusFromAutomation())
+            throw new InvalidOperationException("The tab cannot receive keyboard focus.");
     }
+
     public bool IsSelected => owner.AutomationModel is { IsSelected: true, Parent: ILayoutContentSelector selector } model && ReferenceEquals(selector.SelectedContent, model);
-    public IRawElementProviderSimple? SelectionContainer => owner.AutomationModel != null && owner.FindVisualAncestor<LayoutCachePaneControl>() is { } pane &&
-        CreatePeerForElement(pane) is { } peer ? ProviderFromPeer(peer) : null;
+    public IRawElementProviderSimple? SelectionContainer => owner.AutomationModel != null && owner.FindVisualAncestor<LayoutCachePaneControl>()is { } pane && CreatePeerForElement(pane)is { } peer ? ProviderFromPeer(peer) : null;
+
     public void Select()
     {
         if (!owner.AutomationEnabled || owner.AutomationModel is not { } model || owner.LayoutItem is not { } item)
             throw new InvalidOperationException("The tab is not enabled or no longer belongs to its workspace.");
         var command = item.ActivateCommand;
-        if (command?.CanExecute(null) != true) throw new InvalidOperationException("The tab activation command is disabled.");
+        if (command?.CanExecute(null) != true)
+            throw new InvalidOperationException("The tab activation command is disabled.");
         // CanExecute is application code: it may replace the root, transfer the
         // model, change the command, disable the tab or dispose the manager.
-        if (!ReferenceEquals(owner.AutomationModel, model) || !owner.AutomationEnabled || !ReferenceEquals(item, owner.LayoutItem) ||
-            !ReferenceEquals(item.ActivateCommand, command)) throw new InvalidOperationException("Tab ownership changed during activation validation.");
+        if (!ReferenceEquals(owner.AutomationModel, model) || !owner.AutomationEnabled || !ReferenceEquals(item, owner.LayoutItem) || !ReferenceEquals(item.ActivateCommand, command))
+            throw new InvalidOperationException("Tab ownership changed during activation validation.");
         command.Execute(null);
         owner.QueueAutomationRefresh();
     }
+
     public void AddToSelection()
     {
         if (owner.AutomationModel is not { Parent: ILayoutContentSelector selector } model)
@@ -48,23 +51,37 @@ public sealed class LayoutTabAutomationPeer(LayoutTabItemBase owner) : Framework
             throw new InvalidOperationException("A docking pane does not support multiple selection. Use Select to replace it.");
         Select();
     }
+
     public void RemoveFromSelection()
     {
-        if (owner.AutomationModel == null) throw new InvalidOperationException("The tab is no longer selectable.");
-        if (IsSelected) throw new InvalidOperationException("A nonempty docking pane requires one selected tab.");
+        if (owner.AutomationModel == null)
+            throw new InvalidOperationException("The tab is no longer selectable.");
+        if (IsSelected)
+            throw new InvalidOperationException("A nonempty docking pane requires one selected tab.");
     }
+
     public void Invoke()
     {
         Select();
-        if (owner.AutomationEnabled && IsSelected) RaiseAutomationEvent(AutomationEvents.InvokePatternOnInvoked);
+        if (owner.AutomationEnabled && IsSelected)
+            RaiseAutomationEvent(AutomationEvents.InvokePatternOnInvoked);
     }
+
     internal void Synchronize()
     {
-        var name = GetNameCore(); var selected = IsSelected; var enabled = IsEnabledCore();
-        var oldName = _lastName; var oldSelected = _lastSelected; var oldEnabled = _lastEnabled;
-        _lastName = name; _lastSelected = selected; _lastEnabled = enabled;
-        if (oldName != null && oldName != name) RaisePropertyChangedEvent(AutomationElementIdentifiers.NameProperty, oldName, name);
-        if (oldEnabled is { } enabledBefore && enabledBefore != enabled) RaisePropertyChangedEvent(AutomationElementIdentifiers.IsEnabledProperty, enabledBefore, enabled);
+        var name = GetNameCore();
+        var selected = IsSelected;
+        var enabled = IsEnabledCore();
+        var oldName = _lastName;
+        var oldSelected = _lastSelected;
+        var oldEnabled = _lastEnabled;
+        _lastName = name;
+        _lastSelected = selected;
+        _lastEnabled = enabled;
+        if (oldName != null && oldName != name)
+            RaisePropertyChangedEvent(AutomationElementIdentifiers.NameProperty, oldName, name);
+        if (oldEnabled is { } enabledBefore && enabledBefore != enabled)
+            RaisePropertyChangedEvent(AutomationElementIdentifiers.IsEnabledProperty, enabledBefore, enabled);
         if (oldSelected is { } selectedBefore && selectedBefore != selected)
         {
             RaisePropertyChangedEvent(SelectionItemPatternIdentifiers.IsSelectedProperty, selectedBefore, selected);

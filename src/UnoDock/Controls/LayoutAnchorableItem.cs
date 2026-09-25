@@ -3,15 +3,19 @@ using UnoDock.Internal;
 using UnoDock.Layout;
 
 namespace UnoDock.Controls;
-
-    #if WINDOWS
-    #else
-    #endif
+#if WINDOWS
+#else
+#endif
 public partial class LayoutAnchorableItem : LayoutItem
 {
     protected override void Close() => LayoutElement.Close();
     protected override bool CanExecuteDockAsDocumentCommand() => LayoutElement is LayoutAnchorable { CanDockAsTabbedDocument: true } && base.CanExecuteDockAsDocumentCommand();
-    protected override void SetDefaultBindings() { base.SetDefaultBindings(); BindDefault(CanHideProperty, nameof(LayoutAnchorable.CanHide)); }
+    protected override void SetDefaultBindings()
+    {
+        base.SetDefaultBindings();
+        BindDefault(CanHideProperty, nameof(LayoutAnchorable.CanHide));
+    }
+
     protected override void ClearDefaultBindings() => base.ClearDefaultBindings();
     protected override void InitDefaultCommands()
     {
@@ -20,6 +24,11 @@ public partial class LayoutAnchorableItem : LayoutItem
         CommandDefault(AutoHideCommandProperty, () => ((LayoutAnchorable)LayoutElement).ToggleAutoHide(), () => LayoutElement is LayoutAnchorable { CanAutoHide: true } && LayoutElement.Parent is LayoutAnchorablePane or LayoutAnchorGroup);
         CommandDefault(DockCommandProperty, () => LayoutElement.Dock(), () => LayoutElement.IsFloating || LayoutElement.Parent is LayoutDocumentPane);
     }
+
     protected override void ClearDefaultCommands() => base.ClearDefaultCommands();
-    protected override void OnVisibilityChanged() { if (LayoutElement is LayoutAnchorable a) a.IsVisible = Visibility == Visibility.Visible; }
+    protected override void OnVisibilityChanged()
+    {
+        if (LayoutElement is LayoutAnchorable a)
+            a.IsVisible = Visibility == Visibility.Visible;
+    }
 }

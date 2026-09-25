@@ -7,4 +7,9 @@ using Windows.System;
 using PathShape = Microsoft.UI.Xaml.Shapes.Path;
 
 namespace UnoDock.Gallery;
-internal enum SampleTheme { Generic, Light, Dark }
+internal enum SampleTheme
+{
+    Generic,
+    Light,
+    Dark
+}

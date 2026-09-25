@@ -8,5 +8,6 @@ public class OverlayWindowDropTarget
     public DockDropPlan Plan { get; }
     public Rect DetectionRect => Plan.PreviewRect;
     public DropTargetType Type => Plan.Type;
+
     public bool Drop() => Plan.Execute();
 }

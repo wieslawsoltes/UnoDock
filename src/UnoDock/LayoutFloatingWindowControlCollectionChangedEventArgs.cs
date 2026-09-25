@@ -6,8 +6,9 @@ using UnoDock.Themes;
 
 namespace UnoDock;
 public class LayoutFloatingWindowControlCollectionChangedEventArgs(NotifyCollectionChangedEventArgs collectionChangedEventArgs) : EventArgs
-{ public NotifyCollectionChangedEventArgs CollectionChangedEventArgs { get; private set; } = collectionChangedEventArgs; }
-
-    #if WINDOWS
-    #else
-    #endif
+{
+    public NotifyCollectionChangedEventArgs CollectionChangedEventArgs { get; private set; } = collectionChangedEventArgs;
+}
+#if WINDOWS
+#else
+#endif

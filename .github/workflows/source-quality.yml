@@ -17,11 +17,13 @@ jobs:
           dotnet-version: '10.0.x'
       - name: Require one handwritten top-level type per file
         run: dotnet run --project tools/SourceMaintenance -c Release -- --check .
-      - name: Test the actual source organizer against adversarial fixtures
-        run: python3 tests/metadata/test_source_maintenance.py
-      - name: Require the checked-in EditorConfig formatting
-        run: dotnet format whitespace . --folder --include src samples tests tools --exclude tools/ReferenceProbe --verify-no-changes --verbosity minimal
-      - name: Keep generated adapters and compatibility baselines deterministic
+      - name: Test source organization and formatting fixtures
+        run: |
+          python3 tests/metadata/test_source_maintenance.py
+          python3 tests/metadata/test_source_formatting.py
+      - name: Require expanded and token-preserving source formatting
+        run: dotnet run --project tools/SourceMaintenance -c Release -- --check-format .
+      - name: Preserve generated adapters and compatibility baselines
         run: |
           python3 tools/generate-property-adapters.py
           git diff --exit-code -- src/

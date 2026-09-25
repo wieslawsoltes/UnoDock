@@ -5,8 +5,10 @@ using UnoDock.Layout;
 using UnoDock.Themes;
 
 namespace UnoDock;
-public class DocumentClosingEventArgs(LayoutDocument document) : CancelEventArgs { public LayoutDocument Document { get; private set; } = document; }
-
-    #if WINDOWS
-    #else
-    #endif
+public class DocumentClosingEventArgs(LayoutDocument document) : CancelEventArgs
+{
+    public LayoutDocument Document { get; private set; } = document;
+}
+#if WINDOWS
+#else
+#endif

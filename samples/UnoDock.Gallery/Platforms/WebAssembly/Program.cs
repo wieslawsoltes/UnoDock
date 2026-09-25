@@ -1,4 +1,5 @@
 using Uno.UI.Hosting;
+
 namespace UnoDock.Gallery;
 public static class Program
 {

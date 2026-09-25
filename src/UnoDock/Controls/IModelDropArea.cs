@@ -5,5 +5,6 @@ namespace UnoDock.Controls;
 internal interface IModelDropArea : IDropArea
 {
     ILayoutElement? Model { get; }
+
     DockingManager? Manager { get; }
 }

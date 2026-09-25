@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Resources;
+
 namespace UnoDock.Properties;
 /// <summary>Independent English fallback strings. Applications can replace values in Translations by culture name.</summary>
 public class Resources
@@ -7,6 +8,7 @@ public class Resources
     public static CultureInfo? Culture { get; set; }
     public static ResourceManager ResourceManager { get; } = new StringResources();
     public static IDictionary<string, IDictionary<string, string>> Translations { get; } = new Dictionary<string, IDictionary<string, string>>(StringComparer.OrdinalIgnoreCase);
+
     private static readonly Dictionary<string, string> English = new()
     {
         ["Anchorable_AutoHide"] = "Auto Hide",
@@ -52,6 +54,7 @@ public class Resources
     public static string Document_NewVerticalTabGroup => ResourceManager.GetString(nameof(Document_NewVerticalTabGroup), Culture)!;
     public static string Window_Maximize => ResourceManager.GetString(nameof(Window_Maximize), Culture)!;
     public static string Window_Restore => ResourceManager.GetString(nameof(Window_Restore), Culture)!;
+
     private sealed class StringResources : ResourceManager
     {
         public override string? GetString(string name, CultureInfo? culture)
@@ -59,11 +62,14 @@ public class Resources
             var current = culture ?? CultureInfo.CurrentUICulture;
             while (!Equals(current, CultureInfo.InvariantCulture))
             {
-                if (Translations.TryGetValue(current.Name, out var strings) && strings.TryGetValue(name, out var text)) return text;
+                if (Translations.TryGetValue(current.Name, out var strings) && strings.TryGetValue(name, out var text))
+                    return text;
                 current = current.Parent;
             }
+
             return English.GetValueOrDefault(name);
         }
+
         public override string? GetString(string name) => GetString(name, Culture);
     }
 }

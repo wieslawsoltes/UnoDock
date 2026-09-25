@@ -3,7 +3,6 @@ using System.Xml.Schema;
 using System.Xml.Serialization;
 
 namespace UnoDock.Layout;
-
 [ContentProperty(Name = nameof(Content))]
 public abstract partial class LayoutContent : LayoutElement, IComparable<LayoutContent>, IXmlSerializable, ILayoutPreviousContainer
 {
@@ -16,8 +15,9 @@ public abstract partial class LayoutContent : LayoutElement, IComparable<LayoutC
     private DateTime? _activated;
     private ILayoutContainer? _previous;
     private int _previousIndex = -1;
-    public string? Title { get => (string?)GetValue(TitleProperty); set => SetValue(TitleProperty, value); }
-    public string? ContentId { get => (string?)GetValue(ContentIdProperty); set => SetValue(ContentIdProperty, value); }
+    public string? Title { get => (string? )GetValue(TitleProperty); set => SetValue(TitleProperty, value); }
+    public string? ContentId { get => (string? )GetValue(ContentIdProperty); set => SetValue(ContentIdProperty, value); }
+
     [System.Xml.Serialization.XmlIgnore]
     public object? Content { get => _content; set => Set(ref _content, value); }
     public object? ToolTip { get => _toolTip; set => Set(ref _toolTip, value); }
@@ -33,51 +33,89 @@ public abstract partial class LayoutContent : LayoutElement, IComparable<LayoutC
     public double FloatingTop { get => _top; set => Set(ref _top, LayoutPositionableGroup<LayoutContent>.Coordinate(value)); }
     public double FloatingWidth { get => _width; set => Set(ref _width, LayoutPositionableGroup<LayoutContent>.Dimension(value)); }
     public double FloatingHeight { get => _height; set => Set(ref _height, LayoutPositionableGroup<LayoutContent>.Dimension(value)); }
-    public ILayoutContainer? PreviousContainer { get => _previous; protected set { if (Set(ref _previous, value)) PreviousContainerId = (value as LayoutElement)?.SerializationId; } }
+
+    public ILayoutContainer? PreviousContainer
+    {
+        get => _previous;
+        protected set
+        {
+            if (Set(ref _previous, value))
+                PreviousContainerId = (value as LayoutElement)?.SerializationId;
+        }
+    }
+
     public string? PreviousContainerId { get; protected set; }
+
     [System.Xml.Serialization.XmlIgnore]
     public int PreviousContainerIndex { get => _previousIndex; set => Set(ref _previousIndex, value); }
+
     internal void SetPrevious(ILayoutContainer? container, int index, string? id = null)
-    { PreviousContainer = container; PreviousContainerIndex = index; if (id != null) PreviousContainerId = id; }
+    {
+        PreviousContainer = container;
+        PreviousContainerIndex = index;
+        if (id != null)
+            PreviousContainerId = id;
+    }
+
     internal void RememberDockPosition()
     {
         if (Parent is ILayoutGroup group && !IsFloating && Parent is not LayoutAnchorGroup)
             SetPrevious(group, group.IndexOfChild(this));
     }
+
     [System.Xml.Serialization.XmlIgnore]
     public bool IsActive
     {
         get => _active;
         set
         {
-            if (value && !IsEnabled) return;
+            if (value && !IsEnabled)
+                return;
             if (Root is LayoutRoot root)
             {
-                if (value) { if (this is LayoutAnchorable { IsHidden: true } a) a.Show(); root.ActiveContent = this; }
-                else if (ReferenceEquals(root.ActiveContent, this)) root.ActiveContent = null;
-                else SetActive(false);
+                if (value)
+                {
+                    if (this is LayoutAnchorable { IsHidden: true } a)
+                        a.Show();
+                    root.ActiveContent = this;
+                }
+                else if (ReferenceEquals(root.ActiveContent, this))
+                    root.ActiveContent = null;
+                else
+                    SetActive(false);
             }
-            else SetActive(value);
+            else
+                SetActive(value);
         }
     }
+
     public bool IsSelected
     {
         get => _selected;
         set
         {
             var old = _selected;
-            if (!Set(ref _selected, value)) return;
+            if (!Set(ref _selected, value))
+                return;
             if (value && Parent is ILayoutContentSelector selector && !ReferenceEquals(selector.SelectedContent, this))
                 selector.SelectedContentIndex = selector.IndexOf(this);
-            OnIsSelectedChanged(old, value); IsSelectedChanged?.Invoke(this, EventArgs.Empty);
+            OnIsSelectedChanged(old, value);
+            IsSelectedChanged?.Invoke(this, EventArgs.Empty);
         }
     }
+
     public event EventHandler? IsActiveChanged;
     public event EventHandler? IsSelectedChanged;
     public event EventHandler<CancelEventArgs>? Closing;
     public event EventHandler? Closed;
-    protected virtual void OnIsActiveChanged(bool oldValue, bool newValue) { }
-    protected virtual void OnIsSelectedChanged(bool oldValue, bool newValue) { }
+    protected virtual void OnIsActiveChanged(bool oldValue, bool newValue)
+    {
+    }
+
+    protected virtual void OnIsSelectedChanged(bool oldValue, bool newValue)
+    {
+    }
+
     protected virtual void OnClosing(CancelEventArgs args) => Closing?.Invoke(this, args);
     protected virtual void OnClosed() => Closed?.Invoke(this, EventArgs.Empty);
     protected override void OnParentChanging(ILayoutContainer? oldValue, ILayoutContainer? newValue) => base.OnParentChanging(oldValue, newValue);
@@ -85,27 +123,47 @@ public abstract partial class LayoutContent : LayoutElement, IComparable<LayoutC
     internal virtual void RefreshPlacement() => IsFloating = this.FindParent<LayoutFloatingWindow>() != null;
     public abstract void Close();
     private bool _operationInProgress;
-    protected bool TryBeginOperation() { if (_operationInProgress) return false; _operationInProgress = true; return true; }
+    protected bool TryBeginOperation()
+    {
+        if (_operationInProgress)
+            return false;
+        _operationInProgress = true;
+        return true;
+    }
+
     protected void EndOperation() => _operationInProgress = false;
     protected bool CloseCore()
     {
-        if (!CanClose || Parent == null || !TryBeginOperation()) return false;
+        if (!CanClose || Parent == null || !TryBeginOperation())
+            return false;
         try
         {
-            var parent = Parent; var root = Root as LayoutRoot; var manager = root?.Manager;
-            bool Valid() => CanClose && ReferenceEquals(Parent, parent) && ReferenceEquals(Root, root) &&
-                (manager == null || ReferenceEquals(manager.Layout, root));
-            var args = new CancelEventArgs(); OnClosing(args);
-            if (args.Cancel || !Valid()) return false;
-            if (this is LayoutDocument document && manager?.RaiseDocumentClosing(document) == true) return false;
-            if (!Valid()) return false;
+            var parent = Parent;
+            var root = Root as LayoutRoot;
+            var manager = root?.Manager;
+            bool Valid() => CanClose && ReferenceEquals(Parent, parent) && ReferenceEquals(Root, root) && (manager == null || ReferenceEquals(manager.Layout, root));
+            var args = new CancelEventArgs();
+            OnClosing(args);
+            if (args.Cancel || !Valid())
+                return false;
+            if (this is LayoutDocument document && manager?.RaiseDocumentClosing(document) == true)
+                return false;
+            if (!Valid())
+                return false;
             using var batch = root?.BeginUpdate();
-            parent.RemoveChild(this); IsSelected = false; SetActive(false);
-            root?.CollectGarbage(); OnClosed();
-            if (this is LayoutDocument closed) manager?.RaiseDocumentClosed(closed);
+            parent.RemoveChild(this);
+            IsSelected = false;
+            SetActive(false);
+            root?.CollectGarbage();
+            OnClosed();
+            if (this is LayoutDocument closed)
+                manager?.RaiseDocumentClosed(closed);
             return true;
         }
-        finally { EndOperation(); }
+        finally
+        {
+            EndOperation();
+        }
     }
 
     public void Float() => DockOperations.Float(this);

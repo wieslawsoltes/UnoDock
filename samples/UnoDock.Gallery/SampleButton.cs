@@ -10,23 +10,60 @@ internal sealed class SampleButton : Button
     private bool _hover, _pressed;
     internal SampleButton()
     {
-        FontSize = 12; MinHeight = 0; MinWidth = 0; Padding = new(2); BorderThickness = new(1); CornerRadius = new(0);
-        HorizontalContentAlignment = HorizontalAlignment.Center; VerticalContentAlignment = VerticalAlignment.Center;
+        FontSize = 12;
+        MinHeight = 0;
+        MinWidth = 0;
+        Padding = new(2);
+        BorderThickness = new(1);
+        CornerRadius = new(0);
+        HorizontalContentAlignment = HorizontalAlignment.Center;
+        VerticalContentAlignment = VerticalAlignment.Center;
         Template = (ControlTemplate)XamlReader.Load("<ControlTemplate xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation'><Border Background='{TemplateBinding Background}' BorderBrush='{TemplateBinding BorderBrush}' BorderThickness='{TemplateBinding BorderThickness}'><ContentPresenter Content='{TemplateBinding Content}' Foreground='{TemplateBinding Foreground}' Padding='{TemplateBinding Padding}' HorizontalContentAlignment='{TemplateBinding HorizontalContentAlignment}' VerticalContentAlignment='{TemplateBinding VerticalContentAlignment}'/></Border></ControlTemplate>");
-        PointerEntered += (_, _) => { _hover = true; Paint(); }; PointerExited += (_, _) => { _hover = false; Paint(); };
-        AddHandler(PointerPressedEvent, new PointerEventHandler((_, _) => { _pressed = true; Paint(); }), true);
-        AddHandler(PointerReleasedEvent, new PointerEventHandler((_, _) => { _pressed = false; Paint(); }), true);
-        PointerCaptureLost += (_, _) => { _pressed = false; Paint(); };
-        Unloaded += (_, _) => { _hover = _pressed = false; Paint(); };
-        IsEnabledChanged += (_, _) => Paint(); GotFocus += (_, _) => Paint(); LostFocus += (_, _) => Paint();
+        PointerEntered += (_, _) =>
+        {
+            _hover = true;
+            Paint();
+        };
+        PointerExited += (_, _) =>
+        {
+            _hover = false;
+            Paint();
+        };
+        AddHandler(PointerPressedEvent, new PointerEventHandler((_, _) =>
+        {
+            _pressed = true;
+            Paint();
+        }), true);
+        AddHandler(PointerReleasedEvent, new PointerEventHandler((_, _) =>
+        {
+            _pressed = false;
+            Paint();
+        }), true);
+        PointerCaptureLost += (_, _) =>
+        {
+            _pressed = false;
+            Paint();
+        };
+        Unloaded += (_, _) =>
+        {
+            _hover = _pressed = false;
+            Paint();
+        };
+        IsEnabledChanged += (_, _) => Paint();
+        GotFocus += (_, _) => Paint();
+        LostFocus += (_, _) => Paint();
         Configure(_palette);
     }
+
     internal void Configure(SamplePalette palette)
     {
-        _palette = palette; Foreground = palette.Foreground;
-        if (Content is PathShape path) path.Stroke = palette.Foreground;
+        _palette = palette;
+        Foreground = palette.Foreground;
+        if (Content is PathShape path)
+            path.Stroke = palette.Foreground;
         Paint();
     }
+
     private void Paint()
     {
         Background = IsEnabled && _hover ? _pressed ? _palette.Pressed : _palette.Hover : new SolidColorBrush(Microsoft.UI.Colors.Transparent);

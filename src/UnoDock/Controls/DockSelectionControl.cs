@@ -3,7 +3,6 @@ using Microsoft.UI.Xaml.Input;
 using UnoDock.Compatibility;
 
 namespace UnoDock.Controls;
-
 /// <summary>Selection event extension for the independent cached tab host.</summary>
 public abstract class DockSelectionControl : DockInputControl
 {

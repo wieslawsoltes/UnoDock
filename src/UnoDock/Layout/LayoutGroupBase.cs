@@ -3,7 +3,6 @@ using System.Xml.Schema;
 using System.Xml.Serialization;
 
 namespace UnoDock.Layout;
-
 public abstract class LayoutGroupBase : LayoutElement
 {
     public event EventHandler? ChildrenCollectionChanged;
@@ -13,7 +12,8 @@ public abstract class LayoutGroupBase : LayoutElement
     protected void NotifyChildrenTreeChanged(ChildrenTreeChange change)
     {
         OnChildrenTreeChanged(change);
-        if (Parent is LayoutGroupBase group) group.NotifyChildrenTreeChanged(ChildrenTreeChange.TreeChanged);
+        if (Parent is LayoutGroupBase group)
+            group.NotifyChildrenTreeChanged(ChildrenTreeChange.TreeChanged);
         (Root as LayoutRoot)?.Invalidate();
     }
 }

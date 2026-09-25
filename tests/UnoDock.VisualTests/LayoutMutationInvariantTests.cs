@@ -3,15 +3,34 @@ using System.ComponentModel;
 using UnoDock.Layout;
 
 namespace UnoDock.Testing;
-
 internal static class LayoutMutationInvariantTests
 {
     internal static Task<int> Run(string output)
     {
         var tests = new TestRunner();
-        foreach (var operation in new[] { "insert", "remove", "replace", "clear", "move", "transfer", "slot" })
+        foreach (var operation in new[]
         {
-            foreach (var phase in new[] { "changing", "parent", "collection", "owner", "root" })
+            "insert",
+            "remove",
+            "replace",
+            "clear",
+            "move",
+            "transfer",
+            "slot"
+        }
+
+        )
+        {
+            foreach (var phase in new[]
+            {
+                "changing",
+                "parent",
+                "collection",
+                "owner",
+                "root"
+            }
+
+            )
             {
                 if (operation == "move" && phase is "changing" or "parent")
                 {
@@ -25,23 +44,45 @@ internal static class LayoutMutationInvariantTests
 
                 tests.Test($"ownership: {operation}/{phase} exception preserves both directions", () =>
                 {
-                    var first = new LayoutDocument { Title = "First" };
-                    var second = new LayoutDocument { Title = "Second" };
-                    var incoming = new LayoutDocument { Title = "Incoming" };
+                    var first = new LayoutDocument
+                    {
+                        Title = "First"
+                    };
+                    var second = new LayoutDocument
+                    {
+                        Title = "Second"
+                    };
+                    var incoming = new LayoutDocument
+                    {
+                        Title = "Incoming"
+                    };
                     var source = new LayoutDocumentPane(first);
                     source.Children.Add(second);
                     var destination = new LayoutDocumentPane();
                     var floating = new LayoutDocumentFloatingWindow();
                     var panel = new LayoutPanel(source);
                     panel.Children.Add(destination);
-                    var root = new LayoutRoot { RootPanel = panel };
+                    var root = new LayoutRoot
+                    {
+                        RootPanel = panel
+                    };
                     root.FloatingWindows.Add(floating);
                     if (operation == "slot")
                     {
                         floating.RootDocument = incoming;
                     }
 
-                    var nodes = new LayoutElement[] { root, panel, source, destination, floating, first, second, incoming };
+                    var nodes = new LayoutElement[]
+                    {
+                        root,
+                        panel,
+                        source,
+                        destination,
+                        floating,
+                        first,
+                        second,
+                        incoming
+                    };
                     var failure = new InvalidOperationException("observer failure: " + phase);
                     var thrown = false;
                     void Fail()
@@ -54,36 +95,66 @@ internal static class LayoutMutationInvariantTests
                         }
                     }
 
-                    PropertyChangingEventHandler changing = (_, args) => { if (args.PropertyName == "Parent") Fail(); };
-                    PropertyChangedEventHandler parent = (_, args) => { if (args.PropertyName == "Parent") Fail(); };
+                    PropertyChangingEventHandler changing = (_, args) =>
+                    {
+                        if (args.PropertyName == "Parent")
+                            Fail();
+                    };
+                    PropertyChangedEventHandler parent = (_, args) =>
+                    {
+                        if (args.PropertyName == "Parent")
+                            Fail();
+                    };
                     NotifyCollectionChangedEventHandler collection = (_, _) => Fail();
                     PropertyChangedEventHandler owner = (_, args) =>
                     {
-                        if (args.PropertyName is "ChildrenCount" or "RootDocument") Fail();
+                        if (args.PropertyName is "ChildrenCount" or "RootDocument")
+                            Fail();
                     };
                     EventHandler updated = (_, _) => Fail();
-                    if (phase == "changing") foreach (var node in nodes) node.PropertyChanging += changing;
-                    if (phase == "parent") foreach (var node in nodes) node.PropertyChanged += parent;
+                    if (phase == "changing")
+                        foreach (var node in nodes)
+                            node.PropertyChanging += changing;
+                    if (phase == "parent")
+                        foreach (var node in nodes)
+                            node.PropertyChanged += parent;
                     if (phase == "collection")
                     {
                         source.Children.CollectionChanged += collection;
                         destination.Children.CollectionChanged += collection;
                     }
 
-                    if (phase == "owner") foreach (var node in nodes) node.PropertyChanged += owner;
-                    if (phase == "root") root.Updated += updated;
+                    if (phase == "owner")
+                        foreach (var node in nodes)
+                            node.PropertyChanged += owner;
+                    if (phase == "root")
+                        root.Updated += updated;
                     Exception? observed = null;
                     try
                     {
                         switch (operation)
                         {
-                            case "insert": source.Children.Add(incoming); break;
-                            case "remove": source.Children.Remove(first); break;
-                            case "replace": source.Children[0] = incoming; break;
-                            case "clear": source.Children.Clear(); break;
-                            case "move": source.Children.Move(0, 1); break;
-                            case "transfer": destination.Children.Add(first); break;
-                            default: floating.RootDocument = first; break;
+                            case "insert":
+                                source.Children.Add(incoming);
+                                break;
+                            case "remove":
+                                source.Children.Remove(first);
+                                break;
+                            case "replace":
+                                source.Children[0] = incoming;
+                                break;
+                            case "clear":
+                                source.Children.Clear();
+                                break;
+                            case "move":
+                                source.Children.Move(0, 1);
+                                break;
+                            case "transfer":
+                                destination.Children.Add(first);
+                                break;
+                            default:
+                                floating.RootDocument = first;
+                                break;
                         }
                     }
                     catch (Exception error)
@@ -108,7 +179,10 @@ internal static class LayoutMutationInvariantTests
                     Check.True(Contains(observed, failure), "The original observer exception was lost.");
                     AssertOwnership(nodes);
                     // Failure must not poison notification depth or a later edit.
-                    var followUp = new LayoutDocument { Title = "Follow-up" };
+                    var followUp = new LayoutDocument
+                    {
+                        Title = "Follow-up"
+                    };
                     destination.Children.Add(followUp);
                     Check.Same(destination, followUp.Parent);
                     destination.Children.Remove(followUp);
@@ -124,9 +198,19 @@ internal static class LayoutMutationInvariantTests
             var target = new LayoutDocumentPane();
             var panel = new LayoutPanel(source);
             panel.Children.Add(target);
-            var root = new LayoutRoot { RootPanel = panel };
+            var root = new LayoutRoot
+            {
+                RootPanel = panel
+            };
             var child = new LayoutDocument();
-            var nodes = new LayoutElement[] { source, target, panel, root, child };
+            var nodes = new LayoutElement[]
+            {
+                source,
+                target,
+                panel,
+                root,
+                child
+            };
             child.PropertyChanging += (_, _) => AssertOwnership(nodes);
             child.PropertyChanged += (_, _) => AssertOwnership(nodes);
             source.Children.CollectionChanged += (_, _) => AssertOwnership(nodes);
@@ -162,7 +246,10 @@ internal static class LayoutMutationInvariantTests
             var original = new LayoutDocument();
             var requested = new LayoutDocument();
             var successor = new LayoutDocument();
-            var window = new LayoutDocumentFloatingWindow { RootDocument = original };
+            var window = new LayoutDocumentFloatingWindow
+            {
+                RootDocument = original
+            };
             var redirected = false;
             original.PropertyChanging += (_, args) =>
             {
@@ -195,60 +282,119 @@ internal static class LayoutMutationInvariantTests
             var first = new InvalidOperationException("collection");
             var second = new InvalidOperationException("parent");
             pane.Children.CollectionChanged += (_, _) => throw first;
-            child.PropertyChanged += (_, args) => { if (args.PropertyName == "Parent") throw second; };
+            child.PropertyChanged += (_, args) =>
+            {
+                if (args.PropertyName == "Parent")
+                    throw second;
+            };
             var observed = Check.Throws<AggregateException>(() => pane.Children.Add(child));
             Check.Same(first, observed.InnerExceptions[0]);
             Check.Same(second, observed.InnerExceptions[1]);
             AssertOwnership([pane, child]);
         });
-
-        foreach (var trigger in new[] { "deactivate-changing", "deactivate-property", "deactivate-event", "activate-property", "select", "timestamp", "root" })
+        foreach (var trigger in new[]
         {
-            foreach (var throws in new[] { false, true })
+            "deactivate-changing",
+            "deactivate-property",
+            "deactivate-event",
+            "activate-property",
+            "select",
+            "timestamp",
+            "root"
+        }
+
+        )
+        {
+            foreach (var throws in new[]
+            {
+                false,
+                true
+            }
+
+            )
             {
                 tests.Test($"activation: {trigger}, throws={throws}, last request wins", () =>
                 {
-                    var a = new LayoutDocument { Title = "A" };
-                    var b = new LayoutDocument { Title = "B" };
-                    var c = new LayoutDocument { Title = "C" };
+                    var a = new LayoutDocument
+                    {
+                        Title = "A"
+                    };
+                    var b = new LayoutDocument
+                    {
+                        Title = "B"
+                    };
+                    var c = new LayoutDocument
+                    {
+                        Title = "C"
+                    };
                     var pane = new LayoutDocumentPane(a);
                     pane.Children.Add(b);
                     pane.Children.Add(c);
-                    var root = new LayoutRoot { RootPanel = new LayoutPanel(pane) };
+                    var root = new LayoutRoot
+                    {
+                        RootPanel = new LayoutPanel(pane)
+                    };
                     root.ActiveContent = a;
                     var redirected = false;
                     var failure = new InvalidOperationException("activation observer");
                     void Redirect()
                     {
                         AssertActive(root, [a, b, c]);
-                        if (redirected) return;
+                        if (redirected)
+                            return;
                         redirected = true;
                         root.ActiveContent = c;
-                        if (throws) throw failure;
+                        if (throws)
+                            throw failure;
                     }
 
-                    a.PropertyChanging += (_, args) => { if (trigger == "deactivate-changing" && args.PropertyName == "IsActive") Redirect(); };
-                    a.PropertyChanged += (_, args) => { if (trigger == "deactivate-property" && args.PropertyName == "IsActive") Redirect(); };
-                    a.IsActiveChanged += (_, _) => { if (trigger == "deactivate-event" && !a.IsActive) Redirect(); };
+                    a.PropertyChanging += (_, args) =>
+                    {
+                        if (trigger == "deactivate-changing" && args.PropertyName == "IsActive")
+                            Redirect();
+                    };
+                    a.PropertyChanged += (_, args) =>
+                    {
+                        if (trigger == "deactivate-property" && args.PropertyName == "IsActive")
+                            Redirect();
+                    };
+                    a.IsActiveChanged += (_, _) =>
+                    {
+                        if (trigger == "deactivate-event" && !a.IsActive)
+                            Redirect();
+                    };
                     b.PropertyChanged += (_, args) =>
                     {
-                        if (trigger == "activate-property" && args.PropertyName == "IsActive" ||
-                            trigger == "select" && args.PropertyName == "IsSelected" ||
-                            trigger == "timestamp" && args.PropertyName == "LastActivationTimeStamp") Redirect();
+                        if (trigger == "activate-property" && args.PropertyName == "IsActive" || trigger == "select" && args.PropertyName == "IsSelected" || trigger == "timestamp" && args.PropertyName == "LastActivationTimeStamp")
+                            Redirect();
                     };
-                    root.PropertyChanged += (_, args) => { if (trigger == "root" && args.PropertyName == "ActiveContent") Redirect(); };
+                    root.PropertyChanged += (_, args) =>
+                    {
+                        if (trigger == "root" && args.PropertyName == "ActiveContent")
+                            Redirect();
+                    };
                     Exception? observed = null;
-                    try { root.ActiveContent = b; }
-                    catch (Exception error) { observed = error; }
+                    try
+                    {
+                        root.ActiveContent = b;
+                    }
+                    catch (Exception error)
+                    {
+                        observed = error;
+                    }
+
                     Check.True(redirected);
-                    if (throws) Check.True(Contains(observed, failure));
-                    else Check.True(observed == null);
+                    if (throws)
+                        Check.True(Contains(observed, failure));
+                    else
+                        Check.True(observed == null);
                     Check.Same(c, root.ActiveContent);
                     Check.Same(c, root.LastFocusedDocument);
                     AssertActive(root, [a, b, c]);
                 });
             }
         }
+
         tests.Test("activation: a later request for the current item withdraws a queued successor", () =>
         {
             var a = new LayoutDocument();
@@ -257,7 +403,10 @@ internal static class LayoutMutationInvariantTests
             var pane = new LayoutDocumentPane(a);
             pane.Children.Add(b);
             pane.Children.Add(c);
-            var root = new LayoutRoot { RootPanel = new LayoutPanel(pane) };
+            var root = new LayoutRoot
+            {
+                RootPanel = new LayoutPanel(pane)
+            };
             root.ActiveContent = a;
             a.IsActiveChanged += (_, _) =>
             {
@@ -277,10 +426,17 @@ internal static class LayoutMutationInvariantTests
             var b = new LayoutDocument();
             var pane = new LayoutDocumentPane(a);
             pane.Children.Add(b);
-            var root = new LayoutRoot { RootPanel = new LayoutPanel(pane) };
+            var root = new LayoutRoot
+            {
+                RootPanel = new LayoutPanel(pane)
+            };
             root.ActiveContent = a;
             var failure = new InvalidOperationException("pre-change");
-            b.PropertyChanging += (_, args) => { if (args.PropertyName == "IsActive") throw failure; };
+            b.PropertyChanging += (_, args) =>
+            {
+                if (args.PropertyName == "IsActive")
+                    throw failure;
+            };
             Check.Same(failure, Check.Throws<InvalidOperationException>(() => root.ActiveContent = b));
             Check.Same(a, root.ActiveContent);
             AssertActive(root, [a, b]);
@@ -288,9 +444,7 @@ internal static class LayoutMutationInvariantTests
         return tests.Run(output, "layout-mutation-invariants");
     }
 
-    private static bool Contains(Exception? observed, Exception expected) => ReferenceEquals(observed, expected) ||
-        observed is AggregateException aggregate && aggregate.InnerExceptions.Any(error => Contains(error, expected));
-
+    private static bool Contains(Exception? observed, Exception expected) => ReferenceEquals(observed, expected) || observed is AggregateException aggregate && aggregate.InnerExceptions.Any(error => Contains(error, expected));
     private static void AssertOwnership(IEnumerable<LayoutElement> nodes)
     {
         var all = nodes.ToArray();
