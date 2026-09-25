@@ -25,7 +25,7 @@ class NativeGateTests(unittest.TestCase):
     def fixture(self, system):
         counts = {"desktop-floating": 38 if system == "Linux" else 34, "uno-theme": 10}
         if system == "Windows": counts["windows-floating-input"] = 8
-        if system == "Darwin": counts["mac-native"] = 4
+        if system == "Darwin": counts["mac-native"] = 8
         for suite, count in counts.items():
             root = ET.Element("testsuite", name=suite, tests=str(count), failures="0")
             for i in range(count): ET.SubElement(root, "testcase", name=f"case-{i}", classname=suite)

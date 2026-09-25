@@ -13,7 +13,7 @@ def verify(directory: Path) -> None:
     if system == "Windows":
         expected["windows-floating-input"] = 8
     elif system == "Darwin":
-        expected["mac-native"] = 4
+        expected["mac-native"] = 8
     elif system != "Linux":
         raise RuntimeError(f"No native acceptance contract for {system}")
     totals = {"passed": 0, "failed": 0, "skipped": 0, "executed": 0}

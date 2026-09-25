@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using Windows.Foundation;
@@ -66,6 +67,59 @@ internal static class MacNativeTests
             Check.Equal(1, ticks); Check.Equal(1, failures); Check.Same(failure, observed);
             return Task.CompletedTask;
         });
+        tests.Test("AppKit: callback executes in the concrete tracking mode", () =>
+        {
+            var callbacks = 0; var matched = 0;
+            using var clock = Clock(() =>
+            {
+                callbacks++;
+                var mode = CopyCurrentMode(CurrentLoop());
+                try
+                {
+                    var library = NativeLibrary.Load(AppKit);
+                    try
+                    {
+                        var tracking = Marshal.ReadIntPtr(NativeLibrary.GetExport(library, "NSEventTrackingRunLoopMode"));
+                        if (mode != 0 && Equal(mode, tracking)) matched++;
+                    }
+                    finally { NativeLibrary.Free(library); }
+                }
+                finally { if (mode != 0) Release(mode); }
+            }, _ => { });
+            Track(.12);
+            Check.True(callbacks > 0); Check.Equal(callbacks, matched);
+            return Task.CompletedTask;
+        });
+        tests.Test("AppKit: disposing inside a native callback stops later delivery", () =>
+        {
+            var ticks = 0; Exception? error = null; IDisposable? clock = null;
+            try
+            {
+                clock = Clock(() => { ticks++; clock!.Dispose(); }, e => error = e);
+                Track(.12); Track(.06);
+                Check.Equal(1, ticks); Check.True(error == null);
+            }
+            finally { clock?.Dispose(); }
+            return Task.CompletedTask;
+        });
+        tests.Test("AppKit: throwing failure observer cannot cross the native callback", () =>
+        {
+            var ticks = 0; var failures = 0;
+            using var clock = Clock(() => { ticks++; throw new InvalidOperationException("tick failure"); },
+                _ => { failures++; throw new InvalidOperationException("diagnostic failure"); });
+            Track(.12); Track(.06);
+            Check.Equal(1, ticks); Check.Equal(1, failures);
+            return Task.CompletedTask;
+        });
+        tests.Test("AppKit: tracking clock rejects worker construction before native registration", async () =>
+        {
+            var error = await Task.Run(() =>
+            {
+                try { using var clock = Clock(() => { }, _ => { }); return (Exception?)null; }
+                catch (TargetInvocationException e) { return e.InnerException; }
+            });
+            Check.True(error is InvalidOperationException, "A worker acquired the main-loop drag callback.");
+        });
         return await tests.Run(output, "mac-native");
     }
     private static IDisposable Clock(Action tick, Action<Exception> failed)
@@ -79,7 +133,20 @@ internal static class MacNativeTests
         try
         {
             var mode = Marshal.ReadIntPtr(NativeLibrary.GetExport(library, "NSEventTrackingRunLoopMode"));
-            Check.True(mode != 0); RunMode(mode, duration, false);
+            Check.True(mode != 0);
+            var start = Stopwatch.GetTimestamp();
+            for (var i = 0; i < 1024; i++)
+            {
+                var remaining = duration - Stopwatch.GetElapsedTime(start).TotalSeconds;
+                if (remaining <= 0) return;
+                // AppKit may stop an inner run-loop activation while processing
+                // an unrelated host event. Continue in the SAME tracking mode,
+                // not the dispatcher/default mode, until the bounded deadline.
+                var result = RunMode(mode, remaining, false);
+                if (result == 1) return; // Finished: no sources/timers in this mode.
+                Check.True(result is 2 or 3 or 4, "Unexpected CFRunLoop result: " + result);
+            }
+            throw new InvalidOperationException("AppKit repeatedly stopped event tracking without making progress.");
         }
         finally { NativeLibrary.Free(library); }
     }
@@ -90,5 +157,9 @@ internal static class MacNativeTests
     [DllImport(ObjC, EntryPoint = "objc_msgSend")] private static extern nint Send(nint receiver, nint selector);
     [DllImport(ObjC, EntryPoint = "objc_msgSend")] private static extern long SendLong(nint receiver, nint selector);
     [DllImport(ObjC, EntryPoint = "objc_msgSend")] private static extern void SendBool(nint receiver, nint selector, [MarshalAs(UnmanagedType.I1)] bool value);
+    [DllImport(CF, EntryPoint = "CFRunLoopGetCurrent")] private static extern nint CurrentLoop();
+    [DllImport(CF, EntryPoint = "CFRunLoopCopyCurrentMode")] private static extern nint CopyCurrentMode(nint loop);
+    [DllImport(CF, EntryPoint = "CFEqual")] [return: MarshalAs(UnmanagedType.I1)] private static extern bool Equal(nint a, nint b);
+    [DllImport(CF, EntryPoint = "CFRelease")] private static extern void Release(nint value);
     [DllImport(CF, EntryPoint = "CFRunLoopRunInMode")] private static extern int RunMode(nint mode, double seconds, [MarshalAs(UnmanagedType.I1)] bool returnAfterSourceHandled);
 }
