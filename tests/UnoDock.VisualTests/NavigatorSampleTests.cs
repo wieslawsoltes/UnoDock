@@ -36,6 +36,43 @@ internal static class NavigatorSampleTests
             var path = Path.Combine(output, "visuals", "navigator-activation-sample.png");
             Directory.CreateDirectory(Path.GetDirectoryName(path)!); await VisualCapture.Save(panel, path);
         });
+        Add("navigator sample: command rows wrap without clipping or replacing native controls", async (_, panel, manager) =>
+        {
+            var buttons = panel.FindVisualChildren<SampleButton>().ToArray();
+            var originalCommands = manager.Layout.Descendents().OfType<LayoutContent>()
+                .Select(model => manager.GetLayoutItemFromModel(model).ActivateCommand).ToArray();
+            var active = manager.Layout.ActiveContent;
+            foreach (var width in new[] { 360d, 540d, 780d })
+            {
+                panel.Width = width; panel.HorizontalAlignment = HorizontalAlignment.Left;
+                panel.UpdateLayout(); await Task.Delay(60);
+                Check.Near(width, panel.ActualWidth, .25);
+                var rectangles = buttons.Select(button => button.TransformToVisual(panel)
+                    .TransformBounds(new Windows.Foundation.Rect(0, 0, button.ActualWidth, button.ActualHeight))).ToArray();
+                foreach (var rect in rectangles)
+                {
+                    Check.True(rect.Width > 0 && rect.Height > 0);
+                    Check.True(rect.Left >= 0 && rect.Right <= panel.ActualWidth + .25, "A command is horizontally clipped.");
+                    Check.True(rect.Top >= 0 && rect.Bottom <= manager.TransformToVisual(panel).TransformPoint(new()).Y,
+                        "A command overlaps the drawing workspace.");
+                }
+                for (var i = 0; i < rectangles.Length; i++)
+                    for (var j = i + 1; j < rectangles.Length; j++)
+                    {
+                        var a = rectangles[i]; var b = rectangles[j];
+                        Check.True(a.Right <= b.Left + .25 || b.Right <= a.Left + .25 ||
+                            a.Bottom <= b.Top + .25 || b.Bottom <= a.Top + .25, "Wrapped command bounds overlap.");
+                    }
+                Check.True(rectangles.Select(r => Math.Round(r.Top)).Distinct().Count() >= 2);
+                var current = panel.FindVisualChildren<SampleButton>().ToArray();
+                Check.Equal(buttons.Length, current.Length);
+                for (var i = 0; i < buttons.Length; i++) Check.Same(buttons[i], current[i]);
+                Check.True(originalCommands.SequenceEqual(manager.Layout.Descendents().OfType<LayoutContent>()
+                    .Select(model => manager.GetLayoutItemFromModel(model).ActivateCommand)));
+                Check.Same(active, manager.Layout.ActiveContent);
+                await VisualCapture.Save(panel, Path.Combine(output, "visuals", $"navigator-toolbar-{width:0}.png"));
+            }
+        });
         Add("navigator sample: property buttons retain a vetoed selection then hide documents and close tools", async (_, panel, manager) =>
         {
             var active = manager.Layout.ActiveContent;
@@ -146,8 +183,21 @@ internal static class NavigatorSampleTests
                 async Task Click(string id)
                 {
                     var button = panel.FindVisualChildren<SampleButton>().Single(b => AutomationProperties.GetAutomationId(b) == "NavigatorLab-" + id);
-                    input.MoveTo(button, new(button.ActualWidth / 2, button.ActualHeight / 2));
-                    input.Press(); await Task.Delay(40); input.Release(); await Task.Delay(60);
+                    panel.UpdateLayout();
+                    Check.True(button.IsLoaded && button.ActualWidth > 0 && button.ActualHeight > 0);
+                    var clicks = 0;
+                    RoutedEventHandler observed = (_, _) => clicks++;
+                    button.Click += observed;
+                    try
+                    {
+                        input.MoveTo(button, new(button.ActualWidth / 2, button.ActualHeight / 2));
+                        // Let the real host process pointer entry before pressing.
+                        // Do not retry a click or replace native input with Invoke.
+                        await Task.Delay(50);
+                        input.Press(); await Task.Delay(40); input.Release();
+                        await Wait(() => clicks == 1);
+                    }
+                    finally { button.Click -= observed; }
                 }
             });
         return await tests.Run(output, "navigator-sample");

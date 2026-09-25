@@ -44,6 +44,7 @@ public partial class App : Application
                         ("visual-parity", true, () => Testing.VisualParityTests.Run(gallery.Dock, output)),
                         ("navigator-quality", true, () => Testing.NavigatorQualityTests.Run(gallery.Dock, output)),
                         ("navigator-commit", true, () => Testing.NavigatorCommitTests.Run(output)),
+                        ("navigator-revocation", true, () => Testing.NavigatorRevocationTests.Run(output)),
                         ("navigator-sample", true, () => Testing.NavigatorSampleTests.Run(output)),
                         ("focus-ownership", true, () => Testing.FocusOwnershipTests.Run(output)),
                         ("docking-guides", true, () => Testing.DockGuideTests.Run(gallery.Dock, output)),

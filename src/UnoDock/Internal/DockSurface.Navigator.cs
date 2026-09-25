@@ -68,10 +68,18 @@ internal sealed partial class DockSurface
         var generation = ++_navigatorGeneration;
         bool Current() => root != null && !_disposed && _navigator == null && _navigatorGeneration == generation &&
             ReferenceEquals(Manager.Layout, root) && ReferenceEquals(root.Manager, Manager);
-        var activate = commit ? navigator.CaptureSelectionCommit(Current, true) : null;
-        DetachNavigator(navigator);
+        var detached = false;
+        void Detach()
+        {
+            if (detached) return;
+            detached = true;
+            DetachNavigator(navigator);
+        }
+        // Unloaded is application code. Install command/model/manager observers
+        // before removal, not afterwards, to catch temporary-and-reversed writes.
+        try { if (commit) navigator.CommitClosingSelection(Current, Detach); }
+        finally { Detach(); }
         if (!Current()) return;
-        activate?.Invoke();
         RestoreNavigatorFocus(root, Current);
     }
 

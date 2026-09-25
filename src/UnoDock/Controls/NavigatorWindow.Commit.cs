@@ -31,6 +31,14 @@ public partial class NavigatorWindow
     internal Action? CaptureSelectionCommit(Func<bool> ownsOperation, bool afterDetach) =>
         CaptureActivation(ownsOperation, afterDetach, null);
 
+    /// <summary>Install the activation guards before explicit-close detachment.
+    /// The caller must ensure detachment even when there is no eligible command.</summary>
+    internal void CommitClosingSelection(Func<bool> ownsOperation, Action detach)
+    {
+        ArgumentNullException.ThrowIfNull(detach);
+        CaptureActivation(ownsOperation, false, null, detach)?.Invoke();
+    }
+
     /// <summary>Direct property assignment checks CanExecute while still visible.
     /// A veto/query failure must not dismiss the navigator. Successful queries run
     /// the category-specific hide/close stage before the guarded command executes.</summary>
@@ -40,7 +48,7 @@ public partial class NavigatorWindow
         CaptureActivation(ownsOperation, false, prepareExecution)?.Invoke();
     }
 
-    private Action? CaptureActivation(Func<bool> ownsOperation, bool afterDetach, Action? prepareExecution)
+    private Action? CaptureActivation(Func<bool> ownsOperation, bool afterDetach, Action? prepareExecution, Action? detachBeforeQuery = null)
     {
         ArgumentNullException.ThrowIfNull(ownsOperation);
         if (!DispatcherQueue.HasThreadAccess) throw new InvalidOperationException("Navigator activation requires its owning UI thread.");
@@ -52,6 +60,7 @@ public partial class NavigatorWindow
         var surface = _manager.Surface;
         var activationSession = _activationSession;
         var selection = _selectionVersion;
+        var directRequest = _directSelectionVersion;
         if (command == null || parent is not ILayoutContainer container) return null;
         var consumed = false;
         return () =>
@@ -61,9 +70,11 @@ public partial class NavigatorWindow
             consumed = true;
             if (_committingSelection) return;
             var invalidated = false;
+            var detachedForQuery = false;
             bool Current()
             {
                 if (invalidated || !ownsOperation() || activationSession != _activationSession || selection != _selectionVersion ||
+                    directRequest != _directSelectionVersion ||
                     !ReferenceEquals(_selected, item) || !IsEnabled || !_manager.IsEnabled ||
                     !ReferenceEquals(_manager.Surface, surface) || !ReferenceEquals(_manager.Layout, root) ||
                     !ReferenceEquals(root.Manager, _manager) || !ReferenceEquals(model.Root, root) ||
@@ -73,7 +84,7 @@ public partial class NavigatorWindow
                 // keyboard/host commits keep their original strict attachment rule.
                 if (prepareExecution == null)
                 {
-                    if (afterDetach ? _sessionRoot != null : !ReferenceEquals(_sessionRoot, root)) return false;
+                    if ((afterDetach || detachedForQuery) ? _sessionRoot != null : !ReferenceEquals(_sessionRoot, root)) return false;
                 }
                 else if (_sessionRoot != null && !ReferenceEquals(_sessionRoot, root)) return false;
                 if (!container.Children.Any(child => ReferenceEquals(child, model))) return false;
@@ -95,6 +106,12 @@ public partial class NavigatorWindow
                 commandToken = item.RegisterPropertyChangedCallback(LayoutItem.ActivateCommandProperty, (_, _) => invalidated = true);
                 enabledToken = RegisterPropertyChangedCallback(IsEnabledProperty, (_, _) => invalidated = true);
                 managerEnabledToken = _manager.RegisterPropertyChangedCallback(IsEnabledProperty, (_, _) => invalidated = true);
+                if (!Current()) return;
+                if (detachBeforeQuery != null)
+                {
+                    detachedForQuery = true;
+                    detachBeforeQuery();
+                }
                 if (!Current() || !command.CanExecute(null) || !Current()) return;
                 prepareExecution?.Invoke();
                 // Closing/Closed/Unloaded callbacks are application code too.

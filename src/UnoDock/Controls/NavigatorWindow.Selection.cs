@@ -20,7 +20,14 @@ public partial class NavigatorWindow
     private void PreviewItem(LayoutItem? item)
     {
         if (!DispatcherQueue.HasThreadAccess) throw new InvalidOperationException("Navigator selection requires its owning UI thread.");
-        if (IsWindowClosed || _sessionRoot == null) return;
+        if (IsWindowClosed || _sessionRoot == null)
+        {
+            // A detached view cannot select or activate. It can still revoke an
+            // already captured close intent, including a request made by Unloaded
+            // or CanExecute. Do not publish DPs or revive the ended session.
+            if (!ReferenceEquals(item, _selected)) _selectionVersion++;
+            return;
+        }
         Select(item);
     }
 
