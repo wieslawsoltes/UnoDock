@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Exercise the actual Roslyn formatter, including its no-op detection contract."""
+"""Exercise the actual Roslyn formatter, including expansion and trivia rules."""
 from pathlib import Path
 import subprocess
 import tempfile
 import unittest
 
 APP = Path('tools/SourceMaintenance/bin/Release/net10.0/SourceMaintenance.dll').resolve()
+
 
 class FormattingTests(unittest.TestCase):
     def setUp(self):
@@ -73,6 +74,36 @@ class FormattingTests(unittest.TestCase):
 
     def test_no_source_cannot_pass(self):
         self.run_tool('--check-format', False)
+
+    def test_patterns_and_exception_filters(self):
+        path = self.write('class A{void M(object x){if((x)is string){return;}try{}catch(System.Exception e)when(e!=null){throw;}}}')
+        self.run_tool()
+        self.assertIn('(x) is string', path.read_text())
+        self.assertIn(') when (e != null)', path.read_text())
+        self.run_tool('--check-format')
+
+    def test_nullable_array_and_tuple_foreach(self):
+        path = self.write('class A{object?[] values=[];void M(){foreach(var(x,y)in new[]{(1,2)}){}}}')
+        self.run_tool()
+        self.assertIn('object?[] values', path.read_text())
+        self.assertIn('foreach (var (x, y) in', path.read_text())
+        self.run_tool('--check-format')
+
+    def test_property_accessors_expand(self):
+        path = self.write('class A{int value;public int Value{get{return value;}set{this.value=value;}}}')
+        self.run_tool()
+        text = path.read_text()
+        self.assertIn('public int Value\n    {', text)
+        self.assertIn('get\n        {', text)
+        self.assertIn('set\n        {', text)
+        self.run_tool('--check-format')
+
+    def test_file_scoped_namespace_separation(self):
+        path = self.write('namespace Example;class A{void M(){return;}}')
+        self.run_tool()
+        self.assertIn('namespace Example;\n\nclass A', path.read_text())
+        self.run_tool('--check-format')
+
 
 if __name__ == '__main__':
     unittest.main()
