@@ -58,6 +58,7 @@ public partial class App : Application
                         ("mac-native", false, () => Testing.MacNativeTests.Run(output)),
                         ("desktop-floating", true, () => Testing.DesktopFloatingTests.Run(output)),
                         ("floating-drag-cleanup", true, () => Testing.FloatingDragCleanupTests.Run(output)),
+                        ("floating-chrome", true, () => Testing.FloatingChromeTests.Run(output)),
                         ("uno-theme", true, () => Testing.UnoThemeTests.Run(output)),
                         ("windows-floating-input", true, () => Testing.WindowsFloatingInputTests.Run(output))
                     };
