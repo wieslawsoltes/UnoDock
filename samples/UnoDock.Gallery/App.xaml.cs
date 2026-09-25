@@ -60,13 +60,16 @@ public partial class App : Application
                         ("floating-drag-cleanup", true, () => Testing.FloatingDragCleanupTests.Run(output)),
                         ("floating-chrome-documents", true, () => Testing.FloatingChromeTests.Run(output, false)),
                         ("floating-chrome-tools", true, () => Testing.FloatingChromeTests.Run(output, true)),
+                        ("floating-resize-policy-documents", true, () => Testing.FloatingChromeTests.RunResizePolicy(output, false)),
+                        ("floating-resize-policy-tools", true, () => Testing.FloatingChromeTests.RunResizePolicy(output, true)),
                         ("uno-theme", true, () => Testing.UnoThemeTests.Run(output)),
                         ("windows-floating-input", true, () => Testing.WindowsFloatingInputTests.Run(output))
                     };
                     var selected = suites.Where(s => string.IsNullOrEmpty(requested) || requested == "all" ||
                         (requested == "windows-acceptance" ? s.Windows : requested == "desktop-acceptance"
                             ? s.Name is "mac-native" or "desktop-floating" or "floating-drag-cleanup" or "uno-theme" or "windows-floating-input"
-                            : requested == "floating-chrome" ? s.Name is "floating-chrome-documents" or "floating-chrome-tools" : s.Name == requested)).ToArray();
+                            : requested == "floating-resize-policy" ? s.Name.StartsWith("floating-resize-policy-", StringComparison.Ordinal)
+                            : requested == "floating-chrome" ? s.Name is "floating-chrome-documents" or "floating-chrome-tools" or "floating-resize-policy-documents" or "floating-resize-policy-tools" : s.Name == requested)).ToArray();
                     if (selected.Length == 0) throw new ArgumentException("Unknown UNODOCK_TEST_SUITE: " + requested);
                     // Registry-owned platform selection also drives isolated CI.
                     // A platform no-op is not an executed (or passed) test suite.

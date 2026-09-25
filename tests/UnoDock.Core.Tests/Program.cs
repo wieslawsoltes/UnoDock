@@ -5,6 +5,7 @@ using UnoDock.Testing;
 var tests = new TestRunner();
 InteractionGeometryTests.Register(tests);
 ChromeTests.Register(tests);
+FloatingResizeBoundsTests.Register(tests);
 DockGuideGeometryTests.Register(tests);
 var star = DockLengthUnit.Star; var pixel = DockLengthUnit.Pixel; var auto = DockLengthUnit.Auto;
 tests.Test("empty allocation", () => Check.Equal(0, DockSplitSolver.Allocate(100, 4, []).Length));

@@ -12,7 +12,10 @@ public abstract partial class LayoutFloatingWindowControl
     private Window? _chromeWindow;
     private bool _changingChrome;
     private bool _nativeCaptionActive = true;
-    private readonly Grid _resizeChrome = new() { Visibility = Visibility.Collapsed };
+    private bool _resizeAxesMirrored;
+    // Physical window edges are not reading-order content. Keep this layer LTR
+    // while the caption, document and tool contents retain their inherited flow.
+    private readonly Grid _resizeChrome = new() { Visibility = Visibility.Collapsed, FlowDirection = FlowDirection.LeftToRight };
     private readonly Dictionary<ChromeHit, ResizeGrip> _resizeGrips = [];
     private Thumb? _legacyResizeGrip;
     private Button _dockCaptionButton = null!, _minimizeCaptionButton = null!, _maximizeCaptionButton = null!, _closeCaptionButton = null!;
@@ -53,6 +56,7 @@ public abstract partial class LayoutFloatingWindowControl
             _resizeGrips.Add(hit, grip); _resizeChrome.Children.Add(grip);
         }
         Grid.SetRowSpan(_resizeChrome, 2); _frame.Children.Add(_resizeChrome);
+        _resizeChrome.LayoutUpdated += (_, _) => UpdateResizeAxes();
         _dragHandle.DoubleTapped += (_, e) =>
         {
             CancelCaptionDrag(); CancelFrameResize(true);
@@ -107,6 +111,21 @@ public abstract partial class LayoutFloatingWindowControl
     private void SetNativeCaptionActive(bool active)
     { _nativeCaptionActive = active; UpdateChromeControls(); }
 
+    private void UpdateResizeAxes()
+    {
+        if (_hostDisposed || !_resizeChrome.IsLoaded || _resizeChrome.XamlRoot == null) return;
+        // Uno and native WinUI differ in where they apply inherited RTL transforms.
+        // Inspect the actual layer-to-client axes, rather than inferring them from
+        // FlowDirection or hard-coding a platform exception. Grip placement itself
+        // does not change this transform, so the correction cannot oscillate.
+        var transform = _resizeChrome.TransformToVisual(null);
+        var origin = transform.TransformPoint(new(0, 0));
+        var xAxis = transform.TransformPoint(new(1, 0));
+        var mirrored = xAxis.X < origin.X;
+        if (_resizeAxesMirrored == mirrored) return;
+        _resizeAxesMirrored = mirrored; UpdateChromeControls();
+    }
+
     private void UpdateChromeControls()
     {
         if (_dockCaptionButton == null) return; // No derived/model calls during construction.
@@ -140,12 +159,16 @@ public abstract partial class LayoutFloatingWindowControl
             var t = hit is ChromeHit.Top or ChromeHit.TopLeft or ChromeHit.TopRight;
             var d = hit is ChromeHit.Bottom or ChromeHit.BottomLeft or ChromeHit.BottomRight;
             var corner = (l || r) && (t || d);
-            grip.HorizontalAlignment = l ? HorizontalAlignment.Left : r ? HorizontalAlignment.Right : HorizontalAlignment.Stretch;
+            var physicalLeft = _resizeAxesMirrored ? r : l;
+            var physicalRight = _resizeAxesMirrored ? l : r;
+            grip.HorizontalAlignment = physicalLeft ? HorizontalAlignment.Left : physicalRight ? HorizontalAlignment.Right : HorizontalAlignment.Stretch;
             grip.VerticalAlignment = t ? VerticalAlignment.Top : d ? VerticalAlignment.Bottom : VerticalAlignment.Stretch;
             grip.Width = corner ? cw : l ? left : r ? right : double.NaN;
             grip.Height = corner ? ch : t ? top : d ? bottom : double.NaN;
-            grip.Margin = corner ? new(0) : l || r ? new(0, ch, 0, ch) : new(cw, 0, cw, 0);
-            grip.Visibility = (l && left > 0 || r && right > 0 || t && top > 0 || d && bottom > 0) ? Visibility.Visible : Visibility.Collapsed;
+            // Full-length edges remain reachable when an adjacent side is disabled.
+            // Enabled corners are above them in z-order and require BOTH axes.
+            grip.Margin = new(0);
+            grip.Visibility = IsResizeEdgeEnabled(hit) ? Visibility.Visible : Visibility.Collapsed;
         }
     }
 }
