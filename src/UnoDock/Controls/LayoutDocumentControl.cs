@@ -12,7 +12,8 @@ public class LayoutDocumentControl : DockInputControl
     public static readonly DependencyProperty LayoutItemProperty = DependencyProperty.Register(nameof(LayoutItem), typeof(LayoutItem), typeof(LayoutDocumentControl), new PropertyMetadata(null));
     public LayoutContent? Model
     {
-        get => (LayoutContent?)GetValue(ModelProperty); set => SetValue(ModelProperty, value);
+        get => (LayoutContent?)GetValue(ModelProperty);
+        set => SetValue(ModelProperty, value);
     }
     public LayoutItem? LayoutItem => (LayoutItem?)GetValue(LayoutItemProperty);
 

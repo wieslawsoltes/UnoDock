@@ -21,11 +21,13 @@ public partial class LayoutCachePaneControl : DockSelectionControl
     private readonly Dictionary<LayoutContent, LayoutTabItemBase> _tabs = new(ReferenceEqualityComparer.Instance);
     protected ILayoutContentSelector? Selector
     {
-        get; private set;
+        get;
+        private set;
     }
     protected ILayoutGroup? Pane
     {
-        get; private set;
+        get;
+        private set;
     }
 
     public LayoutCachePaneControl()

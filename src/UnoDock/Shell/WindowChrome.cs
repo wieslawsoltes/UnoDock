@@ -82,7 +82,8 @@ public partial class WindowChrome : DependencyObject, INotifyPropertyChanged
 
     public bool ShowSystemMenu
     {
-        get => (bool)GetValue(ShowSystemMenuProperty); set => SetValue(ShowSystemMenuProperty, value);
+        get => (bool)GetValue(ShowSystemMenuProperty);
+        set => SetValue(ShowSystemMenuProperty, value);
     }
     public static Thickness GlassFrameCompleteThickness => new(-1);
 
@@ -252,7 +253,8 @@ public partial class WindowChrome : DependencyObject, INotifyPropertyChanged
         }
         internal WindowChromeCapabilities Capabilities
         {
-            get; private set;
+            get;
+            private set;
         }
 
         internal Attachment(ContentControl? control, Window? window, WindowChrome chrome)

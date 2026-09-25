@@ -8,7 +8,11 @@ namespace UnoDock;
 
 public class LayoutFloatingWindowControlCollectionChangedEventArgs(NotifyCollectionChangedEventArgs collectionChangedEventArgs) : EventArgs
 {
-    public NotifyCollectionChangedEventArgs CollectionChangedEventArgs { get; private set; } = collectionChangedEventArgs;
+    public NotifyCollectionChangedEventArgs CollectionChangedEventArgs
+    {
+        get;
+        private set;
+    } = collectionChangedEventArgs;
 }
 #if WINDOWS
 #else

@@ -4,6 +4,7 @@ public interface ILayoutOrientableGroup : ILayoutGroup
 {
     Orientation Orientation
     {
-        get; set;
+        get;
+        set;
     }
 }

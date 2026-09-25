@@ -12,7 +12,8 @@ public class LayoutAnchorSide : LayoutGroup<LayoutAnchorGroup>
 
     public AnchorSide Side
     {
-        get => _side; private set => Set(ref _side, value);
+        get => _side;
+        private set => Set(ref _side, value);
     }
 
     internal void SetSide(AnchorSide side) => Side = side;

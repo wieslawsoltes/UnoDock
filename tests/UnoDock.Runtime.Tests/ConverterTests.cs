@@ -452,7 +452,8 @@ public static partial class ConverterTests
         private PropertyChangedEventHandler? _changed;
         public int Subscribers
         {
-            get; private set;
+            get;
+            private set;
         }
 
         public object? Value

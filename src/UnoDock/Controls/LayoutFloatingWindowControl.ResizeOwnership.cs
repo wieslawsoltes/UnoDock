@@ -18,11 +18,13 @@ public abstract partial class LayoutFloatingWindowControl
         internal bool HasCurrentPolicy(LayoutFloatingWindowControl owner) => owner.MinWidth.Equals(_minimumWidth) && owner.MinHeight.Equals(_minimumHeight) && owner.MaxWidth.Equals(_maximumWidth) && owner.MaxHeight.Equals(_maximumHeight) && owner.FlowDirection == _flowDirection && owner.ResizeBorderThickness.Equals(_resizeBorder);
         internal bool Revoked
         {
-            get; private set;
+            get;
+            private set;
         }
         internal bool IsDisposed
         {
-            get; private set;
+            get;
+            private set;
         }
 
         internal void Attach(LayoutFloatingWindowControl owner)

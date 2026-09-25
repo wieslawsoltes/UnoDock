@@ -34,7 +34,8 @@ public interface ILayoutRoot
 
     LayoutContent? ActiveContent
     {
-        get; set;
+        get;
+        set;
     }
 
     ObservableCollection<LayoutAnchorable> Hidden

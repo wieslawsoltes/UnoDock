@@ -27,7 +27,8 @@ public sealed class DockKeyboardFocusChangedEventArgs : EventArgs
     }
     public bool Handled
     {
-        get; set;
+        get;
+        set;
     }
     public bool CanCancel => NativeEvent is GettingFocusEventArgs;
 

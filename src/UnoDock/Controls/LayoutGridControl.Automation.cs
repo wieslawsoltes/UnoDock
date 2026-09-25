@@ -60,7 +60,8 @@ public abstract partial class LayoutGridControl<T>
         private readonly WeakReference<LayoutGridControl<T>> _owner;
         internal FrameworkElement? View
         {
-            get; private set;
+            get;
+            private set;
         }
 
         internal ResizeEndpointObserver(LayoutGridControl<T> owner, FrameworkElement view)

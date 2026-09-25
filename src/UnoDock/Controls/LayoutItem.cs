@@ -18,10 +18,15 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
     private bool _disposed, _attaching;
     private readonly long _visibilityToken;
     protected LayoutItem() => _visibilityToken = RegisterPropertyChangedCallback(VisibilityProperty, (_, _) => OnVisibilityChanged());
-    public LayoutContent LayoutElement { get; private set; } = null!;
+    public LayoutContent LayoutElement
+    {
+        get;
+        private set;
+    } = null!;
     public object? Model
     {
-        get; private set;
+        get;
+        private set;
     }
 
     private ContentPresenter? _view;

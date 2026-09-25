@@ -14,7 +14,8 @@ public class LayoutPanel : LayoutPositionableGroup<ILayoutPanelElement>, ILayout
     public LayoutPanel(ILayoutPanelElement firstChild) => Children.Add(firstChild);
     public Orientation Orientation
     {
-        get => _orientation; set => Set(ref _orientation, value);
+        get => _orientation;
+        set => Set(ref _orientation, value);
     }
 
     protected override bool GetVisibility() => Children.Any(c => c.IsVisible);

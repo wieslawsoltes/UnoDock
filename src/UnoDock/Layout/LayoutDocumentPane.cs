@@ -13,13 +13,15 @@ public class LayoutDocumentPane : LayoutPositionableGroup<LayoutContent>, ILayou
     public LayoutContent? SelectedContent => _selection.Content;
     public int SelectedContentIndex
     {
-        get => _selection.Index; set => _selection.Index = value;
+        get => _selection.Index;
+        set => _selection.Index = value;
     }
 
     public int IndexOf(LayoutContent content) => Children.IndexOf(content);
     public bool ShowHeader
     {
-        get => _showHeader; set => Set(ref _showHeader, value);
+        get => _showHeader;
+        set => Set(ref _showHeader, value);
     }
     public IEnumerable<LayoutContent> ChildrenSorted => Children.OrderBy(c => c.Title, StringComparer.CurrentCultureIgnoreCase);
 

@@ -29,7 +29,8 @@ public class DropArea<T> : IDropArea, IModelDropArea where T : FrameworkElement
     }
     public Rect DetectionRect
     {
-        get; private set;
+        get;
+        private set;
     }
     public DropAreaType Type
     {

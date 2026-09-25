@@ -9,6 +9,7 @@ public sealed class ValueConversionAttribute(Type sourceType, Type targetType) :
     public Type TargetType { get; } = targetType ?? throw new ArgumentNullException(nameof(targetType));
     public Type? ParameterType
     {
-        get; set;
+        get;
+        set;
     }
 }

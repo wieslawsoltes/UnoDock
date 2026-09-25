@@ -9,7 +9,11 @@ public abstract partial class LayoutElement : DependencyObject, ILayoutElement
     /// <summary>Writes a bounded, cycle-safe diagnostic snapshot without evaluating user content.</summary>
     public virtual void ConsoleDump(int tab) => LayoutDiagnostics.Write(this, Console.Out, tab);
     private ILayoutContainer? _parent;
-    internal string SerializationId { get; set; } = "";
+    internal string SerializationId
+    {
+        get;
+        set;
+    } = "";
 
     [System.Xml.Serialization.XmlIgnore]
     public ILayoutContainer? Parent

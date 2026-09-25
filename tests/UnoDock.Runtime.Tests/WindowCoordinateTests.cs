@@ -339,7 +339,8 @@ public static partial class WindowCoordinateTests
     {
         public bool Disposed
         {
-            get; private set;
+            get;
+            private set;
         }
 
         public Point Translate(FrameworkElement source, Point point, FrameworkElement destination) => point;

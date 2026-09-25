@@ -11,15 +11,18 @@ public class LayoutDocument : LayoutContent
     private string? _description;
     public bool CanMove
     {
-        get => _canMove; set => Set(ref _canMove, value);
+        get => _canMove;
+        set => Set(ref _canMove, value);
     }
     public bool IsVisible
     {
-        get => _visible; internal set => Set(ref _visible, value);
+        get => _visible;
+        internal set => Set(ref _visible, value);
     }
     public string? Description
     {
-        get => _description; set => Set(ref _description, value);
+        get => _description;
+        set => Set(ref _description, value);
     }
 
     public override void Close() => CloseCore();

@@ -4,56 +4,67 @@ public interface ILayoutPositionableElement
 {
     GridLength DockWidth
     {
-        get; set;
+        get;
+        set;
     }
 
     GridLength DockHeight
     {
-        get; set;
+        get;
+        set;
     }
 
     double DockMinWidth
     {
-        get; set;
+        get;
+        set;
     }
 
     double DockMinHeight
     {
-        get; set;
+        get;
+        set;
     }
 
     double FloatingLeft
     {
-        get; set;
+        get;
+        set;
     }
 
     double FloatingTop
     {
-        get; set;
+        get;
+        set;
     }
 
     double FloatingWidth
     {
-        get; set;
+        get;
+        set;
     }
 
     double FloatingHeight
     {
-        get; set;
+        get;
+        set;
     }
 
     bool IsMaximized
     {
-        get; set;
+        get;
+        set;
     }
 
     bool CanRepositionItems
     {
-        get; set;
+        get;
+        set;
     }
 
     bool AllowDuplicateContent
     {
-        get; set;
+        get;
+        set;
     }
 }

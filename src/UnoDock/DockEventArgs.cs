@@ -11,7 +11,8 @@ public sealed class DockEventArgs(LayoutContent content) : RoutedEventArgs
     public LayoutContent Content { get; } = content;
     public bool Cancel
     {
-        get; set;
+        get;
+        set;
     }
 }
 #if WINDOWS

@@ -160,7 +160,8 @@ public partial class LayoutAutoHideWindowControl : ContentControl, ILayoutContro
     public ILayoutElement Model => _model!;
     public Style? AnchorableStyle
     {
-        get => (Style?)GetValue(AnchorableStyleProperty); set => SetValue(AnchorableStyleProperty, value);
+        get => (Style?)GetValue(AnchorableStyleProperty);
+        set => SetValue(AnchorableStyleProperty, value);
     }
     internal bool RetainOpen => _pointerInside || _menuOpen || _resizer.IsDragging || HasFocusWithinCore();
 

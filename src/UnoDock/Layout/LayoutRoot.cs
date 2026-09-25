@@ -35,7 +35,8 @@ public partial class LayoutRoot : LayoutElement, ILayoutContainer, ILayoutRoot, 
     [System.Xml.Serialization.XmlIgnore]
     public DockingManager? Manager
     {
-        get => _manager; internal set => Set(ref _manager, value);
+        get => _manager;
+        internal set => Set(ref _manager, value);
     }
 
     public LayoutPanel RootPanel
@@ -116,13 +117,15 @@ public partial class LayoutRoot : LayoutElement, ILayoutContainer, ILayoutRoot, 
     [System.Xml.Serialization.XmlIgnore]
     public LayoutContent? LastFocusedDocument
     {
-        get; internal set;
+        get;
+        internal set;
     }
 
     [System.Xml.Serialization.XmlIgnore]
     public LayoutContent? ActiveContent
     {
-        get => _active; set => ChangeActiveContent(value);
+        get => _active;
+        set => ChangeActiveContent(value);
     }
 
     public IEnumerable<ILayoutElement> Children

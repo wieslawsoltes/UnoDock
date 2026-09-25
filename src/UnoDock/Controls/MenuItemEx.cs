@@ -13,11 +13,13 @@ public class MenuItemEx : MenuFlyoutItem
     private IconElement? _generatedIcon;
     public DataTemplate? IconTemplate
     {
-        get => (DataTemplate?)GetValue(IconTemplateProperty); set => SetValue(IconTemplateProperty, value);
+        get => (DataTemplate?)GetValue(IconTemplateProperty);
+        set => SetValue(IconTemplateProperty, value);
     }
     public DataTemplateSelector? IconTemplateSelector
     {
-        get => (DataTemplateSelector?)GetValue(IconTemplateSelectorProperty); set => SetValue(IconTemplateSelectorProperty, value);
+        get => (DataTemplateSelector?)GetValue(IconTemplateSelectorProperty);
+        set => SetValue(IconTemplateSelectorProperty, value);
     }
 
     public MenuItemEx() => DataContextChanged += (_, _) => UpdateIcon();

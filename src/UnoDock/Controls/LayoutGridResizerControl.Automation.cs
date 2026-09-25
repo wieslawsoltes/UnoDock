@@ -18,11 +18,13 @@ public partial class LayoutGridResizerControl
     };
     internal Func<DockResizeRange>? ReadAutomationRange
     {
-        get; set;
+        get;
+        set;
     }
     internal Action<double>? WriteAutomationValue
     {
-        get; set;
+        get;
+        set;
     }
 
     private void InitializeAutomation(Grid chrome)

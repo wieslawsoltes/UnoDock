@@ -72,6 +72,15 @@ class FormattingTests(unittest.TestCase):
         self.assertFalse(before.startswith(b'\xef\xbb\xbf'))
         self.run_tool('--check-format')
 
+    def test_expression_accessors_have_separate_lines(self):
+        path = self.write('class A{int field;public int Value{get=>field;internal set=>field=value;}}')
+        self.run_tool()
+        text = path.read_text()
+        self.assertIn('get => field;\n', text)
+        self.assertIn('internal set => field = value;', text)
+        self.assertNotIn('get => field; internal', text)
+        self.run_tool('--check-format')
+
     def test_no_source_cannot_pass(self):
         self.run_tool('--check-format', False)
 

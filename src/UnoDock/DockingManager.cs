@@ -29,7 +29,8 @@ public partial class DockingManager : Control, IDisposable, UnoDock.Compatibilit
     private ResourceDictionary? _themeResources;
     internal LayoutRoot? LastRenderedLayout
     {
-        get; private set;
+        get;
+        private set;
     }
 
     public DockingManager()
@@ -59,11 +60,16 @@ public partial class DockingManager : Control, IDisposable, UnoDock.Compatibilit
 
     public ICrossWindowCoordinates? CrossWindowCoordinates
     {
-        get; set;
+        get;
+        set;
     }
 
     internal void SetAutoHideHost(LayoutAutoHideWindowControl? value) => SetAutoHideWindow(value!);
-    public FloatingWindowMode FloatingWindowMode { get; set; } = FloatingWindowMode.Auto;
+    public FloatingWindowMode FloatingWindowMode
+    {
+        get;
+        set;
+    } = FloatingWindowMode.Auto;
     public IEnumerable<LayoutFloatingWindowControl> FloatingWindows => _floating;
     public int RealizedContentCount => _items.Values.Count(i => i.IsViewCreated);
     public IEnumerator LogicalChildrenPublic => LogicalChildren;

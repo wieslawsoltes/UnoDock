@@ -10,11 +10,13 @@ public abstract partial class LayoutGridControl<T>
     {
         internal double Displacement
         {
-            get; set;
+            get;
+            set;
         }
         internal bool AbsolutePixels
         {
-            get; set;
+            get;
+            set;
         }
     }
 

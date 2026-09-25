@@ -14,6 +14,7 @@ public interface ILayoutPreviousContainer
 
     int PreviousContainerIndex
     {
-        get; set;
+        get;
+        set;
     }
 }

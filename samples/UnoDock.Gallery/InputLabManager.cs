@@ -10,7 +10,8 @@ internal sealed class InputLabManager(InputLabState state, Action<string> record
 {
     internal LayoutDocumentPane? BoundPane
     {
-        get; set;
+        get;
+        set;
     }
 
     protected override LayoutDocumentPaneControl CreateDocumentPaneControl(LayoutDocumentPane model) => new InputLabPane(model, state, record, ReferenceEquals(model, BoundPane));

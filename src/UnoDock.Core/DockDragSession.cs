@@ -11,15 +11,18 @@ public sealed class DockDragSession
     }
     public DockDragState State
     {
-        get; private set;
+        get;
+        private set;
     }
     public DockDropTarget? Target
     {
-        get; private set;
+        get;
+        private set;
     }
     public DockPosition Position
     {
-        get; private set;
+        get;
+        private set;
     }
 
     public DockDragSession(double threshold = 5)

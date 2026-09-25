@@ -780,7 +780,8 @@ public static class InputExtensionTests
         // Use the document base property: this probe tests common content-control activation.
         public new LayoutContent? Model
         {
-            get => ((LayoutDocumentControl)this).Model; set => ((LayoutDocumentControl)this).Model = value;
+            get => ((LayoutDocumentControl)this).Model;
+            set => ((LayoutDocumentControl)this).Model = value;
         }
 
         protected override void OnPreviewGotKeyboardFocus(DockKeyboardFocusChangedEventArgs e)

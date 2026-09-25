@@ -11,15 +11,18 @@ public class LayoutAnchorGroup : LayoutGroup<LayoutAnchorable>, ILayoutPreviousC
 
     public ILayoutContainer? PreviousContainer
     {
-        get; internal set;
+        get;
+        internal set;
     }
     public string? PreviousContainerId
     {
-        get; internal set;
+        get;
+        internal set;
     }
     public int PreviousContainerIndex
     {
-        get; set;
+        get;
+        set;
     }
 
     protected override bool GetVisibility() => Children.Count > 0;

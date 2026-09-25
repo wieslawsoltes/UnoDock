@@ -17,11 +17,13 @@ public sealed partial class GalleryPage : IDisposable
     private bool _selectingSample, _selectingTheme, _pageDisposed;
     internal SampleKind CurrentSample
     {
-        get; private set;
+        get;
+        private set;
     }
     internal SampleTheme CurrentSampleTheme
     {
-        get; private set;
+        get;
+        private set;
     }
     internal SamplePropertyInspector? PropertyInspector => _sampleInspector;
 

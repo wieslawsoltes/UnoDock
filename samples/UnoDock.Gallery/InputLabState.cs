@@ -12,15 +12,18 @@ public sealed class InputLabState : INotifyPropertyChanged
     private int _index;
     public bool VetoPress
     {
-        get; set;
+        get;
+        set;
     }
     public bool VetoDrop
     {
-        get; set;
+        get;
+        set;
     }
     public bool Redirect
     {
-        get; set;
+        get;
+        set;
     }
 
     public int Index

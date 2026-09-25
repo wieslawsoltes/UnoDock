@@ -508,11 +508,13 @@ internal static class MvvmWorkspaceTests
         public List<(string Id, string Text)> Writes { get; } = [];
         public TaskCompletionSource<bool>? Hold
         {
-            get; set;
+            get;
+            set;
         }
         public Exception? Failure
         {
-            get; set;
+            get;
+            set;
         }
 
         public async Task WriteAsync(string contentId, string text)

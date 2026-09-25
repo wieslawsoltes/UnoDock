@@ -4,11 +4,13 @@ public abstract partial class LayoutElement
 {
     internal long ParentVersion
     {
-        get; private set;
+        get;
+        private set;
     }
     internal long ChildrenVersion
     {
-        get; private set;
+        get;
+        private set;
     }
 
     internal void ChildrenMutated() => ChildrenVersion++;

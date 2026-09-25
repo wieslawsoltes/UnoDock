@@ -9,7 +9,11 @@ public partial class LayoutAutoHideWindowControl
     private ResizeSession? _resizeSession;
     private sealed record ResizeSession(LayoutAnchorable Model, DockingManager Manager, LayoutRoot Root, DockSurface Surface, AnchorSide Side, FlowDirection Flow, Rect Viewport, double Original, double Initial, double Minimum, double Maximum, double Gutter, Point Origin, Canvas Layer, Border Ghost)
     {
-        internal double Extent { get; set; } = Initial;
+        internal double Extent
+        {
+            get;
+            set;
+        } = Initial;
         internal bool Horizontal => Side is AnchorSide.Left or AnchorSide.Right;
         internal double Sign => Side is AnchorSide.Left or AnchorSide.Top ? 1 : -1;
     }

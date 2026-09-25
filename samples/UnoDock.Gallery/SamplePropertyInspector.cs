@@ -79,7 +79,8 @@ internal sealed class SamplePropertyInspector : UserControl, IDisposable
     internal int VisibleFieldCount => _entries.Count(row => row.View.Visibility == Visibility.Visible);
     internal string? LastError
     {
-        get; private set;
+        get;
+        private set;
     }
     internal string SelectedPropertyName => _selected?.Field.Name ?? "";
 

@@ -33,39 +33,48 @@ public abstract class LayoutPositionableGroup<T> : LayoutGroup<T>, ILayoutPositi
 
     public double DockMinWidth
     {
-        get => _minWidth; set => Set(ref _minWidth, Dimension(value));
+        get => _minWidth;
+        set => Set(ref _minWidth, Dimension(value));
     }
     public double DockMinHeight
     {
-        get => _minHeight; set => Set(ref _minHeight, Dimension(value));
+        get => _minHeight;
+        set => Set(ref _minHeight, Dimension(value));
     }
     public double FloatingLeft
     {
-        get => _left; set => Set(ref _left, Coordinate(value));
+        get => _left;
+        set => Set(ref _left, Coordinate(value));
     }
     public double FloatingTop
     {
-        get => _top; set => Set(ref _top, Coordinate(value));
+        get => _top;
+        set => Set(ref _top, Coordinate(value));
     }
     public double FloatingWidth
     {
-        get => _floatingWidth; set => Set(ref _floatingWidth, Dimension(value));
+        get => _floatingWidth;
+        set => Set(ref _floatingWidth, Dimension(value));
     }
     public double FloatingHeight
     {
-        get => _floatingHeight; set => Set(ref _floatingHeight, Dimension(value));
+        get => _floatingHeight;
+        set => Set(ref _floatingHeight, Dimension(value));
     }
     public bool IsMaximized
     {
-        get => _maximized; set => Set(ref _maximized, value);
+        get => _maximized;
+        set => Set(ref _maximized, value);
     }
     public bool CanRepositionItems
     {
-        get => _reposition; set => Set(ref _reposition, value);
+        get => _reposition;
+        set => Set(ref _reposition, value);
     }
     public bool AllowDuplicateContent
     {
-        get => _duplicates; set => Set(ref _duplicates, value);
+        get => _duplicates;
+        set => Set(ref _duplicates, value);
     }
 
     protected virtual void OnDockWidthChanged()

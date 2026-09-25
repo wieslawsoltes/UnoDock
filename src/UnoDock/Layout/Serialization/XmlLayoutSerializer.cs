@@ -10,7 +10,11 @@ public class XmlLayoutSerializer : LayoutSerializer
     {
     }
 
-    public LayoutReadLimits ReadLimits { get; set; } = new();
+    public LayoutReadLimits ReadLimits
+    {
+        get;
+        set;
+    } = new();
 
     public void Serialize(XmlWriter writer) => LayoutSnapshotXml.Write(LayoutXml.CaptureRoot(Manager.Layout), writer);
     public void Serialize(TextWriter writer)

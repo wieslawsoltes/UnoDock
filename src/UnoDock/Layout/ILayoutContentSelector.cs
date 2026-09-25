@@ -9,7 +9,8 @@ public interface ILayoutContentSelector
 
     int SelectedContentIndex
     {
-        get; set;
+        get;
+        set;
     }
 
     int IndexOf(LayoutContent content);

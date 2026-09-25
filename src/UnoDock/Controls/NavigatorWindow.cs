@@ -42,19 +42,23 @@ public partial class NavigatorWindow : DockWindowControl
     public IEnumerable<LayoutAnchorableItem> Anchorables => (IEnumerable<LayoutAnchorableItem>?)GetValue(AnchorablesProperty) ?? [];
     public LayoutDocumentItem? SelectedDocument
     {
-        get => (LayoutDocumentItem?)GetValue(SelectedDocumentProperty); set => SetValue(SelectedDocumentProperty, value);
+        get => (LayoutDocumentItem?)GetValue(SelectedDocumentProperty);
+        set => SetValue(SelectedDocumentProperty, value);
     }
     public LayoutAnchorableItem? SelectedAnchorable
     {
-        get => (LayoutAnchorableItem?)GetValue(SelectedAnchorableProperty); set => SetValue(SelectedAnchorableProperty, value);
+        get => (LayoutAnchorableItem?)GetValue(SelectedAnchorableProperty);
+        set => SetValue(SelectedAnchorableProperty, value);
     }
     public string LayoutDocumentsLabel
     {
-        get => (string)GetValue(LayoutDocumentsLabelProperty); set => SetValue(LayoutDocumentsLabelProperty, value);
+        get => (string)GetValue(LayoutDocumentsLabelProperty);
+        set => SetValue(LayoutDocumentsLabelProperty, value);
     }
     public string LayoutAnchorablesLabel
     {
-        get => (string)GetValue(LayoutAnchorablesLabelProperty); set => SetValue(LayoutAnchorablesLabelProperty, value);
+        get => (string)GetValue(LayoutAnchorablesLabelProperty);
+        set => SetValue(LayoutAnchorablesLabelProperty, value);
     }
 
     protected void SetDocuments(LayoutDocumentItem[] value) => SetValue(DocumentsProperty, value);

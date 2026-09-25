@@ -8,7 +8,11 @@ namespace UnoDock;
 
 public class DocumentClosedEventArgs(LayoutDocument document) : EventArgs
 {
-    public LayoutDocument Document { get; private set; } = document;
+    public LayoutDocument Document
+    {
+        get;
+        private set;
+    } = document;
 }
 #if WINDOWS
 #else

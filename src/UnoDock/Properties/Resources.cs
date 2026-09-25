@@ -7,7 +7,8 @@ public class Resources
 {
     public static CultureInfo? Culture
     {
-        get; set;
+        get;
+        set;
     }
     public static ResourceManager ResourceManager { get; } = new StringResources();
     public static IDictionary<string, IDictionary<string, string>> Translations { get; } = new Dictionary<string, IDictionary<string, string>>(StringComparer.OrdinalIgnoreCase);

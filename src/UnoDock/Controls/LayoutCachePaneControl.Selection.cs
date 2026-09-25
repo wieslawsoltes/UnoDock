@@ -11,11 +11,13 @@ public partial class LayoutCachePaneControl
     private PaneObserver? _paneObserver;
     public int SelectedIndex
     {
-        get => (int)GetValue(SelectedIndexProperty); set => SetValue(SelectedIndexProperty, value);
+        get => (int)GetValue(SelectedIndexProperty);
+        set => SetValue(SelectedIndexProperty, value);
     }
     public object? SelectedItem
     {
-        get => GetValue(SelectedItemProperty); set => SetValue(SelectedItemProperty, value);
+        get => GetValue(SelectedItemProperty);
+        set => SetValue(SelectedItemProperty, value);
     }
 
     // Binding the model does not call a virtual member from a constructor.

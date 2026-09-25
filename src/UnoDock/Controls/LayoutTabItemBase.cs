@@ -27,7 +27,8 @@ public abstract partial class LayoutTabItemBase : DockInputControl
     private DockingManager? _manager;
     public LayoutContent? Model
     {
-        get => (LayoutContent?)GetValue(ModelProperty); set => SetValue(ModelProperty, value);
+        get => (LayoutContent?)GetValue(ModelProperty);
+        set => SetValue(ModelProperty, value);
     }
     public LayoutItem? LayoutItem => (LayoutItem?)GetValue(LayoutItemProperty);
 

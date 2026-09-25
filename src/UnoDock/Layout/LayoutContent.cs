@@ -18,69 +18,85 @@ public abstract partial class LayoutContent : LayoutElement, IComparable<LayoutC
     private int _previousIndex = -1;
     public string? Title
     {
-        get => (string?)GetValue(TitleProperty); set => SetValue(TitleProperty, value);
+        get => (string?)GetValue(TitleProperty);
+        set => SetValue(TitleProperty, value);
     }
     public string? ContentId
     {
-        get => (string?)GetValue(ContentIdProperty); set => SetValue(ContentIdProperty, value);
+        get => (string?)GetValue(ContentIdProperty);
+        set => SetValue(ContentIdProperty, value);
     }
 
     [System.Xml.Serialization.XmlIgnore]
     public object? Content
     {
-        get => _content; set => Set(ref _content, value);
+        get => _content;
+        set => Set(ref _content, value);
     }
     public object? ToolTip
     {
-        get => _toolTip; set => Set(ref _toolTip, value);
+        get => _toolTip;
+        set => Set(ref _toolTip, value);
     }
     public ImageSource? IconSource
     {
-        get => _icon; set => Set(ref _icon, value);
+        get => _icon;
+        set => Set(ref _icon, value);
     }
     public bool IsEnabled
     {
-        get => _enabled; set => Set(ref _enabled, value);
+        get => _enabled;
+        set => Set(ref _enabled, value);
     }
     public bool CanClose
     {
-        get => _canClose; set => Set(ref _canClose, value);
+        get => _canClose;
+        set => Set(ref _canClose, value);
     }
     public bool CanFloat
     {
-        get => _canFloat; set => Set(ref _canFloat, value);
+        get => _canFloat;
+        set => Set(ref _canFloat, value);
     }
     public bool IsFloating
     {
-        get => _floating; internal set => Set(ref _floating, value);
+        get => _floating;
+        internal set => Set(ref _floating, value);
     }
     public bool IsLastFocusedDocument
     {
-        get => _lastFocused; internal set => Set(ref _lastFocused, value);
+        get => _lastFocused;
+        internal set => Set(ref _lastFocused, value);
     }
     public bool IsMaximized
     {
-        get => _maximized; set => Set(ref _maximized, value);
+        get => _maximized;
+        set => Set(ref _maximized, value);
     }
     public DateTime? LastActivationTimeStamp
     {
-        get => _activated; set => Set(ref _activated, value);
+        get => _activated;
+        set => Set(ref _activated, value);
     }
     public double FloatingLeft
     {
-        get => _left; set => Set(ref _left, LayoutPositionableGroup<LayoutContent>.Coordinate(value));
+        get => _left;
+        set => Set(ref _left, LayoutPositionableGroup<LayoutContent>.Coordinate(value));
     }
     public double FloatingTop
     {
-        get => _top; set => Set(ref _top, LayoutPositionableGroup<LayoutContent>.Coordinate(value));
+        get => _top;
+        set => Set(ref _top, LayoutPositionableGroup<LayoutContent>.Coordinate(value));
     }
     public double FloatingWidth
     {
-        get => _width; set => Set(ref _width, LayoutPositionableGroup<LayoutContent>.Dimension(value));
+        get => _width;
+        set => Set(ref _width, LayoutPositionableGroup<LayoutContent>.Dimension(value));
     }
     public double FloatingHeight
     {
-        get => _height; set => Set(ref _height, LayoutPositionableGroup<LayoutContent>.Dimension(value));
+        get => _height;
+        set => Set(ref _height, LayoutPositionableGroup<LayoutContent>.Dimension(value));
     }
 
     public ILayoutContainer? PreviousContainer
@@ -95,13 +111,15 @@ public abstract partial class LayoutContent : LayoutElement, IComparable<LayoutC
 
     public string? PreviousContainerId
     {
-        get; protected set;
+        get;
+        protected set;
     }
 
     [System.Xml.Serialization.XmlIgnore]
     public int PreviousContainerIndex
     {
-        get => _previousIndex; set => Set(ref _previousIndex, value);
+        get => _previousIndex;
+        set => Set(ref _previousIndex, value);
     }
 
     internal void SetPrevious(ILayoutContainer? container, int index, string? id = null)

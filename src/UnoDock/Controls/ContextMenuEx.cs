@@ -15,11 +15,13 @@ public class ContextMenuEx : MenuFlyout
     }));
     public IEnumerable? ItemsSource
     {
-        get => (IEnumerable?)GetValue(ItemsSourceProperty); set => SetValue(ItemsSourceProperty, value);
+        get => (IEnumerable?)GetValue(ItemsSourceProperty);
+        set => SetValue(ItemsSourceProperty, value);
     }
     public object? MenuDataContext
     {
-        get => GetValue(MenuDataContextProperty); set => SetValue(MenuDataContextProperty, value);
+        get => GetValue(MenuDataContextProperty);
+        set => SetValue(MenuDataContextProperty, value);
     }
 
     public ContextMenuEx()

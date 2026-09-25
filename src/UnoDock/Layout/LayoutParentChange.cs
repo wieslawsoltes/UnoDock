@@ -35,7 +35,8 @@ internal sealed class LayoutParentChange
     }
     internal ILayoutRoot? NewRoot
     {
-        get; private set;
+        get;
+        private set;
     }
     internal (LayoutElement Child, long Version)[] Descendants
     {

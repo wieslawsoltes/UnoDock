@@ -7,7 +7,8 @@ public abstract class OverlayArea
 {
     public Rect ScreenDetectionArea
     {
-        get; private set;
+        get;
+        private set;
     }
 
     protected void SetScreenDetectionArea(Rect rect)

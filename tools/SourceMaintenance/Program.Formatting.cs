@@ -73,6 +73,7 @@ internal static partial class Program
                 // pattern/when spacing, nullable arrays and property accessors.
                 // Neither stage may alter tokens in any supported configuration.
                 var syntax = Parse(text, configuration).NormalizeWhitespace("    ", "\n", false);
+                syntax = SeparateAccessors(syntax);
                 text = Formatter.Format(syntax, workspace, options).ToFullString().TrimEnd() + "\n";
             }
 

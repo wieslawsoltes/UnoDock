@@ -74,7 +74,8 @@ public sealed class WorkspaceDocument : INotifyPropertyChanged, IDockContent
         /// not rewrite the original buffer or mark the document dirty.</summary>
         public string EditorText
     {
-        get => _editorText ??= WorkspaceTextProjection.ForEditor(_text); set => Text = WorkspaceTextProjection.ApplyEditorEdit(_text, value);
+        get => _editorText ??= WorkspaceTextProjection.ForEditor(_text);
+        set => Text = WorkspaceTextProjection.ApplyEditorEdit(_text, value);
     }
     public bool IsDirty => !string.Equals(_savedText, _text, StringComparison.Ordinal);
 

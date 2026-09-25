@@ -36,11 +36,13 @@ public class DropDownButton : ToggleButton
 
     public MenuFlyout? DropDownContextMenu
     {
-        get => (MenuFlyout?)GetValue(DropDownContextMenuProperty); set => SetValue(DropDownContextMenuProperty, value);
+        get => (MenuFlyout?)GetValue(DropDownContextMenuProperty);
+        set => SetValue(DropDownContextMenuProperty, value);
     }
     public object? DropDownContextMenuDataContext
     {
-        get => GetValue(DropDownContextMenuDataContextProperty); set => SetValue(DropDownContextMenuDataContextProperty, value);
+        get => GetValue(DropDownContextMenuDataContextProperty);
+        set => SetValue(DropDownContextMenuDataContextProperty, value);
     }
 
     /// <summary>Shows the configured menu through the same lifetime as a native click.</summary>

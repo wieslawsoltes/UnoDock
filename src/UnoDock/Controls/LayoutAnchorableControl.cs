@@ -10,7 +10,8 @@ public class LayoutAnchorableControl : LayoutDocumentControl
 {
     public new LayoutAnchorable? Model
     {
-        get => base.Model as LayoutAnchorable; set => base.Model = value;
+        get => base.Model as LayoutAnchorable;
+        set => base.Model = value;
     }
 
     public LayoutAnchorableControl()

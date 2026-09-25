@@ -34,7 +34,8 @@ public partial class DockingManager
         public static readonly DependencyProperty ShowDocumentPaneToolGuidesProperty = DependencyProperty.Register(nameof(ShowDocumentPaneToolGuides), typeof(bool), typeof(DockingManager), new PropertyMetadata(false, (d, _) => ((DockingManager)d)._surface?.CancelDrag()));
     public bool ShowDocumentPaneToolGuides
     {
-        get => (bool)GetValue(ShowDocumentPaneToolGuidesProperty); set => SetValue(ShowDocumentPaneToolGuidesProperty, value);
+        get => (bool)GetValue(ShowDocumentPaneToolGuidesProperty);
+        set => SetValue(ShowDocumentPaneToolGuidesProperty, value);
     }
 
     /// <summary>Live validated glyphs in the same surface coordinate space as GetDropPlan.

@@ -12,31 +12,38 @@ public class LayoutAnchorable : LayoutContent
     public LayoutAnchorable() => CanClose = false;
     public bool CanHide
     {
-        get => _canHide; set => Set(ref _canHide, value);
+        get => _canHide;
+        set => Set(ref _canHide, value);
     }
     public bool CanAutoHide
     {
-        get => _canAutoHide; set => Set(ref _canAutoHide, value);
+        get => _canAutoHide;
+        set => Set(ref _canAutoHide, value);
     }
     public bool CanDockAsTabbedDocument
     {
-        get => _canDocument; set => Set(ref _canDocument, value);
+        get => _canDocument;
+        set => Set(ref _canDocument, value);
     }
     public double AutoHideWidth
     {
-        get => _autoWidth; set => Set(ref _autoWidth, LayoutPositionableGroup<LayoutContent>.Dimension(value));
+        get => _autoWidth;
+        set => Set(ref _autoWidth, LayoutPositionableGroup<LayoutContent>.Dimension(value));
     }
     public double AutoHideHeight
     {
-        get => _autoHeight; set => Set(ref _autoHeight, LayoutPositionableGroup<LayoutContent>.Dimension(value));
+        get => _autoHeight;
+        set => Set(ref _autoHeight, LayoutPositionableGroup<LayoutContent>.Dimension(value));
     }
     public double AutoHideMinWidth
     {
-        get => _autoMinWidth; set => Set(ref _autoMinWidth, LayoutPositionableGroup<LayoutContent>.Dimension(value));
+        get => _autoMinWidth;
+        set => Set(ref _autoMinWidth, LayoutPositionableGroup<LayoutContent>.Dimension(value));
     }
     public double AutoHideMinHeight
     {
-        get => _autoMinHeight; set => Set(ref _autoMinHeight, LayoutPositionableGroup<LayoutContent>.Dimension(value));
+        get => _autoMinHeight;
+        set => Set(ref _autoMinHeight, LayoutPositionableGroup<LayoutContent>.Dimension(value));
     }
 
     [System.Xml.Serialization.XmlIgnore]

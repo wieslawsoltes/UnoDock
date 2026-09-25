@@ -16,7 +16,8 @@ public static class AutoHideQualityTests
     {
         public bool Keep
         {
-            get; set;
+            get;
+            set;
         }
 
         protected override bool HasFocusWithinCore() => Keep || base.HasFocusWithinCore();
@@ -26,7 +27,8 @@ public static class AutoHideQualityTests
     {
         public Action? Callback
         {
-            get; set;
+            get;
+            set;
         }
 
         protected override DataTemplate SelectTemplateCore(object item, DependencyObject container)
@@ -42,7 +44,8 @@ public static class AutoHideQualityTests
     {
         public Action<DependencyPropertyChangedEventArgs>? HostChanged
         {
-            get; set;
+            get;
+            set;
         }
 
         protected override LayoutAutoHideWindowControl CreateAutoHideWindowControl() => new FocusFlyout();

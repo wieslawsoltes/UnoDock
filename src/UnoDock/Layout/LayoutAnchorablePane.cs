@@ -13,13 +13,15 @@ public class LayoutAnchorablePane : LayoutPositionableGroup<LayoutAnchorable>, I
     public LayoutContent? SelectedContent => _selection.Content;
     public int SelectedContentIndex
     {
-        get => _selection.Index; set => _selection.Index = value;
+        get => _selection.Index;
+        set => _selection.Index = value;
     }
 
     public int IndexOf(LayoutContent content) => content is LayoutAnchorable a ? Children.IndexOf(a) : -1;
     public string? Name
     {
-        get => _name; set => Set(ref _name, value);
+        get => _name;
+        set => Set(ref _name, value);
     }
     public bool CanClose => Children.All(c => c.CanClose);
     public bool CanHide => Children.All(c => c.CanHide);

@@ -26,7 +26,8 @@ public class DockMouseEventArgs : EventArgs
     public object OriginalSource => NativeEvent.OriginalSource;
     public bool Handled
     {
-        get; set;
+        get;
+        set;
     }
     public uint PointerId => NativeEvent.Pointer.PointerId;
     public PointerDeviceType PointerDeviceType => NativeEvent.Pointer.PointerDeviceType;

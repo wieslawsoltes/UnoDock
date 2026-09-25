@@ -15,11 +15,13 @@ public class DropDownControlArea : UserControl
     private long _inputGeneration;
     public MenuFlyout? DropDownContextMenu
     {
-        get => (MenuFlyout?)GetValue(DropDownContextMenuProperty); set => SetValue(DropDownContextMenuProperty, value);
+        get => (MenuFlyout?)GetValue(DropDownContextMenuProperty);
+        set => SetValue(DropDownContextMenuProperty, value);
     }
     public object? DropDownContextMenuDataContext
     {
-        get => GetValue(DropDownContextMenuDataContextProperty); set => SetValue(DropDownContextMenuDataContextProperty, value);
+        get => GetValue(DropDownContextMenuDataContextProperty);
+        set => SetValue(DropDownContextMenuDataContextProperty, value);
     }
 
     public DropDownControlArea()

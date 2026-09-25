@@ -9,7 +9,8 @@ public abstract class DictionaryTheme : Theme
     public DictionaryTheme(ResourceDictionary themeResourceDictionary) => ThemeResourceDictionary = themeResourceDictionary ?? throw new ArgumentNullException(nameof(themeResourceDictionary));
     public ResourceDictionary ThemeResourceDictionary
     {
-        get; private set;
+        get;
+        private set;
     }
 
     public override Uri GetResourceUri() => ThemeResourceDictionary.Source!;

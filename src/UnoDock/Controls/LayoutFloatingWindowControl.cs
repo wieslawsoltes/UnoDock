@@ -19,7 +19,11 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
     private readonly Grid _frame = new();
     private readonly OverlayWindow _dropOverlay = new();
     private static long _interactionSequence;
-    internal long InteractionOrder { get; private set; } = System.Threading.Interlocked.Increment(ref _interactionSequence);
+    internal long InteractionOrder
+    {
+        get;
+        private set;
+    } = System.Threading.Interlocked.Increment(ref _interactionSequence);
 
     private readonly ContentPresenter _body = new()
     {
@@ -44,7 +48,8 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
     public event EventHandler<Exception>? MessageFilterFailed;
     internal double ChromeCaptionHeight
     {
-        get => _title.MinHeight; set => _title.MinHeight = value;
+        get => _title.MinHeight;
+        set => _title.MinHeight = value;
     }
 
     internal bool CanPerformSystemAction(Microsoft.Windows.Shell.WindowAction action)
@@ -102,7 +107,8 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
 
     protected bool CloseInitiatedByUser
     {
-        get; private set;
+        get;
+        private set;
     }
 
     protected LayoutFloatingWindowControl(ILayoutElement model) : this(model, false)
@@ -176,16 +182,19 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
     }
     public bool IsContentImmutable
     {
-        get => (bool)GetValue(IsContentImmutableProperty); private set => SetValue(IsContentImmutableProperty, value);
+        get => (bool)GetValue(IsContentImmutableProperty);
+        private set => SetValue(IsContentImmutableProperty, value);
     }
     public bool IsDragging => (bool)GetValue(IsDraggingProperty);
     public bool IsMaximized
     {
-        get => (bool)GetValue(IsMaximizedProperty); private set => SetValue(IsMaximizedProperty, value);
+        get => (bool)GetValue(IsMaximizedProperty);
+        private set => SetValue(IsMaximizedProperty, value);
     }
     public Thickness ResizeBorderThickness
     {
-        get => (Thickness)GetValue(ResizeBorderThicknessProperty); set => SetValue(ResizeBorderThicknessProperty, value);
+        get => (Thickness)GetValue(ResizeBorderThicknessProperty);
+        set => SetValue(ResizeBorderThicknessProperty, value);
     }
     public Window? NativeWindow => _window;
     internal IEnumerable<LayoutContent> Contents => Model.Descendents().OfType<LayoutContent>();

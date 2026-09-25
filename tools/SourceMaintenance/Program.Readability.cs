@@ -11,9 +11,7 @@ internal static partial class Program
         // Roslyn expands the containing property but keeps consecutive expression
         // accessors on one line. Separate their trivia without rewriting bodies,
         // accessibility, attributes, comments, literals or any executable token.
-        var endings = syntax.DescendantNodes().OfType<AccessorListSyntax>()
-            .SelectMany(list => list.Accessors.Take(Math.Max(0, list.Accessors.Count - 1)))
-            .Select(accessor => accessor.GetLastToken()).ToArray();
+        var endings = syntax.DescendantNodes().OfType<AccessorListSyntax>().SelectMany(list => list.Accessors.Take(Math.Max(0, list.Accessors.Count - 1))).Select(accessor => accessor.GetLastToken()).ToArray();
         return syntax.ReplaceTokens(endings, (_, token) =>
         {
             if (token.TrailingTrivia.Any(trivia => trivia.IsKind(SyntaxKind.EndOfLineTrivia)))

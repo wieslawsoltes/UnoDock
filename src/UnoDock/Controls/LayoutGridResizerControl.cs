@@ -11,11 +11,13 @@ public partial class LayoutGridResizerControl : ContentControl
     public static readonly DependencyProperty OpacityWhileDraggingProperty = DependencyProperty.Register(nameof(OpacityWhileDragging), typeof(double), typeof(LayoutGridResizerControl), new PropertyMetadata(.5d));
     public Brush? BackgroundWhileDragging
     {
-        get => (Brush?)GetValue(BackgroundWhileDraggingProperty); set => SetValue(BackgroundWhileDraggingProperty, value);
+        get => (Brush?)GetValue(BackgroundWhileDraggingProperty);
+        set => SetValue(BackgroundWhileDraggingProperty, value);
     }
     public double OpacityWhileDragging
     {
-        get => (double)GetValue(OpacityWhileDraggingProperty); set => SetValue(OpacityWhileDraggingProperty, value);
+        get => (double)GetValue(OpacityWhileDraggingProperty);
+        set => SetValue(OpacityWhileDraggingProperty, value);
     }
 
     private readonly Thumb _thumb;
@@ -34,7 +36,8 @@ public partial class LayoutGridResizerControl : ContentControl
     {
         internal bool Released
         {
-            get; set;
+            get;
+            set;
         }
     }
 

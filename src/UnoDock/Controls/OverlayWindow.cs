@@ -24,7 +24,8 @@ public class OverlayWindow : DockWindowControl
     private long _presentationVersion;
     public DockDropPlan? CurrentPlan
     {
-        get; private set;
+        get;
+        private set;
     }
     public IReadOnlyList<DockGuideTarget> DisplayedGuides => _guides;
     public bool IsOpen => Visibility == Visibility.Visible && (CurrentPlan?.CanExecute == true || _guides.Any(g => g.Plan.CanExecute));
