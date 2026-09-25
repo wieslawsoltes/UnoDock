@@ -23,7 +23,7 @@ class NativeGateTests(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
 
     def fixture(self, system):
-        counts = {"desktop-floating": 40 if system == "Linux" else 36, "uno-theme": 10}
+        counts = {"desktop-floating": 40 if system == "Linux" else 36, "floating-drag-cleanup": 27, "uno-theme": 10}
         if system == "Windows": counts["windows-floating-input"] = 8
         if system == "Darwin": counts["mac-native"] = 8
         for suite, count in counts.items():
@@ -93,6 +93,16 @@ class NativeGateTests(unittest.TestCase):
     def test_zero_process_status_cannot_override_evidence(self):
         self.fixture("Darwin"); self.mutate(lambda root: ET.SubElement(root[0], "failure"))
         with patch.dict("os.environ", {"NATIVE_HOST_EXIT_CODE": "0"}), self.assertRaises(RuntimeError): self.run_gate("Darwin")
+
+    def test_missing_cleanup_suite(self):
+        self.fixture("Linux"); (self.directory / "floating-drag-cleanup.xml").unlink()
+        with self.assertRaises(RuntimeError): self.run_gate("Linux")
+
+    def test_incomplete_cleanup_suite(self):
+        self.fixture("Windows")
+        path = self.directory / "floating-drag-cleanup.xml"
+        tree = ET.parse(path); root = tree.getroot(); root.remove(root[-1]); tree.write(path)
+        with self.assertRaises(RuntimeError): self.run_gate("Windows")
 
 
 if __name__ == "__main__": unittest.main()

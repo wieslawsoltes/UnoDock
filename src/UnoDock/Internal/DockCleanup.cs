@@ -1,0 +1,24 @@
+using System.Runtime.ExceptionServices;
+
+namespace UnoDock.Internal;
+
+/// <summary>Complete independent teardown steps before propagating application
+/// callback failures. A single failure retains its identity and original stack;
+/// multiple failures remain observable in occurrence order.</summary>
+internal struct DockCleanup
+{
+    private List<Exception>? _failures;
+
+    internal void Attempt(Action action)
+    {
+        try { action(); }
+        catch (Exception error) { (_failures ??= []).Add(error); }
+    }
+
+    internal void ThrowIfFailed()
+    {
+        if (_failures is not { Count: > 0 } failures) return;
+        if (failures.Count == 1) ExceptionDispatchInfo.Capture(failures[0]).Throw();
+        throw new AggregateException("Docking cleanup callbacks failed.", failures);
+    }
+}

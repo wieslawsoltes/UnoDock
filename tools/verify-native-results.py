@@ -9,7 +9,7 @@ from pathlib import Path
 
 def verify(directory: Path) -> None:
     system = platform.system()
-    expected = {"desktop-floating": 40 if system == "Linux" else 36, "uno-theme": 10}
+    expected = {"desktop-floating": 40 if system == "Linux" else 36, "floating-drag-cleanup": 27, "uno-theme": 10}
     if system == "Windows":
         expected["windows-floating-input"] = 8
     elif system == "Darwin":

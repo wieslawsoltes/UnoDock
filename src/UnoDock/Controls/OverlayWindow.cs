@@ -14,6 +14,7 @@ public class OverlayWindow : DockWindowControl
     private readonly Dictionary<(ILayoutGroup Target, DropTargetType Type), DockGuideVisual> _guideViews = [];
     private readonly Dictionary<ILayoutGroup, DockGuideBackplate> _plates = new(ReferenceEqualityComparer.Instance);
     private IReadOnlyList<DockGuideTarget> _guides = Array.Empty<DockGuideTarget>();
+    private long _presentationVersion;
     public DockDropPlan? CurrentPlan { get; private set; }
     public IReadOnlyList<DockGuideTarget> DisplayedGuides => _guides;
     public bool IsOpen => Visibility == Visibility.Visible && (CurrentPlan?.CanExecute == true || _guides.Any(g => g.Plan.CanExecute));
@@ -37,8 +38,9 @@ public class OverlayWindow : DockWindowControl
     internal void ShowPreview(DockDropPlan? plan, Rect rect, Brush accent)
     {
         ArgumentNullException.ThrowIfNull(accent);
-        Hide();
-        if (plan?.CanExecute != true || !Valid(rect)) return;
+        var version = ++_presentationVersion;
+        HideCore(version);
+        if (version != _presentationVersion || plan?.CanExecute != true || !Valid(rect)) return;
         CurrentPlan = plan; PaintPreview(rect, accent); Visibility = Visibility.Visible;
     }
     public void ShowGuides(IReadOnlyList<DockGuideTarget> guides, DockDropPlan? selectedPlan, DockingManager manager)
@@ -49,6 +51,7 @@ public class OverlayWindow : DockWindowControl
         var valid = guides.Where(g => g != null && g.Plan.CanExecute && ReferenceEquals(g.Plan.Target.Root?.Manager, manager)).ToArray();
         var keys = new HashSet<(ILayoutGroup, DropTargetType)>();
         foreach (var g in valid) if (!keys.Add((g.Plan.Target, g.Type))) throw new ArgumentException("Duplicate docking guide identity.", nameof(guides));
+        _presentationVersion++;
         var selected = selectedPlan?.CanExecute == true && ReferenceEquals(selectedPlan.Target.Root?.Manager, manager) ? selectedPlan : null;
         var p = DockGuidePalette.Resolve(manager, DockChrome.Palette(manager));
         var plateBounds = new Dictionary<ILayoutGroup, Rect>(ReferenceEqualityComparer.Instance);
@@ -105,13 +108,22 @@ public class OverlayWindow : DockWindowControl
         }
         _fill.Background = accent; _preview.BorderBrush = accent;
     }
-    public void Hide()
+    public void Hide() => HideCore(++_presentationVersion);
+    private void HideCore(long version)
     {
-        CurrentPlan = null; _guides = Array.Empty<DockGuideTarget>(); Visibility = Visibility.Collapsed;
-        foreach (var view in _guideViews.Values) _canvas.Children.Remove(view);
-        _guideViews.Clear();
-        foreach (var plate in _plates.Values) _canvas.Children.Remove(plate); _plates.Clear();
-        _fill.Visibility = _preview.Visibility = Visibility.Collapsed;
+        // Revoke the old presentation before a DP/Unloaded callback can throw or
+        // open a replacement. Retire only the old visual instances afterwards.
+        var staleGuides = _guideViews.Values.ToArray();
+        var stalePlates = _plates.Values.ToArray();
+        CurrentPlan = null; _guides = Array.Empty<DockGuideTarget>();
+        _guideViews.Clear(); _plates.Clear();
+        var cleanup = new DockCleanup();
+        cleanup.Attempt(() => { if (version == _presentationVersion) Visibility = Visibility.Collapsed; });
+        foreach (var view in staleGuides) cleanup.Attempt(() => _canvas.Children.Remove(view));
+        foreach (var plate in stalePlates) cleanup.Attempt(() => _canvas.Children.Remove(plate));
+        cleanup.Attempt(() => { if (version == _presentationVersion) _fill.Visibility = Visibility.Collapsed; });
+        cleanup.Attempt(() => { if (version == _presentationVersion) _preview.Visibility = Visibility.Collapsed; });
+        cleanup.ThrowIfFailed();
     }
     public void Close() { var args = new CancelEventArgs(); OnClosing(args); if (!args.Cancel) Hide(); }
     protected override void OnClosing(CancelEventArgs e) => base.OnClosing(e);

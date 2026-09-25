@@ -51,10 +51,14 @@ internal sealed partial class DockSurface
         _dragScrollTimer.Stop();
         try
         {
-            ShowDragPreview(null);
-            window.EndFloatingDragCapture(this, generation, false);
-            // Clearing visuals and capture raises application callbacks. A newer
-            // gesture, root or source owner withdraws the old one-use intent.
+            // Guide Visibility/Unloaded and IsDragging observers are application
+            // code. Failure in one must not strand the other's capture or clock.
+            var cleanup = new DockCleanup();
+            cleanup.Attempt(() => ShowDragPreview(null));
+            cleanup.Attempt(() => window.EndFloatingDragCapture(this, generation, false));
+            cleanup.ThrowIfFailed();
+            // A failed teardown never authorizes a drop. A replacement gesture,
+            // workspace or source owner also withdraws this one-use intent.
             return !_disposed && closing == _floatingDragGeneration && _floatingDrag == null &&
                 _dragSource == null && session.IsCurrent && session.Execute(plan);
         }

@@ -322,8 +322,17 @@ internal sealed partial class DockSurface : Grid, IDisposable
     }
     private void ShowDragPreview(DockDropPlan? plan)
     {
-        _overlay.Hide(); foreach (var window in Manager.FloatingWindows) window.HideDropPreview();
-        if (plan == null) return;
+        var generation = _floatingDragGeneration;
+        var windows = Manager.FloatingWindows.ToArray();
+        var cleanup = new DockCleanup();
+        cleanup.Attempt(_overlay.Hide);
+        foreach (var window in windows)
+        {
+            if (generation != _floatingDragGeneration) break;
+            cleanup.Attempt(window.HideDropPreview);
+        }
+        cleanup.ThrowIfFailed();
+        if (generation != _floatingDragGeneration || plan == null) return;
         var accent = DockVisuals.Brush(Manager, "UnoDock.AccentBrush", "AccentFillColorDefaultBrush");
         var floating = plan.Target.FindParent<LayoutFloatingWindow>();
         var host = floating == null ? null : Manager.FloatingWindows.FirstOrDefault(w => ReferenceEquals(w.Model, floating));
@@ -355,16 +364,23 @@ internal sealed partial class DockSurface : Grid, IDisposable
         var restore = floating?.IsCurrent == true;
         _floatingDrag = null; _floatingDragGeneration++;
         _dragSource = null; _dragInput = null; _dragContent = null;
-        floating?.Dispose();
-        ShowDragPreview(null);
-        floating?.Window.EndFloatingDragCapture(this, generation, restore);
+        // Unsubscribe before guide/caption callbacks can transfer capture. Old
+        // Unloaded/PointerCaptureLost handlers must not cancel a successor.
         if (source != null)
         {
             if (input != null)
             { input.DockDragMoved -= OnDragMoved; input.DockDragReleased -= OnDragReleased; input.DockInputCancelled -= OnDockInputCancelled; }
             else { source.RemoveHandler(PointerMovedEvent, new PointerEventHandler(OnDragMoved)); source.RemoveHandler(PointerReleasedEvent, new PointerEventHandler(OnDragReleased)); }
-            source.PointerCanceled -= OnDragCancelled; source.PointerCaptureLost -= OnCaptureLost; source.Unloaded -= OnDragSourceUnloaded; source.ReleasePointerCaptures();
+            source.PointerCanceled -= OnDragCancelled; source.PointerCaptureLost -= OnCaptureLost; source.Unloaded -= OnDragSourceUnloaded;
         }
+        var cleanup = new DockCleanup();
+        cleanup.Attempt(() => floating?.Dispose());
+        cleanup.Attempt(() => ShowDragPreview(null));
+        cleanup.Attempt(() => floating?.Window.EndFloatingDragCapture(this, generation, restore));
+        // A new gesture may legitimately reacquire the same source during an
+        // application callback. Do not release that successor's pointer capture.
+        if (source != null && !ReferenceEquals(source, _dragSource)) cleanup.Attempt(source.ReleasePointerCaptures);
+        cleanup.ThrowIfFailed();
     }
     internal void Reset()
     {
