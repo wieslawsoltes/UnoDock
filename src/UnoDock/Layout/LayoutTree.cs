@@ -46,6 +46,16 @@ internal static class LayoutTree
         }
     }
 
+    internal static bool DetachForTransfer(LayoutElement element)
+    {
+        var parent = element.Parent;
+        var version = element.ParentVersion;
+        parent?.RemoveChild(element);
+        // A completed intervening attach/remove must revoke the request,
+        // even when its final parent is null again.
+        return element.Parent == null && element.ParentVersion == unchecked(version + (parent == null ? 0 : 1));
+    }
+
     internal static void ReplaceSlot<T>(ILayoutContainer owner, ref T? field, T? value, string property)
         where T : LayoutElement
     {
@@ -66,10 +76,15 @@ internal static class LayoutTree
         {
             var old = field;
             var oldVersion = old?.ParentVersion;
-            value?.Parent?.RemoveChild(value);
+            var destinationVersion = ownerElement.ChildrenVersion;
+            if (value != null && !DetachForTransfer(value))
+            {
+                return;
+            }
+
             // A detach callback may transfer the incoming child or replace this
             // destination slot. Neither operation authorizes reclaiming it.
-            if (!ReferenceEquals(field, old) || old?.ParentVersion != oldVersion || value?.Parent != null)
+            if (ownerElement.ChildrenVersion != destinationVersion || !ReferenceEquals(field, old) || old?.ParentVersion != oldVersion || value?.Parent != null)
             {
                 return;
             }

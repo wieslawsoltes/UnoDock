@@ -27,8 +27,7 @@ internal sealed class OwnedCollection<T>(ILayoutContainer owner, Action changed)
         LayoutMutation.Execute(mutation =>
         {
             var version = Owner.ChildrenVersion;
-            item.Parent?.RemoveChild(item);
-            if (item.Parent != null || Owner.ChildrenVersion != version)
+            if (!LayoutTree.DetachForTransfer((LayoutElement)(ILayoutElement)item) || Owner.ChildrenVersion != version)
             {
                 return;
             }
@@ -101,8 +100,7 @@ internal sealed class OwnedCollection<T>(ILayoutContainer owner, Action changed)
         LayoutMutation.Execute(mutation =>
         {
             var version = Owner.ChildrenVersion;
-            item.Parent?.RemoveChild(item);
-            if (item.Parent != null || Owner.ChildrenVersion != version)
+            if (!LayoutTree.DetachForTransfer((LayoutElement)(ILayoutElement)item) || Owner.ChildrenVersion != version)
             {
                 return;
             }

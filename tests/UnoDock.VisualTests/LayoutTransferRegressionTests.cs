@@ -1,18 +1,30 @@
 using UnoDock.Layout;
 
 namespace UnoDock.Testing;
-
 /// <summary>Additional public-API regressions for the detach-to-attach boundary.</summary>
 internal static class LayoutTransferRegressionTests
 {
     internal static void Add(TestRunner tests)
     {
-        foreach (var operation in new[] { "insert", "replace", "slot" })
+        foreach (var operation in new[]
+        {
+            "insert",
+            "replace",
+            "slot"
+        }
+
+        )
         {
             tests.Test("ownership: detach ABA revokes incoming " + operation, () =>
             {
-                var child = new LayoutDocument { Title = "Incoming" };
-                var retained = new LayoutDocument { Title = "Retained" };
+                var child = new LayoutDocument
+                {
+                    Title = "Incoming"
+                };
+                var retained = new LayoutDocument
+                {
+                    Title = "Retained"
+                };
                 var source = new LayoutDocumentPane(child);
                 var intermediary = new LayoutDocumentPane();
                 var destination = new LayoutDocumentPane();
@@ -78,9 +90,23 @@ internal static class LayoutTransferRegressionTests
             });
         }
 
-        foreach (var side in new[] { AnchorSide.Left, AnchorSide.Top, AnchorSide.Right, AnchorSide.Bottom })
+        foreach (var side in new[]
         {
-            foreach (var phase in new[] { "changing", "changed" })
+            AnchorSide.Left,
+            AnchorSide.Top,
+            AnchorSide.Right,
+            AnchorSide.Bottom
+        }
+
+        )
+        {
+            foreach (var phase in new[]
+            {
+                "changing",
+                "changed"
+            }
+
+            )
             {
                 tests.Test($"ownership: superseded {side} side setter preserves foreign direction at {phase}", () =>
                 {

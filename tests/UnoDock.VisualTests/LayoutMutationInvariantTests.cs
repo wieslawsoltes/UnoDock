@@ -8,6 +8,7 @@ internal static class LayoutMutationInvariantTests
     internal static Task<int> Run(string output)
     {
         var tests = new TestRunner();
+        LayoutTransferRegressionTests.Add(tests);
         foreach (var operation in new[]
         {
             "insert",

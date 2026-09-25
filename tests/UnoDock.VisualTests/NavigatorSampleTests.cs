@@ -215,13 +215,10 @@ internal static class NavigatorSampleTests
                     button.Click += observed;
                     try
                     {
-                        input.MoveTo(button, new(button.ActualWidth / 2, button.ActualHeight / 2));
-                        // Let the real host process pointer entry before pressing.
-                        // Do not retry a click or replace native input with Invoke.
-                        await Task.Delay(50);
-                        input.Press();
-                        await Task.Delay(40);
-                        input.Release();
+                        // Require settled native geometry before the one real click.
+                        // Keep the exactly-one Click assertion and all policy/commit
+                        // assertions below; no retry or Invoke substitution is used.
+                        await input.Click(button);
                         await Wait(() => clicks == 1);
                     }
                     finally

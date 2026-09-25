@@ -51,7 +51,10 @@ public partial class LayoutRoot : LayoutElement, ILayoutContainer, ILayoutRoot, 
         {
             ArgumentNullException.ThrowIfNull(value);
             LayoutTree.ReplaceSlot(this, ref _top, value, nameof(TopSide));
-            value.SetSide(AnchorSide.Top);
+            if (ReferenceEquals(_top, value))
+            {
+                value.SetSide(AnchorSide.Top);
+            }
         }
     }
 
@@ -62,7 +65,10 @@ public partial class LayoutRoot : LayoutElement, ILayoutContainer, ILayoutRoot, 
         {
             ArgumentNullException.ThrowIfNull(value);
             LayoutTree.ReplaceSlot(this, ref _right, value, nameof(RightSide));
-            value.SetSide(AnchorSide.Right);
+            if (ReferenceEquals(_right, value))
+            {
+                value.SetSide(AnchorSide.Right);
+            }
         }
     }
 
@@ -73,7 +79,10 @@ public partial class LayoutRoot : LayoutElement, ILayoutContainer, ILayoutRoot, 
         {
             ArgumentNullException.ThrowIfNull(value);
             LayoutTree.ReplaceSlot(this, ref _bottom, value, nameof(BottomSide));
-            value.SetSide(AnchorSide.Bottom);
+            if (ReferenceEquals(_bottom, value))
+            {
+                value.SetSide(AnchorSide.Bottom);
+            }
         }
     }
 
@@ -84,7 +93,10 @@ public partial class LayoutRoot : LayoutElement, ILayoutContainer, ILayoutRoot, 
         {
             ArgumentNullException.ThrowIfNull(value);
             LayoutTree.ReplaceSlot(this, ref _left, value, nameof(LeftSide));
-            value.SetSide(AnchorSide.Left);
+            if (ReferenceEquals(_left, value))
+            {
+                value.SetSide(AnchorSide.Left);
+            }
         }
     }
 
