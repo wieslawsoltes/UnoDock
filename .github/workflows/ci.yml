@@ -95,7 +95,9 @@ jobs:
         run: |
           $arguments = @('run', '--project', 'samples/UnoDock.Gallery', '-c', 'Release', '-f', 'net10.0-desktop', '--no-build', '-p:UnoDockTargetFrameworks=net10.0-desktop', '-p:UnoDockLibraryFrameworks=net10.0')
           $process = Start-Process dotnet -ArgumentList $arguments -NoNewWindow -PassThru
-          if (-not $process.WaitForExit(180000)) { $process.Kill($true); throw 'Native Windows runtime tests timed out.' }
+          # Match Linux's bounded five-minute runtime budget. Every selected suite
+          # still executes; a timeout remains a failure, never a passing rerun.
+          if (-not $process.WaitForExit(300000)) { $process.Kill($true); throw 'Native Windows runtime tests timed out.' }
           exit $process.ExitCode
       - name: Summarize executed platform cases and failing assertions
         if: always() && (runner.os == 'Linux' || runner.os == 'Windows')

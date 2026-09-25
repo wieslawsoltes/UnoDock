@@ -43,16 +43,8 @@ public partial class NavigatorWindow : DockWindowControl
     public string LayoutAnchorablesLabel { get => (string)GetValue(LayoutAnchorablesLabelProperty); set => SetValue(LayoutAnchorablesLabelProperty, value); }
     protected void SetDocuments(LayoutDocumentItem[] value) => SetValue(DocumentsProperty, value);
     protected void SetAnchorables(IEnumerable<LayoutAnchorableItem> value) => SetValue(AnchorablesProperty, value);
-    protected virtual void OnSelectedDocumentChanged(DependencyPropertyChangedEventArgs e)
-    {
-        // Ignore only the value currently being published, not arbitrary callbacks.
-        // An observer assigning a different value while we publish queues a real request.
-        if (!ReferenceEquals(e.NewValue, _selected as LayoutDocumentItem)) Select(e.NewValue as LayoutItem);
-    }
-    protected virtual void OnSelectedAnchorableChanged(DependencyPropertyChangedEventArgs e)
-    {
-        if (!ReferenceEquals(e.NewValue, _selected as LayoutAnchorableItem)) Select(e.NewValue as LayoutItem);
-    }
+    protected virtual void OnSelectedDocumentChanged(DependencyPropertyChangedEventArgs e) => DirectSelectionChanged(e, true);
+    protected virtual void OnSelectedAnchorableChanged(DependencyPropertyChangedEventArgs e) => DirectSelectionChanged(e, false);
     protected override void OnApplyTemplate()
     {
         CancelReveal(); Detach(_documentsList); Detach(_anchorablesList);
@@ -216,7 +208,9 @@ public partial class NavigatorWindow : DockWindowControl
                 if (changed) QueueReveal();
             }
         }
+        catch { _hasDirectSelection = false; _directSelection = null; throw; }
         finally { _selecting = false; _hasPendingSelection = false; _pendingSelection = null; }
+        DrainDirectSelection();
     }
     private void PublishSelection()
     {

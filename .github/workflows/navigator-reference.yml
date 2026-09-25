@@ -1,0 +1,67 @@
+name: Public navigator selection observations
+on:
+  workflow_dispatch:
+  push:
+    paths: ['tools/NavigatorSelectionProbe/**', '.github/workflows/navigator-reference.yml']
+permissions:
+  contents: read
+concurrency:
+  group: navigator-reference-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  observe:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - uses: microsoft/setup-msbuild@v2
+      - name: Build isolated pinned original and independent public API probe
+        shell: pwsh
+        run: |
+          $revision = (Get-Content contracts/reference.json | ConvertFrom-Json).revision
+          $stage = Join-Path $env:RUNNER_TEMP 'navigator-reference'
+          New-Item -ItemType Directory -Force $stage | Out-Null
+          Invoke-WebRequest "https://codeload.github.com/xceedsoftware/wpftoolkit/tar.gz/$revision" -OutFile "$stage/reference.tar.gz"
+          tar -xzf "$stage/reference.tar.gz" --strip-components=1 -C $stage
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Invoke-WebRequest 'https://api.nuget.org/v3-flatcontainer/microsoft.netframework.referenceassemblies.net40/1.0.3/microsoft.netframework.referenceassemblies.net40.1.0.3.nupkg' -OutFile "$stage/framework.zip"
+          Expand-Archive "$stage/framework.zip" "$stage/framework"
+          $project = "$stage/ExtendedWPFToolkitSolution/Src/Xceed.Wpf.AvalonDock/Xceed.Wpf.AvalonDock.csproj"
+          msbuild $project /nologo /v:minimal /p:Configuration=Release /p:TargetFrameworkRootPath="$stage/framework/build/" /p:OutputPath="$stage/bin/" /p:GenerateSerializationAssemblies=Off /p:CustomAfterMicrosoftCommonTargets="${{ github.workspace }}/tools/ReferenceProbe/LegacyCopy.targets"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          dotnet build tools/NavigatorSelectionProbe -c Release -p:ReferenceAssembly="$stage/bin/Xceed.Wpf.AvalonDock.dll"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Copy-Item "$stage/bin/Xceed.Wpf.Toolkit.dll" tools/NavigatorSelectionProbe/bin/Release/net48/
+      - name: Observe setter and callback behavior twice
+        shell: pwsh
+        run: |
+          function Observe([string]$directory) {
+            New-Item -ItemType Directory -Force $directory | Out-Null
+            $process = Start-Process tools/NavigatorSelectionProbe/bin/Release/net48/NavigatorSelectionProbe.exe -ArgumentList $directory -NoNewWindow -PassThru
+            if (-not $process.WaitForExit(90000)) { $process.Kill($true); throw 'Navigator observation timed out.' }
+            if ($process.ExitCode -ne 0) { throw "Navigator observation exited with $($process.ExitCode)." }
+          }
+          Observe 'artifacts/navigator-reference'
+          $repeat = Join-Path $env:RUNNER_TEMP 'navigator-reference-repeat'
+          Observe $repeat
+          $name = 'navigator-selection-observations.xml'
+          $first = (Get-FileHash "artifacts/navigator-reference/$name" -Algorithm SHA256).Hash
+          $second = (Get-FileHash "$repeat/$name" -Algorithm SHA256).Hash
+          if ($first -ne $second) { throw 'Non-deterministic navigator setter observation.' }
+          [xml]$observations = Get-Content "artifacts/navigator-reference/$name"
+          if ($observations.NavigatorSelectionObservations.Case.Count -ne 28) { throw 'Incomplete navigator case matrix.' }
+          @{ referenceRevision = (Get-Content contracts/reference.json | ConvertFrom-Json).revision; probeRevision = (git rev-parse HEAD); file = $name; sha256 = $first.ToLowerInvariant(); byteIdentical = $true; cases = 28; method = 'public-and-protected-api-only' } | ConvertTo-Json | Set-Content artifacts/navigator-reference/provenance.json
+          Get-Content "artifacts/navigator-reference/$name"
+      - name: Delete isolated original sources and binaries
+        if: always()
+        shell: pwsh
+        run: Remove-Item -Recurse -Force -ErrorAction SilentlyContinue (Join-Path $env:RUNNER_TEMP 'navigator-reference')
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: navigator-selection-reference
+          path: artifacts/navigator-reference/
+          if-no-files-found: error

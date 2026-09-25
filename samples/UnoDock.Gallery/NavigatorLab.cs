@@ -15,7 +15,7 @@ public sealed partial class GalleryPage
         panel.RowDefinitions.Add(new() { Height = GridLength.Auto });
         panel.RowDefinitions.Add(new() { Height = new(1, GridUnitType.Star) });
         panel.RowDefinitions.Add(new() { Height = new(23) });
-        var commands = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 5, Margin = new(6, 3, 6, 3) };
+        var commands = new SampleCommandPanel { Margin = new(6, 3, 6, 3) };
         var buttons = new List<SampleButton>();
         var activationCommands = new List<NavigatorLabCommand>();
         var status = new TextBlock { FontSize = 11, Margin = new(8, 3, 8, 0), TextTrimming = TextTrimming.CharacterEllipsis };
@@ -49,10 +49,13 @@ public sealed partial class GalleryPage
         Add("RTL / LTR", "direction", () => { manager.FlowDirection = manager.FlowDirection == FlowDirection.LeftToRight ? FlowDirection.RightToLeft : FlowDirection.LeftToRight; manager.Refresh(); });
         Add("20 pt", "large", () => { manager.Resources["UnoDock.FontSize"] = 20d; manager.Refresh(); });
         Add("12 pt", "normal", () => { manager.Resources.Remove("UnoDock.FontSize"); manager.Refresh(); });
-        var bar = new ScrollViewer { Content = commands, HorizontalScrollBarVisibility = ScrollBarVisibility.Auto, VerticalScrollBarVisibility = ScrollBarVisibility.Disabled };
+        // Preserve command order; wrap complete native buttons at the available
+        // width instead of clipping the property actions behind horizontal scrolling.
+        Add("Assign document", "assign-document", () => AssignSelection(false));
+        Add("Assign tool", "assign-tool", () => AssignSelection(true));
         var help = new TextBlock { FontSize = 12, Margin = new(8, 2, 8, 6), TextWrapping = TextWrapping.Wrap,
-            Text = "Ctrl+Tab previews without activating. Up/Down, Home/End and Left/Right navigate; Enter or Control release commits, Escape cancels. Block activation demonstrates a real CanExecute veto. Edits remain in their existing buffers." };
-        panel.Children.Add(bar); Grid.SetRow(help, 1); panel.Children.Add(help); Grid.SetRow(manager, 2); panel.Children.Add(manager);
+            Text = "Ctrl+Tab previews without activating. Up/Down, Home/End and Left/Right navigate; Enter or Control release commits, Escape cancels. Block activation demonstrates a real CanExecute veto. Assign document/tool uses the public selection property: an allowed document hides, a tool closes, and a veto keeps the list open. Edits remain in their existing buffers." };
+        panel.Children.Add(commands); Grid.SetRow(help, 1); panel.Children.Add(help); Grid.SetRow(manager, 2); panel.Children.Add(manager);
         Grid.SetRow(status, 3); panel.Children.Add(status);
         Populate(3); Paint();
         var document = new LayoutDocument { Title = "Navigator quality", ContentId = "navigator-lab:" + Guid.NewGuid().ToString("N"), Content = panel };
@@ -103,6 +106,15 @@ public sealed partial class GalleryPage
                     () => !blocked && model.IsEnabled && ReferenceEquals(model.Root, manager.Layout));
                 activationCommands.Add(command); manager.GetLayoutItemFromModel(model).ActivateCommand = command;
             }
+            UpdateStatus();
+        }
+        void AssignSelection(bool tool)
+        {
+            var navigator = manager.FindVisualChildren<NavigatorWindow>().FirstOrDefault();
+            if (navigator == null) { manager.OpenNavigator(); navigator = manager.FindVisualChildren<NavigatorWindow>().FirstOrDefault(); }
+            if (navigator == null) return;
+            if (tool) navigator.SelectedAnchorable = navigator.Anchorables.LastOrDefault();
+            else navigator.SelectedDocument = navigator.Documents.FirstOrDefault(item => !ReferenceEquals(item, navigator.SelectedDocument));
             UpdateStatus();
         }
         SampleButton Add(string title, string id, Action action)
