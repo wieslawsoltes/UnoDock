@@ -1,0 +1,112 @@
+name: Complete reviewed layout fixes
+on:
+  push:
+    branches: [work/preview24-model-invariants-formatting]
+    paths: [.github/workflows/complete-layout-review.yml]
+permissions:
+  contents: write
+jobs:
+  complete:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 2
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Apply exact reviewed changes
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          pending={}
+          def replace(path, old, new, count=1):
+              text=pending.get(path,Path(path).read_text())
+              if text.count(old)!=count: raise RuntimeError(f'{path}: expected {count} anchors, got {text.count(old)}: {old[:80]!r}')
+              pending[path]=text.replace(old,new)
+          path='src/UnoDock/Layout/LayoutTree.cs'
+          replace(path,'    internal static void ReplaceSlot<T>', '''    internal static bool DetachForTransfer(LayoutElement element)
+              {
+                  var parent = element.Parent;
+                  var version = element.ParentVersion;
+                  parent?.RemoveChild(element);
+                  // A completed intervening attach/remove must revoke the request,
+                  // even when its final parent is null again.
+                  return element.Parent == null && element.ParentVersion == unchecked(version + (parent == null ? 0 : 1));
+              }
+          
+              internal static void ReplaceSlot<T>''')
+          replace(path,'            value?.Parent?.RemoveChild(value);', '''            var destinationVersion = ownerElement.ChildrenVersion;
+                      if (value != null && !DetachForTransfer(value))
+                      {
+                          return;
+                      }''')
+          replace(path,'if (!ReferenceEquals(field, old) || old?.ParentVersion != oldVersion || value?.Parent != null)',
+                  'if (ownerElement.ChildrenVersion != destinationVersion || !ReferenceEquals(field, old) || old?.ParentVersion != oldVersion || value?.Parent != null)')
+          path='src/UnoDock/Layout/OwnedCollection.cs'
+          replace(path,'''            item.Parent?.RemoveChild(item);
+                      if (item.Parent != null || Owner.ChildrenVersion != version)''',
+                  '''            if (!LayoutTree.DetachForTransfer((LayoutElement)(ILayoutElement)item) || Owner.ChildrenVersion != version)''',2)
+          path='src/UnoDock/Layout/LayoutRoot.cs'
+          for side in ['Top','Right','Bottom','Left']:
+              replace(path,f'            value.SetSide(AnchorSide.{side});',
+                      f'''            if (ReferenceEquals(_{side.lower()}, value))
+                      {{
+                          value.SetSide(AnchorSide.{side});
+                      }}''')
+          path='tests/UnoDock.VisualTests/LayoutMutationInvariantTests.cs'
+          replace(path,'        var tests = new TestRunner();','        var tests = new TestRunner();\n        LayoutTransferRegressionTests.Add(tests);')
+          path='tests/UnoDock.VisualTests/NavigatorSampleTests.cs'
+          old='''                        input.MoveTo(button, new(button.ActualWidth / 2, button.ActualHeight / 2));
+                                  // Let the real host process pointer entry before pressing.
+                                  // Do not retry a click or replace native input with Invoke.
+                                  await Task.Delay(50);
+                                  input.Press();
+                                  await Task.Delay(40);
+                                  input.Release();'''
+          replace(path,old,'''                        // Require settled native geometry before the one real click.
+                                  // Keep the exactly-one Click assertion and all policy/commit
+                                  // assertions below; no retry or Invoke substitution is used.
+                                  await input.Click(button);''')
+          for path,text in pending.items(): Path(path).write_text(text)
+          print('Applied generation checks and native click readiness; existing assertions retained.')
+          PY
+      - name: Canonical formatting with executable-token and idempotence verification
+        run: |
+          dotnet run --project tools/SourceMaintenance -- --format .
+          dotnet run --project tools/SourceMaintenance -- --check .
+          dotnet run --project tools/SourceMaintenance -- --check-format .
+          python3 tools/generate-property-adapters.py
+          git diff --exit-code -- 'src/**/*.g.cs'
+      - name: Compile actual Uno host
+        run: dotnet build samples/UnoDock.Gallery -c Release -f net10.0-desktop -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0 -warnaserror
+      - name: Install test display dependencies
+        run: sudo apt-get update && sudo apt-get install -y xvfb libx11-6 libxi6 libxrandr2 libxcursor1 libfontconfig1 libgl1 libice6 libsm6 libxcb1 libxtst6
+      - name: Execute layout invariants and real navigator sample input
+        env:
+          UNODOCK_SELFTEST: '1'
+          UNODOCK_NATIVE_INPUT_TESTS: '1'
+        run: |
+          xvfb-run -a -s '-screen 0 2560x1440x24' python3 tools/run-desktop-tests.py --app samples/UnoDock.Gallery/bin/Release/net10.0-desktop/UnoDock.Gallery.dll --output artifacts/layout-final --selector layout-mutation-invariants
+          xvfb-run -a -s '-screen 0 2560x1440x24' python3 tools/run-desktop-tests.py --app samples/UnoDock.Gallery/bin/Release/net10.0-desktop/UnoDock.Gallery.dll --output artifacts/navigator-final --selector navigator-sample
+      - name: Publish validated edits and remove temporary workflows
+        shell: bash
+        run: |
+          set -euo pipefail
+          git rm .github/workflows/complete-layout-review.yml .github/workflows/inspect-layout-acceptance.yml
+          git add src/ tests/ tools/ samples/
+          git diff --cached --check
+          git config user.name 'Wiesław Šoltés'
+          git config user.email 'wieslawsoltes@users.noreply.github.com'
+          git commit -m 'fix: revoke interrupted transfers and stabilize native sample click readiness'
+          git fetch origin work/preview24-model-invariants-formatting
+          test "$(git rev-parse FETCH_HEAD)" = '${{ github.sha }}'
+          git push origin HEAD:work/preview24-model-invariants-formatting
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: layout-final-review
+          path: artifacts/
