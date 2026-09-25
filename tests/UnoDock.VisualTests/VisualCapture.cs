@@ -14,11 +14,11 @@ internal static class VisualCapture
         Check.True(pixels.Length == checked(bitmap.PixelWidth * bitmap.PixelHeight * 4), "Invalid capture size.");
         using var stream = new Windows.Storage.Streams.InMemoryRandomAccessStream();
         var encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.PngEncoderId, stream);
-        encoder.SetPixelData(BitmapPixelFormat.Bgra8, BitmapAlphaMode.Premultiplied,
-            (uint)bitmap.PixelWidth, (uint)bitmap.PixelHeight, 96, 96, pixels);
+        encoder.SetPixelData(BitmapPixelFormat.Bgra8, BitmapAlphaMode.Premultiplied, (uint)bitmap.PixelWidth, (uint)bitmap.PixelHeight, 96, 96, pixels);
         await encoder.FlushAsync();
         stream.Seek(0);
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-        using var file = File.Create(path); await stream.AsStreamForRead().CopyToAsync(file);
+        using var file = File.Create(path);
+        await stream.AsStreamForRead().CopyToAsync(file);
     }
 }

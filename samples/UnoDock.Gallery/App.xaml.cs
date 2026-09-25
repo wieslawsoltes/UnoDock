@@ -7,16 +7,26 @@ public partial class App : Application
     public App() => InitializeComponent();
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
-        _window = new Window { Title = "UnoDock Samples" };
-        var gallery = new GalleryPage(); _window.Content = gallery;
+        _window = new Window
+        {
+            Title = "UnoDock Samples"
+        };
+        var gallery = new GalleryPage();
+        _window.Content = gallery;
         _window.AppWindow.Resize(new Windows.Graphics.SizeInt32 { Width = 1440, Height = 960 });
         var windowRegistration = Microsoft.Windows.Shell.SystemCommands.RegisterWindow(_window);
-        _window.Closed += (_, _) => { windowRegistration.Dispose(); gallery.Dispose(); };
+        _window.Closed += (_, _) =>
+        {
+            windowRegistration.Dispose();
+            gallery.Dispose();
+        };
         if (Environment.GetEnvironmentVariable("UNODOCK_SELFTEST") == "1")
             gallery.Loaded += async (_, _) =>
             {
-                if (_selfTestStarted) return;
-                _selfTestStarted = true; var exitCode = 2;
+                if (_selfTestStarted)
+                    return;
+                _selfTestStarted = true;
+                var exitCode = 2;
                 try
                 {
                     await Task.Delay(300);
@@ -24,6 +34,7 @@ public partial class App : Application
                     var requested = Environment.GetEnvironmentVariable("UNODOCK_TEST_SUITE");
                     var suites = new (string Name, bool Windows, Func<Task<int>> Run)[]
                     {
+                        ("layout-mutation-invariants", true, () => Testing.LayoutMutationInvariantTests.Run(output)),
                         ("runtime", false, () => Testing.RuntimeTests.Run(gallery.Dock, output)),
                         ("interop", false, () => Testing.InteropTests.Run(output)),
                         ("parity", false, () => Testing.ParityTests.Run(gallery.Dock, output)),
@@ -65,29 +76,33 @@ public partial class App : Application
                         ("uno-theme", true, () => Testing.UnoThemeTests.Run(output)),
                         ("windows-floating-input", true, () => Testing.WindowsFloatingInputTests.Run(output))
                     };
-                    var selected = suites.Where(s => string.IsNullOrEmpty(requested) || requested == "all" ||
-                        (requested == "windows-acceptance" ? s.Windows : requested == "desktop-acceptance"
-                            ? s.Name is "mac-native" or "desktop-floating" or "floating-drag-cleanup" or "uno-theme" or "windows-floating-input"
-                            : requested == "floating-resize-policy" ? s.Name.StartsWith("floating-resize-policy-", StringComparison.Ordinal)
-                            : requested == "floating-chrome" ? s.Name is "floating-chrome-documents" or "floating-chrome-tools" or "floating-resize-policy-documents" or "floating-resize-policy-tools" : s.Name == requested)).ToArray();
-                    if (selected.Length == 0) throw new ArgumentException("Unknown UNODOCK_TEST_SUITE: " + requested);
+                    var selected = suites.Where(s => string.IsNullOrEmpty(requested) || requested == "all" || (requested == "windows-acceptance" ? s.Windows : requested == "desktop-acceptance" ? s.Name is "mac-native" or "desktop-floating" or "floating-drag-cleanup" or "uno-theme" or "windows-floating-input" : requested == "floating-resize-policy" ? s.Name.StartsWith("floating-resize-policy-", StringComparison.Ordinal) : requested == "floating-chrome" ? s.Name is "floating-chrome-documents" or "floating-chrome-tools" or "floating-resize-policy-documents" or "floating-resize-policy-tools" : s.Name == requested)).ToArray();
+                    if (selected.Length == 0)
+                        throw new ArgumentException("Unknown UNODOCK_TEST_SUITE: " + requested);
                     // Registry-owned platform selection also drives isolated CI.
                     // A platform no-op is not an executed (or passed) test suite.
-                    selected = selected.Where(s =>
-                        (s.Name != "mac-native" || OperatingSystem.IsMacOS()) &&
-                        (s.Name != "windows-floating-input" || OperatingSystem.IsWindows() &&
-                            Environment.GetEnvironmentVariable("UNODOCK_NATIVE_INPUT_TESTS") == "1")).ToArray();
+                    selected = selected.Where(s => (s.Name != "mac-native" || OperatingSystem.IsMacOS()) && (s.Name != "windows-floating-input" || OperatingSystem.IsWindows() && Environment.GetEnvironmentVariable("UNODOCK_NATIVE_INPUT_TESTS") == "1")).ToArray();
                     exitCode = 0;
                     if (Environment.GetEnvironmentVariable("UNODOCK_LIST_TESTS") == "1")
                     {
                         Directory.CreateDirectory(output);
-                        await File.WriteAllTextAsync(Path.Combine(output, "selected-suites.json"),
-                            System.Text.Json.JsonSerializer.Serialize(selected.Select(s => s.Name).ToArray()));
+                        await File.WriteAllTextAsync(Path.Combine(output, "selected-suites.json"), System.Text.Json.JsonSerializer.Serialize(selected.Select(s => s.Name).ToArray()));
                     }
-                    else foreach (var suite in selected) exitCode |= await suite.Run();
+                    else
+                        foreach (var suite in selected)
+                            exitCode |= await suite.Run();
                 }
-                catch (Exception e) { exitCode = 2; Console.Error.WriteLine(e); }
-                finally { Environment.ExitCode = exitCode; _window.Close(); Exit(); }
+                catch (Exception e)
+                {
+                    exitCode = 2;
+                    Console.Error.WriteLine(e);
+                }
+                finally
+                {
+                    Environment.ExitCode = exitCode;
+                    _window.Close();
+                    Exit();
+                }
             };
         _window.Activate();
     }

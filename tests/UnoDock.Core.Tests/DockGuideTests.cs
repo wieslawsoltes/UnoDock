@@ -5,11 +5,13 @@ internal static class DockGuideGeometryTests
 {
     internal static void Register(TestRunner tests)
     {
-        var host = new DockRect(0, 0, 1000, 640); var pane = new DockRect(200, 0, 800, 640);
+        var host = new DockRect(0, 0, 1000, 640);
+        var pane = new DockRect(200, 0, 800, 640);
         tests.Test("guide layout has independent root, pane and outer tool targets", () =>
         {
             var slots = DockGuideLayout.Create(host, pane, true, true, true);
-            Check.Equal(13, slots.Count); Check.Equal(4, slots.Count(s => s.Scope == DockGuideScope.Workspace));
+            Check.Equal(13, slots.Count);
+            Check.Equal(4, slots.Count(s => s.Scope == DockGuideScope.Workspace));
             Check.Equal(5, slots.Count(s => s.Scope == DockGuideScope.Pane));
             Check.Equal(4, slots.Count(s => s.Scope == DockGuideScope.ToolBesideDocument));
         });
@@ -19,25 +21,41 @@ internal static class DockGuideGeometryTests
         tests.Test("guide layout avoids ambiguous collisions on compact hosts", () =>
         {
             var slots = DockGuideLayout.Create(new(0, 0, 32, 32), new(0, 0, 32, 32), true, true, true);
-            Check.Equal(1, slots.Count); Check.Equal(DockGuideScope.Workspace, slots[0].Scope);
+            Check.Equal(1, slots.Count);
+            Check.Equal(DockGuideScope.Workspace, slots[0].Scope);
         });
         tests.Test("guide layout clips partially visible panes before centering", () =>
         {
             var slot = DockGuideLayout.Create(host, new(-800, 100, 1200, 400), false, true, false).Single(s => s.Position == DockPosition.Inside);
-            Check.Near(184, slot.Bounds.X); Check.Near(284, slot.Bounds.Y);
+            Check.Near(184, slot.Bounds.X);
+            Check.Near(284, slot.Bounds.Y);
         });
         tests.Test("guide hit rectangles are half open", () =>
         {
-            var r = new DockRect(10, 20, 32, 32); Check.True(DockGuideLayout.HitTest(r, new(10, 20)));
-            Check.False(DockGuideLayout.HitTest(r, new(42, 30))); Check.False(DockGuideLayout.HitTest(r, new(20, 52)));
+            var r = new DockRect(10, 20, 32, 32);
+            Check.True(DockGuideLayout.HitTest(r, new(10, 20)));
+            Check.False(DockGuideLayout.HitTest(r, new(42, 30)));
+            Check.False(DockGuideLayout.HitTest(r, new(20, 52)));
             Check.False(DockGuideLayout.HitTest(r, new(double.NaN, 25)));
         });
         tests.Test("guide layout translation covariance", () =>
         {
             var a = DockGuideLayout.Create(host, pane, true, true, true);
-            var b = DockGuideLayout.Create(host with { X = -1500, Y = 930 }, pane with { X = pane.X - 1500, Y = pane.Y + 930 }, true, true, true);
+            var b = DockGuideLayout.Create(host with
+            {
+                X = -1500,
+                Y = 930
+            }, pane with
+            {
+                X = pane.X - 1500,
+                Y = pane.Y + 930
+            }, true, true, true);
             Check.Equal(a.Count, b.Count);
-            for (var i = 0; i < a.Count; i++) { Check.Near(a[i].Bounds.X - 1500, b[i].Bounds.X); Check.Near(a[i].Bounds.Y + 930, b[i].Bounds.Y); }
+            for (var i = 0; i < a.Count; i++)
+            {
+                Check.Near(a[i].Bounds.X - 1500, b[i].Bounds.X);
+                Check.Near(a[i].Bounds.Y + 930, b[i].Bounds.Y);
+            }
         });
         tests.Test("guide geometry randomized clipping collision and hit invariants (20000 layouts)", () =>
         {
@@ -51,11 +69,16 @@ internal static class DockGuideGeometryTests
                 Check.True(a.Count <= 13);
                 for (var i = 0; i < a.Count; i++)
                 {
-                    var r = a[i].Bounds; Check.Near(size, r.Width); Check.Near(size, r.Height);
+                    var r = a[i].Bounds;
+                    Check.Near(size, r.Width);
+                    Check.Near(size, r.Height);
                     Check.True(r.X >= bounds.X && r.Y >= bounds.Y && r.Right <= bounds.Right && r.Bottom <= bounds.Bottom);
                     Check.Equal(1, a.Count(s => DockGuideLayout.HitTest(s.Bounds, new(r.X + size / 2, r.Y + size / 2))));
                     for (var j = i + 1; j < a.Count; j++)
-                    { var b = a[j].Bounds; Check.False(r.X < b.Right && b.X < r.Right && r.Y < b.Bottom && b.Y < r.Bottom); }
+                    {
+                        var b = a[j].Bounds;
+                        Check.False(r.X < b.Right && b.X < r.Right && r.Y < b.Bottom && b.Y < r.Bottom);
+                    }
                 }
             }
         });
@@ -77,8 +100,12 @@ internal static class DockGuideGeometryTests
             Check.Equal(9, slots.Count);
             var left = slots.Single(s => s.Scope == DockGuideScope.Workspace && s.Position == DockPosition.Left).Bounds;
             var top = slots.Single(s => s.Scope == DockGuideScope.Workspace && s.Position == DockPosition.Top).Bounds;
-            Check.Near(32, left.Width); Check.Near(29, left.Height); Check.Near(host.X, left.X);
-            Check.Near(29, top.Width); Check.Near(32, top.Height); Check.Near(host.Y, top.Y);
+            Check.Near(32, left.Width);
+            Check.Near(29, left.Height);
+            Check.Near(host.X, left.X);
+            Check.Near(29, top.Width);
+            Check.Near(32, top.Height);
+            Check.Near(host.Y, top.Y);
         });
         tests.Test("extended stock tool placements are explicitly opt in", () =>
         {
@@ -90,8 +117,7 @@ internal static class DockGuideGeometryTests
             var random = new Random(92023);
             for (var n = 0; n < 10000; n++)
             {
-                var box = new DockRect(random.Next(-4000, 4000) + .125, random.Next(-3000, 3000) + .375,
-                    random.Next(1, 2400), random.Next(1, 1800));
+                var box = new DockRect(random.Next(-4000, 4000) + .125, random.Next(-3000, 3000) + .375, random.Next(1, 2400), random.Next(1, 1800));
                 var slots = DockGuideLayout.CreateStock(box, box, true, true, true, n % 2 == 0 ? 88d / 3 : 44);
                 foreach (var slot in slots)
                 {
@@ -101,13 +127,21 @@ internal static class DockGuideGeometryTests
                 }
             }
         });
-        foreach (var bad in new[] { double.NaN, double.PositiveInfinity, -1d })
+        foreach (var bad in new[]
+        {
+            double.NaN,
+            double.PositiveInfinity,
+            -1d
+        }
+
+        )
         {
             var value = bad;
             tests.Test("guide layout rejects invalid host " + value, () => Check.Throws<ArgumentOutOfRangeException>(() => DockGuideLayout.Create(host with { Width = value }, pane, true, true, true)));
             tests.Test("guide layout rejects invalid glyph size " + value, () => Check.Throws<ArgumentOutOfRangeException>(() => DockGuideLayout.Create(host, pane, true, true, true, value)));
             tests.Test("guide layout rejects invalid gap " + value, () => Check.Throws<ArgumentOutOfRangeException>(() => DockGuideLayout.Create(host, pane, true, true, true, gap: value)));
         }
+
         tests.Test("guide layout rejects overflowing extents", () => Check.Throws<ArgumentOutOfRangeException>(() => DockGuideLayout.Create(new(double.MaxValue, 0, double.MaxValue, 100), pane, true, true, true)));
     }
 }

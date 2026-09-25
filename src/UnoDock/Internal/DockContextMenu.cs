@@ -4,7 +4,6 @@ using UnoDock.Layout;
 using Strings = UnoDock.Properties.Resources;
 
 namespace UnoDock.Internal;
-
 // An item owns its menu. Neither a global cache nor a subscribed application
 // command keeps an obsolete layout alive after the opening session has ended.
 internal sealed class DockContextMenu : MenuFlyout, IDisposable
@@ -21,7 +20,10 @@ internal sealed class DockContextMenu : MenuFlyout, IDisposable
     private DockMenuPalette? _palette;
     internal DockContextMenu(LayoutItem item, DockingManager manager)
     {
-        _item = item; _manager = manager; _root = manager.Layout; _dispatcher = manager.DispatcherQueue;
+        _item = item;
+        _manager = manager;
+        _root = manager.Layout;
+        _dispatcher = manager.DispatcherQueue;
         if (item is LayoutAnchorableItem tool)
         {
             Add("FloatCommand", () => Strings.Anchorable_Float, () => item.FloatCommand);
@@ -43,29 +45,36 @@ internal sealed class DockContextMenu : MenuFlyout, IDisposable
             Add("MoveToNextTabGroupCommand", () => Strings.Document_MoveToNextTabGroup, () => item.MoveToNextTabGroupCommand, collapseDisabled: true);
             Add("MoveToPreviousTabGroupCommand", () => Strings.Document_MoveToPreviousTabGroup, () => item.MoveToPreviousTabGroupCommand, collapseDisabled: true);
         }
-        Opening += OnOpening; Closed += OnClosed;
+
+        Opening += OnOpening;
+        Closed += OnClosed;
         Refresh();
     }
+
     private void Add(string id, Func<string> label, Func<ICommand?> command, Func<bool>? visible = null, bool collapseDisabled = false)
     {
         var entry = new Entry(this, id, label, command, visible, collapseDisabled);
-        _entries.Add(entry); Items.Add(entry.Row);
+        _entries.Add(entry);
+        Items.Add(entry.Row);
     }
-    private bool Valid => !_disposed && _item is { } item && _manager is { } manager && _root is { } root &&
-        (item is LayoutAnchorableItem ? manager.AnchorableContextMenu : manager.DocumentContextMenu) == null &&
-        ReferenceEquals(item.LayoutElement.Root, root) && ReferenceEquals(manager.Layout, root) && ReferenceEquals(root.Manager, manager);
+
+    private bool Valid => !_disposed && _item is { } item && _manager is { } manager && _root is { } root && (item is LayoutAnchorableItem ? manager.AnchorableContextMenu : manager.DocumentContextMenu) == null && ReferenceEquals(item.LayoutElement.Root, root) && ReferenceEquals(manager.Layout, root) && ReferenceEquals(root.Manager, manager);
+
     internal void Refresh()
     {
-        if (_disposed) return;
+        if (_disposed)
+            return;
         _dirty = true;
-        if (_refreshing) return;
+        if (_refreshing)
+            return;
         _refreshing = true;
         try
         {
             var budget = 32;
             while (_dirty)
             {
-                if (--budget == 0) throw new InvalidOperationException("Docking menu callbacks did not converge.");
+                if (--budget == 0)
+                    throw new InvalidOperationException("Docking menu callbacks did not converge.");
                 _dirty = false;
                 var palette = DockMenuPalette.Resolve(_manager!);
                 if (_palette != palette)
@@ -73,77 +82,142 @@ internal sealed class DockContextMenu : MenuFlyout, IDisposable
                     _palette = palette;
                     MenuFlyoutPresenterStyle = DockMenuRow.PresenterStyle(palette);
                 }
-                var focused = _open && _manager?.XamlRoot != null
-                    ? Microsoft.UI.Xaml.Input.FocusManager.GetFocusedElement(_manager.XamlRoot) as DockMenuRow : null;
+
+                var focused = _open && _manager?.XamlRoot != null ? Microsoft.UI.Xaml.Input.FocusManager.GetFocusedElement(_manager.XamlRoot) as DockMenuRow : null;
                 foreach (var entry in _entries)
                 {
-                    if (_disposed) return;
+                    if (_disposed)
+                        return;
                     entry.Refresh(palette);
                 }
+
                 if (_open && focused != null && (!focused.IsEnabled || focused.Visibility != Visibility.Visible))
                 {
                     var position = _entries.FindIndex(e => ReferenceEquals(e.Row, focused));
                     if (position >= 0)
                     {
-                        var replacement = _entries.Skip(position + 1).Concat(_entries.Take(position))
-                            .Select(e => e.Row).FirstOrDefault(r => r.IsEnabled && r.Visibility == Visibility.Visible);
+                        var replacement = _entries.Skip(position + 1).Concat(_entries.Take(position)).Select(e => e.Row).FirstOrDefault(r => r.IsEnabled && r.Visibility == Visibility.Visible);
                         replacement?.Focus(FocusState.Keyboard);
                     }
                 }
             }
         }
-        finally { _refreshing = false; _dirty = false; }
+        finally
+        {
+            _refreshing = false;
+            _dirty = false;
+        }
     }
-    internal void Suspend() { EndOpening(); Hide(); }
+
+    internal void Suspend()
+    {
+        EndOpening();
+        Hide();
+    }
+
     private void OnOpening(object? sender, object e)
     {
         EndOpening();
-        if (!Valid) { QueueHide(); return; }
+        if (!Valid)
+        {
+            QueueHide();
+            return;
+        }
+
         _open = true;
-        _root!.Updated += Updated; _manager!.LayoutChanging += LayoutChanging;
-        try { Refresh(); }
-        catch { EndOpening(); Hide(); throw; }
+        _root!.Updated += Updated;
+        _manager!.LayoutChanging += LayoutChanging;
+        try
+        {
+            Refresh();
+        }
+        catch
+        {
+            EndOpening();
+            Hide();
+            throw;
+        }
     }
+
     private void QueueHide()
     {
         var version = System.Threading.Volatile.Read(ref _version);
-        _dispatcher.TryEnqueue(() => { if (version == _version && !Valid) Hide(); });
+        _dispatcher.TryEnqueue(() =>
+        {
+            if (version == _version && !Valid)
+                Hide();
+        });
     }
+
     private void Updated(object? sender, EventArgs e) => QueueRefresh();
-    private void LayoutChanging(object? sender, EventArgs e) { EndOpening(); Hide(); }
+    private void LayoutChanging(object? sender, EventArgs e)
+    {
+        EndOpening();
+        Hide();
+    }
+
     private void OnClosed(object? sender, object e) => EndOpening();
     private void EndOpening()
     {
-        _open = false; System.Threading.Interlocked.Exchange(ref _refreshScheduled, 0); System.Threading.Interlocked.Increment(ref _version);
-        if (_root is { } root) root.Updated -= Updated;
-        if (_manager is { } manager) manager.LayoutChanging -= LayoutChanging;
-        foreach (var entry in _entries) entry.Unsubscribe();
+        _open = false;
+        System.Threading.Interlocked.Exchange(ref _refreshScheduled, 0);
+        System.Threading.Interlocked.Increment(ref _version);
+        if (_root is { } root)
+            root.Updated -= Updated;
+        if (_manager is { } manager)
+            manager.LayoutChanging -= LayoutChanging;
+        foreach (var entry in _entries)
+            entry.Unsubscribe();
     }
+
     private void QueueRefresh()
     {
         // Application ICommand events may originate on worker threads. Only the
         // queued continuation reads models or touches dependency objects.
-        if (!_open || _disposed || System.Threading.Interlocked.CompareExchange(ref _refreshScheduled, 1, 0) != 0) return;
+        if (!_open || _disposed || System.Threading.Interlocked.CompareExchange(ref _refreshScheduled, 1, 0) != 0)
+            return;
         var version = System.Threading.Volatile.Read(ref _version);
         if (!_dispatcher.TryEnqueue(() =>
         {
-            if (version != System.Threading.Volatile.Read(ref _version) || !_open || _disposed) return;
+            if (version != System.Threading.Volatile.Read(ref _version) || !_open || _disposed)
+                return;
             System.Threading.Interlocked.Exchange(ref _refreshScheduled, 0);
-            if (!Valid) { Suspend(); return; }
-            try { Refresh(); }
-            catch { Suspend(); throw; }
-        })) System.Threading.Interlocked.Exchange(ref _refreshScheduled, 0);
+            if (!Valid)
+            {
+                Suspend();
+                return;
+            }
+
+            try
+            {
+                Refresh();
+            }
+            catch
+            {
+                Suspend();
+                throw;
+            }
+        }))
+            System.Threading.Interlocked.Exchange(ref _refreshScheduled, 0);
     }
+
     public void Dispose()
     {
-        if (_disposed) return;
-        _disposed = true; EndOpening();
+        if (_disposed)
+            return;
+        _disposed = true;
+        EndOpening();
         // Keep the invalid-opening guard on an externally retained old flyout.
         // The self-subscription cannot root it; all model/command subscriptions end.
-        foreach (var entry in _entries) entry.Release();
-        _item = null; _manager = null; _root = null; _palette = null;
+        foreach (var entry in _entries)
+            entry.Release();
+        _item = null;
+        _manager = null;
+        _root = null;
+        _palette = null;
         Hide();
     }
+
     private sealed class Entry : ICommand
     {
         private readonly DockContextMenu _owner;
@@ -153,135 +227,92 @@ internal sealed class DockContextMenu : MenuFlyout, IDisposable
         private readonly bool _collapseDisabled;
         private ICommand? _subscribed;
         private bool _enabled;
-        internal DockMenuRow Row { get; }
+        internal DockMenuRow Row
+        {
+            get;
+        }
+
         internal Entry(DockContextMenu owner, string id, Func<string> label, Func<ICommand?> resolve, Func<bool>? visible, bool collapseDisabled)
         {
-            _owner = owner; _label = label; _resolve = resolve; _visible = visible; _collapseDisabled = collapseDisabled;
-            Row = new() { Name = "PART_" + id, Tag = id, Command = this };
+            _owner = owner;
+            _label = label;
+            _resolve = resolve;
+            _visible = visible;
+            _collapseDisabled = collapseDisabled;
+            Row = new()
+            {
+                Name = "PART_" + id,
+                Tag = id,
+                Command = this
+            };
         }
+
         public event EventHandler? CanExecuteChanged;
-        private bool Check(ICommand? command) => command != null && _owner.Valid && _owner._item!.LayoutElement.IsEnabled &&
-            (_visible?.Invoke() ?? true) && command.CanExecute(null) && _owner.Valid &&
-            _owner._item!.LayoutElement.IsEnabled && ReferenceEquals(command, _resolve());
+        private bool Check(ICommand? command) => command != null && _owner.Valid && _owner._item!.LayoutElement.IsEnabled && (_visible?.Invoke() ?? true) && command.CanExecute(null) && _owner.Valid && _owner._item!.LayoutElement.IsEnabled && ReferenceEquals(command, _resolve());
         public bool CanExecute(object? parameter) => Check(_resolve());
         public void Execute(object? parameter)
         {
             var command = _resolve();
-            if (!Check(command)) return;
+            if (!Check(command))
+                return;
             // Querying an application command may replace its model/command.
             // Check() revalidates both before delegating to this exact command.
-            try { command!.Execute(null); }
-            finally { _owner.Refresh(); }
+            try
+            {
+                command!.Execute(null);
+            }
+            finally
+            {
+                _owner.Refresh();
+            }
         }
+
         internal void Refresh(DockMenuPalette palette)
         {
             var command = _resolve();
             if (_owner._open && !ReferenceEquals(command, _subscribed))
             {
-                Unsubscribe(); _subscribed = command;
-                if (_subscribed != null) _subscribed.CanExecuteChanged += Changed;
+                Unsubscribe();
+                _subscribed = command;
+                if (_subscribed != null)
+                    _subscribed.CanExecuteChanged += Changed;
             }
+
             var allowed = Check(command);
-            if (_owner._disposed) return;
-            Row.Text = _label(); AutomationProperties.SetName(Row, Row.Text);
+            if (_owner._disposed)
+                return;
+            Row.Text = _label();
+            AutomationProperties.SetName(Row, Row.Text);
             var visible = _owner.Valid && (_visible?.Invoke() ?? true) && (!_collapseDisabled || allowed);
             Row.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
             Row.Configure(palette);
             Row.IsEnabled = allowed;
-            if (_enabled != allowed) { _enabled = allowed; CanExecuteChanged?.Invoke(this, EventArgs.Empty); }
+            if (_enabled != allowed)
+            {
+                _enabled = allowed;
+                CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+            }
         }
+
         private void Changed(object? sender, EventArgs args) => _owner.QueueRefresh();
         internal void Unsubscribe()
         {
-            var command = _subscribed; _subscribed = null;
-            if (command != null) command.CanExecuteChanged -= Changed;
+            var command = _subscribed;
+            _subscribed = null;
+            if (command != null)
+                command.CanExecuteChanged -= Changed;
         }
+
         internal void Release()
         {
-            Unsubscribe(); _resolve = static () => null; _label = static () => ""; _visible = null;
-            Row.IsEnabled = false; _enabled = false; Row.Command = null;
+            Unsubscribe();
+            _resolve = static () => null;
+            _label = static () => "";
+            _visible = null;
+            Row.IsEnabled = false;
+            _enabled = false;
+            Row.Command = null;
             CanExecuteChanged?.Invoke(this, EventArgs.Empty);
         }
-    }
-}
-
-internal readonly record struct DockMenuPalette(Brush Surface, Brush Gutter, Brush Border, Brush Foreground,
-    Brush Disabled, Brush Hover, Brush HoverBorder, double FontSize, double RowHeight, double MinWidth, FlowDirection FlowDirection)
-{
-    [ThreadStatic] private static Brush? _light, _gutter, _disabled;
-    internal static DockMenuPalette Resolve(DockingManager manager)
-    {
-        var p = DockChrome.Palette(manager);
-        var palette = manager.Theme is Themes.DictionaryTheme || manager.ActualTheme == ElementTheme.Dark && manager.Theme is not Themes.GenericTheme;
-        var background = Get("MenuBrush", palette ? p.Surface : _light ??= DockChrome.Color(0xf5f5f5));
-        return new(background, Get("MenuGutterBrush", palette ? p.Header : _gutter ??= DockChrome.Color(0xf0f0f0)),
-            Get("MenuBorderBrush", p.Border), Get("MenuForegroundBrush", p.Foreground),
-            Get("MenuDisabledBrush", palette ? p.Border : _disabled ??= DockChrome.Color(0x707070)),
-            Get("MenuHoverBrush", p.Hover), Get("MenuHoverBorderBrush", p.Accent), p.FontSize,
-            Math.Max(Number("MenuRowHeight", 22, 20, 72), Math.Ceiling(p.FontSize * 1.4) + 4), Number("MenuMinWidth", 235, 0, 600), manager.FlowDirection);
-        Brush Get(string key, Brush fallback) => manager.Resources.TryGetValue("UnoDock." + key, out var value) && value is Brush brush ? brush : fallback;
-        double Number(string key, double fallback, double min, double max) => manager.Resources.TryGetValue("UnoDock." + key, out var value) && value is double d && double.IsFinite(d) ? Math.Clamp(d, min, max) : fallback;
-    }
-}
-
-// Real MenuFlyoutItem keeps menu keyboard navigation and its Invoke automation peer.
-// Only its presentation is independent; application-supplied menus are never styled.
-internal sealed class DockMenuRow : MenuFlyoutItem
-{
-    [ThreadStatic] private static ControlTemplate? _rowTemplate, _presenterTemplate;
-    private DockMenuPalette _palette;
-    private Border? _gutter;
-    private bool _pointer;
-    internal DockMenuRow()
-    {
-        MinHeight = 0; MinWidth = 0; Padding = new(0); Margin = new(0); BorderThickness = new(1); CornerRadius = new(0);
-        UseSystemFocusVisuals = true;
-        Template = _rowTemplate ??= (ControlTemplate)XamlReader.Load("""
-            <ControlTemplate xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-                <Grid Background="{TemplateBinding Background}"><Grid.ColumnDefinitions><ColumnDefinition Width="29"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                  <Border x:Name="PART_MenuGutter" BorderThickness="0,0,1,0" BorderBrush="White" IsHitTestVisible="False"/>
-                  <TextBlock Grid.Column="1" Text="{TemplateBinding Text}" Foreground="{TemplateBinding Foreground}" FontSize="{TemplateBinding FontSize}"
-                    Margin="6,0,10,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" IsHitTestVisible="False"/>
-                  <Border Grid.ColumnSpan="2" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" IsHitTestVisible="False"/>
-                </Grid>
-            </ControlTemplate>
-            """);
-        PointerEntered += (_, _) => { _pointer = true; Paint(); };
-        PointerExited += (_, _) => { _pointer = false; Paint(); };
-        GotFocus += (_, _) => Paint(); LostFocus += (_, _) => Paint();
-        IsEnabledChanged += (_, _) => Paint();
-    }
-    protected override void OnApplyTemplate()
-    { base.OnApplyTemplate(); _gutter = GetTemplateChild("PART_MenuGutter") as Border; Paint(); }
-    internal void Configure(DockMenuPalette palette)
-    { _palette = palette; FontSize = palette.FontSize; Height = palette.RowHeight; FlowDirection = palette.FlowDirection; Paint(); }
-    private void Paint()
-    {
-        if (_palette.Surface == null) return;
-        var hot = IsEnabled && (_pointer || FocusState == FocusState.Keyboard);
-        Background = hot ? _palette.Hover : _palette.Surface;
-        BorderBrush = hot ? _palette.HoverBorder : DockChrome.Transparent;
-        Foreground = IsEnabled ? _palette.Foreground : _palette.Disabled;
-        if (_gutter != null) { _gutter.Background = hot ? DockChrome.Transparent : _palette.Gutter; _gutter.BorderBrush = hot ? DockChrome.Transparent : _palette.Border; }
-    }
-    internal static Style PresenterStyle(DockMenuPalette palette)
-    {
-        var style = new Style(typeof(MenuFlyoutPresenter));
-        style.Setters.Add(new Setter(Control.BackgroundProperty, palette.Surface));
-        style.Setters.Add(new Setter(Control.BorderBrushProperty, palette.Border));
-        style.Setters.Add(new Setter(Control.BorderThicknessProperty, new Thickness(1)));
-        style.Setters.Add(new Setter(Control.PaddingProperty, new Thickness(2)));
-        style.Setters.Add(new Setter(Control.CornerRadiusProperty, new CornerRadius(0)));
-        style.Setters.Add(new Setter(FrameworkElement.MinWidthProperty, palette.MinWidth));
-        style.Setters.Add(new Setter(Control.FontSizeProperty, palette.FontSize));
-        style.Setters.Add(new Setter(FrameworkElement.FlowDirectionProperty, palette.FlowDirection));
-        style.Setters.Add(new Setter(Control.TemplateProperty, _presenterTemplate ??= (ControlTemplate)XamlReader.Load("""
-            <ControlTemplate xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
-              <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Padding="{TemplateBinding Padding}">
-                <ScrollViewer HorizontalScrollBarVisibility="Disabled" HorizontalScrollMode="Disabled" VerticalScrollBarVisibility="Auto" VerticalScrollMode="Enabled" IsTabStop="False"><ItemsPresenter/></ScrollViewer>
-              </Border>
-            </ControlTemplate>
-            """)));
-        return style;
     }
 }
