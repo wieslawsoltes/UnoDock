@@ -28,6 +28,9 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
+      - name: Test the independent native evidence gate
+        shell: bash
+        run: python3 tests/metadata/test_native_acceptance.py
       - name: Build actual Uno SDK and XAML
         run: dotnet build samples/UnoDock.Gallery -c Release -f net10.0-desktop -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0 -warnaserror
       - name: Install dedicated X11 display dependencies

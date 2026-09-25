@@ -4,8 +4,8 @@ using System.Runtime.InteropServices;
 
 namespace UnoDock.Internal;
 
-/// <summary>AppKit conversions use the actual content view. Global coordinates
-/// are logical screen points, with bottom-left axes, independent of backing scale.</summary>
+/// <summary>AppKit screen points have bottom-left axes. Uno root points always
+/// have top-left axes, even when the host's native content view is not flipped.</summary>
 internal static class MacDesktopInterop
 {
     private const string ObjC = "/usr/lib/libobjc.A.dylib";
@@ -18,7 +18,6 @@ internal static class MacDesktopInterop
         if (!OperatingSystem.IsMacOS()) throw new PlatformNotSupportedException();
         var native = Uno.UI.Xaml.WindowHelper.GetNativeWindow(window) ?? throw new InvalidOperationException("The AppKit host is unavailable.");
         var type = native.GetType();
-        // Uno 6.7 returns an opaque native descriptor, not an NSWindow-valued Id.
         if (type.FullName is not ("Uno.UI.Runtime.Skia.MacOS.MacOSWindowNative" or "AppKit.NSWindow"))
             throw new PlatformNotSupportedException("This AppKit host needs an explicit cross-window coordinate adapter.");
         var value = type.GetProperty("Handle", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(native);
@@ -32,28 +31,30 @@ internal static class MacDesktopInterop
     }
     internal static Point ToScreen(Window window, Point point)
     {
-        var handle = Handle(window); var view = ContentView(handle);
-        var local = SendPointView(view, Sel("convertPoint:toView:"), new(point.X, point.Y), 0);
-        var screen = SendPoint(handle, Sel("convertPointToScreen:"), local);
+        var handle = Handle(window); var view = ContentView(handle); var bounds = Rect(view, "bounds");
+        var local = new NativePoint(bounds.Origin.X + point.X,
+            bounds.Origin.Y + (SendLong(view, Sel("isFlipped")) != 0 ? point.Y : bounds.Size.Height - point.Y));
+        var windowPoint = SendPointView(view, Sel("convertPoint:toView:"), local, 0);
+        var screen = SendPoint(handle, Sel("convertPointToScreen:"), windowPoint);
         return new(screen.X, screen.Y);
     }
     internal static Point FromScreen(Window window, Point point)
     {
-        var handle = Handle(window); var view = ContentView(handle);
+        var handle = Handle(window); var view = ContentView(handle); var bounds = Rect(view, "bounds");
         var windowPoint = SendPoint(handle, Sel("convertPointFromScreen:"), new(point.X, point.Y));
         var local = SendPointView(view, Sel("convertPoint:fromView:"), windowPoint, 0);
-        return new(local.X, local.Y);
+        var y = local.Y - bounds.Origin.Y;
+        return new(local.X - bounds.Origin.X, SendLong(view, Sel("isFlipped")) != 0 ? y : bounds.Size.Height - y);
     }
     internal static Point Origin(Window window)
     { var frame = Rect(Handle(window), "frame"); return new(frame.Origin.X, frame.Origin.Y); }
     internal static void Move(Window window, Point origin) => SendVoidPoint(Handle(window), Sel("setFrameOrigin:"), new(origin.X, origin.Y));
     internal static bool IsCaption(Window window, Point point)
     {
-        var handle = Handle(window); var frame = Rect(handle, "frame"); var bounds = Rect(ContentView(handle), "bounds");
-        var a = ToScreen(window, new(bounds.Origin.X, bounds.Origin.Y));
-        var b = ToScreen(window, new(bounds.Origin.X + bounds.Size.Width, bounds.Origin.Y + bounds.Size.Height));
+        var handle = Handle(window); var frame = Rect(handle, "frame");
+        var top = ToScreen(window, new(0, 0));
         return point.X >= frame.Origin.X && point.X < frame.Origin.X + frame.Size.Width &&
-            point.Y >= Math.Max(a.Y, b.Y) && point.Y < frame.Origin.Y + frame.Size.Height;
+            point.Y >= top.Y && point.Y < frame.Origin.Y + frame.Size.Height;
     }
     internal static DesktopPointerState Pointer()
     {
@@ -69,25 +70,17 @@ internal static class MacDesktopInterop
         var number = first;
         if (excludedNumber != 0 && number == excludedNumber)
             number = WindowAtPoint(type, Sel("windowNumberAtPoint:belowWindowWithWindowNumber:"), new(point.X, point.Y), (nint)excludedNumber);
-        var windows = Uno.UI.ApplicationHelper.Windows.ToArray();
         if (Environment.GetEnvironmentVariable("UNODOCK_INPUT_TRACE") == "1")
-        {
             Console.Error.WriteLine($"APPKIT hit screen={point.X:0.###},{point.Y:0.###} first={first} excluded={excludedNumber} hit={number}");
-            foreach (var candidate in windows.Where(w => w.Content?.XamlRoot != null))
-            {
-                var handle = Handle(candidate); var frame = Rect(handle, "frame"); var local = FromScreen(candidate, point);
-                Console.Error.WriteLine($"APPKIT candidate={SendLong(handle, Sel("windowNumber"))} parent={SendLong(Send(handle, Sel("parentWindow")), Sel("windowNumber"))} visible={SendLong(handle, Sel("isVisible"))} frame={frame.Origin.X:0.###},{frame.Origin.Y:0.###},{frame.Size.Width:0.###},{frame.Size.Height:0.###} local={local.X:0.###},{local.Y:0.###}");
-            }
-        }
         if (number == 0) return null;
-        foreach (var candidate in windows)
+        foreach (var candidate in Uno.UI.ApplicationHelper.Windows.ToArray())
         {
             if (ReferenceEquals(candidate, excluded) || candidate.Content?.XamlRoot is not { } root) continue;
             if (SendLong(Handle(candidate), Sel("windowNumber")) != number) continue;
             var local = FromScreen(candidate, point); var bounds = Rect(ContentView(Handle(candidate)), "bounds");
-            return new Rect(bounds.Origin.X, bounds.Origin.Y, bounds.Size.Width, bounds.Size.Height).Contains(local) ? root : null;
+            return new Rect(0, 0, bounds.Size.Width, bounds.Size.Height).Contains(local) ? root : null;
         }
-        return null;
+        return null; // Foreign native windows remain real occluders.
     }
     internal static IDisposable SetOwner(Window window, Window owner, bool tool)
     {

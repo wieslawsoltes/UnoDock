@@ -1,10 +1,5 @@
 #!/usr/bin/env python3
-"""Fail closed on missing/partial/failed native acceptance, independently of host exit.
-
-Some desktop hosts can terminate their native event loop with exit status zero
-before .NET's Environment.ExitCode is propagated. Executed JUnit evidence, not
-that status alone, is the acceptance gate. No rerun replaces a failing result.
-"""
+"""Require complete passing native JUnit evidence, independent of host exit status."""
 import json
 import platform
 import sys
@@ -17,6 +12,10 @@ def verify(directory: Path) -> None:
     expected = {"desktop-floating": 38 if system == "Linux" else 34, "uno-theme": 10}
     if system == "Windows":
         expected["windows-floating-input"] = 8
+    elif system == "Darwin":
+        expected["mac-native"] = 4
+    elif system != "Linux":
+        raise RuntimeError(f"No native acceptance contract for {system}")
     totals = {"passed": 0, "failed": 0, "skipped": 0, "executed": 0}
     for suite, minimum in expected.items():
         path = directory / (suite + ".xml")
