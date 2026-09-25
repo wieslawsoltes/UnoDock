@@ -1,0 +1,195 @@
+name: Verify final layout review evidence
+on:
+  push:
+    branches: [work/preview24-final-evidence]
+    paths: [.github/workflows/verify-review-evidence.yml]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: e807fd0105169570a8930ef76ebadabe6b09055a
+          fetch-depth: 0
+      - name: Verify final workflow status, artifact digests, JUnit and source contents
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib, importlib.util, io, json, os, re, subprocess, time, urllib.error, urllib.request, zipfile
+          from pathlib import Path, PurePosixPath
+          from unittest.mock import patch
+          import xml.etree.ElementTree as ET
+
+          repo = 'wieslawsoltes/UnoDock'
+          head = 'f4116e9047644611379663d906cafc1db72bfb94'
+          tested = 'e807fd0105169570a8930ef76ebadabe6b09055a'
+          base = '933e3d10b30fa09db0ad1e3f0e04a472bd7d1d05'
+          expected_tree = '66787d968fb2a70ce791f592a792fb3fc2716c27'
+          runs = {'ordinary': (36196056847, 6), 'native': (36196056786, 3), 'chrome': (36196056796, 3), 'source': (36196056828, 1)}
+          output = Path('artifacts/review')
+          output.mkdir(parents=True, exist_ok=True)
+          headers = {'Authorization': 'Bearer ' + os.environ['GH_TOKEN'], 'Accept': 'application/vnd.github+json', 'User-Agent': 'UnoDock-evidence-verification'}
+          def request(path):
+              return urllib.request.Request('https://api.github.com/repos/' + repo + '/' + path, headers=headers)
+          def get(path):
+              with urllib.request.urlopen(request(path), timeout=60) as response:
+                  return json.load(response)
+          def git(*args):
+              return subprocess.check_output(['git', *args]).decode().strip()
+          assert git('rev-parse', 'HEAD') == tested
+          assert git('rev-parse', 'HEAD^{tree}') == expected_tree
+          assert git('rev-parse', head + '^{tree}') == expected_tree
+          deadline = time.monotonic() + 1080
+          while True:
+              statuses = {name: get(f'actions/runs/{run}') for name, (run, _) in runs.items()}
+              for name, state in statuses.items():
+                  assert state['head_sha'] == head, (name, 'wrong source head')
+                  if state['status'] == 'completed' and state['conclusion'] != 'success':
+                      raise RuntimeError(f'{name}: final workflow failed with {state["conclusion"]}')
+              print('FINAL STATUS', {name: (state['status'], state['conclusion']) for name, state in statuses.items()}, flush=True)
+              if all(state['status'] == 'completed' for state in statuses.values()):
+                  break
+              if time.monotonic() >= deadline:
+                  raise TimeoutError('Final workflows did not complete within the bounded verification deadline.')
+              time.sleep(20)
+          jobs = {}
+          for name, (run, count) in runs.items():
+              items = get(f'actions/runs/{run}/jobs?per_page=100')['jobs']
+              assert len(items) == count and all(item['conclusion'] == 'success' for item in items), (name, items)
+              jobs[name] = [{'id': item['id'], 'name': item['name'], 'conclusion': item['conclusion']} for item in items]
+
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self, *args):
+                  return None
+          def download(artifact):
+              # Authentication is sent only to api.github.com, never to the redirected blob host.
+              try:
+                  response = urllib.request.build_opener(NoRedirect).open(request(f'actions/artifacts/{artifact["id"]}/zip'), timeout=60)
+              except urllib.error.HTTPError as error:
+                  if error.code not in (301, 302, 303, 307, 308):
+                      raise
+                  location = error.headers['Location']
+                  assert location.startswith('https://')
+                  response = urllib.request.urlopen(location, timeout=120)
+              with response:
+                  data = response.read(128 * 1024 * 1024 + 1)
+              assert len(data) <= 128 * 1024 * 1024
+              digest = 'sha256:' + hashlib.sha256(data).hexdigest()
+              assert digest == artifact['digest'], (artifact['name'], 'digest mismatch')
+              return data
+          artifacts = {}
+          archives = {}
+          for category, (run, _) in runs.items():
+              for artifact in get(f'actions/runs/{run}/artifacts?per_page=100')['artifacts']:
+                  name = artifact['name']
+                  selected = name in ('core-and-api-results', 'runtime-test-results', 'windows-runtime-test-results') if category == 'ordinary' else name.startswith('native-docking-') if category == 'native' else name.startswith('custom-floating-chrome-') if category == 'chrome' else False
+                  if not selected:
+                      continue
+                  assert not artifact['expired'] and artifact['workflow_run']['head_sha'] == head
+                  data = download(artifact)
+                  artifacts[name] = {'id': artifact['id'], 'digest': artifact['digest'], 'workflow': run}
+                  directory = output / 'evidence' / name
+                  directory.mkdir(parents=True, exist_ok=True)
+                  archives[name] = directory
+                  with zipfile.ZipFile(io.BytesIO(data)) as archive:
+                      for info in archive.infolist():
+                          path = PurePosixPath(info.filename)
+                          assert not path.is_absolute() and '..' not in path.parts
+                          if info.is_dir():
+                              continue
+                          if name == 'core-and-api-results' and path.name == 'UnoDock-source.zip':
+                              source_archive = archive.read(info)
+                          # Evidence bundle deliberately contains no font or binary dependency files.
+                          if path.suffix.lower() not in ('.json', '.xml', '.txt', '.log'):
+                              continue
+                          target = directory.joinpath(*path.parts)
+                          target.parent.mkdir(parents=True, exist_ok=True)
+                          target.write_bytes(archive.read(info))
+          assert len(artifacts) == 9, sorted(artifacts)
+
+          blobs = {}
+          raw_tree = subprocess.check_output(['git', 'ls-tree', '-rz', '--full-tree', 'HEAD'])
+          for entry in raw_tree.split(b'\0'):
+              if not entry:
+                  continue
+              meta, path = entry.split(b'\t', 1)
+              mode, kind, sha = meta.split()
+              if kind == b'blob':
+                  blobs[path.decode()] = sha.decode()
+          with zipfile.ZipFile(io.BytesIO(source_archive)) as archive:
+              names = {info.filename for info in archive.infolist() if not info.is_dir()}
+              assert names == set(blobs), ('source file set differs', names.symmetric_difference(blobs))
+              for name in names:
+                  data = archive.read(name)
+                  actual = hashlib.sha1(f'blob {len(data)}\0'.encode() + data).hexdigest()
+                  assert actual == blobs[name], ('source content mismatch', name)
+          print('SOURCE VERIFIED', len(blobs), 'tracked blobs', expected_tree)
+          protected = [path for path in blobs if path.endswith('.g.cs') or path.startswith('tools/ReferenceProbe/')]
+          for path in protected:
+              assert git('rev-parse', base + ':' + path) == blobs[path], ('protected source changed', path)
+          assert not any(re.search(r'(inspect-layout|complete-layout|finish-source|finalize-source|apply-layout)', path) for path in blobs if path.startswith('.github/workflows/'))
+
+          def reports(directory):
+              result = {}
+              for path in directory.rglob('*.xml'):
+                  root = ET.parse(path).getroot()
+                  if root.tag != 'testsuite':
+                      continue
+                  cases = root.findall('testcase')
+                  assert len(cases) == int(root.get('tests', '-1')) and len(cases) > 0, path
+                  names = [case.get('name') for case in cases]
+                  assert all(names) and len(names) == len(set(names)), path
+                  assert not any(int(root.get(key, '0')) for key in ('failures', 'errors', 'skipped')), path
+                  assert not any(case.find(tag) is not None for case in cases for tag in ('failure', 'error', 'skipped')), path
+                  suite = root.get('name')
+                  assert suite not in result, ('duplicate suite', suite)
+                  result[suite] = len(cases)
+              return result
+          totals = {}
+          for name, directory in archives.items():
+              counts = reports(directory)
+              assert counts, (name, 'no reports')
+              totals[name] = {'suites': counts, 'executed': sum(counts.values()), 'failed': 0, 'skipped': 0}
+              if name in ('runtime-test-results', 'windows-runtime-test-results'):
+                  execution = json.loads((directory / 'isolated-execution.json').read_text())
+                  assert len(execution['planned']) == len(counts) and set(execution['planned']) == set(counts)
+                  assert len(execution['completed']) == len(counts)
+                  assert {row['suite'] for row in execution['completed']} == set(counts)
+                  for row in execution['completed']:
+                      assert row['error'] is None and row['passed'] == row['executed'] == counts[row['suite']], row
+                  assert counts['layout-mutation-invariants'] == 64
+                  assert counts['navigator-sample'] > 0
+                  summary = json.loads((directory / 'execution-summary.json').read_text())
+                  assert summary['revision'] == tested and summary['executedCases'] == sum(counts.values())
+              if name.startswith('custom-floating-chrome-') or name.startswith('native-docking-'):
+                  script = 'tools/verify-floating-chrome.py' if name.startswith('custom-') else 'tools/verify-native-results.py'
+                  module_name = 'gate_' + re.sub(r'[^a-zA-Z0-9]', '_', name)
+                  spec = importlib.util.spec_from_file_location(module_name, script)
+                  module = importlib.util.module_from_spec(spec)
+                  spec.loader.exec_module(module)
+                  system = 'Darwin' if name.endswith('-macOS') else 'Windows' if name.endswith('-Windows') else 'Linux'
+                  assert (directory / 'source-revision.txt').read_text().strip() == tested
+                  with patch.object(module.platform, 'system', return_value=system):
+                      module.verify(directory)
+              print('JUNIT VERIFIED', name, totals[name])
+          assert totals['core-and-api-results']['executed'] == 128
+          summary = {'schema': 1, 'head': head, 'testedCommit': tested, 'tree': expected_tree,
+                     'sourceFilesVerified': len(blobs), 'protectedSourceFilesVerified': len(protected),
+                     'jobs': jobs, 'artifacts': artifacts, 'results': totals}
+          (output / 'verification.json').write_text(json.dumps(summary, indent=2) + '\n')
+          (output / 'implementation.patch').write_bytes(subprocess.check_output(['git', 'diff', '--no-ext-diff', base, 'HEAD']))
+          (output / 'change-statistics.txt').write_text(git('diff', '--stat', base, 'HEAD') + '\n')
+          print('FINAL REVIEW VERIFIED', json.dumps(summary, indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: UnoDock-PR12-review-evidence
+          path: artifacts/review/
+          if-no-files-found: error
