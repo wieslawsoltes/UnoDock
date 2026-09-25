@@ -1,6 +1,7 @@
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml.Automation;
 using UnoDock.Internal;
+using UnoDock.Layout;
 using Microsoft.Windows.Shell;
 
 namespace UnoDock.Controls;
