@@ -41,6 +41,8 @@ between('src/UnoDock/Layout/Root.cs', '    internal void Added(', '    internal 
 ''')
 replace('src/UnoDock/Layout/Content.cs', 'public abstract class LayoutContent :', 'public abstract partial class LayoutContent :')
 between('src/UnoDock/Layout/Content.cs', '    internal void SetActive(', '    public bool IsSelected\n', '')
+replace('tools/SourceMaintenance/Program.cs', '                document.Save(project, SaveOptions.DisableFormatting);', '''                var output = document.ToString(SaveOptions.DisableFormatting);
+                File.WriteAllText(project, string.Join("\\n", output.Split('\\n').Select(line => line.TrimEnd())).TrimEnd() + "\\n");''')
 p = 'samples/UnoDock.Gallery/App.xaml.cs'
 replace(p, '                    var suites = new (string Name, bool Windows, Func<Task<int>> Run)[]\n                    {', '''                    var suites = new (string Name, bool Windows, Func<Task<int>> Run)[]
                     {
