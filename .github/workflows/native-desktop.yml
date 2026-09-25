@@ -21,6 +21,7 @@ jobs:
       UNODOCK_SELFTEST: '1'
       UNODOCK_TEST_SUITE: desktop-acceptance
       UNODOCK_NATIVE_INPUT_TESTS: '1'
+      UNODOCK_INPUT_TRACE: '1'
       UNODOCK_TEST_RESULTS: ${{ github.workspace }}/artifacts/native-tests
     steps:
       - uses: actions/checkout@v4
@@ -51,13 +52,14 @@ jobs:
           import subprocess
           subprocess.run(['dotnet', 'run', '--project', 'samples/UnoDock.Gallery', '-c', 'Release', '-f', 'net10.0-desktop', '--no-build', '-p:UnoDockTargetFrameworks=net10.0-desktop', '-p:UnoDockLibraryFrameworks=net10.0'], timeout=240, check=True)
           PY
-      - name: Summarize actual executed cases
+      - name: Summarize and independently require complete passing JUnit evidence
         if: always()
         shell: bash
         run: |
           mkdir -p artifacts/native-tests
           git rev-parse HEAD > artifacts/native-tests/source-revision.txt
           python3 tools/report-test-results.py artifacts/native-tests --output artifacts/native-tests/execution-summary.json
+          python3 tools/verify-native-results.py artifacts/native-tests
       - uses: actions/upload-artifact@v4
         if: always()
         with:

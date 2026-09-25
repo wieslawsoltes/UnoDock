@@ -4,9 +4,8 @@ using System.Runtime.InteropServices;
 
 namespace UnoDock.Internal;
 
-/// <summary>AppKit conversions use the actual content view, not a guessed title-bar
-/// offset. Global AppKit coordinates are logical screen points (bottom-left axes),
-/// independent of the backing scale of any particular display.</summary>
+/// <summary>AppKit conversions use the actual content view. Global coordinates
+/// are logical screen points, with bottom-left axes, independent of backing scale.</summary>
 internal static class MacDesktopInterop
 {
     private const string ObjC = "/usr/lib/libobjc.A.dylib";
@@ -14,15 +13,12 @@ internal static class MacDesktopInterop
     [StructLayout(LayoutKind.Sequential)] internal struct NativePoint { public double X, Y; internal NativePoint(double x, double y) { X = x; Y = y; } }
     [StructLayout(LayoutKind.Sequential)] internal struct NativeSize { public double Width, Height; }
     [StructLayout(LayoutKind.Sequential)] internal struct NativeRect { public NativePoint Origin; public NativeSize Size; }
-
     internal static nint Handle(Window window)
     {
         if (!OperatingSystem.IsMacOS()) throw new PlatformNotSupportedException();
         var native = Uno.UI.Xaml.WindowHelper.GetNativeWindow(window) ?? throw new InvalidOperationException("The AppKit host is unavailable.");
         var type = native.GetType();
-        // Uno 6.7's desktop host exposes an opaque MacOSWindowNative from the public
-        // helper. Its Handle property is the audited NSWindow boundary. Do not
-        // interpret AppWindow.Id as an NSWindow pointer or search by window title.
+        // Uno 6.7 returns an opaque native descriptor, not an NSWindow-valued Id.
         if (type.FullName is not ("Uno.UI.Runtime.Skia.MacOS.MacOSWindowNative" or "AppKit.NSWindow"))
             throw new PlatformNotSupportedException("This AppKit host needs an explicit cross-window coordinate adapter.");
         var value = type.GetProperty("Handle", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(native);
@@ -49,14 +45,11 @@ internal static class MacDesktopInterop
         return new(local.X, local.Y);
     }
     internal static Point Origin(Window window)
-    {
-        var frame = Rect(Handle(window), "frame"); return new(frame.Origin.X, frame.Origin.Y);
-    }
+    { var frame = Rect(Handle(window), "frame"); return new(frame.Origin.X, frame.Origin.Y); }
     internal static void Move(Window window, Point origin) => SendVoidPoint(Handle(window), Sel("setFrameOrigin:"), new(origin.X, origin.Y));
     internal static bool IsCaption(Window window, Point point)
     {
-        var handle = Handle(window); var frame = Rect(handle, "frame"); var view = ContentView(handle);
-        var bounds = Rect(view, "bounds");
+        var handle = Handle(window); var frame = Rect(handle, "frame"); var bounds = Rect(ContentView(handle), "bounds");
         var a = ToScreen(window, new(bounds.Origin.X, bounds.Origin.Y));
         var b = ToScreen(window, new(bounds.Origin.X + bounds.Size.Width, bounds.Origin.Y + bounds.Size.Height));
         return point.X >= frame.Origin.X && point.X < frame.Origin.X + frame.Size.Width &&
@@ -72,29 +65,44 @@ internal static class MacDesktopInterop
     {
         var excludedNumber = excluded == null ? 0 : SendLong(Handle(excluded), Sel("windowNumber"));
         var type = Class("NSWindow");
-        var number = WindowAtPoint(type, Sel("windowNumberAtPoint:belowWindowWithWindowNumber:"), new(point.X, point.Y), 0);
+        var first = WindowAtPoint(type, Sel("windowNumberAtPoint:belowWindowWithWindowNumber:"), new(point.X, point.Y), 0);
+        var number = first;
         if (excludedNumber != 0 && number == excludedNumber)
             number = WindowAtPoint(type, Sel("windowNumberAtPoint:belowWindowWithWindowNumber:"), new(point.X, point.Y), (nint)excludedNumber);
+        var windows = Uno.UI.ApplicationHelper.Windows.ToArray();
+        if (Environment.GetEnvironmentVariable("UNODOCK_INPUT_TRACE") == "1")
+        {
+            Console.Error.WriteLine($"APPKIT hit screen={point.X:0.###},{point.Y:0.###} first={first} excluded={excludedNumber} hit={number}");
+            foreach (var candidate in windows.Where(w => w.Content?.XamlRoot != null))
+            {
+                var handle = Handle(candidate); var frame = Rect(handle, "frame"); var local = FromScreen(candidate, point);
+                Console.Error.WriteLine($"APPKIT candidate={SendLong(handle, Sel("windowNumber"))} parent={SendLong(Send(handle, Sel("parentWindow")), Sel("windowNumber"))} visible={SendLong(handle, Sel("isVisible"))} frame={frame.Origin.X:0.###},{frame.Origin.Y:0.###},{frame.Size.Width:0.###},{frame.Size.Height:0.###} local={local.X:0.###},{local.Y:0.###}");
+            }
+        }
         if (number == 0) return null;
-        foreach (var candidate in Uno.UI.ApplicationHelper.Windows.ToArray())
+        foreach (var candidate in windows)
         {
             if (ReferenceEquals(candidate, excluded) || candidate.Content?.XamlRoot is not { } root) continue;
             if (SendLong(Handle(candidate), Sel("windowNumber")) != number) continue;
-            var local = FromScreen(candidate, point);
-            var bounds = Rect(ContentView(Handle(candidate)), "bounds");
+            var local = FromScreen(candidate, point); var bounds = Rect(ContentView(Handle(candidate)), "bounds");
             return new Rect(bounds.Origin.X, bounds.Origin.Y, bounds.Size.Width, bounds.Size.Height).Contains(local) ? root : null;
         }
-        return null; // A foreign native window is an occluder, not a docking target.
+        return null;
     }
     internal static IDisposable SetOwner(Window window, Window owner, bool tool)
     {
         var child = Handle(window); var parent = Handle(owner);
         if (child == parent) throw new ArgumentException("A floating window cannot own itself.");
         Retain(parent); Retain(child);
-        SendChild(parent, Sel("addChildWindow:ordered:"), child, 1);
-        SendBool(child, Sel("setHidesOnDeactivate:"), tool);
-        SendBool(child, Sel("setExcludedFromWindowsMenu:"), tool);
-        return new OwnerLease(parent, child);
+        var lease = new OwnerLease(parent, child);
+        try
+        {
+            SendChild(parent, Sel("addChildWindow:ordered:"), child, 1);
+            SendBool(child, Sel("setHidesOnDeactivate:"), tool);
+            SendBool(child, Sel("setExcludedFromWindowsMenu:"), tool);
+            return lease;
+        }
+        catch { lease.Dispose(); throw; }
     }
     private sealed class OwnerLease(nint parent, nint child) : IDisposable
     {

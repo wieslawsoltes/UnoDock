@@ -22,7 +22,6 @@ public partial class App : Application
                     await Task.Delay(300);
                     var output = Environment.GetEnvironmentVariable("UNODOCK_TEST_RESULTS") ?? "artifacts/test-results";
                     var requested = Environment.GetEnvironmentVariable("UNODOCK_TEST_SUITE");
-                    // A shared registry preserves every existing platform case.
                     var suites = new (string Name, bool Windows, Func<Task<int>> Run)[]
                     {
                         ("runtime", false, () => Testing.RuntimeTests.Run(gallery.Dock, output)),
@@ -57,11 +56,12 @@ public partial class App : Application
                         ("mvvm-chrome", true, () => Testing.MvvmChromeTests.Run(output)),
                         ("accessibility-quality", true, () => Testing.AccessibilityQualityTests.Run(output)),
                         ("desktop-floating", true, () => Testing.DesktopFloatingTests.Run(output)),
-                        ("uno-theme", true, () => Testing.UnoThemeTests.Run(output))
+                        ("uno-theme", true, () => Testing.UnoThemeTests.Run(output)),
+                        ("windows-floating-input", true, () => Testing.WindowsFloatingInputTests.Run(output))
                     };
                     var selected = suites.Where(s => string.IsNullOrEmpty(requested) || requested == "all" ||
                         (requested == "windows-acceptance" ? s.Windows : requested == "desktop-acceptance"
-                            ? s.Name is "desktop-floating" or "uno-theme" : s.Name == requested)).ToArray();
+                            ? s.Name is "desktop-floating" or "uno-theme" or "windows-floating-input" : s.Name == requested)).ToArray();
                     if (selected.Length == 0) throw new ArgumentException("Unknown UNODOCK_TEST_SUITE: " + requested);
                     exitCode = 0;
                     foreach (var suite in selected) exitCode |= await suite.Run();
