@@ -52,11 +52,13 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
     {
         if (!CanPerformSystemAction(action)) return;
         if (action == Microsoft.Windows.Shell.WindowAction.Close) { Close(); return; }
+        CancelFrameResize(true);
         if (_window?.AppWindow.Presenter is OverlappedPresenter presenter)
         {
             if (action == Microsoft.Windows.Shell.WindowAction.Maximize) presenter.Maximize();
             else if (action == Microsoft.Windows.Shell.WindowAction.Minimize) presenter.Minimize();
-            else if (action == Microsoft.Windows.Shell.WindowAction.Restore) presenter.Restore();
+            else if (action == Microsoft.Windows.Shell.WindowAction.Restore)
+            { _dragCoordinates.PrepareRestore(_window); presenter.Restore(); }
             return;
         }
         if (action == Microsoft.Windows.Shell.WindowAction.Minimize) SetMinimized(true);
@@ -76,13 +78,10 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
         _title.ColumnDefinitions.Add(new() { Width = new(1, GridUnitType.Star) }); _title.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
         InitializeCaptionDrag();
         _caption.IsHitTestVisible = false; _title.Children.Add(_dragHandle); _title.Children.Add(_caption);
-        var actions = new StackPanel { Orientation = Orientation.Horizontal };
-        actions.Children.Add(DockVisuals.Button("↙", DockAll, "Dock floating content"));
-        actions.Children.Add(DockVisuals.Button("□", ToggleMaximize, "Maximize or restore floating window"));
-        actions.Children.Add(DockVisuals.Button("×", Close, "Close floating window")); Microsoft.Windows.Shell.WindowChrome.SetIsHitTestVisibleInChrome(actions, true);
+        var actions = CreateCaptionButtons();
         Grid.SetColumn(actions, 1); _title.Children.Add(actions);
         Grid.SetRow(_body, 1); _frame.Children.Add(_title); _frame.Children.Add(_body);
-        var resize = new Thumb { Width = 16, Height = 16, HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Bottom, Opacity = .25 };
+        var resize = _legacyResizeGrip = new Thumb { Width = 16, Height = 16, HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Bottom, Opacity = .25 };
         resize.DragDelta += (_, e) => ResizeBy(e.HorizontalChange, e.VerticalChange); Grid.SetRow(resize, 1); _frame.Children.Add(resize);
         Grid.SetRowSpan(_dropOverlay, 2); _frame.Children.Add(_dropOverlay);
         // One retained caption handle moves and docks the whole window. Pane
@@ -90,6 +89,7 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
         _caption.HorizontalAlignment = HorizontalAlignment.Left;
         GotFocus += (_, _) => MarkInteraction();
         Content = _frame; BorderThickness = new(1); MinWidth = 160; MinHeight = 100;
+        InitializeResizeChrome();
         GotFocus += (_, _) => { if ((Contents.FirstOrDefault(c => c.IsSelected) ?? Contents.FirstOrDefault()) is { } selected) selected.IsActive = true; };
     }
     public abstract ILayoutElement Model { get; }
@@ -125,6 +125,7 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
             foreach (var content in Contents.ToArray()) content.IsMaximized = IsMaximized;
         if (!IsMaximized) _displayBounds = null;
         ApplyManagedBounds();
+        UpdateChromeControls();
         Microsoft.Windows.Shell.SystemCommands.InvalidateCommands();
         OnStateChanged(EventArgs.Empty);
     }
@@ -133,6 +134,7 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
         if (_minimized == minimized) return;
         _minimized = minimized;
         if (_window == null) Visibility = minimized ? Visibility.Collapsed : Visibility.Visible;
+        UpdateChromeControls();
         Microsoft.Windows.Shell.SystemCommands.InvalidateCommands();
         OnStateChanged(EventArgs.Empty);
     }
@@ -217,6 +219,7 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
         if (Model is LayoutAnchorableFloatingWindow { RootPanel: { } panel }) manager.Surface.UpdateView(panel);
         if (body != null) { body.Visibility = Visibility.Visible; if (!ReferenceEquals(_body.Content, body)) { VisualParenting.Detach(body); _body.Content = body; } }
         ApplyManagedBounds();
+        UpdateChromeControls();
         Microsoft.Windows.Shell.SystemCommands.InvalidateCommands();
     }
     internal void ShowDropPreview(DockDropPlan plan, FrameworkElement coordinateOwner, Brush accent)
@@ -251,6 +254,10 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
             _window.AppWindow.Changed += OnNativeChanged;
             _window.Closed += OnNativeClosed;
             _window.Activated += OnNativeActivated;
+            // Apply the native frame contract before the first activation. A
+            // theme-aware client caption must not flash beneath an OS title bar.
+            try { RefreshNativeChrome(); }
+            catch (Exception error) { ReportFilterFailure(error); }
             var bounds = RestoredBounds; var scale = DesktopWindowCoordinates.Scale(this);
             _syncBounds = true;
             try { _window.AppWindow.Move(new Windows.Graphics.PointInt32 { X = (int)(bounds.X * scale), Y = (int)(bounds.Y * scale) }); _window.AppWindow.Resize(new Windows.Graphics.SizeInt32 { Width = (int)(bounds.Width * scale), Height = (int)(bounds.Height * scale) }); }
@@ -261,7 +268,7 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
             _window.Activate();
         }
         else if (!_window.AppWindow.IsVisible && !_minimized) _window.Activate();
-        try { ConfigureNativeDragHost(); }
+        try { ConfigureNativeDragHost(); RefreshNativeChrome(); }
         catch (Exception error) { ReportFilterFailure(error); }
     }
     private void OnNativeClosing(AppWindow sender, AppWindowClosingEventArgs e)
@@ -277,8 +284,9 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
     }
     private void OnNativeActivated(object sender, WindowActivatedEventArgs e)
     {
-        if (e.WindowActivationState != DockWindowActivationState.Deactivated)
-            MarkInteraction();
+        var active = e.WindowActivationState != DockWindowActivationState.Deactivated;
+        if (active) MarkInteraction();
+        SetNativeCaptionActive(active);
     }
     private void ReportFilterFailure(Exception error)
     {
@@ -294,6 +302,7 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
     private void OnNativeClosed(object sender, WindowEventArgs e)
     {
         if (!ReferenceEquals(sender, _window)) return;
+        ReleaseNativeChrome();
         ReleaseNativeDragHost(false);
         _messageHook?.Dispose(); _messageHook = null;
         _systemRegistration?.Dispose(); _systemRegistration = null;
@@ -326,6 +335,7 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
                 var positionScale = OperatingSystem.IsMacOS() ? 1 : scale;
                 SynchronizeNativeState(new(origin.X / positionScale, origin.Y / positionScale,
                     native.Size.Width / scale, native.Size.Height / scale), state);
+                UpdateChromeControls();
             }
             catch (Exception error) when (DockCoordinates.IsUnavailable(error)) { FailCaptionDrag(error); }
         })) _pendingNativeSync = null;
@@ -343,6 +353,7 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
     }
     internal void HideHost()
     {
+        CancelFrameResize(false);
         ReleaseNativeDragHost(false);
 #if WINDOWS
         if (_window != null) _window.AppWindow.Hide();
@@ -353,6 +364,7 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
             _closingHost = true;
             try
             {
+                ReleaseNativeChrome();
                 _messageHook?.Dispose(); _messageHook = null;
                 window.AppWindow.Closing -= OnNativeClosing;
                 window.AppWindow.Changed -= OnNativeChanged;
@@ -371,6 +383,7 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
     internal void CloseHost()
     {
         if (_hostDisposed) return; _hostDisposed = true; _closingHost = true;
+        ReleaseNativeChrome();
         ReleaseNativeDragHost(true);
         Microsoft.Windows.Shell.WindowChrome.SetWindowChrome(this, null);
         if (_window is { } window)
@@ -402,14 +415,19 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
     }
     private void ResizeBy(double x, double y)
     {
-        if (_hostDisposed || IsMaximized || _minimized) return;
+        if (_hostDisposed || IsMaximized || _minimized || _window?.AppWindow.Presenter is OverlappedPresenter { IsResizable: false }) return;
         if (_window != null) { _window.AppWindow.Resize(new Windows.Graphics.SizeInt32 { Width = Math.Max(160, _window.AppWindow.Size.Width + (int)Math.Round(x * (XamlRoot?.RasterizationScale ?? 1))), Height = Math.Max(100, _window.AppWindow.Size.Height + (int)Math.Round(y * (XamlRoot?.RasterizationScale ?? 1))) }); return; }
         var bounds = Bounds; SetBounds(bounds with { Width = Math.Max(160, bounds.Width + x), Height = Math.Max(100, bounds.Height + y) });
     }
     private void ToggleMaximize()
     {
         if (_window?.AppWindow.Presenter is OverlappedPresenter presenter)
-        { if (presenter.State == OverlappedPresenterState.Maximized) presenter.Restore(); else presenter.Maximize(); return; }
+        {
+            if (presenter.State == OverlappedPresenterState.Maximized)
+            { _dragCoordinates.PrepareRestore(_window); presenter.Restore(); }
+            else presenter.Maximize();
+            return;
+        }
         if (Model.Root?.Manager?.Surface is not { } surface) return;
         IsMaximized = !IsMaximized;
         ApplyManagedBounds();
@@ -427,7 +445,7 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
     private void HandleWindowKey(KeyRoutedEventArgs e)
     {
         if (_hostDisposed) return;
-        if (e.Key == Windows.System.VirtualKey.Escape) { Model.Root?.Manager?.Surface?.CancelDrag(); e.Handled = true; return; }
+        if (e.Key == Windows.System.VirtualKey.Escape) { CancelFrameResize(true); Model.Root?.Manager?.Surface?.CancelDrag(); e.Handled = true; return; }
         var manager = Model.Root?.Manager;
         if (InputState.ControlDown && e.Key == Windows.System.VirtualKey.Tab)
         { manager?.ShowNavigatorWindow(); e.Handled = true; return; }
