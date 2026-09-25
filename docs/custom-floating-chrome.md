@@ -30,17 +30,30 @@ decorations rather than pretending that custom chrome was installed.
 
 ## Native contracts
 
-Windows removes the overlapped presenter's title bar and border, handles
-`WM_NCCALCSIZE` to expose the whole native frame to XAML, and constrains borderless
-maximization to the nearest monitor's work area. Caption buttons are real XAML
-buttons; no invisible OS caption-button regions are left over them. A per-window
-subclass participates in the existing safe native message-hook lifecycle.
+Windows removes the overlapped presenter's title bar and border and explicitly
+clears residual HWND caption style bits. `WM_NCCALCSIZE` exposes the entire frame
+to XAML; `WM_NCHITTEST` routes it as client input so invisible native resize or
+caption regions cannot intercept XAML controls. Resizable/minimizable/maximizable
+style bits remain under presenter policy. The native style-change hook prevents
+presenter refresh from reintroducing a caption while the custom lease is active.
+Borderless maximization uses the nearest monitor's work area. All hooks belong
+to that window, use the existing native callback failure boundary, and are removed
+before restoring owned decoration state when switching back to System mode.
 
 X11 preserves the existing `_MOTIF_WM_HINTS` property except for the decoration
 flag/value it owns. It communicates with the actual native X11 window through a
 checked XCB connection. Returning to System mode restores the previous property
 only while it still matches the library's assignment. Pure Wayland is not treated
 as X11 merely because it runs on Linux.
+
+The current Uno X11 presenter's `Restore` path reactivates a window but does not
+remove its EWMH maximized flags. UnoDock supplies the missing `_NET_WM_STATE_REMOVE`
+client message for both maximize axes before calling the presenter's restore.
+The window manager remains authoritative for normal geometry and unrelated state.
+Restoring a minimized window preserves its previous maximized/restored state.
+Caption buttons, double-click and the control's system-command menu share this
+corrected action path; they do not fake restored geometry while leaving the WM
+maximized.
 
 AppKit uses full-size content, a hidden transparent native title bar and hidden
 standard traffic-light buttons. The titled style and original content view remain
@@ -78,11 +91,26 @@ Single-tab continuous tear-off is not introduced by this chrome change.
 
 ## Acceptance
 
-`floating-chrome` supplies independent native geometry/decoration probes, real
-host mode-switch and resize tests, plus explicitly enabled XTEST/SendInput cases.
+The `floating-chrome` selector discovers two application-registered suites,
+`floating-chrome-documents` and `floating-chrome-tools`. Each runs exactly once in
+a fresh native process with independent HWND/AppKit/Xlib geometry and decoration
+probes. Together they retain the complete 47-case actual-host matrix; dedicated
+Windows and Linux add 22 real pointer resize, Escape, maximize/restore and close
+cases. A click waits for stable native/client/button geometry before injecting
+one press/release, never click retries or direct command invocation.
+
 The dedicated Linux job runs under Openbox: its unmodified owner must have an OS
 title bar and its custom floating window must have zero frame extents. Bare Xvfb
-cannot by itself establish that a window manager removed decorations.
+cannot establish that a window manager removed decorations and cannot execute a
+window-manager maximize test. Those cases are omitted from the ordinary no-WM
+suite but are required by name in the dedicated acceptance gate.
+
+The original single-process chrome matrix reached Xvfb's native client limit
+while repeatedly creating and destroying real hosts. Per-kind process isolation
+bounds cumulative host-resource retention without raising that limit, suppressing
+cases or retrying failures. It is not a claim that an underlying Uno/driver leak
+has been diagnosed and repaired. The two-suite execution record and complete
+JUnit evidence are checked independently of native process exit status.
 
 Native WinUI is package/compile checked independently of Uno Skia Win32 runtime
 input tests. macOS host/geometry checks are not physical mouse automation. CI

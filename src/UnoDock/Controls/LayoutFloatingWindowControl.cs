@@ -57,7 +57,8 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
         {
             if (action == Microsoft.Windows.Shell.WindowAction.Maximize) presenter.Maximize();
             else if (action == Microsoft.Windows.Shell.WindowAction.Minimize) presenter.Minimize();
-            else if (action == Microsoft.Windows.Shell.WindowAction.Restore) presenter.Restore();
+            else if (action == Microsoft.Windows.Shell.WindowAction.Restore)
+            { _dragCoordinates.PrepareRestore(_window); presenter.Restore(); }
             return;
         }
         if (action == Microsoft.Windows.Shell.WindowAction.Minimize) SetMinimized(true);
@@ -421,7 +422,12 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
     private void ToggleMaximize()
     {
         if (_window?.AppWindow.Presenter is OverlappedPresenter presenter)
-        { if (presenter.State == OverlappedPresenterState.Maximized) presenter.Restore(); else presenter.Maximize(); return; }
+        {
+            if (presenter.State == OverlappedPresenterState.Maximized)
+            { _dragCoordinates.PrepareRestore(_window); presenter.Restore(); }
+            else presenter.Maximize();
+            return;
+        }
         if (Model.Root?.Manager?.Surface is not { } surface) return;
         IsMaximized = !IsMaximized;
         ApplyManagedBounds();
