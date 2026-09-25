@@ -48,6 +48,30 @@ internal sealed class X11TestInput : IDisposable
         Sync(_display, false);
     }
 
+    internal async Task Click(FrameworkElement target)
+    {
+        // A newly opened popup can have a nonzero ActualHeight before its
+        // native input position settles. Wait for stable geometry, then inject
+        // exactly one click; do not retry a failed command or invoke it directly.
+        Point? previous = null;
+        var stable = 0;
+        for (var i = 0; i < 100; i++)
+        {
+            if (!target.IsLoaded || target.ActualWidth <= 0 || target.ActualHeight <= 0)
+            { stable = 0; previous = null; await Task.Delay(20); continue; }
+            var local = new Point(target.ActualWidth / 2, target.ActualHeight / 2);
+            var screen = ScreenPoint(target, local);
+            MoveTo(target, local);
+            if (previous == screen) stable++; else stable = 0;
+            previous = screen;
+            await Task.Delay(20);
+            if (stable < 3 || !target.IsLoaded || ScreenPoint(target, local) != screen) continue;
+            Press(); await Task.Delay(40); Release();
+            return;
+        }
+        throw new InvalidOperationException("The native click target did not acquire stable input geometry.");
+    }
+
     internal void Press(uint button = 1)
     {
         ObjectDisposedException.ThrowIf(_display == 0, this);
