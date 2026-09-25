@@ -14,20 +14,24 @@ internal static partial class FloatingChromeTests
 {
     private static readonly ChromeHit[] Edges = [ChromeHit.Left, ChromeHit.Top, ChromeHit.Right, ChromeHit.Bottom,
         ChromeHit.TopLeft, ChromeHit.TopRight, ChromeHit.BottomLeft, ChromeHit.BottomRight];
-    internal static async Task<int> Run(string output)
+    internal static async Task<int> Run(string output, bool toolsOnly)
     {
+        // Each window kind is a registered suite and executes once in its own
+        // native process. This bounds cumulative host resources without retries
+        // or a larger X-server client limit, and retains every acceptance case.
         var tests = new TestRunner();
-        tests.Test("chrome: invalid direct mode value restores the previous setting", () =>
-        {
-            using var manager = new DockingManager();
-            Check.Equal(FloatingWindowTitleBarMode.Custom, manager.FloatingWindowTitleBarMode);
-            var failed = false;
-            try { manager.SetValue(DockingManager.FloatingWindowTitleBarModeProperty, (FloatingWindowTitleBarMode)999); }
-            catch (ArgumentOutOfRangeException) { failed = true; }
-            Check.True(failed); Check.Equal(FloatingWindowTitleBarMode.Custom, manager.FloatingWindowTitleBarMode);
-            return Task.CompletedTask;
-        });
-        foreach (var tools in new[] { false, true })
+        if (!toolsOnly)
+            tests.Test("chrome: invalid direct mode value restores the previous setting", () =>
+            {
+                using var manager = new DockingManager();
+                Check.Equal(FloatingWindowTitleBarMode.Custom, manager.FloatingWindowTitleBarMode);
+                var failed = false;
+                try { manager.SetValue(DockingManager.FloatingWindowTitleBarModeProperty, (FloatingWindowTitleBarMode)999); }
+                catch (ArgumentOutOfRangeException) { failed = true; }
+                Check.True(failed); Check.Equal(FloatingWindowTitleBarMode.Custom, manager.FloatingWindowTitleBarMode);
+                return Task.CompletedTask;
+            });
+        foreach (var tools in new[] { toolsOnly })
         {
             var kind = tools ? "tools" : "document";
             tests.Test($"chrome/{kind}: native frame is replaced and caption controls remain real", async () =>
@@ -139,7 +143,7 @@ internal static partial class FloatingChromeTests
             if ((OperatingSystem.IsLinux() || OperatingSystem.IsWindows()) && Environment.GetEnvironmentVariable("UNODOCK_NATIVE_INPUT_TESTS") == "1")
                 RegisterPhysical(tests, tools);
         }
-        return await tests.Run(output, "floating-chrome");
+        return await tests.Run(output, toolsOnly ? "floating-chrome-tools" : "floating-chrome-documents");
     }
     private static object? Call(object target, string name, params object?[] args)
     {

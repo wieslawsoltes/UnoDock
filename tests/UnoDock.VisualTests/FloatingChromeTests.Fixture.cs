@@ -71,10 +71,10 @@ internal static partial class FloatingChromeTests
         internal PointerInput()
         { if (OperatingSystem.IsLinux()) _x11 = new(); else _windows = new(); }
         internal void MoveTo(FrameworkElement e, Point p) { if (_x11 != null) _x11.MoveTo(e, p); else _windows!.MoveTo(e, p); }
+        private Point ScreenPoint(FrameworkElement e, Point p) => _x11?.ScreenPoint(e, p) ?? _windows!.ScreenPoint(e, p);
         internal Point OwnerPoint(FrameworkElement source, Point p, FrameworkElement owner)
         {
-            var screen = _x11?.ScreenPoint(source, p) ?? _windows!.ScreenPoint(source, p);
-            var origin = _x11?.ScreenPoint(owner, new(0, 0)) ?? _windows!.ScreenPoint(owner, new(0, 0));
+            var screen = ScreenPoint(source, p); var origin = ScreenPoint(owner, new(0, 0));
             return new((screen.X - origin.X) / owner.XamlRoot!.RasterizationScale, (screen.Y - origin.Y) / owner.XamlRoot.RasterizationScale);
         }
         internal void Press() { if (_x11 != null) _x11.Press(); else _windows!.Press(); }
@@ -82,7 +82,35 @@ internal static partial class FloatingChromeTests
         internal void EscapeDown() { if (_x11 != null) _x11.KeyDown(0xff1b); else _windows!.KeyDown(0x1b); }
         internal void EscapeUp() { if (_x11 != null) _x11.KeyUp(0xff1b); else _windows!.KeyUp(0x1b); }
         internal async Task Click(FrameworkElement e)
-        { MoveTo(e, new(e.ActualWidth / 2, e.ActualHeight / 2)); await Task.Delay(70); Press(); await Task.Delay(50); Release(); }
+        {
+            // Presenter state can precede both WM configure and XAML arrange.
+            // Wait for an actual full-size custom client and stable button screen
+            // geometry BEFORE injecting exactly one click. Never retry input.
+            var window = Uno.UI.ApplicationHelper.Windows.Single(w => ReferenceEquals(w.Content?.XamlRoot, e.XamlRoot));
+            var client = (FrameworkElement)window.Content!;
+            Point? previous = null; DockRect? previousBounds = null; var stable = 0;
+            for (var attempt = 0; attempt < 160; attempt++)
+            {
+                var bounds = FloatingChromeProbe.Bounds(window);
+                var scale = client.XamlRoot!.RasterizationScale;
+                var local = new Point(e.ActualWidth / 2, e.ActualHeight / 2);
+                var screen = ScreenPoint(e, local);
+                var arranged = e.IsLoaded && e.ActualWidth > 0 && e.ActualHeight > 0 &&
+                    Math.Abs(client.ActualWidth * scale - bounds.Width) <= 1 &&
+                    Math.Abs(client.ActualHeight * scale - bounds.Height) <= 1;
+                stable = arranged && previous == screen && previousBounds == bounds ? stable + 1 : 0;
+                previous = screen; previousBounds = bounds;
+                if (stable >= 3)
+                {
+                    MoveTo(e, local); await Task.Delay(25);
+                    if (ScreenPoint(e, local) == screen && FloatingChromeProbe.Bounds(window) == bounds)
+                    { Press(); await Task.Delay(50); Release(); return; }
+                    stable = 0;
+                }
+                await Task.Delay(25);
+            }
+            throw new InvalidOperationException($"Custom caption input geometry did not settle: client={client.ActualWidth}x{client.ActualHeight}, native={previousBounds}, button={AutomationProperties.GetAutomationId(e)}.");
+        }
         public void Dispose() { _x11?.Dispose(); _windows?.Dispose(); }
     }
 }

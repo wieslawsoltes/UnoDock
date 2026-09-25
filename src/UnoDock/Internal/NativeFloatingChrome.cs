@@ -55,22 +55,28 @@ internal abstract class NativeFloatingChrome(Window window) : IDisposable
 
     private sealed class WindowsChrome(Window window, LayoutFloatingWindowControl control, Action<Exception> failure) : NativeFloatingChrome(window)
     {
+        private const int StyleIndex = -16;
+        private const int CaptionStyle = 0x00c00000;
         private OverlappedPresenter? _presenter;
         private NativeWindowMessageHook? _hook;
         private bool _border, _title, _extended, _changed;
+        private int _captionStyle;
         private nint Handle => Microsoft.Windows.Shell.NativeChrome.Handle(Window);
         protected override void EnableCore()
         {
             _presenter = Window.AppWindow.Presenter as OverlappedPresenter ?? throw new NotSupportedException("Floating chrome requires an overlapped presenter.");
             _border = _presenter.HasBorder; _title = _presenter.HasTitleBar;
             _extended = Window.AppWindow.TitleBar.ExtendsContentIntoTitleBar;
+            _captionStyle = ReadStyle(Handle) & CaptionStyle;
             _hook = NativeWindowMessageHook.Attach(Window, Filter, failure) ?? throw new NotSupportedException("The native HWND is unavailable.");
             _changed = true;
-            // Extending into a WinUI title bar leaves OS caption buttons and drag
-            // hit regions. Completely remove it; XAML owns the entire client frame.
             Window.AppWindow.TitleBar.ExtendsContentIntoTitleBar = false;
             _presenter.SetBorderAndTitleBar(false, false);
-            Check(SetWindowPos(Handle, 0, 0, 0, 0, 0, 0x0001 | 0x0002 | 0x0004 | 0x0010 | 0x0020));
+            // Skia's presenter extends the client but retains WS_CAPTION and
+            // native edge hit regions. Remove only the caption style: preserve
+            // resize/minimize/maximize policy bits and own the full input frame.
+            WriteStyle(Handle, ReadStyle(Handle) & ~CaptionStyle);
+            RecalculateFrame();
         }
         internal override DockRect ReadBounds()
         {
@@ -87,13 +93,29 @@ internal abstract class NativeFloatingChrome(Window window) : IDisposable
         private nint Filter(nint hwnd, int message, nint wParam, nint lParam, ref bool handled)
         {
             if (IsDisposed) return 0;
-            if (message == 0x0083) { handled = true; return 0; } // WM_NCCALCSIZE: no residual OS frame strip.
+            if (message == 0x007c && wParam.ToInt64() == StyleIndex && lParam != 0)
+            {
+                // STYLESTRUCT contains two DWORDs, including in a 64-bit process.
+                // A presenter policy refresh must not restore an invisible OS
+                // caption. Returning to System mode first releases this lease.
+                var next = Marshal.ReadInt32(lParam, 4);
+                Marshal.WriteInt32(lParam, 4, next & ~CaptionStyle);
+                return 0;
+            }
+            if (message == 0x0083) { handled = true; return 0; } // WM_NCCALCSIZE
+            if (message == 0x0084 && GetWindowRect(hwnd, out var frame)) // WM_NCHITTEST
+            {
+                var packed = lParam.ToInt64();
+                var x = unchecked((short)(packed & 0xffff));
+                var y = unchecked((short)((packed >> 16) & 0xffff));
+                if (x >= frame.Left && x < frame.Right && y >= frame.Top && y < frame.Bottom)
+                { handled = true; return 1; } // HTCLIENT: XAML caption/buttons/eight grips own input.
+                return 0;
+            }
             if (message != 0x0024 || lParam == 0) return 0; // WM_GETMINMAXINFO
             var monitor = MonitorFromWindow(hwnd, 2); var info = new MonitorInfo { Size = Marshal.SizeOf<MonitorInfo>() };
             if (monitor == 0 || !GetMonitorInfo(monitor, ref info)) return 0;
             var limits = Marshal.PtrToStructure<MinMaxInfo>(lParam);
-            // A borderless maximize must respect the monitor work area, including
-            // taskbars on non-primary monitors and negative desktop coordinates.
             limits.MaxPosition = new(info.Work.Left - info.Monitor.Left, info.Work.Top - info.Monitor.Top);
             limits.MaxSize = new(info.Work.Right - info.Work.Left, info.Work.Bottom - info.Work.Top);
             var scale = Math.Max(1, GetDpiForWindow(hwnd)) / 96d;
@@ -107,15 +129,32 @@ internal abstract class NativeFloatingChrome(Window window) : IDisposable
         {
             _hook?.Dispose(); _hook = null;
             if (!_changed || _presenter == null || !IsWindow(Handle)) return;
+            var ownsCaption = (ReadStyle(Handle) & CaptionStyle) == 0;
             if (!_presenter.HasBorder && !_presenter.HasTitleBar) _presenter.SetBorderAndTitleBar(_border, _title);
             if (!Window.AppWindow.TitleBar.ExtendsContentIntoTitleBar) Window.AppWindow.TitleBar.ExtendsContentIntoTitleBar = _extended;
+            if (ownsCaption) WriteStyle(Handle, (ReadStyle(Handle) & ~CaptionStyle) | _captionStyle);
+            RecalculateFrame();
         }
         protected override void ReleaseCore() { _hook?.Dispose(); _hook = null; }
+        private void RecalculateFrame() => Check(SetWindowPos(Handle, 0, 0, 0, 0, 0, 0x0001 | 0x0002 | 0x0004 | 0x0010 | 0x0020));
+        private static int ReadStyle(nint window)
+        {
+            Marshal.SetLastPInvokeError(0); var value = GetWindowLong(window, StyleIndex);
+            if (value == 0 && Marshal.GetLastPInvokeError() != 0) throw new Win32Exception(Marshal.GetLastPInvokeError());
+            return value;
+        }
+        private static void WriteStyle(nint window, int value)
+        {
+            Marshal.SetLastPInvokeError(0); var previous = SetWindowLong(window, StyleIndex, value);
+            if (previous == 0 && Marshal.GetLastPInvokeError() != 0) throw new Win32Exception(Marshal.GetLastPInvokeError());
+        }
         private static void Check(bool success) { if (!success) throw new Win32Exception(Marshal.GetLastPInvokeError()); }
         [StructLayout(LayoutKind.Sequential)] private struct NativePoint(int x, int y) { internal int X = x, Y = y; }
         [StructLayout(LayoutKind.Sequential)] private struct NativeRect { internal int Left, Top, Right, Bottom; }
         [StructLayout(LayoutKind.Sequential)] private struct MinMaxInfo { internal NativePoint Reserved, MaxSize, MaxPosition, MinTrack, MaxTrack; }
         [StructLayout(LayoutKind.Sequential)] private struct MonitorInfo { internal int Size; internal NativeRect Monitor, Work; internal uint Flags; }
+        [DllImport("user32.dll", EntryPoint = "GetWindowLongW", ExactSpelling = true, SetLastError = true)] private static extern int GetWindowLong(nint window, int index);
+        [DllImport("user32.dll", EntryPoint = "SetWindowLongW", ExactSpelling = true, SetLastError = true)] private static extern int SetWindowLong(nint window, int index, int value);
         [DllImport("user32.dll", ExactSpelling = true, SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool GetWindowRect(nint window, out NativeRect rect);
         [DllImport("user32.dll", ExactSpelling = true, SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool SetWindowPos(nint window, nint after, int x, int y, int width, int height, uint flags);
         [DllImport("user32.dll", ExactSpelling = true)] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool IsWindow(nint window);
