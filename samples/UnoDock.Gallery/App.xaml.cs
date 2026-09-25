@@ -4,14 +4,11 @@ public partial class App : Application
 {
     private Window? _window;
     private bool _selfTestStarted;
-
     public App() => InitializeComponent();
-
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
         _window = new Window { Title = "UnoDock Samples" };
-        var gallery = new GalleryPage();
-        _window.Content = gallery;
+        var gallery = new GalleryPage(); _window.Content = gallery;
         _window.AppWindow.Resize(new Windows.Graphics.SizeInt32 { Width = 1440, Height = 960 });
         var windowRegistration = Microsoft.Windows.Shell.SystemCommands.RegisterWindow(_window);
         _window.Closed += (_, _) => { windowRegistration.Dispose(); gallery.Dispose(); };
@@ -19,16 +16,13 @@ public partial class App : Application
             gallery.Loaded += async (_, _) =>
             {
                 if (_selfTestStarted) return;
-                _selfTestStarted = true;
-                var exitCode = 2;
+                _selfTestStarted = true; var exitCode = 2;
                 try
                 {
                     await Task.Delay(300);
                     var output = Environment.GetEnvironmentVariable("UNODOCK_TEST_RESULTS") ?? "artifacts/test-results";
                     var requested = Environment.GetEnvironmentVariable("UNODOCK_TEST_SUITE");
-                    // One ordered registry keeps standalone selectors and platform
-                    // acceptance on the same code path. Windows flags preserve the
-                    // existing selected-host scope; false is not a passed test.
+                    // A shared registry preserves every existing platform case.
                     var suites = new (string Name, bool Windows, Func<Task<int>> Run)[]
                     {
                         ("runtime", false, () => Testing.RuntimeTests.Run(gallery.Dock, output)),
@@ -61,21 +55,19 @@ public partial class App : Application
                         ("source-ownership", true, () => Testing.SourceOwnershipTests.Run(output)),
                         ("source-identity", true, () => Testing.SourceIdentityTests.Run(output)),
                         ("mvvm-chrome", true, () => Testing.MvvmChromeTests.Run(output)),
-                        ("accessibility-quality", true, () => Testing.AccessibilityQualityTests.Run(output))
+                        ("accessibility-quality", true, () => Testing.AccessibilityQualityTests.Run(output)),
+                        ("desktop-floating", true, () => Testing.DesktopFloatingTests.Run(output)),
+                        ("uno-theme", true, () => Testing.UnoThemeTests.Run(output))
                     };
                     var selected = suites.Where(s => string.IsNullOrEmpty(requested) || requested == "all" ||
-                        (requested == "windows-acceptance" ? s.Windows : s.Name == requested)).ToArray();
+                        (requested == "windows-acceptance" ? s.Windows : requested == "desktop-acceptance"
+                            ? s.Name is "desktop-floating" or "uno-theme" : s.Name == requested)).ToArray();
                     if (selected.Length == 0) throw new ArgumentException("Unknown UNODOCK_TEST_SUITE: " + requested);
                     exitCode = 0;
                     foreach (var suite in selected) exitCode |= await suite.Run();
                 }
                 catch (Exception e) { exitCode = 2; Console.Error.WriteLine(e); }
-                finally
-                {
-                    Environment.ExitCode = exitCode;
-                    _window.Close();
-                    Exit();
-                }
+                finally { Environment.ExitCode = exitCode; _window.Close(); Exit(); }
             };
         _window.Activate();
     }

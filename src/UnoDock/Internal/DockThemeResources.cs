@@ -26,7 +26,6 @@ internal static class DockThemeResources
     internal static Brush Brush(DockingManager manager, string dockKey, string systemKey, Brush fallback) =>
         Find(manager, "UnoDock." + dockKey) as Brush ??
         (UsesFluent(manager) ? Find(manager, systemKey) as Brush : null) ?? fallback;
-
     internal static object? Find(FrameworkElement owner, string key, ResourceDictionary? skip = null)
     {
         var theme = owner is DockingManager manager ? EffectiveTheme(manager) : owner.ActualTheme;
@@ -37,8 +36,6 @@ internal static class DockThemeResources
     private static object? Find(ResourceDictionary dictionary, string key, ElementTheme theme, ResourceDictionary? skip, HashSet<ResourceDictionary> visited)
     {
         if (ReferenceEquals(dictionary, skip) || !visited.Add(dictionary)) return null;
-        // Enumerating values realizes lazy XAML resources. Inspect keys instead;
-        // direct entries win, then the selected theme, then reverse merged order.
         if (dictionary.Keys.Contains(key)) return dictionary[key];
         var name = theme == ElementTheme.Dark ? "Dark" : "Light";
         if (dictionary.ThemeDictionaries.TryGetValue(name, out var themed) && themed is ResourceDictionary selected &&
@@ -47,6 +44,8 @@ internal static class DockThemeResources
             Find(defaults, key, theme, skip, visited) is { } defaultValue) return defaultValue;
         for (var i = dictionary.MergedDictionaries.Count - 1; i >= 0; i--)
             if (Find(dictionary.MergedDictionaries[i], key, theme, skip, visited) is { } merged) return merged;
-        return dictionary.TryGetValue(key, out var value) ? value : null;
+        // A recursive lookup must not rediscover an explicitly excluded alias
+        // dictionary through the parent's framework TryGetValue fallback.
+        return skip == null && dictionary.TryGetValue(key, out var value) ? value : null;
     }
 }
