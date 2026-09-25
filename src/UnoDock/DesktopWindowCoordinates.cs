@@ -110,66 +110,7 @@ public sealed partial class DesktopWindowCoordinates : IScreenWindowCoordinates,
     /// A successful query with a null root means the point is occluded by another
     /// application or lies outside any registered Uno client window.</summary>
     internal bool TryGetTopmostRoot(FrameworkElement source, Point point, out XamlRoot? hitRoot)
-    {
-        Verify(); Validate(source, point);
-        hitRoot = null;
-#if WINDOWS
-        return false;
-#else
-        if (!OperatingSystem.IsLinux() || source.XamlRoot is not { } root) return false;
-        var windows = Uno.UI.ApplicationHelper.Windows;
-        var window = windows.FirstOrDefault(w => ReferenceEquals(w.Content?.XamlRoot, root));
-        if (window == null || Uno.UI.Xaml.WindowHelper.GetNativeWindow(window) is not Uno.UI.NativeElementHosting.X11NativeWindow native)
-            return false;
-        var client = source.TransformToVisual(null).TransformPoint(point);
-        var x = Math.Round(client.X * root.RasterizationScale);
-        var y = Math.Round(client.Y * root.RasterizationScale);
-        // Core X11 coordinate requests use signed 16-bit coordinates. Reject, do
-        // not wrap an out-of-range position into a different pane.
-        if (!double.IsFinite(x) || !double.IsFinite(y) || x < short.MinValue || x > short.MaxValue || y < short.MinValue || y > short.MaxValue)
-            throw new InvalidOperationException("The point exceeds the X11 coordinate range.");
-        try
-        {
-            var connection = Connection;
-            if (connection.IsInvalid || Xcb.Error(connection) != 0)
-                throw new InvalidOperationException("The X11 connection is unavailable.");
-            var geometry = Xcb.GeometryReply(connection, Xcb.Geometry(connection, Id(native.WindowId)), out var error);
-            uint current;
-            try
-            {
-                if (error != 0 || geometry == 0) throw new InvalidOperationException("The source window has closed.");
-                current = unchecked((uint)Marshal.ReadInt32(geometry, 8)); // screen root
-            }
-            finally { if (geometry != 0) Xcb.Free(geometry); if (error != 0) Xcb.Free(error); }
-            // Descend the server's actual stacking order at the queried point.
-            // This works with window-manager reparenting and never guesses a
-            // frame-to-client offset or relies on focus order for native windows.
-            for (var depth = 0; depth < 32; depth++)
-            {
-                var reply = Xcb.TranslateReply(connection, Xcb.Translate(connection, Id(native.WindowId), current, (short)x, (short)y), out error);
-                uint child;
-                try
-                {
-                    if (error != 0 || reply == 0 || Marshal.ReadByte(reply, 1) == 0)
-                        throw new InvalidOperationException("The X11 target hierarchy changed during hit testing.");
-                    child = unchecked((uint)Marshal.ReadInt32(reply, 8));
-                }
-                finally { if (reply != 0) Xcb.Free(reply); if (error != 0) Xcb.Free(error); }
-                if (child == 0 || child == current) return true;
-                foreach (var candidate in windows)
-                    if (candidate.Content?.XamlRoot is { } candidateRoot &&
-                        Uno.UI.Xaml.WindowHelper.GetNativeWindow(candidate) is Uno.UI.NativeElementHosting.X11NativeWindow candidateNative &&
-                        Id(candidateNative.WindowId) == child)
-                    { hitRoot = candidateRoot; return true; }
-                current = child;
-            }
-            // An unexpectedly deep foreign hierarchy is not a docking target.
-            return true;
-        }
-        catch (DllNotFoundException e) { throw new InvalidOperationException("X11 hit testing requires libxcb.", e); }
-        catch (EntryPointNotFoundException e) { throw new InvalidOperationException("The XCB coordinate API is unavailable.", e); }
-#endif
-    }
+        => TryGetTopmostRootExcludingWindow(source, point, out hitRoot, null);
 
     internal static void HideNativeClientBeforeClose(Window window)
     {

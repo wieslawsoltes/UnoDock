@@ -135,13 +135,15 @@ public static partial class ShellTests
                 document.Float(); host.Refresh(); await Tick();
                 var floating = host.FloatingWindows.Single();
                 var caption = (TextBlock)typeof(LayoutFloatingWindowControl).GetField("_caption", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(floating)!;
-                Check.True(caption.IsHitTestVisible);
-                Check.True(WindowChrome.GetIsHitTestVisibleInChrome(caption));
+                var handle = (Border)typeof(LayoutFloatingWindowControl).GetField("_dragHandle", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(floating)!;
+                Check.False(caption.IsHitTestVisible); // The label cannot steal the shared handle's capture.
+                Check.True(handle.IsHitTestVisible);
+                Check.True(WindowChrome.GetIsHitTestVisibleInChrome(handle));
                 var chrome = new WindowChrome { CaptionHeight = 64 };
                 WindowChrome.SetWindowChrome(floating, chrome); await Tick();
-                Check.True(WindowChrome.GetIsHitTestVisibleInChrome(caption));
+                Check.True(WindowChrome.GetIsHitTestVisibleInChrome(handle));
                 WindowChrome.SetWindowChrome(floating, null);
-                Check.True(WindowChrome.GetIsHitTestVisibleInChrome(caption));
+                Check.True(WindowChrome.GetIsHitTestVisibleInChrome(handle));
             }
             finally { host.Layout = previous; host.FloatingWindowMode = mode; host.Refresh(); await Tick(); }
         });

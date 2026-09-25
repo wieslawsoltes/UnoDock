@@ -224,7 +224,7 @@ internal sealed partial class DockSurface : Grid, IDisposable
         LayoutFloatingWindowControl? floating;
         try
         {
-            if (Manager.CrossWindowCoordinates is DesktopWindowCoordinates coordinates && coordinates.TryGetTopmostRoot(this, point, out var hitRoot, _floatingDrag?.Window.NativeWindow))
+            if (Manager.CrossWindowCoordinates is DesktopWindowCoordinates coordinates && coordinates.TryGetTopmostRootExcludingWindow(this, point, out var hitRoot, _floatingDrag?.Window.NativeWindow))
             {
                 if (hitRoot == null) return null;
                 floating = ReferenceEquals(hitRoot, XamlRoot) ? FloatingAt(point, inSurfaceOnly: true) :

@@ -7,7 +7,7 @@ public sealed partial class DesktopWindowCoordinates
 {
     /// <summary>Native stacking query with one explicitly excluded drag source.
     /// Foreign windows remain occluders; focus order is never a z-order substitute.</summary>
-    internal bool TryGetTopmostRoot(FrameworkElement source, Point point, out XamlRoot? hitRoot, Window? excluded)
+    internal bool TryGetTopmostRootExcludingWindow(FrameworkElement source, Point point, out XamlRoot? hitRoot, Window? excluded)
     {
         Verify(); Validate(source, point); hitRoot = null;
         if (OperatingSystem.IsWindows())

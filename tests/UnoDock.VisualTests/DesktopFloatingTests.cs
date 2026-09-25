@@ -160,10 +160,10 @@ internal static class DesktopFloatingTests
                 var target = f.DocumentCenter();
                 await f.CoverTarget(target);
                 var args = new object?[] { f.Surface, target, null, f.Control.NativeWindow };
-                Check.True((bool)Call(f.Coordinates, "TryGetTopmostRoot", args)!);
+                Check.True((bool)Call(f.Coordinates, "TryGetTopmostRootExcludingWindow", args)!);
                 Check.Same(f.Manager.XamlRoot, args[2]);
                 args = [f.Surface, target, null, null];
-                Check.True((bool)Call(f.Coordinates, "TryGetTopmostRoot", args)!);
+                Check.True((bool)Call(f.Coordinates, "TryGetTopmostRootExcludingWindow", args)!);
                 Check.Same(f.Control.XamlRoot, args[2]);
             });
         }

@@ -229,14 +229,18 @@ public static class InteractionTests
                 var caption = (TextBlock)typeof(LayoutFloatingWindowControl).GetField("_caption", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(floating)!;
                 var destination = Header(Pane(host));
                 using var input = new X11TestInput();
+                // Clicking the text must reach the retained whole-caption handle.
+                // The single-tab state machine is no longer its capture owner.
                 await input.Begin(caption, new(20, caption.ActualHeight / 2));
-                Check.Equal(UnoDock.Core.DockDragState.Dragging, DragState(host));
+                Check.True(floating.IsDragging, "Caption pointer input did not start a floating-window drag.");
                 await input.Drop(destination, new(50, destination.ActualHeight / 2));
                 Check.True(ReferenceEquals(docs[1].Parent, docs[0].Parent),
                     $"Document was not inserted into main pane; drag={DragState(host)}, floating={docs[0].IsFloating}, " +
                     $"sourceParent={docs[0].Parent?.GetType().Name}, destinationParent={docs[1].Parent?.GetType().Name}, " +
                     $"lastPoint={Surface(host).GetType().GetField("_lastDragPoint", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(Surface(host))}.");
                 Check.False(docs[0].IsFloating);
+                Check.False(floating.IsDragging);
+                Check.False(DragTimer(host).IsEnabled);
             });
             tests.Test("X11 Escape cancels captured drag without reordering", async () =>
             {
