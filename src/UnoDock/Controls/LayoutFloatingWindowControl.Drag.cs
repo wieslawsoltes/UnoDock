@@ -12,6 +12,7 @@ public abstract partial class LayoutFloatingWindowControl
     private CaptionDrag? _captionDrag;
     private NativeDragClock? _dragClock;
     private IDisposable? _nativeOwnerLease;
+    private Window? _nativeOwnerConfiguredWindow;
     private Point? _lastNativeOrigin;
     private bool _nativeMoveLoop, _movingFromCaption;
 
@@ -77,12 +78,17 @@ public abstract partial class LayoutFloatingWindowControl
             if (drag == null) return;
             if (!_dragHandle.CapturePointer(e.Pointer)) { CancelCaptionDrag(); return; }
             e.Handled = true;
-            if (_window != null && e.Pointer.PointerDeviceType == Windows.Devices.Input.PointerDeviceType.Mouse) StartDragClock();
+            if (_window != null && e.Pointer.PointerDeviceType == Microsoft.UI.Input.PointerDeviceType.Mouse) StartDragClock();
         }
         catch (Exception error) when (DockCoordinates.IsUnavailable(error)) { FailCaptionDrag(error); }
     }
     private Point CaptionPoint(PointerRoutedEventArgs e)
     {
+        // A routed event can contain client coordinates from before a synchronous
+        // window move. Mouse input has an authoritative global position; mapping
+        // stale local coordinates through the new origin would feed motion back.
+        if (_window is { } window && e.Pointer.PointerDeviceType == Microsoft.UI.Input.PointerDeviceType.Mouse &&
+            _dragCoordinates.TryGetPointer(window, out var state)) return state.Position;
         var point = e.GetCurrentPoint(_dragHandle).Position;
         return _window == null
             ? DockCoordinates.Translate(_dragHandle, point, Model.Root!.Manager!.Surface!, Model.Root.Manager.CrossWindowCoordinates)
@@ -125,7 +131,6 @@ public abstract partial class LayoutFloatingWindowControl
         try
         {
             var point = CaptionPoint(e);
-            // Process the final location even when no matching move was delivered.
             MoveCaption(drag, point, InputState.ControlDown);
             if (Current(drag)) CompleteCaption(drag, point, InputState.ControlDown);
             e.Handled = true;
@@ -143,7 +148,6 @@ public abstract partial class LayoutFloatingWindowControl
         var surfacePoint = drag.Window == null ? point : _dragCoordinates.FromScreen(point, drag.Surface);
         drag.Surface.CompleteFloatingDrag(this, drag.Generation, surfacePoint, suppress);
     }
-
     internal void EndFloatingDragCapture(DockSurface surface, long generation, bool restore)
     {
         if (_captionDrag is not { } drag || !ReferenceEquals(drag.Surface, surface) || drag.Generation != generation) return;
@@ -165,7 +169,6 @@ public abstract partial class LayoutFloatingWindowControl
         }
         finally
         {
-            // Publish terminal state before capture-loss/DP callbacks can reenter.
             try { SetIsDragging(false); }
             finally { if (_captionDrag == null) _dragHandle.ReleasePointerCaptures(); }
         }
@@ -196,7 +199,6 @@ public abstract partial class LayoutFloatingWindowControl
         if (state.EscapeDown) { QueueNativeCompletion(drag, true); return; }
         if (!state.LeftDown)
         {
-            // Never close an HWND inside its system move/size message loop.
             if (!_nativeMoveLoop) QueueNativeCompletion(drag, false);
             return;
         }
@@ -219,16 +221,14 @@ public abstract partial class LayoutFloatingWindowControl
             catch (Exception error) { FailCaptionDrag(error); }
         })) { drag.CompletionQueued = false; CancelCaptionDrag(); }
     }
-
     private nint FilterNativeDragMessage(nint hwnd, int msg, nint wParam, nint lParam, ref bool handled)
     {
         var result = FilterMessage(hwnd, msg, wParam, lParam, ref handled);
         if (handled || _hostDisposed || _window == null) return result;
-        if (msg == 0x231) // WM_ENTERSIZEMOVE: remember geometry, not an assumed drag.
+        if (msg == 0x231)
         { _nativeMoveLoop = true; _lastNativeOrigin = DesktopWindowCoordinates.NativeOrigin(_window); }
         else if (msg == 0x216 && _captionDrag == null && _dragCoordinates.TryGetPointer(_window, out var state) && state.LeftDown && !state.EscapeDown)
         {
-            // WM_MOVING, unlike WM_SIZING, is a real OS window-move gesture.
             if (BeginCaptionDrag(state.Position, null, true) is { } drag)
             { StartDragClock(); MoveCaption(drag, state.Position, state.ControlDown); }
         }
@@ -237,7 +237,7 @@ public abstract partial class LayoutFloatingWindowControl
             _nativeMoveLoop = false;
             if (_captionDrag is { Native: true } drag) QueueNativeCompletion(drag, false);
         }
-        else if (msg == 0x1f && _captionDrag is { } cancelled) QueueNativeCompletion(cancelled, true); // WM_CANCELMODE
+        else if (msg == 0x1f && _captionDrag is { } cancelled) QueueNativeCompletion(cancelled, true);
         return result;
     }
     private void ObserveNativeCaption(AppWindowChangedEventArgs e)
@@ -256,15 +256,18 @@ public abstract partial class LayoutFloatingWindowControl
     private void ConfigureNativeDragHost()
     {
         if (_window is not { } window) return;
-        _lastNativeOrigin = DesktopWindowCoordinates.NativeOrigin(window);
-        if (_nativeOwnerLease == null && Model.Root?.Manager is { } manager)
-            _nativeOwnerLease = _dragCoordinates.ConfigureOwner(window, DesktopWindowCoordinates.WindowFor(manager), Model is LayoutAnchorableFloatingWindow);
+        if (_captionDrag == null) _lastNativeOrigin = DesktopWindowCoordinates.NativeOrigin(window);
+        if (ReferenceEquals(_nativeOwnerConfiguredWindow, window) || Model.Root?.Manager is not { } manager) return;
+        var owner = DesktopWindowCoordinates.WindowFor(manager);
+        if (owner == null) return;
+        _nativeOwnerLease = _dragCoordinates.ConfigureOwner(window, owner, Model is LayoutAnchorableFloatingWindow);
+        _nativeOwnerConfiguredWindow = window;
     }
     private void ReleaseNativeDragHost(bool terminal)
     {
         CancelCaptionDrag();
         _dragClock?.Dispose(); _dragClock = null;
-        _nativeMoveLoop = false; _lastNativeOrigin = null;
+        _nativeMoveLoop = false; _lastNativeOrigin = null; _nativeOwnerConfiguredWindow = null;
         _nativeOwnerLease?.Dispose(); _nativeOwnerLease = null;
         if (terminal) _dragCoordinates.Dispose();
     }
