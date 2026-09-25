@@ -75,7 +75,13 @@ click toggles maximization; right click opens the existing system-command menu.
 Close follows the existing vetoable model/host lifecycle. The caption follows the
 manager's palette and active/inactive state. The eight independently hit-tested
 resize grips use directional cursors and respect resizable presenter policy,
-minimum/maximum dimensions and `ResizeBorderThickness`.
+minimum/maximum dimensions and `ResizeBorderThickness`. Resize edges are physical
+window edges, not reading-order content. The overlay measures its actual XAML-to-
+client X axis and compensates for root RTL mirroring without changing the caption
+or editor's flow direction. A zero-thickness side disables that edge and every
+corner involving it; adjacent enabled edges remain reachable along their full
+length. A press/release without displacement does not clamp a pre-existing frame
+that lies outside current size constraints.
 
 Resize uses the initial native rectangle and pointer position, not accumulated
 rounded deltas. Left/top edges keep the opposite edge fixed at the size limit.
@@ -85,19 +91,60 @@ from a retired session cannot cancel or mutate a successor session. Native mouse
 polling provides release/Escape detection without swallowing another window's
 event queue, and touch/pen use the routed pointer capture path.
 
+Each resize owns a scoped observer lease. Changes to size constraints, reading
+order, resize borders, manager/control availability, source hierarchy or presenter
+retire the old session immediately; changing a value back does not revive it.
+Policy revocation keeps the latest native frame rather than restoring geometry
+computed under a superseded policy. The current policy is also checked before
+rollback, because capture loss can be raised before every property observer runs.
+All observer, capture and clock cleanup is attempted even when another teardown
+step fails. Retained input from another grip cannot act on a successor session
+merely because the mouse pointer ID was reused.
+
+Before another native write or an Escape rollback, an internal bounded frame
+ledger checks the actual native rectangle against acknowledged and in-flight
+requests. A distinct application/window-manager move or resize ends the gesture
+without overwriting that frame. Windows requests are canonicalized to pixel edges,
+X11 requests to its integer origin/size contract, and AppKit retains fractional
+points. X11 may acknowledge position and size separately; the ledger accepts
+those intermediate combinations only from adjacent owned requests. At most 64
+unacknowledged requests are retained; exceeding that bound cancels instead of
+building an unbounded queue. Geometry comparison cannot distinguish an external
+assignment which exactly matches an allowed owned rectangle. It is not a claim
+of native request provenance or arbitrary window-manager ordering support.
+
 The existing caption-drag docking path remains responsible for preview guides,
 whole-tool-group preflight, tab insertion, Control suppression and Escape.
 Single-tab continuous tear-off is not introduced by this chrome change.
 
 ## Acceptance
 
-The `floating-chrome` selector discovers two application-registered suites,
-`floating-chrome-documents` and `floating-chrome-tools`. Each runs exactly once in
-a fresh native process with independent HWND/AppKit/Xlib geometry and decoration
-probes. Together they retain the complete 47-case actual-host matrix; dedicated
-Windows and Linux add 22 real pointer resize, Escape, maximize/restore and close
-cases. A click waits for stable native/client/button geometry before injecting
-one press/release, never click retries or direct command invocation.
+The `floating-chrome` selector discovers four application-registered suites:
+`floating-chrome-documents`, `floating-chrome-tools`,
+`floating-resize-policy-documents` and `floating-resize-policy-tools`. Each runs
+exactly once in a fresh native process with independent HWND/AppKit/Xlib geometry
+and decoration probes. The original suites retain the complete 47-case actual-host
+matrix plus 22 physical input cases on Windows and Linux. The policy suites add
+32 actual-host cases plus 20 physical input cases on Windows and Linux. Thus the
+dedicated gate requires at least 121 cases on those two platforms and 79 on AppKit;
+these are requirements, not a statement that an unobserved run passed.
+
+Policy acceptance verifies physical RTL edge placement independently of the grip's
+configured action, all eight physical RTL resize directions, disabled corners,
+no-motion behavior, policy/hierarchy/presenter revocation, foreign native geometry
+and retained real pointer arguments from a retired grip. The core suite links the
+actual internal frame-ledger source and tests delayed/split acknowledgement and
+bounded request sequences, including 10,000 deterministic sequences. A click
+waits for stable native/client/button geometry before injecting one press/release,
+never click retries or direct command invocation.
+
+The evidence gate is mutation-tested for all three platforms. It rejects missing
+required names, duplicate/planned-but-unrun suites, failed/skipped cases, conflicting
+process/JUnit counts and missing source revisions. Failure removes an old passing
+summary. The four-suite total timeout allows additional suites; the existing
+per-suite timeout and original acceptance requirements are unchanged. Linux uses
+the distribution Openbox configuration explicitly so personal runner rules cannot
+silently force test windows to be maximized or undecorated.
 
 The dedicated Linux job runs under Openbox: its unmodified owner must have an OS
 title bar and its custom floating window must have zero frame extents. Bare Xvfb
@@ -109,11 +156,11 @@ The original single-process chrome matrix reached Xvfb's native client limit
 while repeatedly creating and destroying real hosts. Per-kind process isolation
 bounds cumulative host-resource retention without raising that limit, suppressing
 cases or retrying failures. It is not a claim that an underlying Uno/driver leak
-has been diagnosed and repaired. The two-suite execution record and complete
+has been diagnosed and repaired. The four-suite execution record and complete
 JUnit evidence are checked independently of native process exit status.
 
 Native WinUI is package/compile checked independently of Uno Skia Win32 runtime
 input tests. macOS host/geometry checks are not physical mouse automation. CI
-execution counts and the exact tested source revision are recorded in PR #10;
-this document does not claim that a pending or failed run passed. Mixed-DPI
+execution counts and exact tested source revisions are recorded in the respective
+implementation PRs; this document does not claim that a pending or failed run passed. Mixed-DPI
 multi-monitor hardware, pure Wayland and macOS Intel remain separate validation.
