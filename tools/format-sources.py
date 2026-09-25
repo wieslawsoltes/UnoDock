@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Format an explicit, audited list of handwritten C# files with dotnet format.
+"""Format every handwritten C# input using an isolated SDK formatting project.
 
-The sentinel proves that this SDK actually visits source files and loads the
-repository EditorConfig; a successful no-op caused by an empty include filter is
-not accepted as formatting evidence. Generated files and reference probes remain
-outside the scope. No semantic analyzers or code-style fixes are run.
+A deliberate bad-input sentinel proves that the selected SDK loads EditorConfig
+and applies it. The project includes only audited source paths, no application
+projects, generators, analyzers or build targets. Four preprocessing configurations
+cover conditional Windows and Debug code without altering executable tokens.
 """
 from __future__ import annotations
 
@@ -15,8 +15,10 @@ import re
 import shutil
 import subprocess
 import tempfile
+import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[1]
+CONFIGURATIONS = ("", "WINDOWS", "DEBUG", "WINDOWS;DEBUG")
 
 
 def source_files(root: Path) -> list[Path]:
@@ -34,12 +36,30 @@ def source_files(root: Path) -> list[Path]:
     return sorted(files)
 
 
-def invoke(root: Path, files: list[Path], verify: bool) -> subprocess.CompletedProcess:
-    command = ["dotnet", "format", "whitespace", str(root), "--folder", "--verbosity", "normal"]
-    if verify:
-        command.append("--verify-no-changes")
-    command.extend(["--include", *map(str, files)])
-    return subprocess.run(command, cwd=root, text=True, encoding="utf-8", errors="replace", capture_output=True, timeout=120)
+def invoke(root: Path, files: list[Path], verify: bool, defines: str = "") -> subprocess.CompletedProcess:
+    with tempfile.TemporaryDirectory(prefix="unodock-format-project-") as directory:
+        project = ET.Element("Project", Sdk="Microsoft.NET.Sdk")
+        properties = ET.SubElement(project, "PropertyGroup")
+        for key, value in {
+            "TargetFramework": "net10.0", "EnableDefaultCompileItems": "false",
+            "LangVersion": "preview", "DefineConstants": defines,
+            "GenerateAssemblyInfo": "false", "IsPackable": "false",
+        }.items():
+            ET.SubElement(properties, key).text = value
+        items = ET.SubElement(project, "ItemGroup")
+        for path in files:
+            ET.SubElement(items, "Compile", Include=str(path))
+        ET.SubElement(items, "EditorConfigFiles", Include=str(root / ".editorconfig"))
+        target = Path(directory) / "Formatting.csproj"
+        ET.ElementTree(project).write(target, encoding="utf-8", xml_declaration=True)
+        restored = subprocess.run(["dotnet", "restore", str(target), "--verbosity", "quiet"],
+            cwd=root, text=True, encoding="utf-8", errors="replace", capture_output=True, timeout=120)
+        if restored.returncode != 0:
+            raise RuntimeError(restored.stdout + restored.stderr)
+        command = ["dotnet", "format", "whitespace", str(target), "--no-restore", "--verbosity", "normal"]
+        if verify:
+            command.append("--verify-no-changes")
+        return subprocess.run(command, cwd=root, text=True, encoding="utf-8", errors="replace", capture_output=True, timeout=120)
 
 
 def sentinel(root: Path) -> None:
@@ -51,13 +71,13 @@ def sentinel(root: Path) -> None:
         path.write_text(original, encoding="utf-8")
         initial = invoke(fixture, [path], True)
         if initial.returncode == 0 or path.read_text() != original:
-            raise RuntimeError("Formatter verification did not detect the unformatted sentinel without modifying it.")
+            raise RuntimeError("Verification failed to detect the unformatted sentinel without changing it.\n" + initial.stdout + initial.stderr)
         applied = invoke(fixture, [path], False)
         if applied.returncode != 0:
             raise RuntimeError(applied.stdout + applied.stderr)
         text = path.read_text()
         if not re.search(r"class Example\s*\n\s*\{", text) or "int a = 1;" not in text:
-            raise RuntimeError("Formatter did not apply the repository's brace and spacing rules to the sentinel.")
+            raise RuntimeError("EditorConfig brace/spacing rules were not applied: " + repr(text) + "\n" + applied.stdout + applied.stderr)
         final = invoke(fixture, [path], True)
         if final.returncode != 0:
             raise RuntimeError("Formatter sentinel was not idempotent.\n" + final.stdout + final.stderr)
@@ -74,18 +94,18 @@ def main() -> int:
         return 0
     files = source_files(ROOT)
     if not files:
-        raise RuntimeError("No handwritten C# files were selected.")
+        raise RuntimeError("No handwritten C# files selected.")
     before = {path: hashlib.sha256(path.read_bytes()).hexdigest() for path in files}
     failures = []
-    for index in range(0, len(files), 48):
-        batch = files[index:index + 48]
-        result = invoke(ROOT, batch, args.check)
+    for defines in CONFIGURATIONS:
+        print(f"Formatting {len(files)} explicit source files, symbols={defines or '(none)'}, verify={args.check}.", flush=True)
+        result = invoke(ROOT, files, args.check, defines)
         print(result.stdout, end="", flush=True)
         print(result.stderr, end="", flush=True)
         if result.returncode != 0:
-            failures.append(index)
+            failures.append(defines)
     modified = [path for path in files if before[path] != hashlib.sha256(path.read_bytes()).hexdigest()]
-    print(f"Explicit source coverage: {len(files)} files; {len(modified)} files changed; {len(failures)} failing batches.", flush=True)
+    print(f"Explicit source coverage: {len(files)} files; {len(modified)} changed; {len(failures)} failing configurations.", flush=True)
     if args.check and modified:
         raise RuntimeError("Verification unexpectedly changed source files.")
     return 1 if failures else 0
