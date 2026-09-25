@@ -320,8 +320,14 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
             var scale = DesktopWindowCoordinates.Scale(this);
             var native = window.AppWindow;
             var state = (native.Presenter as OverlappedPresenter)?.State ?? OverlappedPresenterState.Restored;
-            SynchronizeNativeState(new(native.Position.X / scale, native.Position.Y / scale,
-                native.Size.Width / scale, native.Size.Height / scale), state);
+            try
+            {
+                var origin = _dragCoordinates.GetNativeOrigin(window);
+                var positionScale = OperatingSystem.IsMacOS() ? 1 : scale;
+                SynchronizeNativeState(new(origin.X / positionScale, origin.Y / positionScale,
+                    native.Size.Width / scale, native.Size.Height / scale), state);
+            }
+            catch (Exception error) when (DockCoordinates.IsUnavailable(error)) { FailCaptionDrag(error); }
         })) _pendingNativeSync = null;
     }
     internal void SynchronizeNativeState(DockRect bounds, OverlappedPresenterState state)

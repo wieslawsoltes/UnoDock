@@ -147,6 +147,19 @@ internal static class DesktopFloatingTests
         }
         foreach (var tools in new[] { false, true })
         {
+            Add("native origin observes a synchronous move without relying on cached notifications", true, tools, async f =>
+            {
+                var window = f.Control.NativeWindow!;
+                var origin = (Point)CallStatic(typeof(DesktopWindowCoordinates), "NativeOrigin", window)!;
+                var target = new Point(origin.X + 31, origin.Y + 17);
+                CallStatic(typeof(DesktopWindowCoordinates), "MoveNative", window, target);
+                var actual = (Point)CallStatic(typeof(DesktopWindowCoordinates), "NativeOrigin", window)!;
+                Check.Near(target.X, actual.X, 1); Check.Near(target.Y, actual.Y, 1);
+                CallStatic(typeof(DesktopWindowCoordinates), "MoveNative", window, origin);
+                actual = (Point)CallStatic(typeof(DesktopWindowCoordinates), "NativeOrigin", window)!;
+                Check.Near(origin.X, actual.X, 1); Check.Near(origin.Y, actual.Y, 1);
+                await Task.CompletedTask;
+            });
             Add("native coordinate round-trip and source-window stacking exclusion", true, tools, async f =>
             {
                 foreach (var point in new[] { new Point(1, 1), new Point(70.25, 40.5), new Point(240, 110) })
@@ -174,7 +187,8 @@ internal static class DesktopFloatingTests
                     {
                         using var input = new X11TestInput();
                         var handle = Field<Border>(f.Control, "_dragHandle");
-                        var origin = f.Control.NativeWindow!.AppWindow.Position;
+                        var origin = input.ScreenPoint(f.Control, new(0, 0));
+                        var modelOrigin = new Point(f.Source[0].FloatingLeft, f.Source[0].FloatingTop);
                         input.MoveTo(handle, new(Math.Min(100, handle.ActualWidth / 2), handle.ActualHeight / 2));
                         await Task.Delay(60); input.Press(); await Task.Delay(60);
                         var target = f.DocumentCenter();
@@ -182,9 +196,14 @@ internal static class DesktopFloatingTests
                         if (cancel)
                         {
                             input.KeyDown(0xff1b); await Wait(() => !f.Control.IsDragging); input.KeyUp(0xff1b); input.Release();
+                            // AppWindow.Position is an asynchronous Uno cache, not
+                            // the OS geometry oracle. Assert the actual X server and
+                            // our persisted model, including late queued notifications.
+                            await Wait(() => input.ScreenPoint(f.Control, new(0, 0)) == origin &&
+                                f.Source.All(c => c.FloatingLeft == modelOrigin.X && c.FloatingTop == modelOrigin.Y));
                             await Task.Delay(80);
-                            Check.Equal(origin.X, f.Control.NativeWindow!.AppWindow.Position.X);
-                            Check.Equal(origin.Y, f.Control.NativeWindow.AppWindow.Position.Y);
+                            Check.Equal(origin, input.ScreenPoint(f.Control, new(0, 0)));
+                            Check.True(f.Source.All(c => c.FloatingLeft == modelOrigin.X && c.FloatingTop == modelOrigin.Y));
                             Check.True(f.Source.All(c => ReferenceEquals(c.FindParent<LayoutFloatingWindow>(), f.Floating)));
                         }
                         else

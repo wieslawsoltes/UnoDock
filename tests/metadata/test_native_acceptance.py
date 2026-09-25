@@ -23,7 +23,7 @@ class NativeGateTests(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
 
     def fixture(self, system):
-        counts = {"desktop-floating": 38 if system == "Linux" else 34, "uno-theme": 10}
+        counts = {"desktop-floating": 40 if system == "Linux" else 36, "uno-theme": 10}
         if system == "Windows": counts["windows-floating-input"] = 8
         if system == "Darwin": counts["mac-native"] = 8
         for suite, count in counts.items():

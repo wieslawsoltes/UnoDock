@@ -28,6 +28,7 @@ public abstract partial class LayoutFloatingWindowControl
         internal readonly uint? Pointer = pointer;
         internal readonly bool Native = native;
         internal bool Started, CompletionQueued;
+        internal Point? LastRequestedOrigin;
     }
 
     private void InitializeCaptionDrag()
@@ -54,7 +55,7 @@ public abstract partial class LayoutFloatingWindowControl
             Model.Root is not LayoutRoot root || root.Manager?.Surface is not { } surface) return null;
         var window = _window;
         var origin = window == null ? new Point(Bounds.X, Bounds.Y) :
-            native && _lastNativeOrigin is { } previous ? previous : DesktopWindowCoordinates.NativeOrigin(window);
+            native && _lastNativeOrigin is { } previous ? previous : _dragCoordinates.GetNativeOrigin(window);
         var bounds = Bounds;
         var generation = surface.BeginFloatingDrag(this);
         if (generation == 0) return null;
@@ -116,8 +117,15 @@ public abstract partial class LayoutFloatingWindowControl
             _movingFromCaption = true;
             try
             {
-                if (drag.Window != null) DesktopWindowCoordinates.MoveNative(drag.Window, new(drag.Origin.X + dx, drag.Origin.Y + dy));
-                else SetBounds(drag.Bounds with { X = drag.Bounds.X + dx, Y = drag.Bounds.Y + dy });
+                var origin = new Point(drag.Origin.X + dx, drag.Origin.Y + dy);
+                if (drag.LastRequestedOrigin != origin)
+                {
+                    // Do not flood the native event queue with identical moves
+                    // while the pointer is stationary and guides are refreshing.
+                    drag.LastRequestedOrigin = origin;
+                    if (drag.Window != null) DesktopWindowCoordinates.MoveNative(drag.Window, origin);
+                    else SetBounds(drag.Bounds with { X = origin.X, Y = origin.Y });
+                }
             }
             finally { _movingFromCaption = false; }
         }
@@ -226,7 +234,7 @@ public abstract partial class LayoutFloatingWindowControl
         var result = FilterMessage(hwnd, msg, wParam, lParam, ref handled);
         if (handled || _hostDisposed || _window == null) return result;
         if (msg == 0x231)
-        { _nativeMoveLoop = true; _lastNativeOrigin = DesktopWindowCoordinates.NativeOrigin(_window); }
+        { _nativeMoveLoop = true; _lastNativeOrigin = _dragCoordinates.GetNativeOrigin(_window); }
         else if (msg == 0x216 && _captionDrag == null && _dragCoordinates.TryGetPointer(_window, out var state) && state.LeftDown && !state.EscapeDown)
         {
             if (BeginCaptionDrag(state.Position, null, true) is { } drag)
@@ -243,7 +251,7 @@ public abstract partial class LayoutFloatingWindowControl
     private void ObserveNativeCaption(AppWindowChangedEventArgs e)
     {
         if (_window is not { } window || _hostDisposed || _closingHost || _syncBounds || _movingFromCaption) return;
-        var origin = DesktopWindowCoordinates.NativeOrigin(window);
+        var origin = _dragCoordinates.GetNativeOrigin(window);
         if (_captionDrag == null && !OperatingSystem.IsWindows() && e.DidPositionChange && !e.DidSizeChange &&
             _lastNativeOrigin is { } previous && previous != origin && _dragCoordinates.TryGetPointer(window, out var state) &&
             state.LeftDown && !state.EscapeDown && _dragCoordinates.IsNativeCaption(window, state.Position))
@@ -256,7 +264,7 @@ public abstract partial class LayoutFloatingWindowControl
     private void ConfigureNativeDragHost()
     {
         if (_window is not { } window) return;
-        if (_captionDrag == null) _lastNativeOrigin = DesktopWindowCoordinates.NativeOrigin(window);
+        if (_captionDrag == null) _lastNativeOrigin = _dragCoordinates.GetNativeOrigin(window);
         if (ReferenceEquals(_nativeOwnerConfiguredWindow, window) || Model.Root?.Manager is not { } manager) return;
         var owner = DesktopWindowCoordinates.WindowFor(manager);
         if (owner == null) return;

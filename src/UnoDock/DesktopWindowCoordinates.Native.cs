@@ -38,10 +38,31 @@ public sealed partial class DesktopWindowCoordinates
     }
     internal static Point NativeOrigin(Window window)
     {
+        using var coordinates = new DesktopWindowCoordinates();
+        return coordinates.GetNativeOrigin(window);
+    }
+    internal Point GetNativeOrigin(Window window)
+    {
+        Verify();
+        ArgumentNullException.ThrowIfNull(window);
+        // AppWindow.Position is notification-driven on some hosts. A drag can
+        // start or cancel before the last ConfigureNotify reaches that cache.
+        if (OperatingSystem.IsWindows())
+        {
+            if (!W32.GetWindowRect(WindowsHandle(window), out var frame))
+                throw new InvalidOperationException("The native window geometry is unavailable.");
+            return new(frame.Left, frame.Top);
+        }
 #if !WINDOWS
         if (OperatingSystem.IsMacOS()) return MacDesktopInterop.Origin(window);
+        if (OperatingSystem.IsLinux() && Uno.UI.Xaml.WindowHelper.GetNativeWindow(window) is Uno.UI.NativeElementHosting.X11NativeWindow native)
+        {
+            var id = Id(native.WindowId); var root = RootX11(id);
+            var frame = BoundsX11(TopLevelX11(id, root), root);
+            return new(frame.X, frame.Y);
+        }
 #endif
-        return new(window.AppWindow.Position.X, window.AppWindow.Position.Y);
+        throw new PlatformNotSupportedException("This desktop host needs an explicit native geometry adapter.");
     }
     internal static void MoveNative(Window window, Point origin)
     {
