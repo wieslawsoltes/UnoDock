@@ -1,0 +1,53 @@
+name: Inspect layout acceptance failure
+on:
+  push:
+    branches: [work/preview24-model-invariants-formatting]
+    paths: [.github/workflows/inspect-layout-acceptance.yml]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: runtime-test-results
+          run-id: 36183648825
+          github-token: ${{ github.token }}
+          path: artifacts/previous
+      - name: Summarize original failures and their exact source locations
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json, re, subprocess, xml.etree.ElementTree as ET
+          print('REVIEW HEAD', subprocess.check_output(['git','rev-parse','HEAD'], text=True).strip())
+          for path in sorted(Path('artifacts/previous').rglob('*.xml')):
+              try: root=ET.parse(path).getroot()
+              except ET.ParseError: continue
+              failures=[c for c in root.iter('testcase') if c.find('failure') is not None or c.find('error') is not None]
+              if not failures: continue
+              print('SUITE', path, root.attrib)
+              for case in failures:
+                  text=''.join(case.itertext())
+                  print('FAILED CASE',case.attrib, text)
+                  for file, line in re.findall(r'(?:/|\\)((?:tests|src|samples)[^\n]*?\.cs):line (\d+)',text):
+                      source=Path(file.replace('\\','/')); n=int(line)
+                      if source.exists():
+                          lines=source.read_text().splitlines()
+                          print('SOURCE', source, 'LINES',len(lines))
+                          for i in range(max(0,n-12),min(len(lines),n+8)): print(f'{i+1}: {lines[i]}')
+          for name in ['execution-summary.json','isolated-execution.json','source-revision.txt']:
+              paths=list(Path('artifacts/previous').rglob(name))
+              for path in paths:
+                  data=path.read_text()
+                  if name=='isolated-execution.json':
+                      payload=json.loads(data); data=json.dumps([r for r in payload.get('completed',[]) if r.get('error')],indent=2)
+                  print(name, data)
+          for path in ['tools/SourceMaintenance/Program.cs','tests/UnoDock.VisualTests/DesktopFloatingTests.cs','src/UnoDock/Controls/LayoutFloatingWindowControl.Drag.cs']:
+              p=Path(path)
+              print('BLOB',subprocess.check_output(['git','hash-object',path],text=True).strip(),'LINES',len(p.read_text().splitlines()),path)
+          PY
