@@ -21,6 +21,7 @@ internal static class WindowsFloatingInputTests
                 tests.Test($"SendInput: {(tools ? "tool group" : "document")} client caption {outcome}", async () =>
                 {
                     using var f = new Fixture(tools); await f.Show(); using var input = new NativeInput();
+                    Check.True(f.Control.IsCustomTitleBar, "The default floating host must replace OS chrome.");
                     var handle = f.Control.FindVisualChildren<Border>().Single(b => b.Name == "PART_FloatingDragHandle");
                     var window = f.Control.NativeWindow!; var origin = window.AppWindow.Position;
                     var editors = f.Source.Select(c => c.Content).ToArray();
@@ -44,7 +45,9 @@ internal static class WindowsFloatingInputTests
                 });
             tests.Test($"SendInput: {(tools ? "tool group" : "document")} actual OS title bar docks after WM_EXITSIZEMOVE", async () =>
             {
-                using var f = new Fixture(tools); await f.Show(); using var input = new NativeInput();
+                // Keep real OS-title-bar coverage as an explicit compatibility
+                // mode. Custom chrome is exercised by the unchanged gestures above.
+                using var f = new Fixture(tools, systemTitleBar: true); await f.Show(); using var input = new NativeInput();
                 var native = f.Control.NativeWindow!; input.Focus(native);
                 var start = input.CaptionCenter(native);
                 var finish = input.ScreenPoint(f.Target, new(f.Target.ActualWidth / 2, f.Target.ActualHeight / 2));
@@ -80,8 +83,9 @@ internal static class WindowsFloatingInputTests
         internal FrameworkElement Target = null!;
         private readonly Window _window;
         private readonly IDisposable _registration;
-        internal Fixture(bool tools)
+        internal Fixture(bool tools, bool systemTitleBar = false)
         {
+            Manager.FloatingWindowTitleBarMode = systemTitleBar ? FloatingWindowTitleBarMode.System : FloatingWindowTitleBarMode.Custom;
             Manager.Layout = new() { RootPanel = new LayoutPanel(Documents) };
             if (tools)
             {
@@ -121,7 +125,7 @@ internal static class WindowsFloatingInputTests
             finally { _window.Content = null; _window.Close(); _registration.Dispose(); }
         }
     }
-    private sealed class NativeInput : IDisposable
+    internal sealed class NativeInput : IDisposable
     {
         private bool _pressed;
         private readonly HashSet<ushort> _keys = [];
