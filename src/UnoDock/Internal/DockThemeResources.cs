@@ -2,8 +2,6 @@ using UnoDock.Themes;
 
 namespace UnoDock.Internal;
 
-/// <summary>Resolve the owning manager's theme across XamlRoots. Application
-/// brushes remain application-owned; never cache them across theme replacement.</summary>
 internal static class DockThemeResources
 {
     internal static bool UsesFluent(DockingManager manager) => manager.Theme is null or FluentTheme;
@@ -13,33 +11,42 @@ internal static class DockThemeResources
         FluentTheme { RequestedTheme: not ElementTheme.Default } fluent => fluent.RequestedTheme,
         _ => manager.ActualTheme
     };
+    internal static (string Dock, string System, Brush Fallback)[] Slots(DockPalette p) =>
+    [
+        ("PaneBrush", "LayerFillColorDefaultBrush", p.Surface),
+        ("HeaderBrush", "SolidBackgroundFillColorBaseBrush", p.Header),
+        ("InactiveTabBrush", "ControlFillColorSecondaryBrush", p.Tab),
+        ("BorderBrush", "ControlStrokeColorDefaultBrush", p.Border),
+        ("ForegroundBrush", "TextFillColorPrimaryBrush", p.Foreground),
+        ("HoverBrush", "SubtleFillColorSecondaryBrush", p.Hover),
+        ("PressedBrush", "SubtleFillColorTertiaryBrush", p.Pressed),
+        ("AccentBrush", "AccentFillColorDefaultBrush", p.Accent),
+        ("ActiveTitleBrush", "ControlFillColorInputActiveBrush", p.ActiveTitle)
+    ];
+    internal static Brush Brush(DockingManager manager, string dockKey, string systemKey, Brush fallback) =>
+        Find(manager, "UnoDock." + dockKey) as Brush ??
+        (UsesFluent(manager) ? Find(manager, systemKey) as Brush : null) ?? fallback;
 
-    internal static Brush Brush(DockingManager manager, string dockKey, string systemKey, Brush fallback)
-        => Find(manager, "UnoDock." + dockKey) as Brush ??
-           (UsesFluent(manager) ? Find(manager, systemKey) as Brush : null) ?? fallback;
-
-    internal static object? Find(FrameworkElement owner, string key)
+    internal static object? Find(FrameworkElement owner, string key, ResourceDictionary? skip = null)
     {
         var theme = owner is DockingManager manager ? EffectiveTheme(manager) : owner.ActualTheme;
         for (FrameworkElement? current = owner; current != null; current = VisualTreeHelper.GetParent(current) as FrameworkElement)
-            if (Find(current.Resources, key, theme, new(ReferenceEqualityComparer.Instance)) is { } local) return local;
-        return Application.Current is { } app
-            ? Find(app.Resources, key, theme, new(ReferenceEqualityComparer.Instance)) : null;
+            if (Find(current.Resources, key, theme, skip, new(ReferenceEqualityComparer.Instance)) is { } local) return local;
+        return Application.Current is { } app ? Find(app.Resources, key, theme, skip, new(ReferenceEqualityComparer.Instance)) : null;
     }
-
-    private static object? Find(ResourceDictionary dictionary, string key, ElementTheme theme, HashSet<ResourceDictionary> visited)
+    private static object? Find(ResourceDictionary dictionary, string key, ElementTheme theme, ResourceDictionary? skip, HashSet<ResourceDictionary> visited)
     {
-        if (!visited.Add(dictionary)) return null;
-        // Keys does not materialize every lazy resource value, unlike enumerating
-        // the entire dictionary. Local overrides precede theme/merged entries.
+        if (ReferenceEquals(dictionary, skip) || !visited.Add(dictionary)) return null;
+        // Enumerating values realizes lazy XAML resources. Inspect keys instead;
+        // direct entries win, then the selected theme, then reverse merged order.
         if (dictionary.Keys.Contains(key)) return dictionary[key];
         var name = theme == ElementTheme.Dark ? "Dark" : "Light";
         if (dictionary.ThemeDictionaries.TryGetValue(name, out var themed) && themed is ResourceDictionary selected &&
-            Find(selected, key, theme, visited) is { } selectedValue) return selectedValue;
+            Find(selected, key, theme, skip, visited) is { } selectedValue) return selectedValue;
         if (dictionary.ThemeDictionaries.TryGetValue("Default", out var defaultTheme) && defaultTheme is ResourceDictionary defaults &&
-            Find(defaults, key, theme, visited) is { } defaultValue) return defaultValue;
+            Find(defaults, key, theme, skip, visited) is { } defaultValue) return defaultValue;
         for (var i = dictionary.MergedDictionaries.Count - 1; i >= 0; i--)
-            if (Find(dictionary.MergedDictionaries[i], key, theme, visited) is { } merged) return merged;
+            if (Find(dictionary.MergedDictionaries[i], key, theme, skip, visited) is { } merged) return merged;
         return dictionary.TryGetValue(key, out var value) ? value : null;
     }
 }
