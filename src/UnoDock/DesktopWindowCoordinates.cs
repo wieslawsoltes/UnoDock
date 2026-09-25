@@ -2,15 +2,6 @@ using System.Runtime.InteropServices;
 
 namespace UnoDock;
 
-/// <summary>Optional physical-screen coordinate contract for desktop hosts. Screen points
-/// use the host's global coordinate space: physical pixels on Windows/X11 and
-/// AppKit screen points on macOS. Visual points are device-independent local units.</summary>
-public interface IScreenWindowCoordinates : ICrossWindowCoordinates
-{
-    Point ToScreen(FrameworkElement source, Point point);
-    Point FromScreen(Point screenPoint, FrameworkElement destination);
-}
-
 /// <summary>Client-area coordinate conversion for native WinUI, Uno Skia Win32, X11 and AppKit.
 /// No window-frame, caption-height or DPI offsets are guessed. X11 queries use a private,
 /// lazily opened XCB connection with checked replies, without modifying Uno's Xlib error

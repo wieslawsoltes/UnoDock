@@ -3,8 +3,6 @@ using UnoDock.Internal;
 
 namespace UnoDock;
 
-internal readonly record struct DesktopPointerState(Point Position, bool LeftDown, bool ControlDown, bool EscapeDown);
-
 public sealed partial class DesktopWindowCoordinates
 {
     internal static Window? WindowFor(FrameworkElement element) => Microsoft.Windows.Shell.WindowRegistry.Find(element);

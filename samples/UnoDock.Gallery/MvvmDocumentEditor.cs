@@ -66,30 +66,3 @@ public sealed class MvvmDocumentEditor : UserControl
         _commandFrame.BorderBrush = _statusFrame.BorderBrush = SampleChrome.Color(dark ? 0x454545u : 0xd4d4d4u);
     }
 }
-
-public sealed class MvvmToolPresenter : ContentControl
-{
-    public MvvmToolPresenter()
-    {
-        HorizontalContentAlignment = HorizontalAlignment.Stretch;
-        VerticalContentAlignment = VerticalAlignment.Stretch;
-        DataContextChanged += (_, _) => Present();
-        Loaded += (_, _) => Present();
-    }
-    private void Present()
-    {
-        var view = (DataContext as WorkspaceTool)?.View;
-        if (ReferenceEquals(Content, view)) return;
-        if (view != null)
-        {
-            switch (VisualTreeHelper.GetParent(view))
-            {
-                case ContentPresenter parent when ReferenceEquals(parent.Content, view): parent.Content = null; break;
-                case ContentControl parent when ReferenceEquals(parent.Content, view): parent.Content = null; break;
-                case Border parent when ReferenceEquals(parent.Child, view): parent.Child = null; break;
-                case Panel parent: parent.Children.Remove(view); break;
-            }
-        }
-        Content = view;
-    }
-}

@@ -1,8 +1,5 @@
 namespace UnoDock.Core;
 
-public enum DockDragState { Idle, Armed, Dragging, Committed, Cancelled }
-public readonly record struct DockDropTarget(string Id, DockRect Bounds, bool AcceptsDocuments, bool AcceptsAnchorables, int Priority = 0);
-
 /// <summary>Single-pointer, allocation-free drag state machine. The host owns capture and coordinates.</summary>
 public sealed class DockDragSession
 {

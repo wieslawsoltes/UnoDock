@@ -4,14 +4,6 @@ using Path = Microsoft.UI.Xaml.Shapes.Path;
 
 namespace UnoDock.Internal;
 
-// Independent compact chrome. Geometry and layout follow public visual observations,
-// not the original resource dictionaries, templates or vector assets.
-internal readonly record struct DockPalette(Brush Surface, Brush Header, Brush Tab, Brush Border,
-    Brush Foreground, Brush Hover, Brush Pressed, Brush Accent, Brush ActiveTitle,
-    double FontSize, double TitleHeight, double TabHeight, double ToolTabHeight, double RailThickness);
-
-internal enum DockGlyph { Close, Pin, Menu, Documents }
-
 internal static class DockChrome
 {
     [ThreadStatic] private static ControlTemplate? _buttonTemplate;
@@ -98,69 +90,5 @@ internal static class DockChrome
         return new() { Data = geometry, Width = 10, Height = 10, StrokeThickness = 1.2,
             HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center,
             IsHitTestVisible = false, Stretch = Stretch.None };
-    }
-}
-
-internal sealed class DockChromeButton : Button
-{
-    private DockPalette _palette;
-    private bool _over, _pressed;
-    internal DockChromeButton()
-    {
-        MinHeight = 0; MinWidth = 0; Padding = new(0); BorderThickness = new(1); CornerRadius = new(0);
-        HorizontalContentAlignment = HorizontalAlignment.Center; VerticalContentAlignment = VerticalAlignment.Center;
-        Template = DockChrome.ButtonTemplate; UseSystemFocusVisuals = true;
-        Configure(DockChrome.Default(false));
-        PointerEntered += (_, _) => { _over = true; Paint(); };
-        PointerExited += (_, _) => { _over = false; Paint(); };
-        AddHandler(PointerPressedEvent, new PointerEventHandler((_, _) => { _pressed = true; Paint(); }), true);
-        AddHandler(PointerReleasedEvent, new PointerEventHandler((_, _) => { _pressed = false; Paint(); }), true);
-        PointerCaptureLost += (_, _) => { _pressed = false; Paint(); };
-        IsEnabledChanged += (_, _) => Paint();
-        GotFocus += (_, _) => Paint(); LostFocus += (_, _) => Paint();
-        Unloaded += (_, _) => { _over = _pressed = false; Paint(); };
-    }
-    internal void Configure(DockPalette palette)
-    {
-        _palette = palette; Foreground = palette.Foreground; FontSize = palette.FontSize;
-        if (Content is Path path) { path.Stroke = palette.Foreground; path.Fill = palette.Foreground; }
-        Paint();
-    }
-    private void Paint()
-    {
-        Background = IsEnabled && _over ? _pressed ? _palette.Pressed : _palette.Hover : DockChrome.Transparent;
-        BorderBrush = FocusState == FocusState.Keyboard ? _palette.Accent : null;
-        Opacity = IsEnabled ? 1 : .45;
-    }
-}
-
-// Rotates one live element and exchanges its measure/arrange axes. Unlike a render
-// transform on a normal StackPanel this reserves the correct vertical rail length.
-internal sealed class DockRotatedLabel : Panel
-{
-    private bool _vertical;
-    private readonly CompositeTransform _rotation = new() { Rotation = 90 };
-    internal DockRotatedLabel(UIElement child) => Children.Add(child);
-    internal bool Vertical
-    {
-        get => _vertical;
-        set { if (_vertical == value) return; _vertical = value; InvalidateMeasure(); }
-    }
-    protected override Size MeasureOverride(Size availableSize)
-    {
-        var child = Children[0]; child.Measure(_vertical ? new(availableSize.Height, availableSize.Width) : availableSize);
-        return _vertical ? new(child.DesiredSize.Height, child.DesiredSize.Width) : child.DesiredSize;
-    }
-    protected override Size ArrangeOverride(Size finalSize)
-    {
-        var child = Children[0];
-        if (_vertical)
-        {
-            child.Arrange(new(0, 0, finalSize.Height, finalSize.Width));
-            _rotation.TranslateX = finalSize.Width;
-            if (!ReferenceEquals(child.RenderTransform, _rotation)) child.RenderTransform = _rotation;
-        }
-        else { child.RenderTransform = null; child.Arrange(new(0, 0, finalSize.Width, finalSize.Height)); }
-        return finalSize;
     }
 }

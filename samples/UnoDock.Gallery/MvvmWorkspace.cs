@@ -337,21 +337,3 @@ public sealed class MvvmWorkspace : INotifyPropertyChanged, IDisposable
         PropertyChanged = null;
     }
 }
-
-[Bindable]
-public sealed class WorkspaceTool(string contentId, string title, FrameworkElement view) : IDockContent
-{
-    public string ContentId { get; } = contentId;
-    public string Title { get; } = title;
-    public FrameworkElement View { get; } = view;
-}
-internal sealed class WorkspaceTemplateSelector : DataTemplateSelector
-{
-    protected override DataTemplate SelectTemplateCore(object item) => item switch
-    {
-        WorkspaceDocument => (DataTemplate)Application.Current.Resources["WorkspaceDocumentTemplate"],
-        WorkspaceTool => (DataTemplate)Application.Current.Resources["WorkspaceToolTemplate"],
-        _ => null!
-    };
-    protected override DataTemplate SelectTemplateCore(object item, DependencyObject container) => SelectTemplateCore(item);
-}

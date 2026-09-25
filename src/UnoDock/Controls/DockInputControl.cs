@@ -174,10 +174,3 @@ public abstract class DockInputControl : ContentControl
     protected virtual void OnPreviewGotKeyboardFocus(DockKeyboardFocusChangedEventArgs e) { }
     protected virtual IEnumerator LogicalChildren => (Content is DependencyObject child ? new[] { child } : Array.Empty<DependencyObject>()).GetEnumerator();
 }
-
-/// <summary>Selection event extension for the independent cached tab host.</summary>
-public abstract class DockSelectionControl : DockInputControl
-{
-    public event SelectionChangedEventHandler? SelectionChanged;
-    protected virtual void OnSelectionChanged(SelectionChangedEventArgs e) => SelectionChanged?.Invoke(this, e);
-}

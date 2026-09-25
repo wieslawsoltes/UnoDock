@@ -8,9 +8,6 @@ using PathShape = Microsoft.UI.Xaml.Shapes.Path;
 
 namespace UnoDock.Gallery;
 
-internal enum SampleKind { Classic, Workspace, Binding }
-internal enum SampleTheme { Generic, Light, Dark }
-
 public sealed partial class GalleryPage : IDisposable
 {
     private readonly Dictionary<string, Action> _sampleCommands = new(StringComparer.Ordinal);

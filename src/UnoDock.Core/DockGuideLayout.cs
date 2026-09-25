@@ -1,10 +1,5 @@
 namespace UnoDock.Core;
 
-/// <summary>The scope of a docking glyph: the whole workspace, a tab group,
-/// or a tool pane placed beside a document group without becoming a document.</summary>
-public enum DockGuideScope { Workspace, Pane, ToolBesideDocument }
-public readonly record struct DockGuideSlot(DockGuideScope Scope, DockPosition Position, DockRect Bounds);
-
 /// <summary>Independent compass layout. Slots are immutable, non-overlapping,
 /// fully inside the visible host, and never scaled below the requested hit size.</summary>
 public static class DockGuideLayout

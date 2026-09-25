@@ -15,7 +15,9 @@
     <Compile Include="../../tests/UnoDock.Runtime.Tests/InputExtensionTests.cs" Link="Testing/InputExtensionTests.cs" />
     <ProjectReference Include="../../src/UnoDock/UnoDock.csproj" />
     <Compile Include="../../tests/UnoDock.Runtime.Tests/ShellTests*.cs" Link="Testing/%(Filename)%(Extension)" />
+    <Compile Include="../../tests/UnoDock.Testing/Check.cs" Link="Testing/Check.cs" />
     <Compile Include="../../tests/UnoDock.Testing/TestRunner.cs" Link="Testing/TestRunner.cs" />
+
     <Compile Include="../../tests/UnoDock.Runtime.Tests/WindowLifecycleTests.cs" Link="Testing/WindowLifecycleTests.cs" />
     <Compile Include="../../tests/UnoDock.Runtime.Tests/RuntimeTests.cs" Link="Testing/RuntimeTests.cs" />
     <Compile Include="../../tests/UnoDock.Runtime.Tests/InteropTests.cs" Link="Testing/InteropTests.cs" />

@@ -6,16 +6,6 @@ using UnoDock.Themes;
 
 namespace UnoDock;
 
-public enum FloatingWindowMode { Auto, Native, InSurface }
-public class DocumentClosingEventArgs(LayoutDocument document) : CancelEventArgs { public LayoutDocument Document { get; private set; } = document; }
-public class DocumentClosedEventArgs(LayoutDocument document) : EventArgs { public LayoutDocument Document { get; private set; } = document; }
-public class LayoutFloatingWindowControlCollectionChangedEventArgs(NotifyCollectionChangedEventArgs collectionChangedEventArgs) : EventArgs
-{ public NotifyCollectionChangedEventArgs CollectionChangedEventArgs { get; private set; } = collectionChangedEventArgs; }
-public sealed class DockEventArgs(LayoutContent content) : RoutedEventArgs
-{ public LayoutContent Content { get; } = content; public bool Cancel { get; set; } }
-/// <summary>Portable event identity for the four AvalonDock extension events that WinUI cannot register natively.</summary>
-public sealed record DockRoutedEvent(string Name);
-
 [TemplatePart(Name = "PART_AutoHideArea")]
 [ContentProperty(Name = nameof(Layout))]
 public partial class DockingManager : Control, IDisposable, UnoDock.Compatibility.IWeakEventListener
@@ -353,5 +343,3 @@ public partial class DockingManager : Control, IDisposable, UnoDock.Compatibilit
     }
     private sealed record SourceEntry(object Value, LayoutContent Model);
 }
-/// <summary>Optional AOT-safe source-item description. Existing view models can instead use LayoutItemContainerStyle bindings.</summary>
-public interface IDockContent { string ContentId { get; } string Title { get; } }

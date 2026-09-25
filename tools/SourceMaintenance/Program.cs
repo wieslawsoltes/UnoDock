@@ -250,7 +250,8 @@ internal static class Program
 
             if (changed)
             {
-                document.Save(project, SaveOptions.DisableFormatting);
+                var output = document.ToString(SaveOptions.DisableFormatting);
+                File.WriteAllText(project, string.Join("\n", output.Split('\n').Select(line => line.TrimEnd())).TrimEnd() + "\n");
             }
         }
     }

@@ -5,9 +5,6 @@ using UnoDock.Controls;
 
 namespace Microsoft.Windows.Shell;
 
-[Flags]
-public enum WindowChromeCapabilities { None = 0, ManagedFrame = 1, NativeCaption = 2, NativeResize = 4, Glass = 8, SystemMenu = 16 }
-
 /// <summary>Independently implemented non-client configuration. Native Windows supports caption
 /// regions, interactive exclusions, resizing and DWM glass. In-surface hosts apply a managed
 /// frame. This is a DependencyObject, not a general implementation of WPF Freezable.</summary>
