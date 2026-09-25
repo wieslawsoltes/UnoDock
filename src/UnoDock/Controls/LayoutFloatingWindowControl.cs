@@ -11,7 +11,7 @@ using UnoDock.Layout;
 namespace UnoDock.Controls;
 
 /// <summary>Compositional replacement for the WPF Window base. Native desktop and in-surface hosts share the same layout.</summary>
-public abstract class LayoutFloatingWindowControl : DockWindowControl, ILayoutControl
+public abstract partial class LayoutFloatingWindowControl : DockWindowControl, ILayoutControl
 {
     public static readonly DependencyProperty IsContentImmutableProperty = DependencyProperty.Register(nameof(IsContentImmutable), typeof(bool), typeof(LayoutFloatingWindowControl), new PropertyMetadata(false));
     public static readonly DependencyProperty IsDraggingProperty = DependencyProperty.Register(nameof(IsDragging), typeof(bool), typeof(LayoutFloatingWindowControl), new PropertyMetadata(false, (d, e) => ((LayoutFloatingWindowControl)d).OnIsDraggingChanged(e)));
@@ -74,11 +74,8 @@ public abstract class LayoutFloatingWindowControl : DockWindowControl, ILayoutCo
         HorizontalContentAlignment = HorizontalAlignment.Stretch; VerticalContentAlignment = VerticalAlignment.Stretch;
         _frame.RowDefinitions.Add(new() { Height = GridLength.Auto }); _frame.RowDefinitions.Add(new() { Height = new(1, GridUnitType.Star) });
         _title.ColumnDefinitions.Add(new() { Width = new(1, GridUnitType.Star) }); _title.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
-        var drag = new Thumb { HorizontalAlignment = HorizontalAlignment.Stretch, VerticalAlignment = VerticalAlignment.Stretch, Opacity = .01 };
-        drag.DragStarted += (_, _) => SetIsDragging(true);
-        drag.DragDelta += (_, e) => MoveBy(e.HorizontalChange, e.VerticalChange);
-        drag.DragCompleted += (_, _) => SetIsDragging(false);
-        _caption.IsHitTestVisible = false; _title.Children.Add(drag); _title.Children.Add(_caption);
+        InitializeCaptionDrag();
+        _caption.IsHitTestVisible = false; _title.Children.Add(_dragHandle); _title.Children.Add(_caption);
         var actions = new StackPanel { Orientation = Orientation.Horizontal };
         actions.Children.Add(DockVisuals.Button("↙", DockAll, "Dock floating content"));
         actions.Children.Add(DockVisuals.Button("□", ToggleMaximize, "Maximize or restore floating window"));
@@ -88,14 +85,9 @@ public abstract class LayoutFloatingWindowControl : DockWindowControl, ILayoutCo
         var resize = new Thumb { Width = 16, Height = 16, HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Bottom, Opacity = .25 };
         resize.DragDelta += (_, e) => ResizeBy(e.HorizontalChange, e.VerticalChange); Grid.SetRow(resize, 1); _frame.Children.Add(resize);
         Grid.SetRowSpan(_dropOverlay, 2); _frame.Children.Add(_dropOverlay);
-        // Single-document floating windows have no pane header. Their caption is a
-        // docking drag handle; the remaining title area retains window movement.
+        // One retained caption handle moves and docks the whole window. Pane
+        // tabs retain their separate single-item tear-off interaction.
         _caption.HorizontalAlignment = HorizontalAlignment.Left;
-        _caption.PointerPressed += (_, e) =>
-        {
-            if (Model is LayoutDocumentFloatingWindow { RootDocument: { } document })
-                document.Root?.Manager?.BeginDrag(document, _caption, e);
-        };
         GotFocus += (_, _) => MarkInteraction();
         Content = _frame; BorderThickness = new(1); MinWidth = 160; MinHeight = 100;
         GotFocus += (_, _) => { if ((Contents.FirstOrDefault(c => c.IsSelected) ?? Contents.FirstOrDefault()) is { } selected) selected.IsActive = true; };
@@ -204,15 +196,18 @@ public abstract class LayoutFloatingWindowControl : DockWindowControl, ILayoutCo
         EnsureInitialized();
         if (_hostDisposed) return;
         var manager = Model.Root?.Manager; if (manager?.Surface == null) return;
-        _caption.IsHitTestVisible = Model is LayoutDocumentFloatingWindow;
-        // Document captions are docking drag handles, not native window-move
-        // regions. Keep both them and the caption buttons in the client area.
-        Microsoft.Windows.Shell.WindowChrome.SetIsHitTestVisibleInChrome(_caption, _caption.IsHitTestVisible);
+        _caption.IsHitTestVisible = false;
+        var palette = DockChrome.Palette(manager);
+        _frame.RequestedTheme = DockThemeResources.EffectiveTheme(manager);
+        _caption.Foreground = palette.Foreground; _caption.FontSize = palette.FontSize;
+        _caption.Margin = new Thickness(8, 3, 8, 3);
+        foreach (var button in _title.FindVisualChildren<Button>())
+        { button.Foreground = palette.Foreground; button.FontSize = palette.FontSize; button.MinHeight = 0; button.MinWidth = 0; button.Padding = new Thickness(7, 2, 7, 2); }
         _caption.Text = Contents.FirstOrDefault(c => c.IsActive)?.Title ?? Contents.FirstOrDefault()?.Title ?? "Floating tools";
         if (_window != null) _window.Title = _caption.Text;
-        _frame.Background = DockVisuals.Brush(manager, "UnoDock.PaneBrush", "LayerFillColorDefaultBrush");
-        _title.Background = DockVisuals.Brush(manager, "UnoDock.HeaderBrush", "ControlFillColorSecondaryBrush");
-        BorderBrush = DockVisuals.Brush(manager, "UnoDock.AccentBrush", "AccentFillColorDefaultBrush");
+        _frame.Background = palette.Surface;
+        _title.Background = Contents.Any(c => c.IsActive) ? palette.ActiveTitle : palette.Header;
+        BorderBrush = palette.Border;
         UIElement? body = Model switch
         {
             LayoutDocumentFloatingWindow { RootDocument: { } d } => manager.GetLayoutItemFromModel(d).View,
@@ -261,7 +256,7 @@ public abstract class LayoutFloatingWindowControl : DockWindowControl, ILayoutCo
             try { _window.AppWindow.Move(new Windows.Graphics.PointInt32 { X = (int)(bounds.X * scale), Y = (int)(bounds.Y * scale) }); _window.AppWindow.Resize(new Windows.Graphics.SizeInt32 { Width = (int)(bounds.Width * scale), Height = (int)(bounds.Height * scale) }); }
             finally { _syncBounds = false; }
             if (PositionModel?.IsMaximized == true && _window.AppWindow.Presenter is OverlappedPresenter presenter) presenter.Maximize();
-            try { _messageHook = NativeWindowMessageHook.Attach(_window, FilterMessage, ReportFilterFailure); }
+            try { _messageHook = NativeWindowMessageHook.Attach(_window, FilterNativeDragMessage, ReportFilterFailure); }
             catch (Exception error) { ReportFilterFailure(error); }
             _window.Activate();
         }

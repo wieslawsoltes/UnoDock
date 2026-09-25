@@ -57,7 +57,7 @@ public sealed partial class DesktopWindowCoordinates
         if (OperatingSystem.IsWindows())
         {
             var handle = WindowsHandle(window);
-            if (!W32.GetWindowRect(handle, out var frame) || !W32.ClientToScreen(handle, ref W32.Zero)) return false;
+            if (!W32.GetWindowRect(handle, out var frame)) return false;
             var client = W32.ClientOrigin(handle);
             return screen.X >= frame.Left && screen.X < frame.Right && screen.Y >= frame.Top && screen.Y < client.Y;
         }
@@ -109,7 +109,6 @@ public sealed partial class DesktopWindowCoordinates
     {
         [StructLayout(LayoutKind.Sequential)] internal struct NativePoint { internal int X, Y; }
         [StructLayout(LayoutKind.Sequential)] internal struct NativeRect { internal int Left, Top, Right, Bottom; }
-        internal static NativePoint Zero;
         internal static bool Down(int key) => (GetAsyncKeyState(key) & 0x8000) != 0;
         internal static Point ClientOrigin(nint handle)
         {

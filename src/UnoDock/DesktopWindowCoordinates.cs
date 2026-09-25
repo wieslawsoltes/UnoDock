@@ -3,18 +3,19 @@ using System.Runtime.InteropServices;
 namespace UnoDock;
 
 /// <summary>Optional physical-screen coordinate contract for desktop hosts. Screen points
-/// are device pixels; visual points are device-independent units in the supplied element.</summary>
+/// use the host's global coordinate space: physical pixels on Windows/X11 and
+/// AppKit screen points on macOS. Visual points are device-independent local units.</summary>
 public interface IScreenWindowCoordinates : ICrossWindowCoordinates
 {
     Point ToScreen(FrameworkElement source, Point point);
     Point FromScreen(Point screenPoint, FrameworkElement destination);
 }
 
-/// <summary>Client-area coordinate conversion for native WinUI, Uno Skia Win32 and X11.
+/// <summary>Client-area coordinate conversion for native WinUI, Uno Skia Win32, X11 and AppKit.
 /// No window-frame, caption-height or DPI offsets are guessed. X11 queries use a private,
 /// lazily opened XCB connection with checked replies, without modifying Uno's Xlib error
 /// handler or consuming its event queue. Use and dispose on the creating UI thread.</summary>
-public sealed class DesktopWindowCoordinates : IScreenWindowCoordinates, IDisposable
+public sealed partial class DesktopWindowCoordinates : IScreenWindowCoordinates, IDisposable
 {
     private readonly int _thread = Environment.CurrentManagedThreadId;
     private bool _disposed;
@@ -34,6 +35,7 @@ public sealed class DesktopWindowCoordinates : IScreenWindowCoordinates, IDispos
 #if WINDOWS
         return point => FromScreen(ToScreen(source, point), destination);
 #else
+        if (OperatingSystem.IsMacOS()) return point => FromScreen(ToScreen(source, point), destination);
         var from = GetNative(source); var to = GetNative(destination);
         Point offset;
         if (OperatingSystem.IsLinux() && from is Uno.UI.NativeElementHosting.X11NativeWindow x && to is Uno.UI.NativeElementHosting.X11NativeWindow y)
@@ -67,6 +69,7 @@ public sealed class DesktopWindowCoordinates : IScreenWindowCoordinates, IDispos
         var screen = Microsoft.UI.Content.ContentCoordinateConverter.CreateForWindowId(source.XamlRoot!.ContentIslandEnvironment.AppWindowId).ConvertLocalToScreen(local);
         return new Point(screen.X, screen.Y);
 #else
+        if (OperatingSystem.IsMacOS()) return Internal.MacDesktopInterop.ToScreen(WindowFor(source) ?? throw Unsupported(), local);
         var native = GetNative(source);
         var origin = native switch
         {
@@ -87,6 +90,11 @@ public sealed class DesktopWindowCoordinates : IScreenWindowCoordinates, IDispos
         point = Microsoft.UI.Content.ContentCoordinateConverter.CreateForWindowId(destination.XamlRoot!.ContentIslandEnvironment.AppWindowId)
             .ConvertScreenToLocal(new Windows.Graphics.PointInt32 { X = checked((int)Math.Round(screenPoint.X)), Y = checked((int)Math.Round(screenPoint.Y)) });
 #else
+        if (OperatingSystem.IsMacOS())
+        {
+            point = Internal.MacDesktopInterop.FromScreen(WindowFor(destination) ?? throw Unsupported(), screenPoint);
+            return (destination.TransformToVisual(null).Inverse ?? throw new InvalidOperationException("Destination transform is not invertible.")).TransformPoint(point);
+        }
         var native = GetNative(destination);
         var origin = native switch
         {
@@ -229,7 +237,7 @@ public sealed class DesktopWindowCoordinates : IScreenWindowCoordinates, IDispos
         if (window == null) throw new InvalidOperationException("The visual no longer belongs to a live desktop window.");
         return Uno.UI.Xaml.WindowHelper.GetNativeWindow(window) ?? throw Unsupported();
     }
-    private static PlatformNotSupportedException Unsupported() => new("This native host has no built-in client coordinate adapter. Supply ICrossWindowCoordinates for embedded islands, macOS or other custom hosts.");
+    private static PlatformNotSupportedException Unsupported() => new("This native host has no built-in client coordinate adapter. Supply ICrossWindowCoordinates for embedded islands or other custom hosts.");
     private static uint Id(IntPtr handle)
     {
         var value = unchecked((ulong)handle.ToInt64());
@@ -303,7 +311,7 @@ public sealed class DesktopWindowCoordinates : IScreenWindowCoordinates, IDispos
         public override bool IsInvalid => handle == IntPtr.Zero;
         protected override bool ReleaseHandle() { Xcb.Disconnect(handle); return true; }
     }
-    private static class Xcb
+    private static partial class Xcb
     {
         [DllImport("libxcb.so.1", EntryPoint = "xcb_connect", CallingConvention = CallingConvention.Cdecl)] internal static extern IntPtr Connect(IntPtr display, out int screen);
         [DllImport("libxcb.so.1", EntryPoint = "xcb_disconnect", CallingConvention = CallingConvention.Cdecl)] internal static extern void Disconnect(IntPtr connection);
