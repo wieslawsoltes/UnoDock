@@ -15,19 +15,36 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
-      - name: Prove actual formatting coverage and format handwritten sources
-        run: python3 tools/format-sources.py
+      - name: Install checked formatter entry points
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('tools/SourceMaintenance/Program.cs')
+          text = p.read_text()
+          edits = {
+              'internal static class Program': 'internal static partial class Program',
+              'args[0] is not ("--apply" or "--check")': 'args[0] is not ("--apply" or "--check" or "--format" or "--check-format")',
+              'Usage: SourceMaintenance --apply|--check <repository>': 'Usage: SourceMaintenance --apply|--check|--format|--check-format <repository>',
+              '            var root = Path.GetFullPath(args[1]);': '            var root = Path.GetFullPath(args[1]);\n            if (args[0] is "--format" or "--check-format")\n            {\n                return FormatSources(root, args[0] == "--check-format");\n            }',
+          }
+          for old, new in edits.items():
+              if text.count(old) != 1: raise RuntimeError('Unexpected formatter integration anchor: ' + old)
+              text = text.replace(old, new)
+          p.write_text(text)
+          PY
+      - name: Expand and format every handwritten source with token preservation
+        run: dotnet run --project tools/SourceMaintenance -c Release -- --format .
       - name: Verify idempotent formatting and source layout
         run: |
-          python3 tools/format-sources.py --check
+          dotnet run --project tools/SourceMaintenance -c Release -- --check-format .
           dotnet run --project tools/SourceMaintenance -c Release -- --check .
           python3 tests/metadata/test_source_maintenance.py
           python3 tools/generate-property-adapters.py
           git diff --exit-code -- '*Properties.g.cs'
           git diff --check
       - name: Show representative formatted model code
-        run: sed -n '1,120p' src/UnoDock/Layout/LayoutRoot.cs
-      - name: Commit only generated whitespace changes on the formatting worker
+        run: sed -n '1,160p' src/UnoDock/Layout/LayoutRoot.cs
+      - name: Commit only reviewed source formatting on the worker
         run: |
           set -euo pipefail
           git add src/ samples/ tests/ tools/
@@ -35,7 +52,7 @@ jobs:
           if git diff --cached --quiet; then exit 0; fi
           git config user.name 'Wiesław Šoltés'
           git config user.email 'wieslawsoltes@users.noreply.github.com'
-          git commit -m 'style: format every explicitly selected handwritten C# file'
+          git commit -m 'style: expand and format handwritten C# with executable-token verification'
           git fetch origin work/preview24-format-worker
           test "$(git rev-parse FETCH_HEAD)" = '${{ github.sha }}'
           git push origin HEAD:work/preview24-format-worker
