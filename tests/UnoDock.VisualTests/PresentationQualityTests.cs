@@ -115,12 +115,10 @@ internal static class PresentationQualityTests
                     await Task.Delay(80);
                     using var input = new X11TestInput();
                     var file = page.FindVisualChildren<MenuBar>().Single().Items[0];
-                    input.MoveTo(file, new(file.ActualWidth / 2, file.ActualHeight / 2));
-                    input.Press(); await Task.Delay(40); input.Release();
+                    await input.Click(file);
                     await Wait(() => FindCommand(page, "new") is { ActualHeight: > 0 });
                     var command = FindCommand(page, "new")!;
-                    input.MoveTo(command, new(command.ActualWidth / 2, command.ActualHeight / 2));
-                    input.Press(); await Task.Delay(40); input.Release();
+                    await input.Click(command);
                     await Wait(() => page.Dock.Layout.Descendents().OfType<LayoutDocument>().Count() == 3);
                     input.Escape();
                 });
@@ -129,8 +127,7 @@ internal static class PresentationQualityTests
                     window.Activate(); page.SwitchSample(SampleKind.Classic); page.UpdateLayout(); await Task.Delay(80);
                     using var input = new X11TestInput();
                     var file = page.FindVisualChildren<MenuBar>().Single().Items[0];
-                    input.MoveTo(file, new(file.ActualWidth / 2, file.ActualHeight / 2));
-                    input.Press(); await Task.Delay(40); input.Release();
+                    await input.Click(file);
                     await Wait(() => FindCommand(page, "new") is { ActualHeight: > 0 });
                     input.Escape();
                     await Wait(() => FindCommand(page, "new") == null);

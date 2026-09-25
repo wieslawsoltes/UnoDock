@@ -66,6 +66,7 @@ internal sealed partial class DockSurface : Grid, IDisposable
         _navigator?.UpdateAppearance();
         // ContentControl does not necessarily paint Background on every host.
         // Paint the full docking grid so side rails never depend on Window pixels.
+        _docked.RequestedTheme = DockThemeResources.EffectiveTheme(Manager);
         _docked.Background = DockChrome.Palette(Manager).Header;
         var root = Manager.Layout;
         var panel = (LayoutPanelControl)GetView(root.RootPanel); UpdateView(root.RootPanel); Manager.LayoutRootPanel = panel;
@@ -223,7 +224,7 @@ internal sealed partial class DockSurface : Grid, IDisposable
         LayoutFloatingWindowControl? floating;
         try
         {
-            if (Manager.CrossWindowCoordinates is DesktopWindowCoordinates coordinates && coordinates.TryGetTopmostRoot(this, point, out var hitRoot))
+            if (Manager.CrossWindowCoordinates is DesktopWindowCoordinates coordinates && coordinates.TryGetTopmostRootExcludingWindow(this, point, out var hitRoot, _floatingDrag?.Window.NativeWindow))
             {
                 if (hitRoot == null) return null;
                 floating = ReferenceEquals(hitRoot, XamlRoot) ? FloatingAt(point, inSurfaceOnly: true) :
@@ -309,7 +310,7 @@ internal sealed partial class DockSurface : Grid, IDisposable
     {
         foreach (var window in Manager.FloatingWindows.OrderByDescending(w => w.InteractionOrder))
         {
-            if (inSurfaceOnly && window.NativeWindow != null || !Visible(window) || window.NativeWindow is { } native && !native.AppWindow.IsVisible) continue;
+            if (ReferenceEquals(window, _floatingDrag?.Window) || inSurfaceOnly && window.NativeWindow != null || !Visible(window) || window.NativeWindow is { } native && !native.AppWindow.IsVisible) continue;
             try
             {
                 var local = DockCoordinates.Translate(this, point, window, Manager.CrossWindowCoordinates);
@@ -321,8 +322,17 @@ internal sealed partial class DockSurface : Grid, IDisposable
     }
     private void ShowDragPreview(DockDropPlan? plan)
     {
-        _overlay.Hide(); foreach (var window in Manager.FloatingWindows) window.HideDropPreview();
-        if (plan == null) return;
+        var generation = _floatingDragGeneration;
+        var windows = Manager.FloatingWindows.ToArray();
+        var cleanup = new DockCleanup();
+        cleanup.Attempt(_overlay.Hide);
+        foreach (var window in windows)
+        {
+            if (generation != _floatingDragGeneration) break;
+            cleanup.Attempt(window.HideDropPreview);
+        }
+        cleanup.ThrowIfFailed();
+        if (generation != _floatingDragGeneration || plan == null) return;
         var accent = DockVisuals.Brush(Manager, "UnoDock.AccentBrush", "AccentFillColorDefaultBrush");
         var floating = plan.Target.FindParent<LayoutFloatingWindow>();
         var host = floating == null ? null : Manager.FloatingWindows.FirstOrDefault(w => ReferenceEquals(w.Model, floating));
@@ -331,7 +341,7 @@ internal sealed partial class DockSurface : Grid, IDisposable
     }
     private void OnDragScroll(object? sender, object e)
     {
-        if (_disposed || _dragContent == null || _drag.State != DockDragState.Dragging) { _dragScrollTimer.Stop(); return; }
+        if (_disposed || _dragContent == null || (_drag.State != DockDragState.Dragging && _floatingDrag == null)) { _dragScrollTimer.Stop(); return; }
         var now = Stopwatch.GetTimestamp(); var seconds = Stopwatch.GetElapsedTime(_lastScrollTick, now).TotalSeconds; _lastScrollTick = now;
         var plan = UpdateDragAdorners(_lastDragPoint);
         if (plan?.CanExecute != true) return;
@@ -350,15 +360,27 @@ internal sealed partial class DockSurface : Grid, IDisposable
     {
         _dragScrollTimer.Stop();
         var source = _dragSource; var input = _dragInput;
+        var floating = _floatingDrag; var generation = _floatingDragGeneration;
+        var restore = floating?.IsCurrent == true;
+        _floatingDrag = null; _floatingDragGeneration++;
         _dragSource = null; _dragInput = null; _dragContent = null;
+        // Unsubscribe before guide/caption callbacks can transfer capture. Old
+        // Unloaded/PointerCaptureLost handlers must not cancel a successor.
         if (source != null)
         {
             if (input != null)
             { input.DockDragMoved -= OnDragMoved; input.DockDragReleased -= OnDragReleased; input.DockInputCancelled -= OnDockInputCancelled; }
             else { source.RemoveHandler(PointerMovedEvent, new PointerEventHandler(OnDragMoved)); source.RemoveHandler(PointerReleasedEvent, new PointerEventHandler(OnDragReleased)); }
-            source.PointerCanceled -= OnDragCancelled; source.PointerCaptureLost -= OnCaptureLost; source.Unloaded -= OnDragSourceUnloaded; source.ReleasePointerCaptures();
+            source.PointerCanceled -= OnDragCancelled; source.PointerCaptureLost -= OnCaptureLost; source.Unloaded -= OnDragSourceUnloaded;
         }
-        ShowDragPreview(null);
+        var cleanup = new DockCleanup();
+        cleanup.Attempt(() => floating?.Dispose());
+        cleanup.Attempt(() => ShowDragPreview(null));
+        cleanup.Attempt(() => floating?.Window.EndFloatingDragCapture(this, generation, restore));
+        // A new gesture may legitimately reacquire the same source during an
+        // application callback. Do not release that successor's pointer capture.
+        if (source != null && !ReferenceEquals(source, _dragSource)) cleanup.Attempt(source.ReleasePointerCaptures);
+        cleanup.ThrowIfFailed();
     }
     internal void Reset()
     {

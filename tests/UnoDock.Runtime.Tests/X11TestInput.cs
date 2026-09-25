@@ -25,20 +25,51 @@ internal sealed class X11TestInput : IDisposable
         }
     }
 
-    internal void MoveTo(FrameworkElement element, Point point)
+    internal Point ScreenPoint(FrameworkElement element, Point point)
     {
         ObjectDisposedException.ThrowIf(_display == 0, this);
         var root = element.XamlRoot ?? throw new InvalidOperationException("Target element is detached.");
         var window = Uno.UI.ApplicationHelper.Windows.Single(w => ReferenceEquals(w.Content?.XamlRoot, root));
         if (Uno.UI.Xaml.WindowHelper.GetNativeWindow(window) is not Uno.UI.NativeElementHosting.X11NativeWindow native)
             throw new InvalidOperationException("Input test requires an X11 native window.");
-        // Independently use Xlib for input positioning; the production converter uses XCB.
+        // The independent oracle uses Xlib; production geometry uses checked XCB.
         if (TranslateCoordinates(_display, native.WindowId, DefaultRootWindow(_display), 0, 0, out var x, out var y, out _) == 0)
             throw new InvalidOperationException("The native window is on another screen.");
         var client = element.TransformToVisual(null).TransformPoint(point);
-        Check.True(FakeMotion(_display, -1, checked(x + (int)Math.Round(client.X * root.RasterizationScale)),
-            checked(y + (int)Math.Round(client.Y * root.RasterizationScale)), 0) != 0);
-        Flush(_display);
+        return new(x + client.X * root.RasterizationScale, y + client.Y * root.RasterizationScale);
+    }
+
+    internal void MoveTo(FrameworkElement element, Point point)
+    {
+        var screen = ScreenPoint(element, point);
+        Check.True(FakeMotion(_display, -1, checked((int)Math.Round(screen.X)), checked((int)Math.Round(screen.Y)), 0) != 0);
+        // Fence server-side motion before the next press is injected. Application
+        // delivery remains asynchronous; callers still wait for actual UI state.
+        Sync(_display, false);
+    }
+
+    internal async Task Click(FrameworkElement target)
+    {
+        // A newly opened popup can have a nonzero ActualHeight before its
+        // native input position settles. Wait for stable geometry, then inject
+        // exactly one click; do not retry a failed command or invoke it directly.
+        Point? previous = null;
+        var stable = 0;
+        for (var i = 0; i < 100; i++)
+        {
+            if (!target.IsLoaded || target.ActualWidth <= 0 || target.ActualHeight <= 0)
+            { stable = 0; previous = null; await Task.Delay(20); continue; }
+            var local = new Point(target.ActualWidth / 2, target.ActualHeight / 2);
+            var screen = ScreenPoint(target, local);
+            MoveTo(target, local);
+            if (previous == screen) stable++; else stable = 0;
+            previous = screen;
+            await Task.Delay(20);
+            if (stable < 3 || !target.IsLoaded || ScreenPoint(target, local) != screen) continue;
+            Press(); await Task.Delay(40); Release();
+            return;
+        }
+        throw new InvalidOperationException("The native click target did not acquire stable input geometry.");
     }
 
     internal void Press(uint button = 1)
@@ -105,6 +136,7 @@ internal sealed class X11TestInput : IDisposable
         }
     }
 
+    [DllImport("libX11.so.6", EntryPoint = "XSync")] private static extern int Sync(nint display, [MarshalAs(UnmanagedType.Bool)] bool discard);
     [DllImport("libX11.so.6", EntryPoint = "XOpenDisplay")] private static extern nint OpenDisplay(nint display);
     [DllImport("libX11.so.6", EntryPoint = "XCloseDisplay")] private static extern int CloseDisplay(nint display);
     [DllImport("libX11.so.6", EntryPoint = "XDefaultRootWindow")] private static extern nint DefaultRootWindow(nint display);

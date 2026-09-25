@@ -163,6 +163,21 @@ internal static class WindowRegistry
         return null;
 #endif
     }
+    internal static Window[] Snapshot()
+    {
+        var result = new HashSet<Window>(ReferenceEqualityComparer.Instance);
+        lock (Windows)
+            for (var i = Windows.Count - 1; i >= 0; i--)
+            {
+                if (!Windows[i].TryGetTarget(out var window)) { Windows.RemoveAt(i); continue; }
+                if (window.DispatcherQueue.HasThreadAccess && !IsClosed(window)) result.Add(window);
+            }
+#if !WINDOWS
+        foreach (var window in Uno.UI.ApplicationHelper.Windows.ToArray())
+            if (window.DispatcherQueue.HasThreadAccess && !IsClosed(window)) result.Add(window);
+#endif
+        return result.ToArray();
+    }
     private sealed class State
     {
         private readonly Window _window;

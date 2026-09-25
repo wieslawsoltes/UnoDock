@@ -37,7 +37,7 @@ internal sealed partial class DockSurface
                 area.Type == DropAreaType.AnchorablePane ? (DropTargetType)(10 + offset) : DropTargetType.DocumentPaneGroupDockInside;
             if (area.Type == DropAreaType.DocumentPaneGroup && !workspace && slot.Position != DockPosition.Inside) continue;
             var plan = DockDropPlan.Create(content, workspace ? Manager.Layout.RootPanel : target, type, workspace ? host : bounds);
-            if (plan != null) result.Add(new(plan, new(slot.Bounds.X, slot.Bounds.Y, slot.Bounds.Width, slot.Bounds.Height)));
+            if (AcceptFloatingPlan(plan)) result.Add(new(plan!, new(slot.Bounds.X, slot.Bounds.Y, slot.Bounds.Width, slot.Bounds.Height)));
         }
         return result.AsReadOnly();
         static DockRect R(Rect r) => new(r.X, r.Y, r.Width, r.Height);
@@ -47,7 +47,8 @@ internal sealed partial class DockSurface
         var area = FindDropArea(point);
         guides = BuildGuides(content, area);
         foreach (var guide in guides) if (guide.HitTest(point)) return guide.Plan;
-        return area == null ? null : LegacyDropPlan(content, point, area, Manager.DockingGuideMode == DockingGuideMode.GuidesOnly);
+        var legacy = area == null ? null : LegacyDropPlan(content, point, area, Manager.DockingGuideMode == DockingGuideMode.GuidesOnly);
+        return AcceptFloatingPlan(legacy) ? legacy : null;
     }
     private DockDropPlan? UpdateDragAdorners(Point point)
     {
@@ -61,6 +62,9 @@ internal sealed partial class DockSurface
         foreach (var window in windows)
         {
             if (window.NativeWindow == null) { window.HideDropPreview(); continue; }
+            // Keep the same non-hit-testable guides visible over the moving client.
+            if (ReferenceEquals(window, _floatingDrag?.Window))
+            { window.ShowDropGuides(guides, plan, this, Manager); continue; }
             var targets = guides.Where(g => ReferenceEquals(g.Plan.Target.FindParent<LayoutFloatingWindow>(), window.Model)).ToArray();
             window.ShowDropGuides(targets, ReferenceEquals(native, window) ? plan : null, this, Manager);
         }

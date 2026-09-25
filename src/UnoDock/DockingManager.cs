@@ -245,7 +245,7 @@ public partial class DockingManager : Control, IDisposable, UnoDock.Compatibilit
     internal IDisposable? BeginTransition(LayoutContent content, bool floating)
     {
         if (_transitions.ContainsKey(content)) return null;
-        _transitions.Add(content, true); var before = content.Parent; var root = content.Root;
+        _transitions.Add(content, true); var before = content.Parent; var beforeWindow = content.FindParent<LayoutFloatingWindow>(); var root = content.Root;
         try
         {
             if (floating) RaisePreviewFloatEvent(content); else RaisePreviewDockEvent(content);
@@ -257,7 +257,7 @@ public partial class DockingManager : Control, IDisposable, UnoDock.Compatibilit
         return new ActionDisposable(() =>
         {
             _transitions.Remove(content);
-            if (!ReferenceEquals(before, content.Parent)) { if (floating) RaiseFloatedEvent(content); else RaiseDockedEvent(content); }
+            if (!ReferenceEquals(before, content.Parent) || !ReferenceEquals(beforeWindow, content.FindParent<LayoutFloatingWindow>())) { if (floating) RaiseFloatedEvent(content); else RaiseDockedEvent(content); }
         });
     }
     public void AddHandler(DockRoutedEvent routedEvent, RoutedEventHandler handler, bool handledEventsToo = false)

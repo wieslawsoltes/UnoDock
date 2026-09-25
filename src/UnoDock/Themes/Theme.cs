@@ -18,22 +18,42 @@ public class GenericTheme : Theme
 {
     public override Uri GetResourceUri() => new("ms-appx:///UnoDock/Themes/Generic.xaml");
 }
-/// <summary>Independent palette, not a copy of the reference toolkit's theme assets.</summary>
+/// <summary>Uno/WinUI semantic colors with compact docking geometry. The default
+/// constructor follows the owner; an explicit Light/Dark theme remains coherent
+/// even when the containing window requests the other theme.</summary>
 public sealed class FluentTheme : DictionaryTheme
 {
-    public FluentTheme() { }
+    private readonly Dictionary<string, Brush> _published = new(StringComparer.Ordinal);
+    public FluentTheme() : this(ElementTheme.Default) { }
     public FluentTheme(ElementTheme theme)
     {
-        var dark = theme == ElementTheme.Dark;
-        var palette = Internal.DockChrome.Default(dark);
-        ThemeResourceDictionary["UnoDock.InactiveTabBrush"] = palette.Tab;
-        ThemeResourceDictionary["UnoDock.BorderBrush"] = palette.Border;
-        ThemeResourceDictionary["UnoDock.ForegroundBrush"] = palette.Foreground;
-        ThemeResourceDictionary["UnoDock.HoverBrush"] = palette.Hover;
-        ThemeResourceDictionary["UnoDock.PressedBrush"] = palette.Pressed;
-        ThemeResourceDictionary["UnoDock.AccentBrush"] = palette.Accent;
-        ThemeResourceDictionary["UnoDock.ActiveTitleBrush"] = palette.ActiveTitle;
-        ThemeResourceDictionary["UnoDock.PaneBrush"] = new SolidColorBrush(dark ? Microsoft.UI.ColorHelper.FromArgb(255, 30, 34, 43) : Microsoft.UI.ColorHelper.FromArgb(255, 250, 251, 253));
-        ThemeResourceDictionary["UnoDock.HeaderBrush"] = new SolidColorBrush(dark ? Microsoft.UI.ColorHelper.FromArgb(255, 39, 45, 57) : Microsoft.UI.ColorHelper.FromArgb(255, 232, 237, 245));
+        if (!Enum.IsDefined(theme)) throw new ArgumentOutOfRangeException(nameof(theme));
+        RequestedTheme = theme;
+        // Preserve the explicit-theme dictionary contract. These aliases are
+        // refreshed from application resources on use, never cloned/recolored.
+        if (theme != ElementTheme.Default)
+            foreach (var slot in Internal.DockThemeResources.Slots(Internal.DockChrome.Default(theme == ElementTheme.Dark)))
+                Publish(slot.Dock, slot.Fallback);
+    }
+    internal ElementTheme RequestedTheme { get; }
+    internal void UpdateResources(DockingManager manager)
+    {
+        if (RequestedTheme == ElementTheme.Default) return;
+        foreach (var slot in Internal.DockThemeResources.Slots(Internal.DockChrome.Default(RequestedTheme == ElementTheme.Dark)))
+        {
+            var key = "UnoDock." + slot.Dock;
+            if (ThemeResourceDictionary.TryGetValue(key, out var current) &&
+                (!_published.TryGetValue(key, out var previous) || !ReferenceEquals(current, previous))) continue;
+            var brush = Internal.DockThemeResources.Find(manager, key, ThemeResourceDictionary) as Brush ??
+                Internal.DockThemeResources.Find(manager, slot.System) as Brush ?? slot.Fallback;
+            Publish(slot.Dock, brush);
+        }
+    }
+    private void Publish(string name, Brush brush)
+    {
+        var key = "UnoDock." + name;
+        if (!_published.TryGetValue(key, out var previous) || !ReferenceEquals(previous, brush) ||
+            !ThemeResourceDictionary.TryGetValue(key, out var value) || !ReferenceEquals(value, brush)) ThemeResourceDictionary[key] = brush;
+        _published[key] = brush;
     }
 }

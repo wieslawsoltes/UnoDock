@@ -33,7 +33,8 @@ internal static class DockChrome
         """);
     internal static DockPalette Palette(DockingManager manager)
     {
-        var dark = manager.ActualTheme == ElementTheme.Dark && manager.Theme is not Themes.GenericTheme;
+        var dark = DockThemeResources.EffectiveTheme(manager) == ElementTheme.Dark;
+        if (manager.Theme is Themes.FluentTheme fluent) fluent.UpdateResources(manager);
         var p = Default(dark);
         var fontSize = N("FontSize", p.FontSize, 8, 32);
         var textScale = Math.Max(1, fontSize / 12);
@@ -45,7 +46,14 @@ internal static class DockChrome
             fontSize, Fit("TitleHeight", p.TitleHeight, 18, 64),
             Fit("TabHeight", p.TabHeight, 20, 64), Fit("ToolTabHeight", p.ToolTabHeight, 20, 64),
             Fit("RailThickness", p.RailThickness, 24, 72));
-        Brush B(string key, Brush fallback) => manager.Resources.TryGetValue("UnoDock." + key, out var value) && value is Brush b ? b : fallback;
+        Brush B(string key, Brush fallback) => DockThemeResources.Brush(manager, key, key switch
+        {
+            "PaneBrush" => "LayerFillColorDefaultBrush", "HeaderBrush" => "SolidBackgroundFillColorBaseBrush",
+            "InactiveTabBrush" => "ControlFillColorSecondaryBrush", "BorderBrush" => "ControlStrokeColorDefaultBrush",
+            "ForegroundBrush" => "TextFillColorPrimaryBrush", "HoverBrush" => "SubtleFillColorSecondaryBrush",
+            "PressedBrush" => "SubtleFillColorTertiaryBrush", "AccentBrush" => "AccentFillColorDefaultBrush",
+            "ActiveTitleBrush" => "ControlFillColorInputActiveBrush", _ => key
+        }, fallback);
         double N(string key, double fallback, double min, double max) => manager.Resources.TryGetValue("UnoDock." + key, out var value) && value is double d && double.IsFinite(d) ? Math.Clamp(d, min, max) : fallback;
     }
     internal static DockPalette Default(bool dark) => dark ? _dark ??= CreateDefault(true) : _light ??= CreateDefault(false);
