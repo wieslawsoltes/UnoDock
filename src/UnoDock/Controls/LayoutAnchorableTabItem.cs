@@ -7,7 +7,10 @@ using UnoDock.Compatibility;
 namespace UnoDock.Controls;
 public class LayoutAnchorableTabItem : LayoutTabItemBase
 {
-    public LayoutAnchorableTabItem() { }
+    public LayoutAnchorableTabItem()
+    {
+    }
+
     protected override void OnMouseEnter(DockMouseEventArgs e) => base.OnMouseEnter(e);
     protected override void OnMouseLeave(DockMouseEventArgs e) => base.OnMouseLeave(e);
     protected override void OnMouseLeftButtonDown(DockMouseButtonEventArgs e) => base.OnMouseLeftButtonDown(e);

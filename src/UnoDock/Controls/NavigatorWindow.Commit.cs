@@ -2,7 +2,6 @@ using System.ComponentModel;
 using UnoDock.Layout;
 
 namespace UnoDock.Controls;
-
 public partial class NavigatorWindow
 {
     private bool _committingSelection;
@@ -15,12 +14,14 @@ public partial class NavigatorWindow
     private void CloseNavigatorForInput(bool commit)
     {
         var surface = _manager.Surface;
-        if (surface?.OwnsNavigator(this) == true) surface.CloseNavigator(commit);
+        if (surface?.OwnsNavigator(this) == true)
+            surface.CloseNavigator(commit);
     }
 
     internal void CommitSelection()
     {
-        if (_committingSelection) return;
+        if (_committingSelection)
+            return;
         var session = _sessionVersion;
         CaptureSelectionCommit(() => session == _sessionVersion, false)?.Invoke();
     }
@@ -28,9 +29,7 @@ public partial class NavigatorWindow
     /// <summary>Capture a one-use activation before removing the view. The surface
     /// supplies its closing-generation fence; ordinary EndSession does not revoke
     /// that authorized close, but a replacement session or workspace does.</summary>
-    internal Action? CaptureSelectionCommit(Func<bool> ownsOperation, bool afterDetach) =>
-        CaptureActivation(ownsOperation, afterDetach, null);
-
+    internal Action? CaptureSelectionCommit(Func<bool> ownsOperation, bool afterDetach) => CaptureActivation(ownsOperation, afterDetach, null);
     /// <summary>Install the activation guards before explicit-close detachment.
     /// The caller must ensure detachment even when there is no eligible command.</summary>
     internal void CommitClosingSelection(Func<bool> ownsOperation, Action detach)
@@ -51,8 +50,10 @@ public partial class NavigatorWindow
     private Action? CaptureActivation(Func<bool> ownsOperation, bool afterDetach, Action? prepareExecution, Action? detachBeforeQuery = null)
     {
         ArgumentNullException.ThrowIfNull(ownsOperation);
-        if (!DispatcherQueue.HasThreadAccess) throw new InvalidOperationException("Navigator activation requires its owning UI thread.");
-        if (_committingSelection || _sessionRoot is not { } root || !Eligible(_selected)) return null;
+        if (!DispatcherQueue.HasThreadAccess)
+            throw new InvalidOperationException("Navigator activation requires its owning UI thread.");
+        if (_committingSelection || _sessionRoot is not { } root || !Eligible(_selected))
+            return null;
         var item = _selected!;
         var model = item.LayoutElement;
         var parent = model.Parent;
@@ -61,36 +62,40 @@ public partial class NavigatorWindow
         var activationSession = _activationSession;
         var selection = _selectionVersion;
         var directRequest = _directSelectionVersion;
-        if (command == null || parent is not ILayoutContainer container) return null;
+        if (command == null || parent is not ILayoutContainer container)
+            return null;
         var consumed = false;
         return () =>
         {
-            if (!DispatcherQueue.HasThreadAccess) throw new InvalidOperationException("Navigator activation requires its owning UI thread.");
-            if (consumed) return;
+            if (!DispatcherQueue.HasThreadAccess)
+                throw new InvalidOperationException("Navigator activation requires its owning UI thread.");
+            if (consumed)
+                return;
             consumed = true;
-            if (_committingSelection) return;
+            if (_committingSelection)
+                return;
             var invalidated = false;
             var detachedForQuery = false;
             bool Current()
             {
-                if (invalidated || !ownsOperation() || activationSession != _activationSession || selection != _selectionVersion ||
-                    directRequest != _directSelectionVersion ||
-                    !ReferenceEquals(_selected, item) || !IsEnabled || !_manager.IsEnabled ||
-                    !ReferenceEquals(_manager.Surface, surface) || !ReferenceEquals(_manager.Layout, root) ||
-                    !ReferenceEquals(root.Manager, _manager) || !ReferenceEquals(model.Root, root) ||
-                    !ReferenceEquals(model.Parent, parent) || !ReferenceEquals(item.LayoutElement, model) ||
-                    !ReferenceEquals(item.ActivateCommand, command) || !Eligible(model)) return false;
+                if (invalidated || !ownsOperation() || activationSession != _activationSession || selection != _selectionVersion || directRequest != _directSelectionVersion || !ReferenceEquals(_selected, item) || !IsEnabled || !_manager.IsEnabled || !ReferenceEquals(_manager.Surface, surface) || !ReferenceEquals(_manager.Layout, root) || !ReferenceEquals(root.Manager, _manager) || !ReferenceEquals(model.Root, root) || !ReferenceEquals(model.Parent, parent) || !ReferenceEquals(item.LayoutElement, model) || !ReferenceEquals(item.ActivateCommand, command) || !Eligible(model))
+                    return false;
                 // The direct caller fences both sides of its own detach. Explicit
                 // keyboard/host commits keep their original strict attachment rule.
                 if (prepareExecution == null)
                 {
-                    if ((afterDetach || detachedForQuery) ? _sessionRoot != null : !ReferenceEquals(_sessionRoot, root)) return false;
+                    if ((afterDetach || detachedForQuery) ? _sessionRoot != null : !ReferenceEquals(_sessionRoot, root))
+                        return false;
                 }
-                else if (_sessionRoot != null && !ReferenceEquals(_sessionRoot, root)) return false;
-                if (!container.Children.Any(child => ReferenceEquals(child, model))) return false;
+                else if (_sessionRoot != null && !ReferenceEquals(_sessionRoot, root))
+                    return false;
+                if (!container.Children.Any(child => ReferenceEquals(child, model)))
+                    return false;
                 return ReferenceEquals(_manager.GetLayoutItemFromModel(model), item);
             }
-            if (!Current()) return;
+
+            if (!Current())
+                return;
             EventHandler layoutChanged = (_, _) => invalidated = true;
             PropertyChangedEventHandler modelChanged = (_, e) =>
             {
@@ -106,22 +111,29 @@ public partial class NavigatorWindow
                 commandToken = item.RegisterPropertyChangedCallback(LayoutItem.ActivateCommandProperty, (_, _) => invalidated = true);
                 enabledToken = RegisterPropertyChangedCallback(IsEnabledProperty, (_, _) => invalidated = true);
                 managerEnabledToken = _manager.RegisterPropertyChangedCallback(IsEnabledProperty, (_, _) => invalidated = true);
-                if (!Current()) return;
+                if (!Current())
+                    return;
                 if (detachBeforeQuery != null)
                 {
                     detachedForQuery = true;
                     detachBeforeQuery();
                 }
-                if (!Current() || !command.CanExecute(null) || !Current()) return;
+
+                if (!Current() || !command.CanExecute(null) || !Current())
+                    return;
                 prepareExecution?.Invoke();
                 // Closing/Closed/Unloaded callbacks are application code too.
-                if (Current()) command.Execute(null);
+                if (Current())
+                    command.Execute(null);
             }
             finally
             {
-                if (managerEnabledToken is { } managerToken) _manager.UnregisterPropertyChangedCallback(IsEnabledProperty, managerToken);
-                if (enabledToken is { } navigatorToken) UnregisterPropertyChangedCallback(IsEnabledProperty, navigatorToken);
-                if (commandToken is { } itemToken) item.UnregisterPropertyChangedCallback(LayoutItem.ActivateCommandProperty, itemToken);
+                if (managerEnabledToken is { } managerToken)
+                    _manager.UnregisterPropertyChangedCallback(IsEnabledProperty, managerToken);
+                if (enabledToken is { } navigatorToken)
+                    UnregisterPropertyChangedCallback(IsEnabledProperty, navigatorToken);
+                if (commandToken is { } itemToken)
+                    item.UnregisterPropertyChangedCallback(LayoutItem.ActivateCommandProperty, itemToken);
                 model.PropertyChanged -= modelChanged;
                 _manager.LayoutChanged -= layoutChanged;
                 _committingSelection = false;

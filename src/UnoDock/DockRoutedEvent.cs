@@ -7,7 +7,6 @@ using UnoDock.Themes;
 namespace UnoDock;
 /// <summary>Portable event identity for the four AvalonDock extension events that WinUI cannot register natively.</summary>
 public sealed record DockRoutedEvent(string Name);
-
-    #if WINDOWS
-    #else
-    #endif
+#if WINDOWS
+#else
+#endif

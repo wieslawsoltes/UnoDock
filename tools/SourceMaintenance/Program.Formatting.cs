@@ -2,7 +2,6 @@ using System.Text;
 using Microsoft.CodeAnalysis;
 
 namespace UnoDock.SourceMaintenance;
-
 internal static partial class Program
 {
     private static int FormatSources(string root, bool verify)
@@ -45,7 +44,7 @@ internal static partial class Program
         else
         {
             // All files and compile configurations are validated before writing.
-            foreach (var (path, text) in changes)
+            foreach (var(path, text)in changes)
             {
                 File.WriteAllText(path, text, new UTF8Encoding(false));
             }
@@ -81,8 +80,7 @@ internal static partial class Program
     {
         const string original = "namespace FormattingProbe;public class Sentinel{public void Run(){int a=1;int b=2;}}\n";
         var formatted = FormatText(original);
-        if (formatted == original || !formatted.Contains("class Sentinel\n{", StringComparison.Ordinal) ||
-            !formatted.Contains("int a = 1;\n", StringComparison.Ordinal) || FormatText(formatted) != formatted)
+        if (formatted == original || !formatted.Contains("class Sentinel\n{", StringComparison.Ordinal) || !formatted.Contains("int a = 1;\n", StringComparison.Ordinal) || FormatText(formatted) != formatted)
         {
             throw new InvalidOperationException("The formatter failed its expansion and idempotence sentinel.");
         }

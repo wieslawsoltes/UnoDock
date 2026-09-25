@@ -7,7 +7,10 @@ using UnoDock.Compatibility;
 namespace UnoDock.Controls;
 public class LayoutDocumentTabItem : LayoutTabItemBase
 {
-    public LayoutDocumentTabItem() { }
+    public LayoutDocumentTabItem()
+    {
+    }
+
     protected override void OnMouseDown(DockMouseButtonEventArgs e) => base.OnMouseDown(e);
     protected override void OnMouseEnter(DockMouseEventArgs e) => base.OnMouseEnter(e);
     protected override void OnMouseLeave(DockMouseEventArgs e) => base.OnMouseLeave(e);

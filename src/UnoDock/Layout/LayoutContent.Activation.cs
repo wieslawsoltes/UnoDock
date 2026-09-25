@@ -1,9 +1,7 @@
 namespace UnoDock.Layout;
-
 public abstract partial class LayoutContent
 {
     private long _activationVersion;
-
     internal void PrepareActivation(bool value)
     {
         if (_active != value)
@@ -29,8 +27,7 @@ public abstract partial class LayoutContent
 
         var version = _activationVersion;
         var root = Root;
-        bool Current() => _activationVersion == version && _active == value && ReferenceEquals(Root, root) &&
-            (!value || root is not LayoutRoot layout || ReferenceEquals(layout.ActiveContent, this));
+        bool Current() => _activationVersion == version && _active == value && ReferenceEquals(Root, root) && (!value || root is not LayoutRoot layout || ReferenceEquals(layout.ActiveContent, this));
         void Publish(Action action)
         {
             if (Current())

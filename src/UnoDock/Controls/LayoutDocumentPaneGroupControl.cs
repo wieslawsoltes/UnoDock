@@ -6,4 +6,6 @@ using UnoDock.Layout;
 
 namespace UnoDock.Controls;
 public class LayoutDocumentPaneGroupControl(LayoutDocumentPaneGroup model) : LayoutGridControl<ILayoutDocumentPane>(model)
-{ protected override void OnFixChildrenDockLengths() => NormalizeLengths(); }
+{
+    protected override void OnFixChildrenDockLengths() => NormalizeLengths();
+}

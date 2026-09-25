@@ -1,15 +1,11 @@
 namespace UnoDock.Layout;
-
 public partial class LayoutRoot
 {
     private bool _changingActivation;
     private bool _activationPending;
     private LayoutContent? _requestedActivation;
     private long _activationRequest;
-
-    private bool CanActivate(LayoutContent content) => ReferenceEquals(content.Root, this) && content.IsEnabled &&
-        content is not LayoutAnchorable { IsHidden: true };
-
+    private bool CanActivate(LayoutContent content) => ReferenceEquals(content.Root, this) && content.IsEnabled && content is not LayoutAnchorable { IsHidden: true };
     private void ChangeActiveContent(LayoutContent? value)
     {
         if (value != null && !CanActivate(value))
@@ -57,10 +53,8 @@ public partial class LayoutRoot
                     continue;
                 }
 
-                bool OwnsOld() => old == null || old.Root is not LayoutRoot other ||
-                    ReferenceEquals(other, this) || !ReferenceEquals(other.ActiveContent, old);
-                bool Current() => request == _activationRequest && ReferenceEquals(_active, old) &&
-                    (requested == null || CanActivate(requested));
+                bool OwnsOld() => old == null || old.Root is not LayoutRoot other || ReferenceEquals(other, this) || !ReferenceEquals(other.ActiveContent, old);
+                bool Current() => request == _activationRequest && ReferenceEquals(_active, old) && (requested == null || CanActivate(requested));
                 var failures = mutation.FailureCount;
                 if (old != null && OwnsOld())
                 {
@@ -93,8 +87,7 @@ public partial class LayoutRoot
                 }
 
                 requested?.PublishActivation(newFlag, true, mutation);
-                if (requested != null && CanActivate(requested) &&
-                    (requested is LayoutDocument || requested.Parent is LayoutDocumentPane))
+                if (requested != null && CanActivate(requested) && (requested is LayoutDocument || requested.Parent is LayoutDocumentPane))
                 {
                     PublishLastFocused(requested, mutation);
                 }
@@ -123,8 +116,7 @@ public partial class LayoutRoot
         }
 
         LastFocusedDocument = value;
-        var ownsPrevious = previous != null && (previous.Root is not LayoutRoot other ||
-            ReferenceEquals(other, this) || !ReferenceEquals(other.LastFocusedDocument, previous));
+        var ownsPrevious = previous != null && (previous.Root is not LayoutRoot other || ReferenceEquals(other, this) || !ReferenceEquals(other.LastFocusedDocument, previous));
         if (ownsPrevious)
         {
             previous!.CommitLastFocused(false);
@@ -153,8 +145,7 @@ public partial class LayoutRoot
 
         if (_active != null && !CanActivate(_active))
         {
-            var next = this.Descendents().OfType<LayoutContent>().Where(CanActivate)
-                .OrderByDescending(content => content.LastActivationTimeStamp).FirstOrDefault();
+            var next = this.Descendents().OfType<LayoutContent>().Where(CanActivate).OrderByDescending(content => content.LastActivationTimeStamp).FirstOrDefault();
             ChangeActiveContent(next);
         }
 
@@ -190,7 +181,10 @@ public partial class LayoutRoot
 
     private void PublishElementChange(LayoutElement element, bool added)
     {
-        var elements = new[] { element }.Concat(element.Descendents().OfType<LayoutElement>()).ToArray();
+        var elements = new[]
+        {
+            element
+        }.Concat(element.Descendents().OfType<LayoutElement>()).ToArray();
         LayoutMutation.Execute(mutation =>
         {
             foreach (var child in elements)

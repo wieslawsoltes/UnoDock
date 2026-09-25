@@ -1,9 +1,7 @@
 namespace UnoDock.Layout;
-
 /// <summary>Storage and parent fields are committed before notifications. An
 /// observer exception never leaves half an ownership relationship published.</summary>
-internal sealed class OwnedCollection<T>(ILayoutContainer owner, Action changed) : ObservableCollection<T>
-    where T : class, ILayoutElement
+internal sealed class OwnedCollection<T>(ILayoutContainer owner, Action changed) : ObservableCollection<T> where T : class, ILayoutElement
 {
     private LayoutElement Owner => (LayoutElement)owner;
 
@@ -15,8 +13,7 @@ internal sealed class OwnedCollection<T>(ILayoutContainer owner, Action changed)
         }
 
         LayoutTree.Validate(owner, item);
-        if (this.Any(child => ReferenceEquals(child, item)) &&
-            (!replacing || !ReferenceEquals(this[index], item)))
+        if (this.Any(child => ReferenceEquals(child, item)) && (!replacing || !ReferenceEquals(this[index], item)))
         {
             throw new InvalidOperationException("A child cannot occur twice in its container.");
         }
@@ -49,7 +46,6 @@ internal sealed class OwnedCollection<T>(ILayoutContainer owner, Action changed)
             change.Commit();
             Owner.ChildrenMutated();
             item.PropertyChanged += ChildChanged;
-
             PublishCollection(mutation, new(NotifyCollectionChangedAction.Add, item, index), true);
             change.Publish(mutation);
             if (root != null && change.IsCommitted)
@@ -80,7 +76,6 @@ internal sealed class OwnedCollection<T>(ILayoutContainer owner, Action changed)
             change.Commit();
             Owner.ChildrenMutated();
             item.PropertyChanged -= ChildChanged;
-
             PublishCollection(mutation, new(NotifyCollectionChangedAction.Remove, item, index), true);
             change.Publish(mutation);
             if (root != null)
@@ -134,7 +129,6 @@ internal sealed class OwnedCollection<T>(ILayoutContainer owner, Action changed)
             Owner.ChildrenMutated();
             old.PropertyChanged -= ChildChanged;
             item.PropertyChanged += ChildChanged;
-
             PublishCollection(mutation, new(NotifyCollectionChangedAction.Replace, item, old, index), false);
             remove.Publish(mutation);
             insert.Publish(mutation);
@@ -243,8 +237,7 @@ internal sealed class OwnedCollection<T>(ILayoutContainer owner, Action changed)
 
     private void ChildChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(LayoutContent.IsSelected) && sender is LayoutContent { IsSelected: true } selected &&
-            owner is ILayoutContentSelector selector && !ReferenceEquals(selector.SelectedContent, selected))
+        if (e.PropertyName == nameof(LayoutContent.IsSelected) && sender is LayoutContent { IsSelected: true } selected && owner is ILayoutContentSelector selector && !ReferenceEquals(selector.SelectedContent, selected))
         {
             selector.SelectedContentIndex = selector.IndexOf(selected);
         }

@@ -10,15 +10,22 @@ internal sealed class InputLabTab(InputLabState state, Action<string> record) : 
     protected override void OnPreviewMouseLeftButtonDown(DockMouseButtonEventArgs e)
     {
         record($"Preview left: {Model?.Title}, pointer={e.PointerId}, veto={state.VetoPress}");
-        if (state.VetoPress) e.Handled = true;
+        if (state.VetoPress)
+            e.Handled = true;
         base.OnPreviewMouseLeftButtonDown(e);
     }
+
     protected override void OnMouseLeftButtonDown(DockMouseButtonEventArgs e)
-    { record("Left down: " + Model?.Title); base.OnMouseLeftButtonDown(e); }
+    {
+        record("Left down: " + Model?.Title);
+        base.OnMouseLeftButtonDown(e);
+    }
+
     protected override void OnMouseLeftButtonUp(DockMouseButtonEventArgs e)
     {
         record($"Left up: {Model?.Title}, veto={state.VetoDrop}");
-        if (state.VetoDrop) e.Handled = true;
+        if (state.VetoDrop)
+            e.Handled = true;
         base.OnMouseLeftButtonUp(e);
     }
 }

@@ -1,5 +1,4 @@
 namespace UnoDock.Layout;
-
 internal static class LayoutTree
 {
     internal static void Validate(ILayoutContainer owner, ILayoutElement item)
@@ -77,15 +76,13 @@ internal static class LayoutTree
 
             var version = ownerElement.ChildrenVersion;
             var remove = old?.PrepareParentChange(null);
-            if (ownerElement.ChildrenVersion != version || !ReferenceEquals(field, old) ||
-                remove is { IsPrepared: false })
+            if (ownerElement.ChildrenVersion != version || !ReferenceEquals(field, old) || remove is { IsPrepared: false })
             {
                 return;
             }
 
             var insert = value?.PrepareParentChange(owner);
-            if (ownerElement.ChildrenVersion != version || !ReferenceEquals(field, old) ||
-                remove is { IsPrepared: false } || insert is { IsPrepared: false })
+            if (ownerElement.ChildrenVersion != version || !ReferenceEquals(field, old) || remove is { IsPrepared: false } || insert is { IsPrepared: false })
             {
                 return;
             }
@@ -100,7 +97,6 @@ internal static class LayoutTree
             ownerElement.ChildrenMutated();
             remove?.Commit();
             insert?.Commit();
-
             mutation.Run(() => ownerElement.Notify(property));
             remove?.Publish(mutation);
             insert?.Publish(mutation);

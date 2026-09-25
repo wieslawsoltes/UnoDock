@@ -5,9 +5,12 @@ using UnoDock.Layout;
 using UnoDock.Themes;
 
 namespace UnoDock;
-
-public enum FloatingWindowMode { Auto, Native, InSurface }
-
-    #if WINDOWS
-    #else
-    #endif
+public enum FloatingWindowMode
+{
+    Auto,
+    Native,
+    InSurface
+}
+#if WINDOWS
+#else
+#endif

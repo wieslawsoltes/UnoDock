@@ -1,2 +1,5 @@
 namespace UnoDock.Layout;
-public interface ILayoutControl { ILayoutElement? Model { get; } }
+public interface ILayoutControl
+{
+    ILayoutElement? Model { get; }
+}

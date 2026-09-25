@@ -3,7 +3,6 @@ using System.Xml.Schema;
 using System.Xml.Serialization;
 
 namespace UnoDock.Layout;
-
 public class LayoutAnchorable : LayoutContent
 {
     public override void ConsoleDump(int tab) => base.ConsoleDump(tab);
@@ -17,11 +16,24 @@ public class LayoutAnchorable : LayoutContent
     public double AutoHideHeight { get => _autoHeight; set => Set(ref _autoHeight, LayoutPositionableGroup<LayoutContent>.Dimension(value)); }
     public double AutoHideMinWidth { get => _autoMinWidth; set => Set(ref _autoMinWidth, LayoutPositionableGroup<LayoutContent>.Dimension(value)); }
     public double AutoHideMinHeight { get => _autoMinHeight; set => Set(ref _autoMinHeight, LayoutPositionableGroup<LayoutContent>.Dimension(value)); }
+
     [System.Xml.Serialization.XmlIgnore]
     public bool IsHidden => Parent is LayoutRoot root && root.Hidden.Contains(this);
     public bool IsAutoHidden => Parent is LayoutAnchorGroup;
+
     [System.Xml.Serialization.XmlIgnore]
-    public bool IsVisible { get => Parent != null && !IsHidden; set { if (value) Show(); else Hide(); } }
+    public bool IsVisible
+    {
+        get => Parent != null && !IsHidden;
+        set
+        {
+            if (value)
+                Show();
+            else
+                Hide();
+        }
+    }
+
     public event EventHandler<CancelEventArgs>? Hiding;
     public event EventHandler? Hidden;
     public event EventHandler? IsVisibleChanged;
@@ -29,40 +41,63 @@ public class LayoutAnchorable : LayoutContent
     protected virtual void OnHidden() => Hidden?.Invoke(this, EventArgs.Empty);
     public void Hide(bool cancelable = true)
     {
-        if (!CanHide || IsHidden || Root is not LayoutRoot root || !TryBeginOperation()) return;
+        if (!CanHide || IsHidden || Root is not LayoutRoot root || !TryBeginOperation())
+            return;
         try
         {
-            var parent = Parent; var manager = root.Manager;
-            var args = new CancelEventArgs(); OnHiding(args);
-            if (cancelable && args.Cancel || !CanHide || !ReferenceEquals(Parent, parent) ||
-                !ReferenceEquals(Root, root) || manager != null && !ReferenceEquals(manager.Layout, root)) return;
+            var parent = Parent;
+            var manager = root.Manager;
+            var args = new CancelEventArgs();
+            OnHiding(args);
+            if (cancelable && args.Cancel || !CanHide || !ReferenceEquals(Parent, parent) || !ReferenceEquals(Root, root) || manager != null && !ReferenceEquals(manager.Layout, root))
+                return;
             using var batch = root.BeginUpdate();
-            if (parent is ILayoutGroup group) SetPrevious(group, group.IndexOfChild(this));
-            root.Hidden.Add(this); SetActive(false); OnHidden();
+            if (parent is ILayoutGroup group)
+                SetPrevious(group, group.IndexOfChild(this));
+            root.Hidden.Add(this);
+            SetActive(false);
+            OnHidden();
         }
-        finally { EndOperation(); }
+        finally
+        {
+            EndOperation();
+        }
     }
 
     public void Show()
     {
-        if (!IsHidden) { if (Parent != null) IsSelected = true; return; }
-        DockOperations.Restore(this); IsSelected = true;
+        if (!IsHidden)
+        {
+            if (Parent != null)
+                IsSelected = true;
+            return;
+        }
+
+        DockOperations.Restore(this);
+        IsSelected = true;
     }
+
     public void ToggleAutoHide() => DockOperations.ToggleAutoHide(this);
     public void AddToLayout(DockingManager manager, AnchorableShowStrategy strategy)
     {
         ArgumentNullException.ThrowIfNull(manager);
-        if (Parent != null) throw new InvalidOperationException("The anchorable already belongs to a layout.");
+        if (Parent != null)
+            throw new InvalidOperationException("The anchorable already belongs to a layout.");
         DockOperations.AddAnchorable(manager.Layout, this, strategy);
     }
+
     public override void Close() => CloseCore();
     protected override void InternalDock() => DockOperations.Restore(this);
     protected override void OnParentChanged(ILayoutContainer? oldValue, ILayoutContainer? newValue) => base.OnParentChanged(oldValue, newValue);
     internal override void RefreshPlacement()
     {
-        base.RefreshPlacement(); Notify(nameof(IsHidden)); Notify(nameof(IsAutoHidden)); Notify(nameof(IsVisible));
+        base.RefreshPlacement();
+        Notify(nameof(IsHidden));
+        Notify(nameof(IsAutoHidden));
+        Notify(nameof(IsVisible));
         IsVisibleChanged?.Invoke(this, EventArgs.Empty);
     }
+
     public override void ReadXml(XmlReader reader) => base.ReadXml(reader);
     public override void WriteXml(XmlWriter writer) => base.WriteXml(writer);
 }

@@ -7,5 +7,9 @@ using Windows.System;
 using PathShape = Microsoft.UI.Xaml.Shapes.Path;
 
 namespace UnoDock.Gallery;
-
-internal enum SampleKind { Classic, Workspace, Binding }
+internal enum SampleKind
+{
+    Classic,
+    Workspace,
+    Binding
+}

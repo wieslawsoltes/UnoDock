@@ -1,7 +1,6 @@
 using System.Globalization;
 
 namespace UnoDock.Compatibility;
-
 /// <summary>Declares the input and output types of an independently implemented converter.</summary>
 [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
 public sealed class ValueConversionAttribute(Type sourceType, Type targetType) : Attribute

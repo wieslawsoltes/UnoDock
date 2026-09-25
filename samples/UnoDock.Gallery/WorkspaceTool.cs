@@ -5,7 +5,6 @@ using UnoDock.Controls;
 using UnoDock.Layout.Serialization;
 
 namespace UnoDock.Gallery;
-
 [Bindable]
 public sealed class WorkspaceTool(string contentId, string title, FrameworkElement view) : IDockContent
 {

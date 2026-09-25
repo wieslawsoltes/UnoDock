@@ -8,6 +8,10 @@ namespace UnoDock.Controls;
 public class LayoutAnchorableControl : LayoutDocumentControl
 {
     public new LayoutAnchorable? Model { get => base.Model as LayoutAnchorable; set => base.Model = value; }
-    public LayoutAnchorableControl() { }
+
+    public LayoutAnchorableControl()
+    {
+    }
+
     protected override void OnGotKeyboardFocus(DockKeyboardFocusChangedEventArgs e) => base.OnGotKeyboardFocus(e);
 }

@@ -11,24 +11,44 @@ internal static class SampleChrome
     internal static SamplePalette Default(bool dark) => new(Color(dark ? 0xf2f2f2u : 0x202020u), Color(dark ? 0x444444u : 0xdceaf4u), Color(dark ? 0x555555u : 0xb9d8edu), Color(0x0067b8));
     internal static SampleButton Button(string label, Action action, string? name = null)
     {
-        var button = new SampleButton { Content = label };
+        var button = new SampleButton
+        {
+            Content = label
+        };
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(button, name ?? label);
-        ToolTipService.SetToolTip(button, name ?? label); button.Click += (_, _) => action(); return button;
+        ToolTipService.SetToolTip(button, name ?? label);
+        button.Click += (_, _) => action();
+        return button;
     }
+
     internal static MenuBar CreateMenuBar()
     {
         // A fixed Grid row does not override a Height set by the native control's
         // default style. Set the control itself, not just its clipping parent.
-        var menu = new MenuBar { Height = MenuHeight, MinHeight = 0, Padding = new(2, 0, 2, 0), FontSize = 12 };
+        var menu = new MenuBar
+        {
+            Height = MenuHeight,
+            MinHeight = 0,
+            Padding = new(2, 0, 2, 0),
+            FontSize = 12
+        };
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(menu, "SampleMenu");
         return menu;
     }
+
     internal static MenuBarItem CreateMenuItem(string title)
     {
         // Independently authored sample chrome around the native MenuBarItem.
         // ContentButton is the Uno/WinUI template part responsible for the native
         // flyout, keyboard traversal and accessibility; none is reimplemented.
-        var item = new MenuBarItem { Title = title, FontSize = 12, Height = MenuHeight, MinHeight = 0, MinWidth = 0 };
+        var item = new MenuBarItem
+        {
+            Title = title,
+            FontSize = 12,
+            Height = MenuHeight,
+            MinHeight = 0,
+            MinWidth = 0
+        };
         item.Template = (ControlTemplate)XamlReader.Load("""
             <ControlTemplate xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"

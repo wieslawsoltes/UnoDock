@@ -6,7 +6,6 @@ using UnoDock.Controls;
 using UnoDock.Layout;
 
 namespace UnoDock.Converters;
-
 public class AutoHideCommandLayoutItemFromLayoutModelConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => ConverterInterop.Item(value) switch
@@ -16,8 +15,6 @@ public class AutoHideCommandLayoutItemFromLayoutModelConverter : IValueConverter
         _ => BindingValue.DoNothing
     };
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => ConverterInterop.UnsupportedReverse();
-    public object Convert(object value, Type targetType, object parameter, string language) =>
-        ConverterInterop.Native(Convert(value, targetType, parameter, ConverterInterop.Culture(language)));
-    public object ConvertBack(object value, Type targetType, object parameter, string language) =>
-        ConverterInterop.Native(ConvertBack(value, targetType, parameter, ConverterInterop.Culture(language)));
+    public object Convert(object value, Type targetType, object parameter, string language) => ConverterInterop.Native(Convert(value, targetType, parameter, ConverterInterop.Culture(language)));
+    public object ConvertBack(object value, Type targetType, object parameter, string language) => ConverterInterop.Native(ConvertBack(value, targetType, parameter, ConverterInterop.Culture(language)));
 }

@@ -5,13 +5,15 @@ using UnoDock.Internal;
 using Windows.System;
 
 namespace UnoDock.Controls;
-
 public partial class LayoutGridResizerControl
 {
     private readonly Border _keyboardFocus = new()
     {
-        Name = "PART_SplitterKeyboardFocus", IsHitTestVisible = false,
-        Visibility = Visibility.Collapsed, BorderThickness = new(1), Margin = new(1)
+        Name = "PART_SplitterKeyboardFocus",
+        IsHitTestVisible = false,
+        Visibility = Visibility.Collapsed,
+        BorderThickness = new(1),
+        Margin = new(1)
     };
     internal Func<DockResizeRange>? ReadAutomationRange { get; set; }
     internal Action<double>? WriteAutomationValue { get; set; }
@@ -27,54 +29,78 @@ public partial class LayoutGridResizerControl
         LostFocus += (_, _) => PaintKeyboardFocus();
         SizeChanged += (_, _) => RefreshAutomation();
         Loaded += (_, _) => RefreshAutomation();
-        Unloaded += (_, _) => { PaintKeyboardFocus(); RefreshAutomation(); };
-        IsEnabledChanged += (_, _) => { PaintKeyboardFocus(); RefreshAutomation(); };
+        Unloaded += (_, _) =>
+        {
+            PaintKeyboardFocus();
+            RefreshAutomation();
+        };
+        IsEnabledChanged += (_, _) =>
+        {
+            PaintKeyboardFocus();
+            RefreshAutomation();
+        };
     }
+
     internal void ConfigureAutomation(DockPalette palette)
     {
         _keyboardFocus.BorderBrush = palette.Accent;
-        PaintKeyboardFocus(); RefreshAutomation();
+        PaintKeyboardFocus();
+        RefreshAutomation();
     }
-    private void PaintKeyboardFocus() => _keyboardFocus.Visibility = IsLoaded && IsEnabled && FocusState == FocusState.Keyboard
-        ? Visibility.Visible : Visibility.Collapsed;
+
+    private void PaintKeyboardFocus() => _keyboardFocus.Visibility = IsLoaded && IsEnabled && FocusState == FocusState.Keyboard ? Visibility.Visible : Visibility.Collapsed;
     internal DockResizeRange AutomationRange
     {
         get
         {
-            if (!DispatcherQueue.HasThreadAccess) throw new InvalidOperationException("Automation must run on the owning UI thread.");
+            if (!DispatcherQueue.HasThreadAccess)
+                throw new InvalidOperationException("Automation must run on the owning UI thread.");
             var range = ReadAutomationRange?.Invoke() ?? DockResizeRange.Unavailable;
-            return range with { IsReadOnly = range.IsReadOnly || !IsEnabled || !IsLoaded || _dragging || _ending || _pendingCompletion != null };
+            return range with
+            {
+                IsReadOnly = range.IsReadOnly || !IsEnabled || !IsLoaded || _dragging || _ending || _pendingCompletion != null
+            };
         }
     }
+
     internal void SetAutomationValue(double value)
     {
-        if (!double.IsFinite(value)) throw new ArgumentOutOfRangeException(nameof(value), "A finite pane size is required.");
+        if (!double.IsFinite(value))
+            throw new ArgumentOutOfRangeException(nameof(value), "A finite pane size is required.");
         var range = AutomationRange;
-        if (range.IsReadOnly || WriteAutomationValue == null) throw new InvalidOperationException("The splitter is not currently resizable.");
-        if (value < range.Minimum || value > range.Maximum) throw new ArgumentOutOfRangeException(nameof(value), "The pane size is outside the current resize range.");
-        if (value == range.Value) return;
+        if (range.IsReadOnly || WriteAutomationValue == null)
+            throw new InvalidOperationException("The splitter is not currently resizable.");
+        if (value < range.Minimum || value > range.Maximum)
+            throw new ArgumentOutOfRangeException(nameof(value), "The pane size is outside the current resize range.");
+        if (value == range.Value)
+            return;
         WriteAutomationValue(value);
         RefreshAutomation();
     }
+
     private bool ResizeBoundaryFromKey(VirtualKey key)
     {
-        if (key is not (VirtualKey.Home or VirtualKey.End or VirtualKey.PageUp or VirtualKey.PageDown)) return false;
+        if (key is not (VirtualKey.Home or VirtualKey.End or VirtualKey.PageUp or VirtualKey.PageDown))
+            return false;
         var range = AutomationRange;
-        if (range.IsReadOnly) return false;
+        if (range.IsReadOnly)
+            return false;
         var value = key switch
         {
             VirtualKey.Home => range.Minimum,
             VirtualKey.End => range.Maximum,
             VirtualKey.PageUp => Math.Max(range.Minimum, range.Value - 50),
-            _ => Math.Min(range.Maximum, range.Value + 50)
-        };
-        SetAutomationValue(value); return true;
+            _ => Math.Min(range.Maximum, range.Value + 50)};
+        SetAutomationValue(value);
+        return true;
     }
+
     internal void RefreshAutomation()
     {
         // No peer creation, global subscriptions or model enumeration when unused.
-        if (FrameworkElementAutomationPeer.FromElement(this) is LayoutGridResizerAutomationPeer peer)
+        if (FrameworkElementAutomationPeer.FromElement(this)is LayoutGridResizerAutomationPeer peer)
             peer.Synchronize();
     }
+
     protected override AutomationPeer OnCreateAutomationPeer() => new LayoutGridResizerAutomationPeer(this);
 }

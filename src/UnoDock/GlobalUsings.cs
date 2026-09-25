@@ -11,5 +11,4 @@ global using Microsoft.UI.Xaml.Media;
 global using Microsoft.UI.Xaml.Markup;
 global using Windows.Foundation;
 global using UnoDock.Core;
-
 global using LayoutPanel = UnoDock.Layout.LayoutPanel;

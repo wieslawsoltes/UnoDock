@@ -1,2 +1,4 @@
 namespace UnoDock.Layout;
-public interface ILayoutDocumentPane : ILayoutPanelElement, ILayoutPane { }
+public interface ILayoutDocumentPane : ILayoutPanelElement, ILayoutPane
+{
+}
