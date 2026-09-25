@@ -9,7 +9,7 @@ import xml.etree.ElementTree as ET
 
 def verify(directory: Path) -> None:
     system = platform.system()
-    minimum = 45 if system == "Darwin" else 67
+    minimum = 47 if system == "Darwin" else 69
     root = ET.parse(directory / "floating-chrome.xml").getroot()
     cases = root.findall("testcase")
     names = [case.get("name", "") for case in cases]
@@ -27,6 +27,8 @@ def verify(directory: Path) -> None:
             for edge in ("Left", "Top", "Right", "Bottom", "TopLeft", "TopRight", "BottomLeft", "BottomRight"):
                 if f"chrome/{kind}: physical pointer resizes {edge}" not in names:
                     raise ValueError(f"Missing real pointer resize: {kind}/{edge}")
+            if f"chrome/{kind}: physical custom maximize and restore buttons retain the native host" not in names:
+                raise ValueError(f"Missing real maximize/restore: {kind}")
     summary = {"schema": 1, "platform": system, "executed": len(cases), "passed": len(cases), "failed": 0,
                "revision": (directory / "source-revision.txt").read_text().strip()}
     (directory / "chrome-acceptance.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")

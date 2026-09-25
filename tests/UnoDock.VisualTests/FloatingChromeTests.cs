@@ -1,19 +1,16 @@
 using System.Reflection;
 using System.Runtime.ExceptionServices;
 using Microsoft.UI.Windowing;
-using Microsoft.UI.Xaml.Automation;
 using UnoDock.Controls;
 using UnoDock.Core;
-using UnoDock.Layout;
 using UnoDock.Themes;
 using Windows.Foundation;
 
 namespace UnoDock.Testing;
 
-/// <summary>Real-host chrome acceptance. Native decoration/geometry probes do not
-/// call production adapters. Deterministic resize entry tests and actual XTEST /
-/// SendInput tests are labeled separately and do not stand in for each other.</summary>
-internal static class FloatingChromeTests
+/// <summary>Real-host chrome acceptance. Independent native frame probes,
+/// deterministic resize boundaries and physical input are reported separately.</summary>
+internal static partial class FloatingChromeTests
 {
     private static readonly ChromeHit[] Edges = [ChromeHit.Left, ChromeHit.Top, ChromeHit.Right, ChromeHit.Bottom,
         ChromeHit.TopLeft, ChromeHit.TopRight, ChromeHit.BottomLeft, ChromeHit.BottomRight];
@@ -123,140 +120,26 @@ internal static class FloatingChromeTests
                 for (var i = 0; i < grips.Length; i++) Check.Same(grips[i], f.Grip(Edges[i]));
                 f.Manager.Theme = new FluentTheme(ElementTheme.Light); f.Manager.Refresh(); f.AssertEditors();
             });
-            if ((OperatingSystem.IsLinux() || OperatingSystem.IsWindows()) && Environment.GetEnvironmentVariable("UNODOCK_NATIVE_INPUT_TESTS") == "1")
+            tests.Test($"chrome/{kind}: late resize events cannot cancel an independently started successor", async () =>
             {
-                foreach (var edge in Edges)
-                    tests.Test($"chrome/{kind}: physical pointer resizes {edge}", async () =>
-                    {
-                        using var f = new Fixture(tools); await f.Show(); using var input = new PointerInput();
-                        f.Native.Activate(); var before = FloatingChromeProbe.Bounds(f.Native); var grip = f.Grip(edge);
-                        var down = new Point(grip.ActualWidth / 2, grip.ActualHeight / 2);
-                        input.MoveTo(grip, down); await Task.Delay(70); input.Press(); await Task.Delay(70);
-                        Check.True(f.Control.IsResizing, "The native press did not capture a resize grip.");
-                        // Resolve the finish against the original screen position via
-                        // an unmoved owner, not against the now-moving grip itself.
-                        var startInOwner = input.OwnerPoint(grip, down, f.Manager);
-                        input.MoveTo(f.Manager, new(startInOwner.X + 22, startInOwner.Y + 16));
-                        await Task.Delay(100); input.Release(); await Wait(() => !f.Control.IsResizing);
-                        var scale = f.Control.XamlRoot!.RasterizationScale;
-                        Near(ChromeResize.Apply(before, edge, 22 * scale, 16 * scale, 0, 0), FloatingChromeProbe.Bounds(f.Native), 2);
-                        Check.False(f.Control.IsDragging); f.AssertEditors();
-                    });
-                tests.Test($"chrome/{kind}: physical Escape cancels resize without a late-release commit", async () =>
-                {
-                    using var f = new Fixture(tools); await f.Show(); using var input = new PointerInput();
-                    f.Native.Activate(); var before = FloatingChromeProbe.Bounds(f.Native); var grip = f.Grip(ChromeHit.BottomRight);
-                    var down = new Point(grip.ActualWidth / 2, grip.ActualHeight / 2);
-                    var ownerPoint = input.OwnerPoint(grip, down, f.Manager);
-                    input.MoveTo(grip, down); await Task.Delay(60); input.Press(); await Task.Delay(60);
-                    Check.True(f.Control.IsResizing);
-                    input.MoveTo(f.Manager, new(ownerPoint.X + 45, ownerPoint.Y + 30)); await Task.Delay(100);
-                    input.EscapeDown(); await Wait(() => !f.Control.IsResizing); input.EscapeUp(); input.Release(); await Task.Delay(100);
-                    Near(before, FloatingChromeProbe.Bounds(f.Native)); f.AssertEditors();
-                });
-                tests.Test($"chrome/{kind}: physical custom maximize and restore buttons retain the native host", async () =>
-                {
-                    using var f = new Fixture(tools); await f.Show(); using var input = new PointerInput();
-                    // Xvfb without a window manager cannot implement EWMH maximize.
-                    // The dedicated Openbox job and Windows run execute this behavior.
-                    if (OperatingSystem.IsLinux() && Environment.GetEnvironmentVariable("UNODOCK_REQUIRE_WM") != "1")
-                    { Check.True(f.Button("Maximize").IsEnabled); return; }
-                    var native = f.Native; var before = FloatingChromeProbe.Bounds(native);
-                    await input.Click(f.Button("Maximize")); await Wait(() => f.Control.IsMaximized);
-                    Check.True(f.Control.IsCustomTitleBar);
-                    await input.Click(f.Button("Maximize")); await Wait(() => !f.Control.IsMaximized);
-                    await Task.Delay(100); Near(before, FloatingChromeProbe.Bounds(native), 2);
-                    Check.Same(native, f.Native); f.AssertEditors();
-                });
-                tests.Test($"chrome/{kind}: physical custom close honors veto and then closes once", async () =>
-                {
-                    using var f = new Fixture(tools); await f.Show(); using var input = new PointerInput();
-                    var veto = true; var calls = 0;
-                    f.Control.Closing += (_, e) => { calls++; e.Cancel = veto; };
-                    await input.Click(f.Button("Close")); await Wait(() => calls == 1);
-                    Check.True(f.Control.NativeWindow != null && f.Control.IsCustomTitleBar); f.AssertEditors();
-                    veto = false; await input.Click(f.Button("Close")); await Wait(() => f.Control.NativeWindow == null);
-                    Check.Equal(2, calls); Check.False(f.Control.IsResizing); Check.False(f.Control.IsDragging);
-                });
-            }
+                using var f = new Fixture(tools); await f.Show();
+                var first = Call(f.Control, "BeginFrameResize", ChromeHit.Right, new Point(0, 0), null, null)!;
+                Call(f.Control, "EndFrameResize", first, false);
+                var second = Call(f.Control, "BeginFrameResize", ChromeHit.Bottom, new Point(0, 0), null, null)!;
+                Check.True(second != null && !ReferenceEquals(first, second));
+                var before = FloatingChromeProbe.Bounds(f.Native);
+                Call(f.Control, "MoveFrameResize", first, new Point(200, 200));
+                Call(f.Control, "EndFrameResize", first, true);
+                Check.True(f.Control.IsResizing); Near(before, FloatingChromeProbe.Bounds(f.Native));
+                Call(f.Control, "MoveFrameResize", second!, new Point(0, 20)); await Task.Delay(80);
+                Near(before with { Height = before.Height + 20 }, FloatingChromeProbe.Bounds(f.Native));
+                Call(f.Control, "EndFrameResize", second!, true); await Task.Delay(80);
+                Check.False(f.Control.IsResizing); Near(before, FloatingChromeProbe.Bounds(f.Native)); f.AssertEditors();
+            });
+            if ((OperatingSystem.IsLinux() || OperatingSystem.IsWindows()) && Environment.GetEnvironmentVariable("UNODOCK_NATIVE_INPUT_TESTS") == "1")
+                RegisterPhysical(tests, tools);
         }
         return await tests.Run(output, "floating-chrome");
-    }
-    internal sealed class Fixture : IDisposable
-    {
-        internal readonly DockingManager Manager = new() { Width = 920, Height = 580, FloatingWindowMode = FloatingWindowMode.Native, Theme = new FluentTheme() };
-        internal readonly Window Owner;
-        internal readonly LayoutContent[] Source;
-        internal LayoutFloatingWindowControl Control = null!;
-        internal Window Native => Control.NativeWindow ?? throw new InvalidOperationException("The native floating window is missing.");
-        internal Border Caption => Control.FindVisualChildren<Border>().Single(b => b.Name == "PART_FloatingDragHandle");
-        private readonly object?[] _editors;
-        private readonly IDisposable _registration;
-        private readonly List<Exception> _errors = [];
-        internal Fixture(bool tools)
-        {
-            var documents = new LayoutDocumentPane(new LayoutDocument { Title = "Destination", Content = new TextBox { Text = "Destination" } });
-            Manager.Layout = new() { RootPanel = new LayoutPanel(documents) };
-            if (tools)
-            {
-                Source = Enumerable.Range(0, 2).Select(i => (LayoutContent)new LayoutAnchorable { Title = "Tool " + i, ContentId = "tool-" + i,
-                    Content = new TextBox { Text = "Unsaved tool draft " + i }, CanDockAsTabbedDocument = true,
-                    FloatingLeft = 160, FloatingTop = 120, FloatingWidth = 440, FloatingHeight = 320 }).ToArray();
-                var pane = new LayoutAnchorablePane((LayoutAnchorable)Source[0]); pane.Children.Add((LayoutAnchorable)Source[1]);
-                var group = new LayoutAnchorablePaneGroup(); group.Children.Add(pane);
-                Manager.Layout.FloatingWindows.Add(new LayoutAnchorableFloatingWindow { RootPanel = group });
-            }
-            else
-            {
-                var source = new LayoutDocument { Title = "Document", ContentId = "document", Content = new TextBox { Text = "Unsaved document draft" },
-                    FloatingLeft = 160, FloatingTop = 120, FloatingWidth = 440, FloatingHeight = 320 };
-                Source = [source]; Manager.Layout.FloatingWindows.Add(new LayoutDocumentFloatingWindow { RootDocument = source });
-            }
-            Source[0].IsActive = true; _editors = Source.Select(s => s.Content).ToArray();
-            Owner = new Window { Content = Manager, Title = "Custom floating chrome acceptance" };
-            _registration = Microsoft.Windows.Shell.SystemCommands.RegisterWindow(Owner);
-            Owner.AppWindow.Move(new() { X = 20, Y = 20 }); Owner.AppWindow.Resize(new() { Width = 1000, Height = 700 }); Owner.Activate();
-        }
-        internal async Task Show()
-        {
-            await Wait(() => Manager.IsLoaded); Manager.Refresh(); await Wait(() => Manager.FloatingWindows.Count() == 1);
-            Control = Manager.FloatingWindows.Single(); Control.MessageFilterFailed += (_, e) => _errors.Add(e);
-            await Wait(() => Control.IsLoaded && Control.NativeWindow != null && Control.ActualWidth > 0);
-            await Task.Delay(100); Check.True(Control.IsCustomTitleBar, string.Join("\n", _errors));
-        }
-        internal Border Grip(ChromeHit edge) => Control.FindVisualChildren<Border>().Single(b => b.Name == "PART_FloatingResize" + edge);
-        internal Button Button(string action) => Control.FindVisualChildren<Button>().Single(b => AutomationProperties.GetAutomationId(b) == "FloatingWindow" + action);
-        internal void AssertEditors()
-        {
-            for (var i = 0; i < Source.Length; i++) Check.Same(_editors[i], Source[i].Content);
-            Check.Equal(0, _errors.Count);
-        }
-        public void Dispose()
-        {
-            try { Manager.Dispose(); }
-            finally { Owner.Content = null; Owner.Close(); _registration.Dispose(); }
-        }
-    }
-    private sealed class PointerInput : IDisposable
-    {
-        private readonly X11TestInput? _x11;
-        private readonly WindowsFloatingInputTests.NativeInput? _windows;
-        internal PointerInput()
-        { if (OperatingSystem.IsLinux()) _x11 = new(); else _windows = new(); }
-        internal void MoveTo(FrameworkElement e, Point p) { if (_x11 != null) _x11.MoveTo(e, p); else _windows!.MoveTo(e, p); }
-        internal Point OwnerPoint(FrameworkElement source, Point p, FrameworkElement owner)
-        {
-            var screen = _x11?.ScreenPoint(source, p) ?? _windows!.ScreenPoint(source, p);
-            var origin = _x11?.ScreenPoint(owner, new(0, 0)) ?? _windows!.ScreenPoint(owner, new(0, 0));
-            return new((screen.X - origin.X) / owner.XamlRoot!.RasterizationScale, (screen.Y - origin.Y) / owner.XamlRoot.RasterizationScale);
-        }
-        internal void Press() { if (_x11 != null) _x11.Press(); else _windows!.Press(); }
-        internal void Release() { if (_x11 != null) _x11.Release(); else _windows!.Release(); }
-        internal void EscapeDown() { if (_x11 != null) _x11.KeyDown(0xff1b); else _windows!.KeyDown(0x1b); }
-        internal void EscapeUp() { if (_x11 != null) _x11.KeyUp(0xff1b); else _windows!.KeyUp(0x1b); }
-        internal async Task Click(FrameworkElement e)
-        { MoveTo(e, new(e.ActualWidth / 2, e.ActualHeight / 2)); await Task.Delay(70); Press(); await Task.Delay(50); Release(); }
-        public void Dispose() { _x11?.Dispose(); _windows?.Dispose(); }
     }
     private static object? Call(object target, string name, params object?[] args)
     {

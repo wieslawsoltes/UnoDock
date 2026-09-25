@@ -5,10 +5,8 @@ using UnoDock.Internal;
 using UnoDock.Layout;
 #if WINDOWS
 using ResizeGripBase = Microsoft.UI.Xaml.Controls.ContentControl;
-using PointerDeviceType = Microsoft.UI.Input.PointerDeviceType;
 #else
 using ResizeGripBase = Microsoft.UI.Xaml.Controls.Border;
-using PointerDeviceType = Windows.Devices.Input.PointerDeviceType;
 #endif
 
 namespace UnoDock.Controls;
