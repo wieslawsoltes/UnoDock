@@ -84,14 +84,14 @@ class DesktopRunnerTests(unittest.TestCase):
             for error in [False, True]:
                 with self.subTest(encoding=encoding, error=error):
                     data = io.BytesIO()
-                    with io.TextIOWrapper(data, encoding=encoding) as stream:
+                    with io.TextIOWrapper(data, encoding=encoding, newline="\n") as stream:
                         with patch.object(runner.sys, "stderr" if error else "stdout", stream):
                             runner.write_console("PASS infinity=\u221e arrow=\u2192", error=error)
                         self.assertEqual(b"PASS infinity=\\u221e arrow=\\u2192\n", data.getvalue())
 
     def test_utf8_console_preserves_unicode(self):
         data = io.BytesIO()
-        with io.TextIOWrapper(data, encoding="utf-8") as stream:
+        with io.TextIOWrapper(data, encoding="utf-8", newline="\n") as stream:
             with patch.object(runner.sys, "stdout", stream):
                 runner.write_console("PASS infinity=\u221e arrow=\u2192")
             self.assertEqual("PASS infinity=\u221e arrow=\u2192\n".encode("utf-8"), data.getvalue())
@@ -101,7 +101,7 @@ class DesktopRunnerTests(unittest.TestCase):
         for code in [0, 7]:
             with self.subTest(code=code):
                 data = io.BytesIO(); log = self.directory / f"child-{code}.log"
-                with io.TextIOWrapper(data, encoding="cp1252") as stream:
+                with io.TextIOWrapper(data, encoding="cp1252", newline="\n") as stream:
                     with patch.object(runner.sys, "stdout", stream):
                         result = runner.execute([sys.executable, "-c",
                             f"import sys; sys.stdout.buffer.write({raw!r}); sys.exit({code})"],
