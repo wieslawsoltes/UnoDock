@@ -261,6 +261,8 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
             _window.Activate();
         }
         else if (!_window.AppWindow.IsVisible && !_minimized) _window.Activate();
+        try { ConfigureNativeDragHost(); }
+        catch (Exception error) { ReportFilterFailure(error); }
     }
     private void OnNativeClosing(AppWindow sender, AppWindowClosingEventArgs e)
     {
@@ -292,6 +294,7 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
     private void OnNativeClosed(object sender, WindowEventArgs e)
     {
         if (!ReferenceEquals(sender, _window)) return;
+        ReleaseNativeDragHost(false);
         _messageHook?.Dispose(); _messageHook = null;
         _systemRegistration?.Dispose(); _systemRegistration = null;
         if (_window is { } window)
@@ -304,6 +307,8 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
     }
     private void OnNativeChanged(AppWindow sender, AppWindowChangedEventArgs e)
     {
+        try { ObserveNativeCaption(e); }
+        catch (Exception error) { FailCaptionDrag(error); }
         if (_syncBounds || _closingHost || _window is not { } window || ReferenceEquals(_pendingNativeSync, window)) return;
         // Presenter, bounds and activation notifications can arrive separately.
         // Observe one coherent live snapshot after the native transition settles.
@@ -332,6 +337,7 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
     }
     internal void HideHost()
     {
+        ReleaseNativeDragHost(false);
 #if WINDOWS
         if (_window != null) _window.AppWindow.Hide();
 #else
@@ -359,6 +365,7 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
     internal void CloseHost()
     {
         if (_hostDisposed) return; _hostDisposed = true; _closingHost = true;
+        ReleaseNativeDragHost(true);
         Microsoft.Windows.Shell.WindowChrome.SetWindowChrome(this, null);
         if (_window is { } window)
         {

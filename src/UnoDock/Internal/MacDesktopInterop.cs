@@ -90,6 +90,7 @@ internal static class MacDesktopInterop
     {
         var child = Handle(window); var parent = Handle(owner);
         if (child == parent) throw new ArgumentException("A floating window cannot own itself.");
+        Retain(parent); Retain(child);
         SendChild(parent, Sel("addChildWindow:ordered:"), child, 1);
         SendBool(child, Sel("setHidesOnDeactivate:"), tool);
         SendBool(child, Sel("setExcludedFromWindowsMenu:"), tool);
@@ -101,7 +102,9 @@ internal static class MacDesktopInterop
         public void Dispose()
         {
             var owner = _parent; _parent = 0;
-            if (owner != 0) SendVoidObject(owner, Sel("removeChildWindow:"), child);
+            if (owner == 0) return;
+            try { if (Send(child, Sel("parentWindow")) == owner) SendVoidObject(owner, Sel("removeChildWindow:"), child); }
+            finally { Release(child); Release(owner); }
         }
     }
     private static NativeRect Rect(nint receiver, string selector)
@@ -110,6 +113,8 @@ internal static class MacDesktopInterop
         { SendRectStret(out var rect, receiver, Sel(selector)); return rect; }
         return SendRect(receiver, Sel(selector));
     }
+    [DllImport(ObjC, EntryPoint = "objc_retain")] private static extern nint Retain(nint value);
+    [DllImport(ObjC, EntryPoint = "objc_release")] private static extern void Release(nint value);
     [DllImport(ObjC, EntryPoint = "objc_getClass")] private static extern nint Class(string name);
     [DllImport(ObjC, EntryPoint = "sel_registerName")] private static extern nint Sel(string name);
     [DllImport(ObjC, EntryPoint = "objc_msgSend")] private static extern nint Send(nint receiver, nint selector);
