@@ -25,6 +25,16 @@ an application-selected container. Collection notifications retain the base
 ObservableCollection reentrancy policy; clients must not assume a blanket rollback
 or that every multicast subscriber runs after another subscriber throws.
 
+The detach-to-attach boundary checks the incoming child's parent generation as
+well as its current parent. An observer can complete an attach/remove sequence
+and leave the parent null again; this ABA does not authorize the interrupted
+transfer. Slot replacement also captures the destination generation before the
+detach so a changed-and-restored destination cannot revive the old request.
+
+A root side setter publishes a side direction only while it still owns that
+specific incoming side. A callback which transfers it to another root cannot
+have the new root's direction overwritten by the superseded outer setter.
+
 ## Activation
 
 Layout-root activation serializes nested requests with last-explicit-request-wins
@@ -47,15 +57,22 @@ arbitrary throwing or reentrant application callbacks.
 
 ## Coverage
 
-The initial new actual-host suite has 53 cases. It injects failures during parent
-preparation, parent publication, collection events, owner notifications and root
-updates for each structural operation. It checks ownership inside callbacks,
-after the exception and after subsequent successful edits. Additional cases cover
-reentrant transfers/slot replacements, retained error identity, pane selection
-repair, and activation redirected from property, selection, timestamp, root and
-activation-event callbacks, both with and without exceptions.
+The actual-host suite contains 64 cases. Its original 53 inject failures during
+parent preparation, parent publication, collection events, owner notifications
+and root updates for each structural operation. They check ownership inside
+callbacks, after the exception and after subsequent successful edits. Other cases
+cover reentrant transfers/slot replacements, retained error identity, pane
+selection repair, and activation redirected from property, selection, timestamp,
+root and activation-event callbacks, both with and without exceptions.
+
+Eleven additional cases cover detach/attach ABA for collection insertion,
+replacement and floating-document slots, plus all four root-side assignments
+superseded from pre-change and post-change callbacks. They exercise only public
+model APIs and require a subsequent independent edit to remain usable.
 
 The source organization pass separately checks declaration-token preservation
-under four compile configurations. Existing API inventories, generated adapters
-and compatibility baselines are unchanged. Final-head CI, rather than this document,
-establishes the executed platform results.
+under four compile configurations. Canonical formatting combines syntax expansion
+with the pinned Roslyn language formatter, checks exact executable-token identity,
+and enforces byte-idempotent output. Existing API inventories, generated adapters
+and compatibility baselines remain unchanged. Final-head CI, rather than this
+document, establishes the executed platform results.
