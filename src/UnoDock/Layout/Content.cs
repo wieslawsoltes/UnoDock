@@ -5,7 +5,7 @@ using System.Xml.Serialization;
 namespace UnoDock.Layout;
 
 [ContentProperty(Name = nameof(Content))]
-public abstract class LayoutContent : LayoutElement, IComparable<LayoutContent>, IXmlSerializable, ILayoutPreviousContainer
+public abstract partial class LayoutContent : LayoutElement, IComparable<LayoutContent>, IXmlSerializable, ILayoutPreviousContainer
 {
     public static readonly DependencyProperty TitleProperty = DependencyProperty.Register(nameof(Title), typeof(string), typeof(LayoutContent), new PropertyMetadata(null, (d, e) => ((LayoutContent)d).Notify(nameof(Title))));
     public static readonly DependencyProperty ContentIdProperty = DependencyProperty.Register(nameof(ContentId), typeof(string), typeof(LayoutContent), new PropertyMetadata(null, (d, e) => ((LayoutContent)d).Notify(nameof(ContentId))));
@@ -60,13 +60,7 @@ public abstract class LayoutContent : LayoutElement, IComparable<LayoutContent>,
             else SetActive(value);
         }
     }
-    internal void SetActive(bool value)
-    {
-        var old = _active;
-        if (!Set(ref _active, value, nameof(IsActive))) return;
-        if (value) { IsSelected = true; LastActivationTimeStamp = DateTime.UtcNow; }
-        OnIsActiveChanged(old, value); IsActiveChanged?.Invoke(this, EventArgs.Empty);
-    }
+
     public bool IsSelected
     {
         get => _selected;

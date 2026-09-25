@@ -5,7 +5,7 @@ using System.Xml.Serialization;
 namespace UnoDock.Layout;
 
 [ContentProperty(Name = nameof(RootPanel))]
-public class LayoutRoot : LayoutElement, ILayoutContainer, ILayoutRoot, IXmlSerializable
+public partial class LayoutRoot : LayoutElement, ILayoutContainer, ILayoutRoot, IXmlSerializable
 {
     public override void ConsoleDump(int tab) => base.ConsoleDump(tab);
     private readonly UpdateBatch _updates;
@@ -27,10 +27,10 @@ public class LayoutRoot : LayoutElement, ILayoutContainer, ILayoutRoot, IXmlSeri
     [System.Xml.Serialization.XmlIgnore]
     public DockingManager? Manager { get => _manager; internal set => Set(ref _manager, value); }
     public LayoutPanel RootPanel { get => _panel!; set { ArgumentNullException.ThrowIfNull(value); LayoutTree.ReplaceSlot(this, ref _panel, value, nameof(RootPanel)); } }
-    public LayoutAnchorSide TopSide { get => _top!; set { ArgumentNullException.ThrowIfNull(value); LayoutTree.ReplaceSlot(this, ref _top, value, nameof(TopSide)); value.SetSide(AnchorSide.Top); } }
-    public LayoutAnchorSide RightSide { get => _right!; set { ArgumentNullException.ThrowIfNull(value); LayoutTree.ReplaceSlot(this, ref _right, value, nameof(RightSide)); value.SetSide(AnchorSide.Right); } }
-    public LayoutAnchorSide BottomSide { get => _bottom!; set { ArgumentNullException.ThrowIfNull(value); LayoutTree.ReplaceSlot(this, ref _bottom, value, nameof(BottomSide)); value.SetSide(AnchorSide.Bottom); } }
-    public LayoutAnchorSide LeftSide { get => _left!; set { ArgumentNullException.ThrowIfNull(value); LayoutTree.ReplaceSlot(this, ref _left, value, nameof(LeftSide)); value.SetSide(AnchorSide.Left); } }
+    public LayoutAnchorSide TopSide { get => _top!; set { ArgumentNullException.ThrowIfNull(value); LayoutTree.ReplaceSlot(this, ref _top, value, nameof(TopSide)); } }
+    public LayoutAnchorSide RightSide { get => _right!; set { ArgumentNullException.ThrowIfNull(value); LayoutTree.ReplaceSlot(this, ref _right, value, nameof(RightSide)); } }
+    public LayoutAnchorSide BottomSide { get => _bottom!; set { ArgumentNullException.ThrowIfNull(value); LayoutTree.ReplaceSlot(this, ref _bottom, value, nameof(BottomSide)); } }
+    public LayoutAnchorSide LeftSide { get => _left!; set { ArgumentNullException.ThrowIfNull(value); LayoutTree.ReplaceSlot(this, ref _left, value, nameof(LeftSide)); } }
     public ObservableCollection<LayoutFloatingWindow> FloatingWindows { get; }
     public ObservableCollection<LayoutAnchorable> Hidden { get; }
     [System.Xml.Serialization.XmlIgnore]
@@ -39,21 +39,7 @@ public class LayoutRoot : LayoutElement, ILayoutContainer, ILayoutRoot, IXmlSeri
     public LayoutContent? ActiveContent
     {
         get => _active;
-        set
-        {
-            if (value != null && (!ReferenceEquals(value.Root, this) || !value.IsEnabled || value is LayoutAnchorable { IsHidden: true }))
-                throw new InvalidOperationException("Active content must be an enabled, non-hidden child of this layout.");
-            if (ReferenceEquals(_active, value)) return;
-            using var batch = BeginUpdate();
-            var old = _active; _active = value;
-            old?.SetActive(false); value?.SetActive(true);
-            if (value is LayoutDocument || value?.Parent is LayoutDocumentPane)
-            {
-                if (LastFocusedDocument != null) LastFocusedDocument.IsLastFocusedDocument = false;
-                LastFocusedDocument = value; value.IsLastFocusedDocument = true; Notify(nameof(LastFocusedDocument));
-            }
-            Notify(nameof(ActiveContent));
-        }
+        set => RequestActiveContent(value);
     }
     public IEnumerable<ILayoutElement> Children
     {
@@ -74,29 +60,21 @@ public class LayoutRoot : LayoutElement, ILayoutContainer, ILayoutRoot, IXmlSeri
     internal void Invalidate() { if (!_initializing) _updates.Invalidate(); }
     internal void Added(LayoutElement element)
     {
-        ElementAdded?.Invoke(this, new(element));
-        foreach (var child in element.Descendents().OfType<LayoutElement>()) ElementAdded?.Invoke(this, new(child));
-        Invalidate();
+        // Snapshot before invoking application callbacks; they may edit descendants.
+        var elements = new[] { element }.Concat(element.Descendents().OfType<LayoutElement>()).ToArray();
+        using var notifications = new LayoutMutationScope();
+        foreach (var child in elements) notifications.Run(() => ElementAdded?.Invoke(this, new(child)));
+        notifications.Run(Invalidate);
     }
     internal void Removed(LayoutElement element)
     {
-        ElementRemoved?.Invoke(this, new(element));
-        foreach (var child in element.Descendents().OfType<LayoutElement>()) ElementRemoved?.Invoke(this, new(child));
-        Invalidate();
+        // Snapshot before invoking application callbacks; they may edit descendants.
+        var elements = new[] { element }.Concat(element.Descendents().OfType<LayoutElement>()).ToArray();
+        using var notifications = new LayoutMutationScope();
+        foreach (var child in elements) notifications.Run(() => ElementRemoved?.Invoke(this, new(child)));
+        notifications.Run(Invalidate);
     }
-    private void RepairActivation()
-    {
-        if (_active != null && (!ReferenceEquals(_active.Root, this) || !_active.IsEnabled || _active is LayoutAnchorable { IsHidden: true }))
-        {
-            _active.SetActive(false); _active = null;
-            var next = this.Descendents().OfType<LayoutContent>().Where(c => c.IsEnabled && c is not LayoutAnchorable { IsHidden: true })
-                .OrderByDescending(c => c.LastActivationTimeStamp).FirstOrDefault();
-            if (next != null) { _active = next; next.SetActive(true); }
-            Notify(nameof(ActiveContent));
-        }
-        if (LastFocusedDocument != null && !ReferenceEquals(LastFocusedDocument.Root, this))
-        { LastFocusedDocument.IsLastFocusedDocument = false; LastFocusedDocument = null; Notify(nameof(LastFocusedDocument)); }
-    }
+
     internal AnchorSide SideOf(LayoutAnchorSide side) => ReferenceEquals(side, _top) ? AnchorSide.Top : ReferenceEquals(side, _left) ? AnchorSide.Left : ReferenceEquals(side, _bottom) ? AnchorSide.Bottom : AnchorSide.Right;
     internal LayoutAnchorSide GetSide(AnchorSide side) => side switch { AnchorSide.Top => TopSide, AnchorSide.Left => LeftSide, AnchorSide.Bottom => BottomSide, _ => RightSide };
     public void RemoveChild(ILayoutElement element)

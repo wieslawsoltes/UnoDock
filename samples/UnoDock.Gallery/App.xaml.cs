@@ -24,6 +24,7 @@ public partial class App : Application
                     var requested = Environment.GetEnvironmentVariable("UNODOCK_TEST_SUITE");
                     var suites = new (string Name, bool Windows, Func<Task<int>> Run)[]
                     {
+                        ("layout-mutation-invariants", true, () => Testing.LayoutMutationInvariantTests.Run(output)),
                         ("runtime", false, () => Testing.RuntimeTests.Run(gallery.Dock, output)),
                         ("interop", false, () => Testing.InteropTests.Run(output)),
                         ("parity", false, () => Testing.ParityTests.Run(gallery.Dock, output)),
