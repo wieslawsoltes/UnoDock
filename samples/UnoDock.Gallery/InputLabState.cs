@@ -5,13 +5,23 @@ using UnoDock.Compatibility;
 using UnoDock.Controls;
 
 namespace UnoDock.Gallery;
+
 [Microsoft.UI.Xaml.Data.Bindable]
 public sealed class InputLabState : INotifyPropertyChanged
 {
     private int _index;
-    public bool VetoPress { get; set; }
-    public bool VetoDrop { get; set; }
-    public bool Redirect { get; set; }
+    public bool VetoPress
+    {
+        get; set;
+    }
+    public bool VetoDrop
+    {
+        get; set;
+    }
+    public bool Redirect
+    {
+        get; set;
+    }
 
     public int Index
     {

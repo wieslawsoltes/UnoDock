@@ -2,6 +2,7 @@ using System.Text;
 using UnoDock.Gallery;
 
 namespace UnoDock.Testing;
+
 internal static class WorkspaceTextTests
 {
     internal static void Register(TestRunner tests)

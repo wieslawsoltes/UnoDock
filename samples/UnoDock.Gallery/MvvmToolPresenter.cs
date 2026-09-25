@@ -2,6 +2,7 @@ using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Data;
 
 namespace UnoDock.Gallery;
+
 public sealed class MvvmToolPresenter : ContentControl
 {
     public MvvmToolPresenter()

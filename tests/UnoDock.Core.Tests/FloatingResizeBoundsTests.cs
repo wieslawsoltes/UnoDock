@@ -16,23 +16,45 @@ internal static class FloatingResizeBoundsTests
             Check.True(ledger.Request(target));
             Check.True(ledger.Observe(target));
             Check.False(ledger.Observe(initial));
-            Check.False(ledger.Observe(target with { X = target.X + 1 }));
+            Check.False(ledger.Observe(target with
+            {
+                X = target.X + 1
+            }));
         });
         tests.Test("resize bounds: atomic backend rejects split acknowledgements", () =>
         {
             var ledger = new FloatingResizeBoundsTracker(initial, false);
             Check.True(ledger.Request(target));
-            Check.False(ledger.Observe(initial with { Width = target.Width, Height = target.Height }));
-            Check.False(ledger.Observe(target with { Width = initial.Width, Height = initial.Height }));
+            Check.False(ledger.Observe(initial with
+            {
+                Width = target.Width,
+                Height = target.Height
+            }));
+            Check.False(ledger.Observe(target with
+            {
+                Width = initial.Width,
+                Height = initial.Height
+            }));
             Check.True(ledger.Observe(target));
         });
         tests.Test("resize bounds: X11 size and position acknowledge independently", () =>
         {
             var ledger = new FloatingResizeBoundsTracker(initial, true);
             Check.True(ledger.Request(target));
-            Check.True(ledger.Observe(initial with { Width = target.Width, Height = target.Height }));
-            Check.True(ledger.Observe(target with { Width = initial.Width, Height = initial.Height }));
-            Check.False(ledger.Observe(target with { Width = target.Width + 7 }));
+            Check.True(ledger.Observe(initial with
+            {
+                Width = target.Width,
+                Height = target.Height
+            }));
+            Check.True(ledger.Observe(target with
+            {
+                Width = initial.Width,
+                Height = initial.Height
+            }));
+            Check.False(ledger.Observe(target with
+            {
+                Width = target.Width + 7
+            }));
             Check.True(ledger.Observe(target));
             Check.False(ledger.Observe(initial));
         });
@@ -44,7 +66,11 @@ internal static class FloatingResizeBoundsTests
             Check.True(ledger.Request(second));
             Check.True(ledger.Observe(initial));
             Check.True(ledger.Observe(target));
-            Check.True(ledger.Observe(target with { Width = second.Width, Height = second.Height }));
+            Check.True(ledger.Observe(target with
+            {
+                Width = second.Width,
+                Height = second.Height
+            }));
             Check.True(ledger.Observe(second));
             Check.False(ledger.Observe(target));
         });
@@ -60,9 +86,15 @@ internal static class FloatingResizeBoundsTests
         {
             var ledger = new FloatingResizeBoundsTracker(initial, false);
             for (var i = 1; i <= 64; i++)
-                Check.True(ledger.Request(initial with { Width = initial.Width + i }));
+                Check.True(ledger.Request(initial with
+                {
+                    Width = initial.Width + i
+                }));
             Check.False(ledger.Request(target));
-            Check.True(ledger.Observe(initial with { Width = initial.Width + 64 }));
+            Check.True(ledger.Observe(initial with
+            {
+                Width = initial.Width + 64
+            }));
             Check.True(ledger.Request(target));
             Check.True(ledger.Observe(target));
         });
@@ -79,8 +111,14 @@ internal static class FloatingResizeBoundsTests
 
             )
             {
-                Check.False(ledger.Observe(target with { X = value }));
-                Check.False(ledger.Observe(target with { Height = value }));
+                Check.False(ledger.Observe(target with
+                {
+                    X = value
+                }));
+                Check.False(ledger.Observe(target with
+                {
+                    Height = value
+                }));
             }
         });
         tests.Test("resize bounds: 10000 deterministic delayed frame sequences", () =>
@@ -95,8 +133,15 @@ internal static class FloatingResizeBoundsTests
                 var previous = initial;
                 foreach (var next in pending)
                 {
-                    Check.True(ledger.Observe(previous with { Width = next.Width, Height = next.Height }));
-                    Check.False(ledger.Observe(next with { X = -9999 }));
+                    Check.True(ledger.Observe(previous with
+                    {
+                        Width = next.Width,
+                        Height = next.Height
+                    }));
+                    Check.False(ledger.Observe(next with
+                    {
+                        X = -9999
+                    }));
                     Check.True(ledger.Observe(next));
                     previous = next;
                 }

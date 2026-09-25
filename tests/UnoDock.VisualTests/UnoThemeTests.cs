@@ -4,6 +4,7 @@ using UnoDock.Layout;
 using UnoDock.Themes;
 
 namespace UnoDock.Testing;
+
 internal static class UnoThemeTests
 {
     internal static async Task<int> Run(string output)
@@ -181,7 +182,11 @@ internal static class UnoThemeTests
                 Content = Scope,
                 Title = "UnoDock theme acceptance"
             };
-            _window.AppWindow.Resize(new() { Width = 920, Height = 650 });
+            _window.AppWindow.Resize(new()
+            {
+                Width = 920,
+                Height = 650
+            });
             _window.Activate();
         }
 

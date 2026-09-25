@@ -4,6 +4,7 @@ using UnoDock.Themes;
 using Windows.Storage;
 
 namespace UnoDock.Gallery;
+
 public sealed partial class GalleryPage : Page
 {
     public GalleryDockingManager Dock { get; } = new();
@@ -337,8 +338,14 @@ public sealed partial class GalleryPage : Page
     private UIElement Inspector()
     {
         var grid = new Grid();
-        grid.RowDefinitions.Add(new() { Height = GridLength.Auto });
-        grid.RowDefinitions.Add(new() { Height = new(1, GridUnitType.Star) });
+        grid.RowDefinitions.Add(new()
+        {
+            Height = GridLength.Auto
+        });
+        grid.RowDefinitions.Add(new()
+        {
+            Height = new(1, GridUnitType.Star)
+        });
         var list = new ListView
         {
             FontFamily = new FontFamily("Consolas"),

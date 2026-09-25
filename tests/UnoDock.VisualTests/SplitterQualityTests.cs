@@ -34,7 +34,11 @@ public static class SplitterQualityTests
             Content = scene,
             Title = "UnoDock splitter transaction tests"
         };
-        window.AppWindow.Resize(new() { Width = 1040, Height = 720 });
+        window.AppWindow.Resize(new()
+        {
+            Width = 1040,
+            Height = 720
+        });
         window.Activate();
         using var registration = Microsoft.Windows.Shell.SystemCommands.RegisterWindow(window);
         LayoutAnchorablePane first = null!;
@@ -683,7 +687,7 @@ public static class SplitterQualityTests
         {
             return target.GetType().GetMethod(method, BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(target, args);
         }
-        catch (TargetInvocationException e)when (e.InnerException != null)
+        catch (TargetInvocationException e) when (e.InnerException != null)
         {
             ExceptionDispatchInfo.Capture(e.InnerException).Throw();
             throw;

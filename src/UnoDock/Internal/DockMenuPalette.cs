@@ -4,6 +4,7 @@ using UnoDock.Layout;
 using Strings = UnoDock.Properties.Resources;
 
 namespace UnoDock.Internal;
+
 internal readonly record struct DockMenuPalette(Brush Surface, Brush Gutter, Brush Border, Brush Foreground, Brush Disabled, Brush Hover, Brush HoverBorder, double FontSize, double RowHeight, double MinWidth, FlowDirection FlowDirection)
 {
     [ThreadStatic]

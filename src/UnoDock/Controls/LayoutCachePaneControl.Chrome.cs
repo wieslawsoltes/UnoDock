@@ -2,6 +2,7 @@ using UnoDock.Internal;
 using UnoDock.Layout;
 
 namespace UnoDock.Controls;
+
 public partial class LayoutCachePaneControl
 {
     private readonly Grid _tabBar = new();
@@ -45,8 +46,14 @@ public partial class LayoutCachePaneControl
         MinHeight = 0;
         MinWidth = 0;
         _layout.Children.Remove(_scroll);
-        _tabBar.ColumnDefinitions.Add(new() { Width = new(1, GridUnitType.Star) });
-        _tabBar.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
+        _tabBar.ColumnDefinitions.Add(new()
+        {
+            Width = new(1, GridUnitType.Star)
+        });
+        _tabBar.ColumnDefinitions.Add(new()
+        {
+            Width = GridLength.Auto
+        });
         _tabBar.Children.Add(_scroll);
         _documentsButton = DockChrome.Icon(DockGlyph.Documents, ShowDocuments, "Open documents");
         Grid.SetColumn(_documentsButton, 1);
@@ -59,8 +66,14 @@ public partial class LayoutCachePaneControl
         _title.TextTrimming = TextTrimming.CharacterEllipsis;
         _titlePresenter.Content = _title;
         _titlePresenter.VerticalContentAlignment = VerticalAlignment.Center;
-        _titleRow.ColumnDefinitions.Add(new() { Width = new(1, GridUnitType.Star) });
-        _titleRow.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
+        _titleRow.ColumnDefinitions.Add(new()
+        {
+            Width = new(1, GridUnitType.Star)
+        });
+        _titleRow.ColumnDefinitions.Add(new()
+        {
+            Width = GridLength.Auto
+        });
         _titleRow.Children.Add(_titlePresenter);
         var actions = new StackPanel
         {

@@ -2,9 +2,13 @@ using UnoDock.Internal;
 using UnoDock.Layout;
 
 namespace UnoDock.Controls;
+
 public abstract class OverlayArea
 {
-    public Rect ScreenDetectionArea { get; private set; }
+    public Rect ScreenDetectionArea
+    {
+        get; private set;
+    }
 
     protected void SetScreenDetectionArea(Rect rect)
     {

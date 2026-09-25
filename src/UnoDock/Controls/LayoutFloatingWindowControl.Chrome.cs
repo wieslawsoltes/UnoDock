@@ -5,6 +5,7 @@ using UnoDock.Layout;
 using Microsoft.Windows.Shell;
 
 namespace UnoDock.Controls;
+
 public abstract partial class LayoutFloatingWindowControl
 {
     private NativeFloatingChrome? _nativeChrome;
@@ -232,7 +233,7 @@ public abstract partial class LayoutFloatingWindowControl
         var bottom = Extent(b.Bottom);
         var cw = Math.Max(8, Math.Max(left, right));
         var ch = Math.Max(8, Math.Max(top, bottom));
-        foreach (var(hit, grip)in _resizeGrips)
+        foreach (var (hit, grip) in _resizeGrips)
         {
             var l = hit is ChromeHit.Left or ChromeHit.TopLeft or ChromeHit.BottomLeft;
             var r = hit is ChromeHit.Right or ChromeHit.TopRight or ChromeHit.BottomRight;

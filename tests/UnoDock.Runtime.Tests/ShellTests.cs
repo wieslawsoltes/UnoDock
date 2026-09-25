@@ -6,6 +6,7 @@ using UnoDock.Controls;
 using UnoDock.Layout;
 
 namespace UnoDock.Testing;
+
 public static partial class ShellTests
 {
     public static async Task<int> Run(string output, DockingManager host)
@@ -20,13 +21,13 @@ public static partial class ShellTests
         tests.Test("shell commands reject absent and arbitrary targets", () =>
         {
             Check.False(SystemCommands.CloseWindowCommand.CanExecute(null));
-            Check.False(SystemCommands.MaximizeWindowCommand.CanExecute(new object ()));
+            Check.False(SystemCommands.MaximizeWindowCommand.CanExecute(new object()));
             Check.False(SystemCommands.CloseWindowCommand.CanExecute(new ContentControl()));
         });
         tests.Test("null native shell target rejected", () => Check.Throws<ArgumentNullException>(() => SystemCommands.CloseWindow((Window)null!)));
         tests.Test("null compositional target rejected", () => Check.Throws<ArgumentNullException>(() => SystemCommands.CloseWindow((ContentControl)null!)));
         tests.Test("null registration rejected", () => Check.Throws<ArgumentNullException>(() => SystemCommands.RegisterWindow(null!)));
-        tests.Test("unknown menu target rejected", () => Check.Throws<ArgumentException>(() => SystemCommands.CreateSystemMenu(new object ())));
+        tests.Test("unknown menu target rejected", () => Check.Throws<ArgumentException>(() => SystemCommands.CreateSystemMenu(new object())));
         tests.Test("nonfinite menu position rejected", () => Check.Throws<ArgumentOutOfRangeException>(() => SystemCommands.ShowSystemMenu(new ContentControl(), new(double.NaN, 0))));
         tests.Test("chrome attached input has independent local values", () =>
         {
@@ -177,7 +178,10 @@ public static partial class ShellTests
         {
             var control = new LayoutDocumentFloatingWindowControl(new());
             var original = control.ResizeBorderThickness;
-            WindowChrome.SetWindowChrome(control, new() { ResizeBorderThickness = new(19) });
+            WindowChrome.SetWindowChrome(control, new()
+            {
+                ResizeBorderThickness = new(19)
+            });
             WindowChrome.SetWindowChrome(control, null);
             await Tick();
             Check.Equal(original, control.ResizeBorderThickness);
@@ -200,7 +204,10 @@ public static partial class ShellTests
         tests.Test("chrome detach preserves independently changed host value", async () =>
         {
             var control = new LayoutDocumentFloatingWindowControl(new());
-            WindowChrome.SetWindowChrome(control, new() { ResizeBorderThickness = new(13) });
+            WindowChrome.SetWindowChrome(control, new()
+            {
+                ResizeBorderThickness = new(13)
+            });
             await Tick();
             control.ResizeBorderThickness = new(22);
             WindowChrome.SetWindowChrome(control, null);

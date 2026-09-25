@@ -3,6 +3,7 @@ using System.Runtime.ExceptionServices;
 using System.Xml;
 
 namespace UnoDock.Layout.Serialization;
+
 public class XmlLayoutSerializer : LayoutSerializer
 {
     public XmlLayoutSerializer(DockingManager manager) : base(manager)
@@ -14,13 +15,25 @@ public class XmlLayoutSerializer : LayoutSerializer
     public void Serialize(XmlWriter writer) => LayoutSnapshotXml.Write(LayoutXml.CaptureRoot(Manager.Layout), writer);
     public void Serialize(TextWriter writer)
     {
-        using var xml = XmlWriter.Create(writer, new() { Indent = true, OmitXmlDeclaration = true, CloseOutput = false, NewLineChars = "\n" });
+        using var xml = XmlWriter.Create(writer, new()
+        {
+            Indent = true,
+            OmitXmlDeclaration = true,
+            CloseOutput = false,
+            NewLineChars = "\n"
+        });
         Serialize(xml);
     }
 
     public void Serialize(Stream stream)
     {
-        using var xml = XmlWriter.Create(stream, new() { Indent = true, Encoding = new System.Text.UTF8Encoding(false), CloseOutput = false, NewLineChars = "\n" });
+        using var xml = XmlWriter.Create(stream, new()
+        {
+            Indent = true,
+            Encoding = new System.Text.UTF8Encoding(false),
+            CloseOutput = false,
+            NewLineChars = "\n"
+        });
         Serialize(xml);
     }
 

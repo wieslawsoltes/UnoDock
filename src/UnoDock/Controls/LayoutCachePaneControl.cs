@@ -19,16 +19,31 @@ public partial class LayoutCachePaneControl : DockSelectionControl
         VerticalAlignment = VerticalAlignment.Center
     };
     private readonly Dictionary<LayoutContent, LayoutTabItemBase> _tabs = new(ReferenceEqualityComparer.Instance);
-    protected ILayoutContentSelector? Selector { get; private set; }
-    protected ILayoutGroup? Pane { get; private set; }
+    protected ILayoutContentSelector? Selector
+    {
+        get; private set;
+    }
+    protected ILayoutGroup? Pane
+    {
+        get; private set;
+    }
 
     public LayoutCachePaneControl()
     {
         HorizontalContentAlignment = HorizontalAlignment.Stretch;
         VerticalContentAlignment = VerticalAlignment.Stretch;
-        _layout.RowDefinitions.Add(new() { Height = GridLength.Auto });
-        _layout.RowDefinitions.Add(new() { Height = GridLength.Auto });
-        _layout.RowDefinitions.Add(new() { Height = new(1, GridUnitType.Star) });
+        _layout.RowDefinitions.Add(new()
+        {
+            Height = GridLength.Auto
+        });
+        _layout.RowDefinitions.Add(new()
+        {
+            Height = GridLength.Auto
+        });
+        _layout.RowDefinitions.Add(new()
+        {
+            Height = new(1, GridUnitType.Star)
+        });
         _scroll = new()
         {
             Content = _headers,
@@ -145,7 +160,7 @@ public partial class LayoutCachePaneControl : DockSelectionControl
             var local = DockCoordinates.Translate(surface, point, header, surface.Manager.CrossWindowCoordinates);
             return new Rect(0, 0, header.ActualWidth, header.ActualHeight).Contains(local);
         }
-        catch (Exception e)when (DockCoordinates.IsUnavailable(e))
+        catch (Exception e) when (DockCoordinates.IsUnavailable(e))
         {
             return false;
         }

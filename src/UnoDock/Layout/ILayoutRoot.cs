@@ -1,23 +1,51 @@
 namespace UnoDock.Layout;
+
 public interface ILayoutRoot
 {
-    DockingManager? Manager { get; }
+    DockingManager? Manager
+    {
+        get;
+    }
 
-    LayoutPanel RootPanel { get; }
+    LayoutPanel RootPanel
+    {
+        get;
+    }
 
-    LayoutAnchorSide LeftSide { get; }
+    LayoutAnchorSide LeftSide
+    {
+        get;
+    }
 
-    LayoutAnchorSide TopSide { get; }
+    LayoutAnchorSide TopSide
+    {
+        get;
+    }
 
-    LayoutAnchorSide RightSide { get; }
+    LayoutAnchorSide RightSide
+    {
+        get;
+    }
 
-    LayoutAnchorSide BottomSide { get; }
+    LayoutAnchorSide BottomSide
+    {
+        get;
+    }
 
-    LayoutContent? ActiveContent { get; set; }
+    LayoutContent? ActiveContent
+    {
+        get; set;
+    }
 
-    ObservableCollection<LayoutAnchorable> Hidden { get; }
+    ObservableCollection<LayoutAnchorable> Hidden
+    {
+        get;
+    }
 
-    ObservableCollection<LayoutFloatingWindow> FloatingWindows { get; }
+    ObservableCollection<LayoutFloatingWindow> FloatingWindows
+    {
+        get;
+    }
 
     void CollectGarbage();
 }

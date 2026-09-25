@@ -6,6 +6,7 @@ using UnoDock.Layout;
 using Windows.Foundation;
 
 namespace UnoDock.Testing;
+
 internal static partial class FloatingChromeTests
 {
     internal static async Task<int> RunResizePolicy(string output, bool tools)
@@ -172,8 +173,16 @@ internal static partial class FloatingChromeTests
                 Call(f.Control, "MoveFrameResize", resize, new Point(20, 15));
                 await Task.Delay(100);
                 var native = f.Native.AppWindow;
-                native.Move(new() { X = native.Position.X + 107, Y = native.Position.Y + 83 });
-                native.Resize(new() { Width = native.Size.Width + 47, Height = native.Size.Height + 31 });
+                native.Move(new()
+                {
+                    X = native.Position.X + 107,
+                    Y = native.Position.Y + 83
+                });
+                native.Resize(new()
+                {
+                    Width = native.Size.Width + 47,
+                    Height = native.Size.Height + 31
+                });
                 await Task.Delay(120);
                 var applicationBounds = FloatingChromeProbe.Bounds(f.Native);
                 if (cancel)

@@ -2,6 +2,7 @@ using Microsoft.UI.Xaml.Automation.Peers;
 using UnoDock.Layout;
 
 namespace UnoDock.Controls;
+
 public partial class LayoutCachePaneControl
 {
     internal ILayoutGroup? AutomationPane => Pane;
@@ -10,7 +11,7 @@ public partial class LayoutCachePaneControl
     private bool _automationSelectionQueued;
     private void QueueSelectionAutomation()
     {
-        if (_automationSelectionQueued || FrameworkElementAutomationPeer.FromElement(this)is not LayoutPaneAutomationPeer peer)
+        if (_automationSelectionQueued || FrameworkElementAutomationPeer.FromElement(this) is not LayoutPaneAutomationPeer peer)
             return;
         _automationSelectionQueued = true;
         if (!DispatcherQueue.TryEnqueue(() =>

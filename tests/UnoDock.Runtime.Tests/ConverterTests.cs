@@ -41,10 +41,10 @@ public static partial class ConverterTests
         var converters = new Dictionary<string, object>(StringComparer.Ordinal);
         foreach (var record in cases)
         {
-            var name = (string? )record.Attribute("Converter") ?? nameof(AnchorableContextMenuHideVisibilityConverter);
+            var name = (string?)record.Attribute("Converter") ?? nameof(AnchorableContextMenuHideVisibilityConverter);
             var key = (string)record.Attribute("Input")!;
             var reverse = (bool)record.Attribute("Reverse")!;
-            var targetKey = (string? )record.Attribute("Target") ?? "visibility";
+            var targetKey = (string?)record.Attribute("Target") ?? "visibility";
             if (!converters.TryGetValue(name, out var converter))
                 converters[name] = converter = Activator.CreateInstance(typeof(DockingManager).Assembly.GetType("UnoDock.Converters." + name, true)!)!;
             tests.Test($"reference {name}: {key} -> {targetKey}, reverse={reverse}", () =>
@@ -129,7 +129,7 @@ public static partial class ConverterTests
         {
             return converter.GetType().GetMethod(method, [typeof(object), typeof(Type), typeof(object), typeof(CultureInfo)])!.Invoke(converter, [input, target, null, Invariant]);
         }
-        catch (TargetInvocationException error)when (error.InnerException != null)
+        catch (TargetInvocationException error) when (error.InnerException != null)
         {
             ExceptionDispatchInfo.Capture(error.InnerException).Throw();
             throw;
@@ -139,9 +139,10 @@ public static partial class ConverterTests
     private static Type Target(string key) => key switch
     {
         "bool" => typeof(bool),
-        "nullable-bool" => typeof(bool? ),
+        "nullable-bool" => typeof(bool?),
         "visibility" => typeof(Visibility),
-        _ => typeof(object)};
+        _ => typeof(object)
+    };
     private static object? Input(string key, LayoutDocument document, LayoutAnchorable tool) => key switch
     {
         "null" => null,
@@ -161,7 +162,8 @@ public static partial class ConverterTests
         "tool" => new LayoutAnchorable(),
         "attached-document" => document,
         "attached-tool" => tool,
-        _ => throw new ArgumentOutOfRangeException(nameof(key))};
+        _ => throw new ArgumentOutOfRangeException(nameof(key))
+    };
     private static object[] Values(string key) => key == "empty" ? [] : key.Split(',').Select(value => value == "null" ? null! : (object)bool.Parse(value)).ToArray();
     private static void Verify(XElement expected, Func<object?> invoke, object? input, DockingManager manager, LayoutDocument document, LayoutAnchorable tool, string converter)
     {
@@ -177,7 +179,7 @@ public static partial class ConverterTests
                 actualException = error;
             }
 
-            Check.Equal((string? )expected.Attribute("Type"), actualException?.GetType().FullName);
+            Check.Equal((string?)expected.Attribute("Type"), actualException?.GetType().FullName);
             return;
         }
 
@@ -218,7 +220,7 @@ public static partial class ConverterTests
                 Check.Equal(type.Replace("Xceed.Wpf.AvalonDock", "UnoDock", StringComparison.Ordinal), result?.GetType().FullName);
                 Check.Equal(expected.Value, Convert.ToString(result, Invariant));
                 break;
-            case "Object" when (string? )expected.Attribute("Type") == "System.Windows.Controls.Image":
+            case "Object" when (string?)expected.Attribute("Type") == "System.Windows.Controls.Image":
                 Check.True(result is Image { Source: BitmapImage });
                 Check.Equal(input, ((BitmapImage)((Image)result!).Source).UriSource);
                 break;
@@ -226,7 +228,7 @@ public static partial class ConverterTests
                 Check.True(result is Image { Source: BitmapImage });
                 var image = (Image)result!;
                 Check.Equal((bool)expected.Attribute("SameUri")!, Equals(input, ((BitmapImage)image.Source).UriSource));
-                Check.Equal((string? )expected.Attribute("Stretch"), image.Stretch.ToString());
+                Check.Equal((string?)expected.Attribute("Stretch"), image.Stretch.ToString());
                 break;
             default:
                 throw new InvalidOperationException("Unrecognized reference result: " + expected);
@@ -448,7 +450,10 @@ public static partial class ConverterTests
     {
         private object? _value;
         private PropertyChangedEventHandler? _changed;
-        public int Subscribers { get; private set; }
+        public int Subscribers
+        {
+            get; private set;
+        }
 
         public object? Value
         {

@@ -4,6 +4,7 @@ using UnoDock.Themes;
 using Windows.Storage;
 
 namespace UnoDock.Gallery;
+
 [Microsoft.UI.Xaml.Data.Bindable]
 public sealed class Note(string contentId, string title, string text) : INotifyPropertyChanged, IDockContent
 {

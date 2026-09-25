@@ -2,6 +2,7 @@ using UnoDock.Internal;
 using UnoDock.Layout;
 
 namespace UnoDock;
+
 public partial class DockingManager
 {
     bool UnoDock.Compatibility.IWeakEventListener.ReceiveWeakEvent(Type managerType, object sender, EventArgs e)
@@ -123,7 +124,7 @@ public partial class DockingManager
     private object[] SnapshotSource(IEnumerable? source, SourcePass pass)
     {
         if (source == null)
-            return[];
+            return [];
         var values = new List<object>();
         var seen = new HashSet<object>(ReferenceEqualityComparer.Instance);
         var iterator = source.GetEnumerator();

@@ -3,6 +3,7 @@ using UnoDock.Internal;
 using UnoDock.Layout;
 
 namespace UnoDock.Controls;
+
 [TemplatePart(Name = "PART_AnchorableListBox", Type = typeof(ListBox))]
 [TemplatePart(Name = "PART_DocumentListBox", Type = typeof(ListBox))]
 public partial class NavigatorWindow : DockWindowControl
@@ -37,12 +38,24 @@ public partial class NavigatorWindow : DockWindowControl
         Unloaded += (_, _) => EndSession();
     }
 
-    public LayoutDocumentItem[] Documents => (LayoutDocumentItem[]? )GetValue(DocumentsProperty) ?? [];
-    public IEnumerable<LayoutAnchorableItem> Anchorables => (IEnumerable<LayoutAnchorableItem>? )GetValue(AnchorablesProperty) ?? [];
-    public LayoutDocumentItem? SelectedDocument { get => (LayoutDocumentItem? )GetValue(SelectedDocumentProperty); set => SetValue(SelectedDocumentProperty, value); }
-    public LayoutAnchorableItem? SelectedAnchorable { get => (LayoutAnchorableItem? )GetValue(SelectedAnchorableProperty); set => SetValue(SelectedAnchorableProperty, value); }
-    public string LayoutDocumentsLabel { get => (string)GetValue(LayoutDocumentsLabelProperty); set => SetValue(LayoutDocumentsLabelProperty, value); }
-    public string LayoutAnchorablesLabel { get => (string)GetValue(LayoutAnchorablesLabelProperty); set => SetValue(LayoutAnchorablesLabelProperty, value); }
+    public LayoutDocumentItem[] Documents => (LayoutDocumentItem[]?)GetValue(DocumentsProperty) ?? [];
+    public IEnumerable<LayoutAnchorableItem> Anchorables => (IEnumerable<LayoutAnchorableItem>?)GetValue(AnchorablesProperty) ?? [];
+    public LayoutDocumentItem? SelectedDocument
+    {
+        get => (LayoutDocumentItem?)GetValue(SelectedDocumentProperty); set => SetValue(SelectedDocumentProperty, value);
+    }
+    public LayoutAnchorableItem? SelectedAnchorable
+    {
+        get => (LayoutAnchorableItem?)GetValue(SelectedAnchorableProperty); set => SetValue(SelectedAnchorableProperty, value);
+    }
+    public string LayoutDocumentsLabel
+    {
+        get => (string)GetValue(LayoutDocumentsLabelProperty); set => SetValue(LayoutDocumentsLabelProperty, value);
+    }
+    public string LayoutAnchorablesLabel
+    {
+        get => (string)GetValue(LayoutAnchorablesLabelProperty); set => SetValue(LayoutAnchorablesLabelProperty, value);
+    }
 
     protected void SetDocuments(LayoutDocumentItem[] value) => SetValue(DocumentsProperty, value);
     protected void SetAnchorables(IEnumerable<LayoutAnchorableItem> value) => SetValue(AnchorablesProperty, value);

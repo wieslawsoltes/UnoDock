@@ -1,8 +1,15 @@
 namespace UnoDock.Layout;
+
 public abstract partial class LayoutElement
 {
-    internal long ParentVersion { get; private set; }
-    internal long ChildrenVersion { get; private set; }
+    internal long ParentVersion
+    {
+        get; private set;
+    }
+    internal long ChildrenVersion
+    {
+        get; private set;
+    }
 
     internal void ChildrenMutated() => ChildrenVersion++;
     internal LayoutParentChange PrepareParentChange(ILayoutContainer? parent)
@@ -39,7 +46,7 @@ public abstract partial class LayoutElement
         {
             Publish(() => OnRootChanged(change.OldRoot, change.NewRoot));
             Publish(() => RaisePropertyChanged(nameof(Root)));
-            foreach (var(child, version)in change.Descendants)
+            foreach (var (child, version) in change.Descendants)
             {
                 bool Current() => change.IsCommitted && child.ParentVersion == version && ReferenceEquals(child.Root, change.NewRoot);
                 if (Current())

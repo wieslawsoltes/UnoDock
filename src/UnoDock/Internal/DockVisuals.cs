@@ -4,6 +4,7 @@ using UnoDock.Layout;
 using UnoDock.Controls;
 
 namespace UnoDock.Internal;
+
 internal static class DockVisuals
 {
     internal static Brush Brush(FrameworkElement element, string key, string fallback)

@@ -4,6 +4,7 @@ using UnoDock;
 using UnoDock.Controls;
 
 namespace Microsoft.Windows.Shell;
+
 [Flags]
 public enum WindowChromeCapabilities
 {

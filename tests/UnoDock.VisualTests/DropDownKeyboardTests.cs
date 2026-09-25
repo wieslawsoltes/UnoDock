@@ -1,6 +1,7 @@
 using UnoDock.Controls;
 
 namespace UnoDock.Testing;
+
 internal static class DropDownKeyboardTests
 {
     internal static void Register(TestRunner tests, StackPanel root, Window window)

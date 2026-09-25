@@ -114,8 +114,8 @@ internal static class FloatingChromeProbe
         }
     }
 
-    private static nint WinHandle(Window window) => Uno.UI.Xaml.WindowHelper.GetNativeWindow(window)is Uno.UI.NativeElementHosting.Win32NativeWindow native ? native.Hwnd : throw new InvalidOperationException("Expected a Win32 host.");
-    private static nint X11Handle(Window window) => Uno.UI.Xaml.WindowHelper.GetNativeWindow(window)is Uno.UI.NativeElementHosting.X11NativeWindow native ? native.WindowId : throw new InvalidOperationException("Expected an X11 host.");
+    private static nint WinHandle(Window window) => Uno.UI.Xaml.WindowHelper.GetNativeWindow(window) is Uno.UI.NativeElementHosting.Win32NativeWindow native ? native.Hwnd : throw new InvalidOperationException("Expected a Win32 host.");
+    private static nint X11Handle(Window window) => Uno.UI.Xaml.WindowHelper.GetNativeWindow(window) is Uno.UI.NativeElementHosting.X11NativeWindow native ? native.WindowId : throw new InvalidOperationException("Expected an X11 host.");
     private static nint MacHandle(Window window)
     {
         var native = Uno.UI.Xaml.WindowHelper.GetNativeWindow(window) ?? throw new InvalidOperationException("Expected AppKit host.");
@@ -141,7 +141,7 @@ internal static class FloatingChromeProbe
                 Check.Equal(0, status);
                 Check.True(after == 0 && count <= 64);
                 if (format == 0)
-                    return[];
+                    return [];
                 Check.Equal(32, format);
                 var result = new ulong[(int)count];
                 for (var i = 0; i < result.Length; i++)

@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using UnoDock.Internal;
 
 namespace UnoDock;
+
 public sealed partial class DesktopWindowCoordinates
 {
     internal static NativeFloatingChrome CreateX11FloatingChrome(Window window) => new X11FloatingChrome(window);
@@ -14,7 +15,7 @@ public sealed partial class DesktopWindowCoordinates
         private bool _changed;
         protected override void EnableCore()
         {
-            if (Uno.UI.Xaml.WindowHelper.GetNativeWindow(Window)is not Uno.UI.NativeElementHosting.X11NativeWindow native)
+            if (Uno.UI.Xaml.WindowHelper.GetNativeWindow(Window) is not Uno.UI.NativeElementHosting.X11NativeWindow native)
                 throw new PlatformNotSupportedException("Custom Linux decorations require an X11 native host; pure Wayland is not inferred from the OS name.");
             _window = Id(native.WindowId);
             _atom = _coordinates.AtomX11("_MOTIF_WM_HINTS");
@@ -61,14 +62,18 @@ public sealed partial class DesktopWindowCoordinates
         internal override void WriteBounds(DockRect bounds)
         {
             Verify();
-            Window.AppWindow.Resize(new() { Width = checked((int)Math.Round(bounds.Width)), Height = checked((int)Math.Round(bounds.Height)) });
+            Window.AppWindow.Resize(new()
+            {
+                Width = checked((int)Math.Round(bounds.Width)),
+                Height = checked((int)Math.Round(bounds.Height))
+            });
             if (!IsDisposed)
                 MoveNative(Window, new(bounds.X, bounds.Y));
         }
 
         protected override void RestoreCore()
         {
-            if (!_changed || _applied == null || ReadHints()is not { } current || !current.SequenceEqual(_applied))
+            if (!_changed || _applied == null || ReadHints() is not { } current || !current.SequenceEqual(_applied))
                 return;
             if (_before != null)
             {

@@ -4,6 +4,7 @@ using UnoDock.Internal;
 using UnoDock.Layout;
 
 namespace UnoDock.Controls;
+
 public class LayoutAnchorSideControl : ContentControl, ILayoutControl
 {
     public static readonly DependencyProperty IsLeftSideProperty = DependencyProperty.Register(nameof(IsLeftSide), typeof(bool), typeof(LayoutAnchorSideControl), new PropertyMetadata(false));

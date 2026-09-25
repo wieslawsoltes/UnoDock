@@ -11,6 +11,7 @@ using ResizeGripBase = Microsoft.UI.Xaml.Controls.Border;
 
 #endif
 namespace UnoDock.Controls;
+
 public abstract partial class LayoutFloatingWindowControl
 {
     private FrameResize? _frameResize;
@@ -18,7 +19,10 @@ public abstract partial class LayoutFloatingWindowControl
     private long _resizeGeneration;
     private sealed class ResizeGrip : ResizeGripBase
     {
-        internal ChromeHit Hit { get; }
+        internal ChromeHit Hit
+        {
+            get;
+        }
 
         internal ResizeGrip(ChromeHit hit)
         {

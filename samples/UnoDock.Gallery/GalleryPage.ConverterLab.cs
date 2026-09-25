@@ -2,6 +2,7 @@ using System.Globalization;
 using UnoDock.Compatibility;
 
 namespace UnoDock.Gallery;
+
 public sealed partial class GalleryPage
 {
     private void ShowConverterLab()

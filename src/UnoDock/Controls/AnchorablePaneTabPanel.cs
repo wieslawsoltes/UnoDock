@@ -5,6 +5,7 @@ using UnoDock.Internal;
 using UnoDock.Layout;
 
 namespace UnoDock.Controls;
+
 public class AnchorablePaneTabPanel : DocumentPaneTabPanel
 {
     protected override Size MeasureOverride(Size availableSize)

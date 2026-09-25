@@ -3,6 +3,7 @@ using System.Windows.Input;
 using Windows.Storage;
 
 namespace UnoDock.Gallery;
+
 internal sealed class LocalWorkspaceStorage : IWorkspaceStorage
 {
     public async Task WriteAsync(string contentId, string text)

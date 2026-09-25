@@ -5,6 +5,7 @@ using Windows.Foundation;
 using System.Xml.Linq;
 
 namespace UnoDock.Testing;
+
 public static class DockGuideTests
 {
     public static async Task<int> Run(DockingManager templateSource, string output)
@@ -36,7 +37,11 @@ public static class DockGuideTests
             Content = scene,
             Title = "UnoDock guide regression laboratory"
         };
-        window.AppWindow.Resize(new() { Width = 1064, Height = 740 });
+        window.AppWindow.Resize(new()
+        {
+            Width = 1064,
+            Height = 740
+        });
         window.Activate();
         var registration = Microsoft.Windows.Shell.SystemCommands.RegisterWindow(window);
         try
@@ -401,14 +406,14 @@ public static class DockGuideTests
                     var file = useTool ? "guides-tool-message.xml" : "guides-document-message.xml";
                     using var stream = typeof(DockGuideTests).Assembly.GetManifestResourceStream("VisualFixtures." + file)!;
                     var reference = XDocument.Load(stream);
-                    var named = reference.Root!.Elements("Element").Where(e => MapReference((string? )e.Attribute("name")) != null).ToArray();
+                    var named = reference.Root!.Elements("Element").Where(e => MapReference((string?)e.Attribute("name")) != null).ToArray();
                     Check.Equal(named.Length, guides.Count);
                     overlay.ShowGuides(guides, null, dock);
                     await Settle();
                     var differences = new XElement("GuideGeometry", new XAttribute("referenceProbe", "5298acd6024c134925286fc80b83b04608a17304"));
                     foreach (var item in named)
                     {
-                        var type = MapReference((string? )item.Attribute("name"))!.Value;
+                        var type = MapReference((string?)item.Attribute("name"))!.Value;
                         var g = guides.Single(g => g.Type == type);
                         var visual = Glyph(type);
                         var actual = visual.TransformToVisual(overlay).TransformBounds(new(0, 0, visual.ActualWidth, visual.ActualHeight));
@@ -584,7 +589,11 @@ public static class DockGuideTests
             dock.CrossWindowCoordinates = coordinates;
             dock.FloatingWindowMode = FloatingWindowMode.Native;
             dock.DockingGuideMode = DockingGuideMode.GuidesOnly;
-            window.AppWindow.Move(new() { X = 25, Y = 25 });
+            window.AppWindow.Move(new()
+            {
+                X = 25,
+                Y = 25
+            });
             var source = Tool();
             var target = dock.Layout.Descendents().OfType<LayoutAnchorable>().Single(t => t.ContentId == "properties");
             target.FloatingLeft = 1250;

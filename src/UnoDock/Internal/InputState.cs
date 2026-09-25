@@ -1,6 +1,7 @@
 using Microsoft.UI.Xaml.Input;
 
 namespace UnoDock.Internal;
+
 internal static class InputState
 {
     public static bool ControlDown => Down(Windows.System.VirtualKey.Control);

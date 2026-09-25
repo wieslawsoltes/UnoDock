@@ -4,6 +4,7 @@ using UnoDock.Controls;
 using UnoDock.Themes;
 
 namespace UnoDock.Gallery;
+
 public sealed partial class GalleryPage
 {
     private void ShowNavigatorLab()
@@ -14,10 +15,22 @@ public sealed partial class GalleryPage
             RequestedTheme = ElementTheme.Light
         };
         var panel = new Grid();
-        panel.RowDefinitions.Add(new() { Height = GridLength.Auto });
-        panel.RowDefinitions.Add(new() { Height = GridLength.Auto });
-        panel.RowDefinitions.Add(new() { Height = new(1, GridUnitType.Star) });
-        panel.RowDefinitions.Add(new() { Height = new(23) });
+        panel.RowDefinitions.Add(new()
+        {
+            Height = GridLength.Auto
+        });
+        panel.RowDefinitions.Add(new()
+        {
+            Height = GridLength.Auto
+        });
+        panel.RowDefinitions.Add(new()
+        {
+            Height = new(1, GridUnitType.Star)
+        });
+        panel.RowDefinitions.Add(new()
+        {
+            Height = new(23)
+        });
         var commands = new SampleCommandPanel
         {
             Margin = new(6, 3, 6, 3)
@@ -174,7 +187,12 @@ public sealed partial class GalleryPage
             }
 
             )
-                tools.Children.Add(new() { Title = title, ContentId = "navigator-tool:" + title, Content = new TextBox { Text = title, AcceptsReturn = true } });
+                tools.Children.Add(new()
+                {
+                    Title = title,
+                    ContentId = "navigator-tool:" + title,
+                    Content = new TextBox { Text = title, AcceptsReturn = true }
+                });
             var workspace = new LayoutPanel(tools);
             workspace.Children.Add(documents);
             manager.Layout = new()

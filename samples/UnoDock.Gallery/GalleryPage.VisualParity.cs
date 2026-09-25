@@ -2,6 +2,7 @@ using UnoDock.Testing;
 using UnoDock.Themes;
 
 namespace UnoDock.Gallery;
+
 public sealed partial class GalleryPage
 {
     private void ShowVisualParityLab()
@@ -18,8 +19,14 @@ public sealed partial class GalleryPage
         {
             RowSpacing = 6
         };
-        panel.RowDefinitions.Add(new() { Height = GridLength.Auto });
-        panel.RowDefinitions.Add(new() { Height = new(1, GridUnitType.Star) });
+        panel.RowDefinitions.Add(new()
+        {
+            Height = GridLength.Auto
+        });
+        panel.RowDefinitions.Add(new()
+        {
+            Height = new(1, GridUnitType.Star)
+        });
         var commands = new StackPanel
         {
             Orientation = Orientation.Horizontal,

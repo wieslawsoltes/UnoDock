@@ -5,6 +5,7 @@ using UnoDock.Internal;
 using UnoDock.Layout;
 
 namespace UnoDock.Controls;
+
 public abstract partial class LayoutGridControl<T> : Grid, ILayoutControl, IRefreshableLayoutControl where T : class, ILayoutPanelElement
 {
     private readonly ILayoutOrientableGroup _group;
@@ -86,9 +87,15 @@ public abstract partial class LayoutGridControl<T> : Grid, ILayoutControl, IRefr
                 if (i + 1 < models.Length)
                 {
                     if (horizontal)
-                        ColumnDefinitions.Add(new() { Width = new(thickness) });
+                        ColumnDefinitions.Add(new()
+                        {
+                            Width = new(thickness)
+                        });
                     else
-                        RowDefinitions.Add(new() { Height = new(thickness) });
+                        RowDefinitions.Add(new()
+                        {
+                            Height = new(thickness)
+                        });
                     var index = i;
                     var resize = new LayoutGridResizerControl
                     {

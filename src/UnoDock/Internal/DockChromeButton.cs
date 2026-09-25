@@ -3,6 +3,7 @@ using Windows.UI;
 using Path = Microsoft.UI.Xaml.Shapes.Path;
 
 namespace UnoDock.Internal;
+
 internal sealed class DockChromeButton : Button
 {
     private DockPalette _palette;

@@ -1,6 +1,7 @@
 using System.Xml;
 
 namespace UnoDock.Layout;
+
 [ContentProperty(Name = "Children")]
 public class LayoutDocumentPane : LayoutPositionableGroup<LayoutContent>, ILayoutDocumentPane, ILayoutContentSelector
 {
@@ -10,10 +11,16 @@ public class LayoutDocumentPane : LayoutPositionableGroup<LayoutContent>, ILayou
     public LayoutDocumentPane() => _selection = new(this, Notify);
     public LayoutDocumentPane(LayoutContent firstChild) : this() => Children.Add(firstChild);
     public LayoutContent? SelectedContent => _selection.Content;
-    public int SelectedContentIndex { get => _selection.Index; set => _selection.Index = value; }
+    public int SelectedContentIndex
+    {
+        get => _selection.Index; set => _selection.Index = value;
+    }
 
     public int IndexOf(LayoutContent content) => Children.IndexOf(content);
-    public bool ShowHeader { get => _showHeader; set => Set(ref _showHeader, value); }
+    public bool ShowHeader
+    {
+        get => _showHeader; set => Set(ref _showHeader, value);
+    }
     public IEnumerable<LayoutContent> ChildrenSorted => Children.OrderBy(c => c.Title, StringComparer.CurrentCultureIgnoreCase);
 
     protected override bool GetVisibility() => true; // An empty document well is a valid drop target.

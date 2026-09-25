@@ -4,6 +4,7 @@ using UnoDock.Controls;
 using UnoDock.Gallery;
 
 namespace UnoDock.Testing;
+
 internal static class InspectorQualityTests
 {
     internal static async Task<int> Run(string output)
@@ -18,7 +19,11 @@ internal static class InspectorQualityTests
             Content = page,
             Title = "UnoDock property inspector acceptance"
         };
-        window.AppWindow.Resize(new() { Width = 1100, Height = 830 });
+        window.AppWindow.Resize(new()
+        {
+            Width = 1100,
+            Height = 830
+        });
         window.Activate();
         try
         {

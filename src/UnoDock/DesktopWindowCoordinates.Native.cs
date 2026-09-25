@@ -2,6 +2,7 @@ using System.Runtime.InteropServices;
 using UnoDock.Internal;
 
 namespace UnoDock;
+
 public sealed partial class DesktopWindowCoordinates
 {
     internal static Window? WindowFor(FrameworkElement element) => Microsoft.Windows.Shell.WindowRegistry.Find(element);
@@ -24,7 +25,7 @@ public sealed partial class DesktopWindowCoordinates
             return true;
         }
 
-        if (OperatingSystem.IsLinux() && Uno.UI.Xaml.WindowHelper.GetNativeWindow(window)is Uno.UI.NativeElementHosting.X11NativeWindow native)
+        if (OperatingSystem.IsLinux() && Uno.UI.Xaml.WindowHelper.GetNativeWindow(window) is Uno.UI.NativeElementHosting.X11NativeWindow native)
         {
             var connection = Connection;
             var reply = Xcb.PointerReply(connection, Xcb.Pointer(connection, Id(native.WindowId)), out var error);
@@ -70,7 +71,7 @@ public sealed partial class DesktopWindowCoordinates
 #if !WINDOWS
         if (OperatingSystem.IsMacOS())
             return MacDesktopInterop.Origin(window);
-        if (OperatingSystem.IsLinux() && Uno.UI.Xaml.WindowHelper.GetNativeWindow(window)is Uno.UI.NativeElementHosting.X11NativeWindow native)
+        if (OperatingSystem.IsLinux() && Uno.UI.Xaml.WindowHelper.GetNativeWindow(window) is Uno.UI.NativeElementHosting.X11NativeWindow native)
         {
             var id = Id(native.WindowId);
             var root = RootX11(id);
@@ -94,7 +95,11 @@ public sealed partial class DesktopWindowCoordinates
         }
 
 #endif
-        window.AppWindow.Move(new() { X = checked((int)Math.Round(origin.X)), Y = checked((int)Math.Round(origin.Y)) });
+        window.AppWindow.Move(new()
+        {
+            X = checked((int)Math.Round(origin.X)),
+            Y = checked((int)Math.Round(origin.Y))
+        });
     }
 
     internal bool IsNativeCaption(Window window, Point screen)
@@ -112,7 +117,7 @@ public sealed partial class DesktopWindowCoordinates
 #if !WINDOWS
         if (OperatingSystem.IsMacOS())
             return MacDesktopInterop.IsCaption(window, screen);
-        if (OperatingSystem.IsLinux() && Uno.UI.Xaml.WindowHelper.GetNativeWindow(window)is Uno.UI.NativeElementHosting.X11NativeWindow native)
+        if (OperatingSystem.IsLinux() && Uno.UI.Xaml.WindowHelper.GetNativeWindow(window) is Uno.UI.NativeElementHosting.X11NativeWindow native)
         {
             var id = Id(native.WindowId);
             var root = RootX11(id);
@@ -137,7 +142,7 @@ public sealed partial class DesktopWindowCoordinates
 #if !WINDOWS
         if (OperatingSystem.IsMacOS())
             return MacDesktopInterop.SetOwner(window, owner, tool);
-        if (OperatingSystem.IsLinux() && Uno.UI.Xaml.WindowHelper.GetNativeWindow(window)is Uno.UI.NativeElementHosting.X11NativeWindow child && Uno.UI.Xaml.WindowHelper.GetNativeWindow(owner)is Uno.UI.NativeElementHosting.X11NativeWindow parent)
+        if (OperatingSystem.IsLinux() && Uno.UI.Xaml.WindowHelper.GetNativeWindow(window) is Uno.UI.NativeElementHosting.X11NativeWindow child && Uno.UI.Xaml.WindowHelper.GetNativeWindow(owner) is Uno.UI.NativeElementHosting.X11NativeWindow parent)
         {
             var id = Id(child.WindowId);
             PropertyX11(id, AtomX11("WM_TRANSIENT_FOR"), 33, [Id(parent.WindowId)]);
@@ -159,7 +164,7 @@ public sealed partial class DesktopWindowCoordinates
 #if WINDOWS
         return WinRT.Interop.WindowNative.GetWindowHandle(window);
 #else
-        return Uno.UI.Xaml.WindowHelper.GetNativeWindow(window)is Uno.UI.NativeElementHosting.Win32NativeWindow native ? native.Hwnd : throw new PlatformNotSupportedException("A Win32 native host is required.");
+        return Uno.UI.Xaml.WindowHelper.GetNativeWindow(window) is Uno.UI.NativeElementHosting.Win32NativeWindow native ? native.Hwnd : throw new PlatformNotSupportedException("A Win32 native host is required.");
 #endif
     }
 
@@ -360,7 +365,7 @@ public sealed partial class DesktopWindowCoordinates
         {
             CheckReply(reply, error);
             if (Marshal.ReadByte(reply, 1) == 0)
-                return[];
+                return [];
             var count = Marshal.ReadInt32(reply, 16);
             if (Marshal.ReadByte(reply, 1) != 32 || count < 0 || count > 1024 || Marshal.ReadInt32(reply, 12) != 0)
                 throw new InvalidOperationException("The existing X11 window state is not a bounded atom list.");

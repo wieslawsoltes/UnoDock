@@ -6,6 +6,7 @@ using UnoDock.Controls;
 using UnoDock.Layout;
 
 namespace UnoDock.Converters;
+
 [ValueConversion(typeof(bool), typeof(Visibility))]
 public class InverseBoolToVisibilityConverter : IValueConverter
 {

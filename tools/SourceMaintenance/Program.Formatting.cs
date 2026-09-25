@@ -8,10 +8,7 @@ namespace UnoDock.SourceMaintenance;
 
 internal static partial class Program
 {
-    private static readonly Lazy<AdhocWorkspace> FormattingWorkspace = new(() =>
-        new AdhocWorkspace(MefHostServices.Create(MefHostServices.DefaultAssemblies
-            .Append(typeof(CSharpFormattingOptions).Assembly).Distinct())));
-
+    private static readonly Lazy<AdhocWorkspace> FormattingWorkspace = new(() => new AdhocWorkspace(MefHostServices.Create(MefHostServices.DefaultAssemblies.Append(typeof(CSharpFormattingOptions).Assembly).Distinct())));
     private static int FormatSources(string root, bool verify)
     {
         VerifyFormatter();
@@ -65,14 +62,7 @@ internal static partial class Program
     private static string FormatText(string text)
     {
         var workspace = FormattingWorkspace.Value;
-        var options = workspace.Options
-            .WithChangedOption(FormattingOptions.UseTabs, LanguageNames.CSharp, false)
-            .WithChangedOption(FormattingOptions.TabSize, LanguageNames.CSharp, 4)
-            .WithChangedOption(FormattingOptions.IndentationSize, LanguageNames.CSharp, 4)
-            .WithChangedOption(FormattingOptions.NewLine, LanguageNames.CSharp, "\n")
-            .WithChangedOption(CSharpFormattingOptions.WrappingPreserveSingleLine, false)
-            .WithChangedOption(CSharpFormattingOptions.WrappingKeepStatementsOnSingleLine, false);
-
+        var options = workspace.Options.WithChangedOption(FormattingOptions.UseTabs, LanguageNames.CSharp, false).WithChangedOption(FormattingOptions.TabSize, LanguageNames.CSharp, 4).WithChangedOption(FormattingOptions.IndentationSize, LanguageNames.CSharp, 4).WithChangedOption(FormattingOptions.NewLine, LanguageNames.CSharp, "\n").WithChangedOption(CSharpFormattingOptions.WrappingPreserveSingleLine, false).WithChangedOption(CSharpFormattingOptions.WrappingKeepStatementsOnSingleLine, false);
         for (var pass = 0; pass < 4; pass++)
         {
             var previous = text;
@@ -99,13 +89,7 @@ internal static partial class Program
     {
         const string original = "namespace FormattingProbe;public class Sentinel{public object?[] Items{get{return [];}}public void Run(object? x){int a=1;int b=2;if((x)is string){return;}try{}catch(System.Exception e)when(e!=null){throw;}}}\n";
         var formatted = FormatText(original);
-        if (formatted == original ||
-            !formatted.Contains("class Sentinel\n{", StringComparison.Ordinal) ||
-            !formatted.Contains("int a = 1;\n", StringComparison.Ordinal) ||
-            !formatted.Contains("object?[] Items", StringComparison.Ordinal) ||
-            !formatted.Contains("(x) is string", StringComparison.Ordinal) ||
-            !formatted.Contains(") when (", StringComparison.Ordinal) ||
-            FormatText(formatted) != formatted)
+        if (formatted == original || !formatted.Contains("class Sentinel\n{", StringComparison.Ordinal) || !formatted.Contains("int a = 1;\n", StringComparison.Ordinal) || !formatted.Contains("object?[] Items", StringComparison.Ordinal) || !formatted.Contains("(x) is string", StringComparison.Ordinal) || !formatted.Contains(") when (", StringComparison.Ordinal) || FormatText(formatted) != formatted)
         {
             throw new InvalidOperationException("The formatter failed its expansion, spacing or idempotence sentinel.");
         }

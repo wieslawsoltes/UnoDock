@@ -461,7 +461,7 @@ public static class NavigatorQualityTests
             nav.PreviewDocument(nav.Documents[0]);
             await Tick();
             var width = nav.ActualWidth;
-            ((LayoutDocument)nav.SelectedDocument!.LayoutElement).Description = new string ('W', 800);
+            ((LayoutDocument)nav.SelectedDocument!.LayoutElement).Description = new string('W', 800);
             await Tick();
             nav.UpdateLayout();
             Check.Near(width, nav.ActualWidth, 1);
@@ -591,7 +591,10 @@ public static class NavigatorQualityTests
         private readonly LayoutRoot _root;
         private readonly ElementTheme _theme;
         private readonly UnoDock.Themes.Theme? _palette;
-        internal LayoutDocument[] Docs { get; }
+        internal LayoutDocument[] Docs
+        {
+            get;
+        }
         internal LayoutDocumentPane Pane { get; } = new();
         internal LayoutAnchorablePane Tools { get; } = new();
 
@@ -614,7 +617,12 @@ public static class NavigatorQualityTests
             }
 
             )
-                Tools.Children.Add(new() { ContentId = title, Title = title, Content = new TextBox() });
+                Tools.Children.Add(new()
+                {
+                    ContentId = title,
+                    Title = title,
+                    Content = new TextBox()
+                });
             var panel = new UnoDock.Layout.LayoutPanel(Tools);
             panel.Children.Add(Pane);
             host.Layout = new()
@@ -651,7 +659,7 @@ public static class NavigatorQualityTests
 
     private static async Task Ready(NavigatorWindow nav)
     {
-        await Until(() => nav.ActualHeight > 0 && (nav.Documents.Length == 0 || List(nav, true).ContainerFromItem(nav.Documents[0])is FrameworkElement { ActualHeight: > 0 }));
+        await Until(() => nav.ActualHeight > 0 && (nav.Documents.Length == 0 || List(nav, true).ContainerFromItem(nav.Documents[0]) is FrameworkElement { ActualHeight: > 0 }));
         await Tick();
     }
 
@@ -670,7 +678,7 @@ public static class NavigatorQualityTests
     private static Rect Bounds(FrameworkElement element, UIElement relative) => element.TransformToVisual(relative).TransformBounds(new(0, 0, element.ActualWidth, element.ActualHeight));
     private static bool FullyVisible(ListBox list, LayoutItem item)
     {
-        if (list.ContainerFromItem(item)is not FrameworkElement row || row.ActualHeight <= 0)
+        if (list.ContainerFromItem(item) is not FrameworkElement row || row.ActualHeight <= 0)
             return false;
         var scroll = Scroll(list);
         var rect = Bounds(row, scroll);
@@ -701,7 +709,7 @@ public static class NavigatorQualityTests
         {
             var list = List(nav, documents);
             foreach (var item in list.Items.OfType<LayoutItem>())
-                if (list.ContainerFromItem(item)is FrameworkElement row)
+                if (list.ContainerFromItem(item) is FrameworkElement row)
                     foreach (var text in row.FindVisualChildren<TextBlock>())
                         yield return text;
         }
@@ -730,7 +738,7 @@ public static class NavigatorQualityTests
         {
             return target.GetType().GetMethod(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)!.Invoke(target, args);
         }
-        catch (TargetInvocationException e)when (e.InnerException != null)
+        catch (TargetInvocationException e) when (e.InnerException != null)
         {
             ExceptionDispatchInfo.Capture(e.InnerException).Throw();
             throw;

@@ -10,8 +10,14 @@ public sealed class DockGuideTarget
         DetectionRect = detectionRect;
     }
 
-    public DockDropPlan Plan { get; }
-    public Rect DetectionRect { get; }
+    public DockDropPlan Plan
+    {
+        get;
+    }
+    public Rect DetectionRect
+    {
+        get;
+    }
     public DropTargetType Type => Plan.Type;
 
     public bool HitTest(Point point) => Plan.CanExecute && DockGuideLayout.HitTest(new(DetectionRect.X, DetectionRect.Y, DetectionRect.Width, DetectionRect.Height), new(point.X, point.Y));

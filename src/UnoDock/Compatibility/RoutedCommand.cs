@@ -13,8 +13,14 @@ public sealed class RoutedCommand : ICommand
         _execute = execute;
     }
 
-    public string Name { get; }
-    public Type OwnerType { get; }
+    public string Name
+    {
+        get;
+    }
+    public Type OwnerType
+    {
+        get;
+    }
 
     public event EventHandler? CanExecuteChanged;
     public bool CanExecute(object? parameter) => _canExecute(parameter, null);

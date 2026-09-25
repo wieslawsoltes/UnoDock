@@ -54,8 +54,8 @@ public static class ChromeGeometry
     }
 
     /// <summary>Disjoint caption rectangles excluding interactive content. A sweep over vertical
-    /// boundaries merges overlapping exclusion intervals, then coalesces equal adjacent bands.</summary>
-    public static IReadOnlyList<DockRect> CaptionRegions(DockRect bounds, double captionHeight, IReadOnlyList<DockRect> interactive)
+        /// boundaries merges overlapping exclusion intervals, then coalesces equal adjacent bands.</summary>
+        public static IReadOnlyList<DockRect> CaptionRegions(DockRect bounds, double captionHeight, IReadOnlyList<DockRect> interactive)
     {
         Validate(bounds, captionHeight);
         ArgumentNullException.ThrowIfNull(interactive);

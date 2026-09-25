@@ -2,6 +2,7 @@ using UnoDock.Controls;
 using UnoDock.Layout;
 
 namespace UnoDock.Internal;
+
 internal sealed partial class DockSurface
 {
     internal bool OwnsNavigator(NavigatorWindow navigator) => !_disposed && ReferenceEquals(_navigator, navigator);

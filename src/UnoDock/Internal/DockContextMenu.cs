@@ -227,7 +227,10 @@ internal sealed class DockContextMenu : MenuFlyout, IDisposable
         private readonly bool _collapseDisabled;
         private ICommand? _subscribed;
         private bool _enabled;
-        internal DockMenuRow Row { get; }
+        internal DockMenuRow Row
+        {
+            get;
+        }
 
         internal Entry(DockContextMenu owner, string id, Func<string> label, Func<ICommand?> resolve, Func<bool>? visible, bool collapseDisabled)
         {

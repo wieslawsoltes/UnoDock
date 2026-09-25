@@ -1,6 +1,7 @@
 using System.Xml;
 
 namespace UnoDock.Layout;
+
 [ContentProperty(Name = "Children")]
 public class LayoutAnchorablePaneGroup : LayoutPositionableGroup<ILayoutAnchorablePane>, ILayoutAnchorablePane, ILayoutOrientableGroup
 {
@@ -11,7 +12,10 @@ public class LayoutAnchorablePaneGroup : LayoutPositionableGroup<ILayoutAnchorab
     }
 
     public LayoutAnchorablePaneGroup(LayoutAnchorablePane firstChild) => Children.Add(firstChild);
-    public Orientation Orientation { get => _orientation; set => Set(ref _orientation, value); }
+    public Orientation Orientation
+    {
+        get => _orientation; set => Set(ref _orientation, value);
+    }
 
     protected override bool GetVisibility() => Children.Any(c => c.IsVisible);
     protected override void OnIsVisibleChanged()

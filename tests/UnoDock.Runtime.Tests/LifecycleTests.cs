@@ -7,6 +7,7 @@ using UnoDock.Controls;
 using UnoDock.Layout;
 
 namespace UnoDock.Testing;
+
 using LayoutPanel = UnoDock.Layout.LayoutPanel;
 
 public static class LifecycleTests
@@ -156,7 +157,7 @@ public static class LifecycleTests
         {
             using var m = new DockingManager();
             var source = new ObservableCollection<object>();
-            var added = new object ();
+            var added = new object();
             var once = false;
             m.LayoutUpdateStrategy = new Strategy
             {
@@ -172,14 +173,14 @@ public static class LifecycleTests
                 }
             };
             m.DocumentsSource = source;
-            source.Add(new object ());
+            source.Add(new object());
             Check.Equal(2, m.Layout.Descendents().OfType<LayoutDocument>().Count());
         });
         tests.Test("source callback removes an item reentrantly", () =>
         {
             using var m = new DockingManager();
             var source = new ObservableCollection<object>();
-            var first = new object ();
+            var first = new object();
             m.LayoutUpdateStrategy = new Strategy
             {
                 After = (_, d) =>
@@ -221,7 +222,7 @@ public static class LifecycleTests
         tests.Test("both sources are snapshotted before mutation", () =>
         {
             using var m = new DockingManager();
-            var value = new object ();
+            var value = new object();
             m.DocumentsSource = new[]
             {
                 value
@@ -245,7 +246,7 @@ public static class LifecycleTests
         });
         tests.Test("128 tabs realize only visited editors", () =>
         {
-            var docs = Enumerable.Range(0, 128).Select(i => new LayoutDocument { ContentId = i.ToString(), Title = "Tab " + i, Content = new object () }).ToArray();
+            var docs = Enumerable.Range(0, 128).Select(i => new LayoutDocument { ContentId = i.ToString(), Title = "Tab " + i, Content = new object() }).ToArray();
             var pane = new LayoutDocumentPane();
             foreach (var d in docs)
                 pane.Children.Add(d);
@@ -267,7 +268,7 @@ public static class LifecycleTests
         tests.Test("closed editor releases presenter references", () =>
         {
             using var m = Workspace(out var d);
-            d.Content = new object ();
+            d.Content = new object();
             var item = m.GetLayoutItemFromModel(d);
             var view = item.View;
             item.Dispose();
@@ -425,7 +426,7 @@ public static class LifecycleTests
 
             )
             {
-                var attribute = (Microsoft.UI.Xaml.Markup.ContentPropertyAttribute? )Attribute.GetCustomAttribute(type, typeof(Microsoft.UI.Xaml.Markup.ContentPropertyAttribute), false);
+                var attribute = (Microsoft.UI.Xaml.Markup.ContentPropertyAttribute?)Attribute.GetCustomAttribute(type, typeof(Microsoft.UI.Xaml.Markup.ContentPropertyAttribute), false);
                 Check.Equal("Children", attribute!.Name);
             }
         });
@@ -448,7 +449,7 @@ public static class LifecycleTests
 
     private static IEnumerable Broken()
     {
-        yield return new object ();
+        yield return new object();
         throw new InvalidOperationException("source failure");
     }
 

@@ -3,6 +3,7 @@ using UnoDock.Internal;
 using UnoDock.Layout;
 
 namespace UnoDock.Controls;
+
 public abstract partial class LayoutItem : FrameworkElement, IDisposable
 {
     private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<LayoutRoot, BulkCloseState> BulkClosures = new();
@@ -18,7 +19,10 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
     private readonly long _visibilityToken;
     protected LayoutItem() => _visibilityToken = RegisterPropertyChangedCallback(VisibilityProperty, (_, _) => OnVisibilityChanged());
     public LayoutContent LayoutElement { get; private set; } = null!;
-    public object? Model { get; private set; }
+    public object? Model
+    {
+        get; private set;
+    }
 
     private ContentPresenter? _view;
     private DockContextMenu? _defaultMenu;
@@ -55,7 +59,7 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
             return false;
         if (_lastFocused?.TryGetTarget(out var previous) == true && IsInView(previous) && previous is Control control && control.IsEnabled && control.Visibility == Visibility.Visible && control.Focus(FocusState.Programmatic))
             return true;
-        return Microsoft.UI.Xaml.Input.FocusManager.FindFirstFocusableElement(_view)is Control first && first.Focus(FocusState.Programmatic);
+        return Microsoft.UI.Xaml.Input.FocusManager.FindFirstFocusableElement(_view) is Control first && first.Focus(FocusState.Programmatic);
     }
 
     public bool IsViewCreated => _view != null;
@@ -154,7 +158,7 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
 
     protected virtual void ClearDefaultBindings()
     {
-        foreach (var(property, binding)in _bindings)
+        foreach (var (property, binding) in _bindings)
             if (ReferenceEquals(GetBindingExpression(property)?.ParentBinding, binding))
                 ClearValue(property);
         _bindings.Clear();
@@ -176,7 +180,7 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
 
     protected virtual void ClearDefaultCommands()
     {
-        foreach (var(property, command)in _commands)
+        foreach (var (property, command) in _commands)
             if (ReferenceEquals(GetValue(property), command))
                 ClearValue(property);
         _commands.Clear();
@@ -307,7 +311,7 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
 
     private void Move(int direction)
     {
-        if (AdjacentPane(direction)is { } target)
+        if (AdjacentPane(direction) is { } target)
             DockOperations.Dock(LayoutElement, target, DockPosition.Inside);
     }
 

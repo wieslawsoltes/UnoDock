@@ -216,7 +216,10 @@ internal static partial class FloatingChromeTests
                 Near(before, FloatingChromeProbe.Bounds(f.Native));
                 Call(f.Control, "MoveFrameResize", second!, new Point(0, 20));
                 await Task.Delay(80);
-                Near(before with { Height = before.Height + 20 }, FloatingChromeProbe.Bounds(f.Native));
+                Near(before with
+                {
+                    Height = before.Height + 20
+                }, FloatingChromeProbe.Bounds(f.Native));
                 Call(f.Control, "EndFrameResize", second!, true);
                 await Task.Delay(80);
                 Check.False(f.Control.IsResizing);
@@ -230,14 +233,14 @@ internal static partial class FloatingChromeTests
         return await tests.Run(output, toolsOnly ? "floating-chrome-tools" : "floating-chrome-documents");
     }
 
-    private static object? Call(object target, string name, params object? [] args)
+    private static object? Call(object target, string name, params object?[] args)
     {
         var method = typeof(LayoutFloatingWindowControl).GetMethod(name, BindingFlags.Instance | BindingFlags.NonPublic) ?? throw new MissingMethodException(name);
         try
         {
             return method.Invoke(target, args);
         }
-        catch (TargetInvocationException e)when (e.InnerException != null)
+        catch (TargetInvocationException e) when (e.InnerException != null)
         {
             ExceptionDispatchInfo.Capture(e.InnerException).Throw();
             throw;

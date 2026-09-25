@@ -5,6 +5,7 @@ using UnoDock.Layout;
 using UnoDock.Layout.Serialization;
 
 namespace UnoDock.Testing;
+
 public static class RestoreOwnershipTests
 {
     public static Task<int> Run(string output)
@@ -181,7 +182,7 @@ public static class RestoreOwnershipTests
             serializer.LayoutSerializationCallback += (_, e) =>
             {
                 if (e.Model.ContentId == "first")
-                    originals[1].Content = new object ();
+                    originals[1].Content = new object();
             };
             serializer.Deserialize(new StringReader(xml));
             Check.Same(expected, Documents(manager).Single(d => d.ContentId == "second").Content);
@@ -202,7 +203,7 @@ public static class RestoreOwnershipTests
             var pane = new LayoutDocumentPane();
             other.Layout.RootPanel.Children.Add(pane);
             var serializer = new XmlLayoutSerializer(manager);
-            var sentinel = new object ();
+            var sentinel = new object();
             serializer.LayoutSerializationCallback += (_, e) =>
             {
                 if (e.Model.ContentId == "first")
@@ -222,7 +223,7 @@ public static class RestoreOwnershipTests
             var pane = new LayoutDocumentPane();
             other.Layout.RootPanel.Children.Add(pane);
             var icon = new Microsoft.UI.Xaml.Media.Imaging.BitmapImage();
-            var tooltip = new object ();
+            var tooltip = new object();
             var serializer = new XmlLayoutSerializer(manager);
             serializer.LayoutSerializationCallback += (_, e) =>
             {
@@ -247,8 +248,8 @@ public static class RestoreOwnershipTests
         tests.Test("restore: observable source adopts restored models without duplicate content", () =>
         {
             using var manager = new DockingManager();
-            var a = new object ();
-            var b = new object ();
+            var a = new object();
+            var b = new object();
             var source = new ObservableCollection<object>
             {
                 a,
@@ -340,7 +341,7 @@ public static class RestoreOwnershipTests
             var serializer = new XmlLayoutSerializer(manager);
             for (var i = 0; i < 24; i++)
             {
-                var content = new object ();
+                var content = new object();
                 Documents(manager)[0].Content = content;
                 serializer.Deserialize(new StringReader(xml));
                 Check.Same(content, Documents(manager)[0].Content);
@@ -353,8 +354,8 @@ public static class RestoreOwnershipTests
     private static LayoutDocument[] Documents(DockingManager manager) => manager.Layout.Descendents().OfType<LayoutDocument>().ToArray();
     private static DockingManager Workspace()
     {
-        var pane = new LayoutDocumentPane(new LayoutDocument { ContentId = "first", Title = "First", Content = new object () });
-        pane.Children.Add(new LayoutDocument { ContentId = "second", Title = "Second", Content = new object () });
+        var pane = new LayoutDocumentPane(new LayoutDocument { ContentId = "first", Title = "First", Content = new object() });
+        pane.Children.Add(new LayoutDocument { ContentId = "second", Title = "Second", Content = new object() });
         return new()
         {
             Layout = new()

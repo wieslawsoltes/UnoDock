@@ -6,6 +6,7 @@ using UnoDock.Controls;
 using UnoDock.Layout;
 
 namespace UnoDock.Converters;
+
 internal static class ConverterInterop
 {
     internal static CultureInfo Culture(string language)
@@ -28,7 +29,8 @@ internal static class ConverterInterop
         null => throw new NullReferenceException(),
         AnchorSide side => side,
         int side => (AnchorSide)side,
-        _ => throw new InvalidCastException()};
+        _ => throw new InvalidCastException()
+    };
     internal static LayoutItem? Item(object value) => value is LayoutContent content && content.Root?.Manager is { } manager ? manager.GetLayoutItemFromModel(content) : null;
     // This is the observed reference contract for unsupported reverse directions, not
     // an unimplemented forward conversion. See the public-call fixtures and regression suite.

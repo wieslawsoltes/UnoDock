@@ -1,4 +1,5 @@
 namespace UnoDock.Internal;
+
 internal static class DockCoordinates
 {
     internal static Point Translate(FrameworkElement source, Point point, FrameworkElement destination, ICrossWindowCoordinates? coordinates)

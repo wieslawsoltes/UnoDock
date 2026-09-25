@@ -4,6 +4,7 @@ using Microsoft.UI.Xaml.Shapes;
 using PathShape = Microsoft.UI.Xaml.Shapes.Path;
 
 namespace UnoDock.Gallery;
+
 internal static class SampleChrome
 {
     internal const double MenuHeight = 28;

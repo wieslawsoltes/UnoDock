@@ -3,6 +3,7 @@ using Microsoft.UI.Xaml.Media.Imaging;
 using Windows.Graphics.Imaging;
 
 namespace UnoDock.Testing;
+
 internal static class VisualCapture
 {
     internal static async Task Save(FrameworkElement element, string path)

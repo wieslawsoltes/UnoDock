@@ -3,6 +3,7 @@ using System.Windows.Input;
 using Windows.Storage;
 
 namespace UnoDock.Gallery;
+
 internal sealed class WorkspaceCommand(Action execute, Func<bool>? canExecute = null) : ICommand
 {
     private Action? _execute = execute;

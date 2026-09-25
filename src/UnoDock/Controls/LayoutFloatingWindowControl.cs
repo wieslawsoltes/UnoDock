@@ -42,7 +42,10 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
     internal bool IsMinimized => _minimized;
 
     public event EventHandler<Exception>? MessageFilterFailed;
-    internal double ChromeCaptionHeight { get => _title.MinHeight; set => _title.MinHeight = value; }
+    internal double ChromeCaptionHeight
+    {
+        get => _title.MinHeight; set => _title.MinHeight = value;
+    }
 
     internal bool CanPerformSystemAction(Microsoft.Windows.Shell.WindowAction action)
     {
@@ -97,7 +100,10 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
         }
     }
 
-    protected bool CloseInitiatedByUser { get; private set; }
+    protected bool CloseInitiatedByUser
+    {
+        get; private set;
+    }
 
     protected LayoutFloatingWindowControl(ILayoutElement model) : this(model, false)
     {
@@ -109,10 +115,22 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
         SetValue(IsContentImmutableProperty, isContentImmutable);
         HorizontalContentAlignment = HorizontalAlignment.Stretch;
         VerticalContentAlignment = VerticalAlignment.Stretch;
-        _frame.RowDefinitions.Add(new() { Height = GridLength.Auto });
-        _frame.RowDefinitions.Add(new() { Height = new(1, GridUnitType.Star) });
-        _title.ColumnDefinitions.Add(new() { Width = new(1, GridUnitType.Star) });
-        _title.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
+        _frame.RowDefinitions.Add(new()
+        {
+            Height = GridLength.Auto
+        });
+        _frame.RowDefinitions.Add(new()
+        {
+            Height = new(1, GridUnitType.Star)
+        });
+        _title.ColumnDefinitions.Add(new()
+        {
+            Width = new(1, GridUnitType.Star)
+        });
+        _title.ColumnDefinitions.Add(new()
+        {
+            Width = GridLength.Auto
+        });
         InitializeCaptionDrag();
         _caption.IsHitTestVisible = false;
         _title.Children.Add(_dragHandle);
@@ -147,16 +165,28 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
         InitializeResizeChrome();
         GotFocus += (_, _) =>
         {
-            if ((Contents.FirstOrDefault(c => c.IsSelected) ?? Contents.FirstOrDefault())is { } selected)
+            if ((Contents.FirstOrDefault(c => c.IsSelected) ?? Contents.FirstOrDefault()) is { } selected)
                 selected.IsActive = true;
         };
     }
 
-    public abstract ILayoutElement Model { get; }
-    public bool IsContentImmutable { get => (bool)GetValue(IsContentImmutableProperty); private set => SetValue(IsContentImmutableProperty, value); }
+    public abstract ILayoutElement Model
+    {
+        get;
+    }
+    public bool IsContentImmutable
+    {
+        get => (bool)GetValue(IsContentImmutableProperty); private set => SetValue(IsContentImmutableProperty, value);
+    }
     public bool IsDragging => (bool)GetValue(IsDraggingProperty);
-    public bool IsMaximized { get => (bool)GetValue(IsMaximizedProperty); private set => SetValue(IsMaximizedProperty, value); }
-    public Thickness ResizeBorderThickness { get => (Thickness)GetValue(ResizeBorderThicknessProperty); set => SetValue(ResizeBorderThicknessProperty, value); }
+    public bool IsMaximized
+    {
+        get => (bool)GetValue(IsMaximizedProperty); private set => SetValue(IsMaximizedProperty, value);
+    }
+    public Thickness ResizeBorderThickness
+    {
+        get => (Thickness)GetValue(ResizeBorderThicknessProperty); set => SetValue(ResizeBorderThicknessProperty, value);
+    }
     public Window? NativeWindow => _window;
     internal IEnumerable<LayoutContent> Contents => Model.Descendents().OfType<LayoutContent>();
     private LayoutContent? PositionModel => Contents.FirstOrDefault();
@@ -378,7 +408,7 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
         {
             _dropOverlay.ShowPreview(plan, DockCoordinates.Bounds(coordinateOwner, plan.PreviewRect, _dropOverlay, Model.Root?.Manager?.CrossWindowCoordinates), accent);
         }
-        catch (Exception e)when (DockCoordinates.IsUnavailable(e))
+        catch (Exception e) when (DockCoordinates.IsUnavailable(e))
         {
             _dropOverlay.Hide();
         }
@@ -394,7 +424,7 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
                 preview = DockCoordinates.Bounds(coordinateOwner, plan.PreviewRect, _dropOverlay, manager.CrossWindowCoordinates);
             _dropOverlay.ShowGuides(local, plan, manager, preview);
         }
-        catch (Exception e)when (DockCoordinates.IsUnavailable(e))
+        catch (Exception e) when (DockCoordinates.IsUnavailable(e))
         {
             _dropOverlay.Hide();
         }
@@ -561,7 +591,7 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
                 SynchronizeNativeState(new(origin.X / positionScale, origin.Y / positionScale, native.Size.Width / scale, native.Size.Height / scale), state);
                 UpdateChromeControls();
             }
-            catch (Exception error)when (DockCoordinates.IsUnavailable(error))
+            catch (Exception error) when (DockCoordinates.IsUnavailable(error))
             {
                 FailCaptionDrag(error);
             }
@@ -713,7 +743,11 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
         }
 
         var bounds = Bounds;
-        SetBounds(bounds with { Width = Math.Max(160, bounds.Width + x), Height = Math.Max(100, bounds.Height + y) });
+        SetBounds(bounds with
+        {
+            Width = Math.Max(160, bounds.Width + x),
+            Height = Math.Max(100, bounds.Height + y)
+        });
     }
 
     private void ToggleMaximize()

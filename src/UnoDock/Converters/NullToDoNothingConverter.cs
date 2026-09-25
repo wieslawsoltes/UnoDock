@@ -6,6 +6,7 @@ using UnoDock.Controls;
 using UnoDock.Layout;
 
 namespace UnoDock.Converters;
+
 public class NullToDoNothingConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => value ?? BindingValue.DoNothing;

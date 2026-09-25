@@ -35,7 +35,7 @@ public static class Extentions
     public static DependencyObject FindVisualTreeRoot(this DependencyObject initial)
     {
         ArgumentNullException.ThrowIfNull(initial);
-        while (VisualTreeHelper.GetParent(initial)is { } parent)
+        while (VisualTreeHelper.GetParent(initial) is { } parent)
             initial = parent;
         return initial;
     }

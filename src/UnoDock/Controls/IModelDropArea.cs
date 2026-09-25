@@ -2,9 +2,16 @@ using UnoDock.Internal;
 using UnoDock.Layout;
 
 namespace UnoDock.Controls;
+
 internal interface IModelDropArea : IDropArea
 {
-    ILayoutElement? Model { get; }
+    ILayoutElement? Model
+    {
+        get;
+    }
 
-    DockingManager? Manager { get; }
+    DockingManager? Manager
+    {
+        get;
+    }
 }

@@ -53,11 +53,23 @@ public partial class LayoutAutoHideWindowControl : ContentControl, ILayoutContro
             _root.RowDefinitions.Add(new());
         }
 
-        _layout.RowDefinitions.Add(new() { Height = GridLength.Auto });
-        _layout.RowDefinitions.Add(new() { Height = new(1, GridUnitType.Star) });
+        _layout.RowDefinitions.Add(new()
+        {
+            Height = GridLength.Auto
+        });
+        _layout.RowDefinitions.Add(new()
+        {
+            Height = new(1, GridUnitType.Star)
+        });
         _layout.BorderThickness = new(1);
-        _titleBar.ColumnDefinitions.Add(new() { Width = new(1, GridUnitType.Star) });
-        _titleBar.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
+        _titleBar.ColumnDefinitions.Add(new()
+        {
+            Width = new(1, GridUnitType.Star)
+        });
+        _titleBar.ColumnDefinitions.Add(new()
+        {
+            Width = GridLength.Auto
+        });
         _titleView.Content = _title;
         _titleBar.Children.Add(_titleView);
         var buttons = new StackPanel
@@ -146,7 +158,10 @@ public partial class LayoutAutoHideWindowControl : ContentControl, ILayoutContro
     }
 
     public ILayoutElement Model => _model!;
-    public Style? AnchorableStyle { get => (Style? )GetValue(AnchorableStyleProperty); set => SetValue(AnchorableStyleProperty, value); }
+    public Style? AnchorableStyle
+    {
+        get => (Style?)GetValue(AnchorableStyleProperty); set => SetValue(AnchorableStyleProperty, value);
+    }
     internal bool RetainOpen => _pointerInside || _menuOpen || _resizer.IsDragging || HasFocusWithinCore();
 
     internal void Open(LayoutAnchorable model, bool activate = true)

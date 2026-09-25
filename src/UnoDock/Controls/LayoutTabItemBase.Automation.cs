@@ -2,6 +2,7 @@ using Microsoft.UI.Xaml.Automation.Peers;
 using UnoDock.Layout;
 
 namespace UnoDock.Controls;
+
 public abstract partial class LayoutTabItemBase
 {
     private bool _automationWasLoaded, _automationQueued;
@@ -24,7 +25,7 @@ public abstract partial class LayoutTabItemBase
                 throw new InvalidOperationException("Automation must run on the owning UI thread.");
             if (Model is not { Parent: ILayoutGroup group, Root: LayoutRoot { Manager: { } manager } root } model || !ReferenceEquals(manager, _manager) || !ReferenceEquals(manager.Layout, root) || !group.Children.Any(child => ReferenceEquals(child, model)) || model is LayoutDocument { IsVisible: false } or LayoutAnchorable { IsHidden: true } || (_automationWasLoaded && !IsLoaded))
                 return null;
-            if (this.FindVisualAncestor<LayoutCachePaneControl>()is { } pane && !ReferenceEquals(pane.AutomationPane, group))
+            if (this.FindVisualAncestor<LayoutCachePaneControl>() is { } pane && !ReferenceEquals(pane.AutomationPane, group))
                 return null;
             return model;
         }
@@ -36,7 +37,7 @@ public abstract partial class LayoutTabItemBase
     internal bool FocusFromAutomation() => AutomationEnabled && _label.Focus(FocusState.Keyboard);
     internal void QueueAutomationRefresh()
     {
-        if (_automationQueued || Microsoft.UI.Xaml.Automation.Peers.FrameworkElementAutomationPeer.FromElement(this)is not LayoutTabAutomationPeer peer)
+        if (_automationQueued || Microsoft.UI.Xaml.Automation.Peers.FrameworkElementAutomationPeer.FromElement(this) is not LayoutTabAutomationPeer peer)
             return;
         _automationQueued = true;
         if (!DispatcherQueue.TryEnqueue(() =>

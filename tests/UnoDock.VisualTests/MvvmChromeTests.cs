@@ -7,6 +7,7 @@ using Windows.Foundation;
 using System.Xml.Linq;
 
 namespace UnoDock.Testing;
+
 internal static class MvvmChromeTests
 {
     internal static async Task<int> Run(string output)
@@ -24,7 +25,11 @@ internal static class MvvmChromeTests
             Content = dock,
             Title = "UnoDock compact MVVM chrome"
         };
-        window.AppWindow.Resize(new() { Width = 1100, Height = 800 });
+        window.AppWindow.Resize(new()
+        {
+            Width = 1100,
+            Height = 800
+        });
         window.Activate();
         try
         {

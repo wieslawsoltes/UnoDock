@@ -3,6 +3,7 @@ using System.Runtime.ExceptionServices;
 using System.Xml;
 
 namespace UnoDock.Layout.Serialization;
+
 public abstract class LayoutSerializer
 {
     private static readonly ConditionalWeakTable<DockingManager, RestoreState> Restores = new();
@@ -19,7 +20,10 @@ public abstract class LayoutSerializer
     private bool _observing, _superseded;
     private readonly Dictionary<string, PreviousContent> _previous = new(StringComparer.Ordinal);
     public LayoutSerializer(DockingManager manager) => Manager = manager ?? throw new ArgumentNullException(nameof(manager));
-    public DockingManager Manager { get; }
+    public DockingManager Manager
+    {
+        get;
+    }
 
     public event EventHandler<LayoutSerializationCallbackEventArgs>? LayoutSerializationCallback;
     protected void StartDeserialization()

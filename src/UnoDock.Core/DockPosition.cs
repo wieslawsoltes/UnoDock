@@ -1,4 +1,5 @@
 namespace UnoDock.Core;
+
 public enum DockPosition
 {
     Inside,

@@ -5,6 +5,7 @@ using UnoDock.Layout;
 using UnoDock.Themes;
 
 namespace UnoDock;
+
 public enum FloatingWindowMode
 {
     Auto,

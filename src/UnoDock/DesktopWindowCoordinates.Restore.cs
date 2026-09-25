@@ -1,17 +1,18 @@
 using System.Runtime.InteropServices;
 
 namespace UnoDock;
+
 public sealed partial class DesktopWindowCoordinates
 {
     /// <summary>Complete the missing X11 unmaximize request before asking Uno to
-    /// reactivate a restored window. The WM remains authoritative for saved normal
-    /// geometry. No unrelated EWMH state or minimized restore state is rewritten.</summary>
-    internal void PrepareRestore(Window window)
+        /// reactivate a restored window. The WM remains authoritative for saved normal
+        /// geometry. No unrelated EWMH state or minimized restore state is rewritten.</summary>
+        internal void PrepareRestore(Window window)
     {
         Verify();
         ArgumentNullException.ThrowIfNull(window);
 #if !WINDOWS
-        if (!OperatingSystem.IsLinux() || Uno.UI.Xaml.WindowHelper.GetNativeWindow(window)is not Uno.UI.NativeElementHosting.X11NativeWindow native)
+        if (!OperatingSystem.IsLinux() || Uno.UI.Xaml.WindowHelper.GetNativeWindow(window) is not Uno.UI.NativeElementHosting.X11NativeWindow native)
             return;
         var id = Id(native.WindowId);
         var stateAtom = AtomX11("_NET_WM_STATE");

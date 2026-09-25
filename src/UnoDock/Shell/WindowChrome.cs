@@ -80,7 +80,10 @@ public partial class WindowChrome : DependencyObject, INotifyPropertyChanged
         }
     }
 
-    public bool ShowSystemMenu { get => (bool)GetValue(ShowSystemMenuProperty); set => SetValue(ShowSystemMenuProperty, value); }
+    public bool ShowSystemMenu
+    {
+        get => (bool)GetValue(ShowSystemMenuProperty); set => SetValue(ShowSystemMenuProperty, value);
+    }
     public static Thickness GlassFrameCompleteThickness => new(-1);
 
     public static bool GetIsHitTestVisibleInChrome(UIElement inputElement)
@@ -100,7 +103,7 @@ public partial class WindowChrome : DependencyObject, INotifyPropertyChanged
     public static WindowChrome? GetWindowChrome(ContentControl window)
     {
         ArgumentNullException.ThrowIfNull(window);
-        return (WindowChrome? )window.GetValue(WindowChromeProperty);
+        return (WindowChrome?)window.GetValue(WindowChromeProperty);
     }
 
     public static void SetWindowChrome(ContentControl window, WindowChrome? chrome)
@@ -243,8 +246,14 @@ public partial class WindowChrome : DependencyObject, INotifyPropertyChanged
         private global::Windows.Graphics.RectInt32[]? _nativeRegions;
         private Thickness? _nativeGlass;
         private double _nativeScale;
-        internal WindowChrome Chrome { get; }
-        internal WindowChromeCapabilities Capabilities { get; private set; }
+        internal WindowChrome Chrome
+        {
+            get;
+        }
+        internal WindowChromeCapabilities Capabilities
+        {
+            get; private set;
+        }
 
         internal Attachment(ContentControl? control, Window? window, WindowChrome chrome)
         {
@@ -453,7 +462,7 @@ public partial class WindowChrome : DependencyObject, INotifyPropertyChanged
         {
             if (!Chrome.ShowSystemMenu || _root?.IsLoaded != true || Hit(e.GetPosition(_root)) != ChromeHit.Caption)
                 return;
-            SystemCommands.CreateSystemMenu((object? )_window ?? _control!).ShowAt(_root, new FlyoutShowOptions { Position = e.GetPosition(_root) });
+            SystemCommands.CreateSystemMenu((object?)_window ?? _control!).ShowAt(_root, new FlyoutShowOptions { Position = e.GetPosition(_root) });
             e.Handled = true;
         }
 

@@ -7,6 +7,7 @@ using UnoDock.VisualValidation;
 using Windows.Foundation;
 
 namespace UnoDock.Testing;
+
 internal static class DesktopFloatingTests
 {
     internal static async Task<int> Run(string output)
@@ -264,7 +265,7 @@ internal static class DesktopFloatingTests
 
                 var target = f.DocumentCenter();
                 await f.CoverTarget(target);
-                var args = new object? []
+                var args = new object?[]
                 {
                     f.Surface,
                     target,
@@ -273,7 +274,7 @@ internal static class DesktopFloatingTests
                 };
                 Check.True((bool)Call(f.Coordinates, "TryGetTopmostRootExcludingWindow", args)!);
                 Check.Same(f.Manager.XamlRoot, args[2]);
-                args = [f.Surface, target, null, null ];
+                args = [f.Surface, target, null, null];
                 Check.True((bool)Call(f.Coordinates, "TryGetTopmostRootExcludingWindow", args)!);
                 Check.Same(f.Control.XamlRoot, args[2]);
             });
@@ -423,8 +424,16 @@ internal static class DesktopFloatingTests
                 Title = "UnoDock native docking acceptance"
             };
             _registration = Microsoft.Windows.Shell.SystemCommands.RegisterWindow(_window);
-            _window.AppWindow.Move(new() { X = 40, Y = 40 });
-            _window.AppWindow.Resize(new() { Width = 1100, Height = 780 });
+            _window.AppWindow.Move(new()
+            {
+                X = 40,
+                Y = 40
+            });
+            _window.AppWindow.Resize(new()
+            {
+                Width = 1100,
+                Height = 780
+            });
             _window.Activate();
         }
 
@@ -491,20 +500,20 @@ internal static class DesktopFloatingTests
     private static T Field<T>(object value, string name)
     {
         for (var type = value.GetType(); type != null; type = type.BaseType)
-            if (type.GetField(name, BindingFlags.NonPublic | BindingFlags.Instance)is { } field)
+            if (type.GetField(name, BindingFlags.NonPublic | BindingFlags.Instance) is { } field)
                 return (T)field.GetValue(value)!;
         throw new MissingFieldException(name);
     }
 
-    private static object? CallStatic(Type type, string name, params object? [] args) => Invoke(type, null, name, args, BindingFlags.Static);
-    private static object? Call(object target, string name, params object? [] args) => Invoke(target.GetType(), target, name, args, BindingFlags.Instance);
-    private static object? Invoke(Type type, object? target, string name, object? [] args, BindingFlags kind)
+    private static object? CallStatic(Type type, string name, params object?[] args) => Invoke(type, null, name, args, BindingFlags.Static);
+    private static object? Call(object target, string name, params object?[] args) => Invoke(target.GetType(), target, name, args, BindingFlags.Instance);
+    private static object? Invoke(Type type, object? target, string name, object?[] args, BindingFlags kind)
     {
         try
         {
             return type.GetMethods(kind | BindingFlags.Public | BindingFlags.NonPublic).Single(m => m.Name == name && m.GetParameters().Length == args.Length).Invoke(target, args);
         }
-        catch (TargetInvocationException e)when (e.InnerException != null)
+        catch (TargetInvocationException e) when (e.InnerException != null)
         {
             ExceptionDispatchInfo.Capture(e.InnerException).Throw();
             throw;

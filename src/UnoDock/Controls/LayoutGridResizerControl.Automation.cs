@@ -5,6 +5,7 @@ using UnoDock.Internal;
 using Windows.System;
 
 namespace UnoDock.Controls;
+
 public partial class LayoutGridResizerControl
 {
     private readonly Border _keyboardFocus = new()
@@ -15,8 +16,14 @@ public partial class LayoutGridResizerControl
         BorderThickness = new(1),
         Margin = new(1)
     };
-    internal Func<DockResizeRange>? ReadAutomationRange { get; set; }
-    internal Action<double>? WriteAutomationValue { get; set; }
+    internal Func<DockResizeRange>? ReadAutomationRange
+    {
+        get; set;
+    }
+    internal Action<double>? WriteAutomationValue
+    {
+        get; set;
+    }
 
     private void InitializeAutomation(Grid chrome)
     {
@@ -90,7 +97,8 @@ public partial class LayoutGridResizerControl
             VirtualKey.Home => range.Minimum,
             VirtualKey.End => range.Maximum,
             VirtualKey.PageUp => Math.Max(range.Minimum, range.Value - 50),
-            _ => Math.Min(range.Maximum, range.Value + 50)};
+            _ => Math.Min(range.Maximum, range.Value + 50)
+        };
         SetAutomationValue(value);
         return true;
     }
@@ -98,7 +106,7 @@ public partial class LayoutGridResizerControl
     internal void RefreshAutomation()
     {
         // No peer creation, global subscriptions or model enumeration when unused.
-        if (FrameworkElementAutomationPeer.FromElement(this)is LayoutGridResizerAutomationPeer peer)
+        if (FrameworkElementAutomationPeer.FromElement(this) is LayoutGridResizerAutomationPeer peer)
             peer.Synchronize();
     }
 

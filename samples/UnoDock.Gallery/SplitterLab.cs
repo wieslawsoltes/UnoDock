@@ -5,6 +5,7 @@ using Microsoft.UI.Xaml.Automation.Provider;
 using System.Globalization;
 
 namespace UnoDock.Gallery;
+
 public sealed partial class GalleryPage
 {
     private void ShowSplitterLab()
@@ -15,10 +16,22 @@ public sealed partial class GalleryPage
             RequestedTheme = ElementTheme.Light
         };
         var container = new Grid();
-        container.RowDefinitions.Add(new() { Height = GridLength.Auto });
-        container.RowDefinitions.Add(new() { Height = GridLength.Auto });
-        container.RowDefinitions.Add(new() { Height = GridLength.Auto });
-        container.RowDefinitions.Add(new() { Height = new(1, GridUnitType.Star) });
+        container.RowDefinitions.Add(new()
+        {
+            Height = GridLength.Auto
+        });
+        container.RowDefinitions.Add(new()
+        {
+            Height = GridLength.Auto
+        });
+        container.RowDefinitions.Add(new()
+        {
+            Height = GridLength.Auto
+        });
+        container.RowDefinitions.Add(new()
+        {
+            Height = new(1, GridUnitType.Star)
+        });
         var controls = new StackPanel
         {
             Orientation = Orientation.Horizontal,

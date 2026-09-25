@@ -110,12 +110,12 @@ internal static partial class Program
             }
 
             // Plan and token checks finish before any original file is removed.
-            foreach (var(file, text)in writes)
+            foreach (var (file, text) in writes)
             {
                 File.WriteAllText(file, text, new UTF8Encoding(false));
             }
 
-            foreach (var(file, outputs)in moves)
+            foreach (var (file, outputs) in moves)
             {
                 if (!outputs.Contains(file, StringComparer.OrdinalIgnoreCase))
                 {
@@ -127,7 +127,7 @@ internal static partial class Program
             Directory.CreateDirectory(Path.Combine(root, "artifacts"));
             var report = moves.ToDictionary(pair => Path.GetRelativePath(root, pair.Key).Replace('\\', '/'), pair => pair.Value.Select(path => Path.GetRelativePath(root, path).Replace('\\', '/')).ToArray());
             File.WriteAllText(Path.Combine(root, "artifacts/source-organization.json"), JsonSerializer.Serialize(report, new JsonSerializerOptions { WriteIndented = true }) + "\n");
-            foreach (var(source, destinations)in report)
+            foreach (var (source, destinations) in report)
             {
                 Console.WriteLine($"{source} -> {string.Join(", ", destinations)}");
             }
@@ -155,7 +155,8 @@ internal static partial class Program
     {
         BaseTypeDeclarationSyntax type => type.Identifier.ValueText,
         DelegateDeclarationSyntax type => type.Identifier.ValueText,
-        _ => throw new ArgumentException("Not a type declaration.")};
+        _ => throw new ArgumentException("Not a type declaration.")
+    };
     private static string Key(MemberDeclarationSyntax node)
     {
         var ns = string.Join(".", node.Ancestors().OfType<BaseNamespaceDeclarationSyntax>().Reverse().Select(value => value.Name.ToString()));
@@ -200,7 +201,7 @@ internal static partial class Program
             var changed = false;
             foreach (var entry in document.Descendants().Where(element => element.Name.LocalName == "Compile").ToArray())
             {
-                var include = (string? )entry.Attribute("Include");
+                var include = (string?)entry.Attribute("Include");
                 if (include == null || include.IndexOfAny(['*', '?', '$', ';']) >= 0)
                 {
                     continue;
@@ -216,7 +217,7 @@ internal static partial class Program
                 {
                     var clone = new XElement(entry);
                     clone.SetAttributeValue("Include", Path.GetRelativePath(Path.GetDirectoryName(project)!, destination).Replace('\\', '/'));
-                    if (clone.Attribute("Link")is { } link && !link.Value.Contains("%("))
+                    if (clone.Attribute("Link") is { } link && !link.Value.Contains("%("))
                     {
                         var prefix = link.Value.Contains('/') ? link.Value[..(link.Value.LastIndexOf('/') + 1)] : "";
                         link.Value = prefix + Path.GetFileName(destination);

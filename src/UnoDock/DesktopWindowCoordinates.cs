@@ -81,7 +81,8 @@ public sealed partial class DesktopWindowCoordinates : IScreenWindowCoordinates,
         {
             Uno.UI.NativeElementHosting.X11NativeWindow window when OperatingSystem.IsLinux() => TranslateX11(Id(window.WindowId), RootX11(Id(window.WindowId))),
             Uno.UI.NativeElementHosting.Win32NativeWindow window when OperatingSystem.IsWindows() => Win32Origin(window.Hwnd),
-            _ => throw Unsupported()};
+            _ => throw Unsupported()
+        };
         return new(origin.X + local.X * Scale(source), origin.Y + local.Y * Scale(source));
 #endif
     }
@@ -107,16 +108,17 @@ public sealed partial class DesktopWindowCoordinates : IScreenWindowCoordinates,
         {
             Uno.UI.NativeElementHosting.X11NativeWindow window when OperatingSystem.IsLinux() => TranslateX11(Id(window.WindowId), RootX11(Id(window.WindowId))),
             Uno.UI.NativeElementHosting.Win32NativeWindow window when OperatingSystem.IsWindows() => Win32Origin(window.Hwnd),
-            _ => throw Unsupported()};
+            _ => throw Unsupported()
+        };
         point = new((screenPoint.X - origin.X) / Scale(destination), (screenPoint.Y - origin.Y) / Scale(destination));
 #endif
         return (destination.TransformToVisual(null).Inverse ?? throw new InvalidOperationException("Destination transform is not invertible.")).TransformPoint(point);
     }
 
     /// <summary>Returns false only when this provider has no native z-order query.
-    /// A successful query with a null root means the point is occluded by another
-    /// application or lies outside any registered Uno client window.</summary>
-    internal bool TryGetTopmostRoot(FrameworkElement source, Point point, out XamlRoot? hitRoot) => TryGetTopmostRootExcludingWindow(source, point, out hitRoot, null);
+        /// A successful query with a null root means the point is occluded by another
+        /// application or lies outside any registered Uno client window.</summary>
+        internal bool TryGetTopmostRoot(FrameworkElement source, Point point, out XamlRoot? hitRoot) => TryGetTopmostRootExcludingWindow(source, point, out hitRoot, null);
     internal static void HideNativeClientBeforeClose(Window window)
     {
 #if !WINDOWS
@@ -124,7 +126,7 @@ public sealed partial class DesktopWindowCoordinates : IScreenWindowCoordinates,
             return;
         try
         {
-            if (Uno.UI.Xaml.WindowHelper.GetNativeWindow(window)is not Uno.UI.NativeElementHosting.X11NativeWindow native)
+            if (Uno.UI.Xaml.WindowHelper.GetNativeWindow(window) is not Uno.UI.NativeElementHosting.X11NativeWindow native)
                 return;
             using var adapter = new DesktopWindowCoordinates();
             var connection = adapter.Connection;

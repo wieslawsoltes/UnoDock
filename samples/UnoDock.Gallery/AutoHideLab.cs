@@ -2,6 +2,7 @@ using UnoDock.Controls;
 using UnoDock.Themes;
 
 namespace UnoDock.Gallery;
+
 public sealed partial class GalleryPage
 {
     private void ShowAutoHideLab()
@@ -12,9 +13,18 @@ public sealed partial class GalleryPage
             RequestedTheme = ElementTheme.Light
         };
         var panel = new Grid();
-        panel.RowDefinitions.Add(new() { Height = GridLength.Auto });
-        panel.RowDefinitions.Add(new() { Height = GridLength.Auto });
-        panel.RowDefinitions.Add(new() { Height = new(1, GridUnitType.Star) });
+        panel.RowDefinitions.Add(new()
+        {
+            Height = GridLength.Auto
+        });
+        panel.RowDefinitions.Add(new()
+        {
+            Height = GridLength.Auto
+        });
+        panel.RowDefinitions.Add(new()
+        {
+            Height = new(1, GridUnitType.Star)
+        });
         var actions = new StackPanel
         {
             Orientation = Orientation.Horizontal,

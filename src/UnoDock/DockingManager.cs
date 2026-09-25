@@ -5,11 +5,12 @@ using UnoDock.Layout;
 using UnoDock.Themes;
 
 namespace UnoDock;
+
 [TemplatePart(Name = "PART_AutoHideArea")]
 [ContentProperty(Name = nameof(Layout))]
 public partial class DockingManager : Control, IDisposable, UnoDock.Compatibility.IWeakEventListener
 {
-    public static readonly DependencyProperty LayoutProperty = DependencyProperty.Register(nameof(Layout), typeof(LayoutRoot), typeof(DockingManager), new PropertyMetadata(null, (d, e) => ((DockingManager)d).ChangeLayout((LayoutRoot? )e.OldValue, (LayoutRoot? )e.NewValue)));
+    public static readonly DependencyProperty LayoutProperty = DependencyProperty.Register(nameof(Layout), typeof(LayoutRoot), typeof(DockingManager), new PropertyMetadata(null, (d, e) => ((DockingManager)d).ChangeLayout((LayoutRoot?)e.OldValue, (LayoutRoot?)e.NewValue)));
     public static readonly DockRoutedEvent PreviewDockEvent = new(nameof(PreviewDock)), DockedEvent = new(nameof(Docked)), PreviewFloatEvent = new(nameof(PreviewFloat)), FloatedEvent = new(nameof(Floated));
     private readonly UpdateBatch _updates;
     private readonly DesktopWindowCoordinates _ownedCoordinates = new();
@@ -26,7 +27,10 @@ public partial class DockingManager : Control, IDisposable, UnoDock.Compatibilit
     private bool _renderPending, _disposed, _syncActive, _reconcilingSources;
     private int _suspendSources;
     private ResourceDictionary? _themeResources;
-    internal LayoutRoot? LastRenderedLayout { get; private set; }
+    internal LayoutRoot? LastRenderedLayout
+    {
+        get; private set;
+    }
 
     public DockingManager()
     {
@@ -53,7 +57,10 @@ public partial class DockingManager : Control, IDisposable, UnoDock.Compatibilit
         }
     }
 
-    public ICrossWindowCoordinates? CrossWindowCoordinates { get; set; }
+    public ICrossWindowCoordinates? CrossWindowCoordinates
+    {
+        get; set;
+    }
 
     internal void SetAutoHideHost(LayoutAutoHideWindowControl? value) => SetAutoHideWindow(value!);
     public FloatingWindowMode FloatingWindowMode { get; set; } = FloatingWindowMode.Auto;
@@ -61,8 +68,8 @@ public partial class DockingManager : Control, IDisposable, UnoDock.Compatibilit
     public int RealizedContentCount => _items.Values.Count(i => i.IsViewCreated);
     public IEnumerator LogicalChildrenPublic => LogicalChildren;
     /// <summary>Snapshot of owned realized views and floating controls. This is a
-    /// compatibility enumeration, not a replacement for the native XAML logical tree.</summary>
-    protected virtual IEnumerator LogicalChildren => _items.Values.Select(i => i.ExistingView).OfType<object>().Concat(_floating).ToArray().GetEnumerator();
+        /// compatibility enumeration, not a replacement for the native XAML logical tree.</summary>
+        protected virtual IEnumerator LogicalChildren => _items.Values.Select(i => i.ExistingView).OfType<object>().Concat(_floating).ToArray().GetEnumerator();
 
     /// <summary>Called on first loading, after the derived constructor has completed.</summary>
     protected virtual void OnInitialized(EventArgs e)

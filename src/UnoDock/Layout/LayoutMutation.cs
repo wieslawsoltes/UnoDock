@@ -10,7 +10,7 @@ internal sealed class LayoutMutation : IDisposable
     private readonly List<IDisposable> _updates = [];
     private List<Exception>? _failures;
     private bool _disposed;
-    internal LayoutMutation(params LayoutRoot? [] roots)
+    internal LayoutMutation(params LayoutRoot?[] roots)
     {
         var distinct = new HashSet<LayoutRoot>(ReferenceEqualityComparer.Instance);
         try
@@ -33,7 +33,7 @@ internal sealed class LayoutMutation : IDisposable
 
     internal int FailureCount => _failures?.Count ?? 0;
 
-    internal static void Execute(Action<LayoutMutation> action, params LayoutRoot? [] roots)
+    internal static void Execute(Action<LayoutMutation> action, params LayoutRoot?[] roots)
     {
         using var mutation = new LayoutMutation(roots);
         mutation.Run(() => action(mutation));

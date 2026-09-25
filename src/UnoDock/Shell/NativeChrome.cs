@@ -11,7 +11,7 @@ internal static class NativeChrome
 #if WINDOWS
         return WinRT.Interop.WindowNative.GetWindowHandle(window);
 #else
-        return Uno.UI.Xaml.WindowHelper.GetNativeWindow(window)is Uno.UI.NativeElementHosting.Win32NativeWindow native ? native.Hwnd : 0;
+        return Uno.UI.Xaml.WindowHelper.GetNativeWindow(window) is Uno.UI.NativeElementHosting.Win32NativeWindow native ? native.Hwnd : 0;
 #endif
     }
 

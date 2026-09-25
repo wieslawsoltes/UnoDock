@@ -33,7 +33,7 @@ internal static class LayoutXml
     {
         AssignIds(element);
         var node = Capture(element);
-        foreach (var(key, value)in node.Attributes)
+        foreach (var (key, value) in node.Attributes)
             writer.WriteAttributeString(key, value);
         foreach (var child in node.Children)
             LayoutSnapshotXml.Write(child, writer);
@@ -180,7 +180,7 @@ internal static class LayoutXml
         string? S(string key) => node.Attributes.GetValueOrDefault(key);
         void D(string key, Action<double> set)
         {
-            if (S(key)is { } text)
+            if (S(key) is { } text)
             {
                 if (!double.TryParse(text, NumberStyles.Float, Invariant, out var value) || !double.IsFinite(value))
                     throw new XmlException("Invalid finite number: " + key);
@@ -190,7 +190,7 @@ internal static class LayoutXml
 
         void B(string key, Action<bool> set)
         {
-            if (S(key)is { } text)
+            if (S(key) is { } text)
             {
                 if (text == "1")
                     set(true);
@@ -203,19 +203,20 @@ internal static class LayoutXml
             }
         }
 
-        int I(string key, int fallback = 0) => S(key)is not { } text ? fallback : int.TryParse(text, NumberStyles.Integer, Invariant, out var value) ? value : throw new XmlException("Invalid integer: " + key);
+        int I(string key, int fallback = 0) => S(key) is not { } text ? fallback : int.TryParse(text, NumberStyles.Integer, Invariant, out var value) ? value : throw new XmlException("Invalid integer: " + key);
         element.SerializationId = S("Id") ?? "";
-        if (element is ILayoutOrientableGroup orientable && S("Orientation")is { } o)
+        if (element is ILayoutOrientableGroup orientable && S("Orientation") is { } o)
             orientable.Orientation = o switch
             {
                 "Horizontal" => Orientation.Horizontal,
                 "Vertical" => Orientation.Vertical,
-                _ => throw new XmlException("Invalid orientation.")};
+                _ => throw new XmlException("Invalid orientation.")
+            };
         if (element is ILayoutPositionableElement position)
         {
-            if (S("DockWidth")is { } width)
+            if (S("DockWidth") is { } width)
                 position.DockWidth = ParseLength(width);
-            if (S("DockHeight")is { } height)
+            if (S("DockHeight") is { } height)
                 position.DockHeight = ParseLength(height);
             D("DockMinWidth", v => position.DockMinWidth = v);
             D("DockMinHeight", v => position.DockMinHeight = v);
@@ -240,7 +241,7 @@ internal static class LayoutXml
             D("FloatingWidth", v => content.FloatingWidth = v);
             D("FloatingHeight", v => content.FloatingHeight = v);
             B("IsMaximized", v => content.IsMaximized = v);
-            if (S("LastActivationTimeStamp")is { } dt)
+            if (S("LastActivationTimeStamp") is { } dt)
                 content.LastActivationTimeStamp = ParseTimestamp(dt);
             B("IsLastFocusedDocument", v => content.IsLastFocusedDocument = v);
             if (content is LayoutDocument document)
@@ -374,7 +375,8 @@ internal static class LayoutXml
         nameof(LayoutAnchorable) => Build<LayoutAnchorable>(node),
         nameof(LayoutDocumentFloatingWindow) => Build<LayoutDocumentFloatingWindow>(node),
         nameof(LayoutAnchorableFloatingWindow) => Build<LayoutAnchorableFloatingWindow>(node),
-        _ => throw new XmlException("Unknown layout node: " + node.Name)};
+        _ => throw new XmlException("Unknown layout node: " + node.Name)
+    };
     private static void FixReferences(LayoutRoot root)
     {
         var ids = new Dictionary<string, ILayoutContainer>(StringComparer.Ordinal);

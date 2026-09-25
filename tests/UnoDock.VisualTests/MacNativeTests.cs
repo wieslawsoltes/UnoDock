@@ -32,8 +32,16 @@ internal static class MacNativeTests
                 Content = content,
                 Title = "UnoDock AppKit coordinate basis"
             };
-            window.AppWindow.Move(new() { X = 80, Y = 90 });
-            window.AppWindow.Resize(new() { Width = 600, Height = 450 });
+            window.AppWindow.Move(new()
+            {
+                X = 80,
+                Y = 90
+            });
+            window.AppWindow.Resize(new()
+            {
+                Width = 600,
+                Height = 450
+            });
             window.Activate();
             using var registration = Microsoft.Windows.Shell.SystemCommands.RegisterWindow(window);
             using var coordinates = new DesktopWindowCoordinates();
@@ -192,7 +200,7 @@ internal static class MacNativeTests
                     }, _ =>
                     {
                     });
-                    return (Exception? )null;
+                    return (Exception?)null;
                 }
                 catch (TargetInvocationException e)
                 {

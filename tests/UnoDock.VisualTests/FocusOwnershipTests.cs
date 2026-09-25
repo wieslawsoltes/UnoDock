@@ -4,6 +4,7 @@ using UnoDock.Controls;
 using UnoDock.Layout;
 
 namespace UnoDock.Testing;
+
 internal static class FocusOwnershipTests
 {
     internal static async Task<int> Run(string output)
@@ -196,7 +197,11 @@ internal static class FocusOwnershipTests
                 Content = Host,
                 Title = "UnoDock focus ownership acceptance"
             };
-            _window.AppWindow.Resize(new() { Width = 1100, Height = 800 });
+            _window.AppWindow.Resize(new()
+            {
+                Width = 1100,
+                Height = 800
+            });
             _window.Activate();
         }
 

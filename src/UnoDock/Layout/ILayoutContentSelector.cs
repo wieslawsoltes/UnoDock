@@ -1,9 +1,16 @@
 namespace UnoDock.Layout;
+
 public interface ILayoutContentSelector
 {
-    LayoutContent? SelectedContent { get; }
+    LayoutContent? SelectedContent
+    {
+        get;
+    }
 
-    int SelectedContentIndex { get; set; }
+    int SelectedContentIndex
+    {
+        get; set;
+    }
 
     int IndexOf(LayoutContent content);
 }

@@ -5,6 +5,7 @@ using UnoDock.Layout;
 using UnoDock.Compatibility;
 
 namespace UnoDock.Controls;
+
 public abstract partial class LayoutTabItemBase : DockInputControl
 {
     public static readonly DependencyProperty ModelProperty = DependencyProperty.Register(nameof(Model), typeof(LayoutContent), typeof(LayoutTabItemBase), new PropertyMetadata(null, (d, e) => ((LayoutTabItemBase)d).OnModelChanged(e)));
@@ -24,8 +25,11 @@ public abstract partial class LayoutTabItemBase : DockInputControl
     };
     private readonly DockChromeButton _close;
     private DockingManager? _manager;
-    public LayoutContent? Model { get => (LayoutContent? )GetValue(ModelProperty); set => SetValue(ModelProperty, value); }
-    public LayoutItem? LayoutItem => (LayoutItem? )GetValue(LayoutItemProperty);
+    public LayoutContent? Model
+    {
+        get => (LayoutContent?)GetValue(ModelProperty); set => SetValue(ModelProperty, value);
+    }
+    public LayoutItem? LayoutItem => (LayoutItem?)GetValue(LayoutItemProperty);
 
     protected LayoutTabItemBase()
     {
@@ -35,12 +39,24 @@ public abstract partial class LayoutTabItemBase : DockInputControl
         Height = 20;
         HorizontalContentAlignment = HorizontalAlignment.Stretch;
         VerticalContentAlignment = VerticalAlignment.Stretch;
-        _chrome.ColumnDefinitions.Add(new() { Width = new(1, GridUnitType.Star) });
-        _chrome.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
+        _chrome.ColumnDefinitions.Add(new()
+        {
+            Width = new(1, GridUnitType.Star)
+        });
+        _chrome.ColumnDefinitions.Add(new()
+        {
+            Width = GridLength.Auto
+        });
         _label = DockChrome.Button("", ActivateFromKeyboard);
         var header = new Grid();
-        header.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
-        header.ColumnDefinitions.Add(new() { Width = new(1, GridUnitType.Star) });
+        header.ColumnDefinitions.Add(new()
+        {
+            Width = GridLength.Auto
+        });
+        header.ColumnDefinitions.Add(new()
+        {
+            Width = new(1, GridUnitType.Star)
+        });
         header.Children.Add(_icon);
         Grid.SetColumn(_header, 1);
         header.Children.Add(_header);

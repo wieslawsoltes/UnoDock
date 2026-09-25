@@ -2,6 +2,7 @@ using UnoDock.Internal;
 using UnoDock.Layout;
 
 namespace UnoDock.Controls;
+
 public enum OverlayWindowDropTargetType
 {
     DockingManagerDockLeft = 0,

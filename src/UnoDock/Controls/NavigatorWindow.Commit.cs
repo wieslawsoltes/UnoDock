@@ -2,6 +2,7 @@ using System.ComponentModel;
 using UnoDock.Layout;
 
 namespace UnoDock.Controls;
+
 public partial class NavigatorWindow
 {
     private bool _committingSelection;
@@ -27,21 +28,21 @@ public partial class NavigatorWindow
     }
 
     /// <summary>Capture a one-use activation before removing the view. The surface
-    /// supplies its closing-generation fence; ordinary EndSession does not revoke
-    /// that authorized close, but a replacement session or workspace does.</summary>
-    internal Action? CaptureSelectionCommit(Func<bool> ownsOperation, bool afterDetach) => CaptureActivation(ownsOperation, afterDetach, null);
+        /// supplies its closing-generation fence; ordinary EndSession does not revoke
+        /// that authorized close, but a replacement session or workspace does.</summary>
+        internal Action? CaptureSelectionCommit(Func<bool> ownsOperation, bool afterDetach) => CaptureActivation(ownsOperation, afterDetach, null);
     /// <summary>Install the activation guards before explicit-close detachment.
-    /// The caller must ensure detachment even when there is no eligible command.</summary>
-    internal void CommitClosingSelection(Func<bool> ownsOperation, Action detach)
+        /// The caller must ensure detachment even when there is no eligible command.</summary>
+        internal void CommitClosingSelection(Func<bool> ownsOperation, Action detach)
     {
         ArgumentNullException.ThrowIfNull(detach);
         CaptureActivation(ownsOperation, false, null, detach)?.Invoke();
     }
 
     /// <summary>Direct property assignment checks CanExecute while still visible.
-    /// A veto/query failure must not dismiss the navigator. Successful queries run
-    /// the category-specific hide/close stage before the guarded command executes.</summary>
-    internal void CommitDirectSelection(Func<bool> ownsOperation, Action prepareExecution)
+        /// A veto/query failure must not dismiss the navigator. Successful queries run
+        /// the category-specific hide/close stage before the guarded command executes.</summary>
+        internal void CommitDirectSelection(Func<bool> ownsOperation, Action prepareExecution)
     {
         ArgumentNullException.ThrowIfNull(prepareExecution);
         CaptureActivation(ownsOperation, false, prepareExecution)?.Invoke();

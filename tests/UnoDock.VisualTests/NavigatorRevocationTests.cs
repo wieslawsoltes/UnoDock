@@ -15,7 +15,11 @@ internal static class NavigatorRevocationTests
         {
             Title = "UnoDock navigator revocation acceptance"
         };
-        window.AppWindow.Resize(new() { Width = 1100, Height = 800 });
+        window.AppWindow.Resize(new()
+        {
+            Width = 1100,
+            Height = 800
+        });
         var mutations = new (string Name, bool Revokes, Action<Fixture> Apply)[]
         {
             ("preview changed", true, f => f.Nav.PreviewDocument(f.Document(f.A))),
@@ -315,18 +319,18 @@ internal static class NavigatorRevocationTests
         Check.True(predicate(), "Navigator revocation fixture did not become ready.");
     }
 
-    private static object? Call(object target, string name, params object? [] args)
+    private static object? Call(object target, string name, params object?[] args)
     {
         try
         {
             return target.GetType().GetMethod(name, BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(target, args);
         }
-        catch (TargetInvocationException error)when (error.InnerException != null)
+        catch (TargetInvocationException error) when (error.InnerException != null)
         {
             ExceptionDispatchInfo.Capture(error.InnerException).Throw();
             throw;
         }
     }
 
-    private static object? Surface(DockingManager host, string name, params object? [] args) => Call(typeof(DockingManager).GetProperty("Surface", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(host)!, name, args);
+    private static object? Surface(DockingManager host, string name, params object?[] args) => Call(typeof(DockingManager).GetProperty("Surface", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(host)!, name, args);
 }

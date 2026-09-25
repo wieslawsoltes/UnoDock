@@ -6,7 +6,7 @@ internal static class ChromeTests
     internal static void Register(TestRunner tests)
     {
         var bounds = new DockRect(0, 0, 800, 600);
-        foreach (var(point, hit)in new[]
+        foreach (var (point, hit) in new[]
         {
             (new DockPoint(0, 0), ChromeHit.TopLeft),
             (new DockPoint(400, 0), ChromeHit.Top),

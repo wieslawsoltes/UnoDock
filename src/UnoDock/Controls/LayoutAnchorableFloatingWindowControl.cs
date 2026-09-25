@@ -28,9 +28,18 @@ public class LayoutAnchorableFloatingWindowControl : LayoutFloatingWindowControl
     }
 
     public override ILayoutElement Model => _model;
-    public LayoutItem? SingleContentLayoutItem { get => (LayoutItem? )GetValue(SingleContentLayoutItemProperty); set => SetValue(SingleContentLayoutItemProperty, value); }
-    public ICommand CloseWindowCommand { get; private set; }
-    public ICommand HideWindowCommand { get; private set; }
+    public LayoutItem? SingleContentLayoutItem
+    {
+        get => (LayoutItem?)GetValue(SingleContentLayoutItemProperty); set => SetValue(SingleContentLayoutItemProperty, value);
+    }
+    public ICommand CloseWindowCommand
+    {
+        get; private set;
+    }
+    public ICommand HideWindowCommand
+    {
+        get; private set;
+    }
 
     protected virtual void OnSingleContentLayoutItemChanged(DependencyPropertyChangedEventArgs e)
     {

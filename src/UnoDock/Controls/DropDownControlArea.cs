@@ -4,6 +4,7 @@ using UnoDock.Compatibility;
 using UnoDock.Internal;
 
 namespace UnoDock.Controls;
+
 public class DropDownControlArea : UserControl
 {
     public static readonly DependencyProperty DropDownContextMenuProperty = DependencyProperty.Register(nameof(DropDownContextMenu), typeof(MenuFlyout), typeof(DropDownControlArea), new PropertyMetadata(null, (d, _) => ((DropDownControlArea)d)._session?.Close()));
@@ -12,8 +13,14 @@ public class DropDownControlArea : UserControl
     private uint? _rightPointer;
     private bool _downHandled, _suppressMouseRightTap;
     private long _inputGeneration;
-    public MenuFlyout? DropDownContextMenu { get => (MenuFlyout? )GetValue(DropDownContextMenuProperty); set => SetValue(DropDownContextMenuProperty, value); }
-    public object? DropDownContextMenuDataContext { get => GetValue(DropDownContextMenuDataContextProperty); set => SetValue(DropDownContextMenuDataContextProperty, value); }
+    public MenuFlyout? DropDownContextMenu
+    {
+        get => (MenuFlyout?)GetValue(DropDownContextMenuProperty); set => SetValue(DropDownContextMenuProperty, value);
+    }
+    public object? DropDownContextMenuDataContext
+    {
+        get => GetValue(DropDownContextMenuDataContextProperty); set => SetValue(DropDownContextMenuDataContextProperty, value);
+    }
 
     public DropDownControlArea()
     {
@@ -72,8 +79,8 @@ public class DropDownControlArea : UserControl
     }
 
     /// <summary>Local compatibility stage, not a synthetic WPF tunnel. Mark Handled
-    /// or omit the base call to suppress the default context-menu opening.</summary>
-    protected virtual void OnPreviewMouseRightButtonUp(DockMouseButtonEventArgs e)
+        /// or omit the base call to suppress the default context-menu opening.</summary>
+        protected virtual void OnPreviewMouseRightButtonUp(DockMouseButtonEventArgs e)
     {
         if (e.Handled)
             return;

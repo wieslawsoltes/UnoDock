@@ -2,13 +2,14 @@ using UnoDock.Controls;
 using UnoDock.Layout;
 
 namespace UnoDock.Internal;
+
 internal sealed partial class DockSurface
 {
     internal IReadOnlyList<DockGuideTarget> GetDockingGuides(LayoutContent content, Point point) => BuildGuides(content, FindDropArea(point));
     private IReadOnlyList<DockGuideTarget> BuildGuides(LayoutContent content, IModelDropArea? area)
     {
         if (_disposed || Manager.DockingGuideMode == DockingGuideMode.EdgesOnly || !ReferenceEquals(content.Root, Manager.Layout) || !DockOperations.CanMove(content) || area?.Model is not ILayoutGroup target)
-            return[];
+            return [];
         var floating = target.FindParent<LayoutFloatingWindow>();
         var window = floating == null ? null : Manager.FloatingWindows.FirstOrDefault(w => ReferenceEquals(w.Model, floating));
         // Native pane glyphs are laid out inside their own physical host, then represented
@@ -20,9 +21,9 @@ internal sealed partial class DockSurface
             {
                 host = DockCoordinates.Bounds(window, new(0, 0, window.ActualWidth, window.ActualHeight), this, Manager.CrossWindowCoordinates);
             }
-            catch (Exception e)when (DockCoordinates.IsUnavailable(e))
+            catch (Exception e) when (DockCoordinates.IsUnavailable(e))
             {
-                return[];
+                return [];
             }
         }
 
@@ -74,8 +75,8 @@ internal sealed partial class DockSurface
 
         var plan = ResolveDrop(_dragContent, point, out var guides);
         var windows = Manager.FloatingWindows.ToArray();
-        var local = guides.Where(g => g.Plan.Target.FindParent<LayoutFloatingWindow>()is not { } f || windows.All(w => !ReferenceEquals(w.Model, f) || w.NativeWindow == null)).ToArray();
-        var native = plan?.Target.FindParent<LayoutFloatingWindow>()is { } model ? windows.FirstOrDefault(w => ReferenceEquals(w.Model, model) && w.NativeWindow != null) : null;
+        var local = guides.Where(g => g.Plan.Target.FindParent<LayoutFloatingWindow>() is not { } f || windows.All(w => !ReferenceEquals(w.Model, f) || w.NativeWindow == null)).ToArray();
+        var native = plan?.Target.FindParent<LayoutFloatingWindow>() is { } model ? windows.FirstOrDefault(w => ReferenceEquals(w.Model, model) && w.NativeWindow != null) : null;
         _overlay.ShowGuides(local, native == null ? plan : null, Manager);
         foreach (var window in windows)
         {

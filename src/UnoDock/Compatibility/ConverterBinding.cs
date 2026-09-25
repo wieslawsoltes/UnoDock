@@ -25,9 +25,9 @@ public sealed class ConverterBinding : IDisposable
     private int _targetWriteDepth, _sourceWriteDepth, _queued;
     private volatile bool _disposed;
     /// <summary>Attaches and performs the initial source-to-target transfer. A null source
-    /// property filter observes every property, supporting multi-value projection delegates.
-    /// The source and target delegates always execute on the creating UI thread.</summary>
-    public ConverterBinding(FrameworkElement target, DependencyProperty targetProperty, Func<object?> readSource, Func<object?, object?> convert, IEnumerable<INotifyPropertyChanged>? sources = null, string? sourceProperty = null, Action<object?>? writeSource = null, Func<object?, object?>? convertBack = null, object? fallbackValue = null, bool useFallbackValue = false)
+        /// property filter observes every property, supporting multi-value projection delegates.
+        /// The source and target delegates always execute on the creating UI thread.</summary>
+        public ConverterBinding(FrameworkElement target, DependencyProperty targetProperty, Func<object?> readSource, Func<object?, object?> convert, IEnumerable<INotifyPropertyChanged>? sources = null, string? sourceProperty = null, Action<object?>? writeSource = null, Func<object?, object?>? convertBack = null, object? fallbackValue = null, bool useFallbackValue = false)
     {
         ArgumentNullException.ThrowIfNull(target);
         ArgumentNullException.ThrowIfNull(targetProperty);

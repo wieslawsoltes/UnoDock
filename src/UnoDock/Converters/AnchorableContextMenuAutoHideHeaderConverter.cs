@@ -6,6 +6,7 @@ using UnoDock.Controls;
 using UnoDock.Layout;
 
 namespace UnoDock.Converters;
+
 public class AnchorableContextMenuAutoHideHeaderConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => value is true ? Properties.Resources.Window_Restore : Properties.Resources.Anchorable_AutoHide;

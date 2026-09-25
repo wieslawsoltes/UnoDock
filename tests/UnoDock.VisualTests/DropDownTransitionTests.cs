@@ -3,13 +3,14 @@ using UnoDock.Controls;
 using DockButton = UnoDock.Controls.DropDownButton;
 
 namespace UnoDock.Testing;
+
 internal static class DropDownTransitionTests
 {
     private sealed class Trigger
     {
         private readonly DockButton? _button;
         private readonly DropDownControlArea? _area;
-        internal Control View => (Control? )_button ?? _area!;
+        internal Control View => (Control?)_button ?? _area!;
 
         internal Trigger(bool area)
         {
@@ -94,7 +95,7 @@ internal static class DropDownTransitionTests
                 t.Close();
                 var next = NewMenu(out var row);
                 t.Menu = next;
-                var context = new object ();
+                var context = new object();
                 t.Context = context;
                 t.Open();
                 await Wait(() => next.IsOpen);
@@ -191,7 +192,7 @@ internal static class DropDownTransitionTests
             Add("native closing veto preserves context and checked state", async t =>
             {
                 t.Menu = NewMenu(out var row);
-                var context = new object ();
+                var context = new object();
                 t.Context = context;
                 var cancel = true;
                 t.Menu.Closing += (_, e) => e.Cancel = cancel;
@@ -250,7 +251,7 @@ internal static class DropDownTransitionTests
             Add("one-shot native closing exception cleans up and permits reopening", async t =>
             {
                 t.Menu = NewMenu(out var row);
-                t.Context = new object ();
+                t.Context = new object();
                 var fail = true;
                 t.Menu.Closing += (_, _) =>
                 {
@@ -272,7 +273,7 @@ internal static class DropDownTransitionTests
             Add("persistent native closing failures preserve scope and do not poison future openings", async t =>
             {
                 t.Menu = NewMenu(out var row);
-                var context = new object ();
+                var context = new object();
                 t.Context = context;
                 var fail = true;
                 t.Menu.Closing += (_, _) =>
@@ -314,7 +315,7 @@ internal static class DropDownTransitionTests
                         row
                     }
                 };
-                var context = new object ();
+                var context = new object();
                 t.Context = context;
                 t.Open();
                 await Wait(() => t.Menu.IsOpen);
@@ -330,7 +331,7 @@ internal static class DropDownTransitionTests
                 {
                     Text = "Explicit context"
                 };
-                var context = new object ();
+                var context = new object();
                 t.Menu = new ContextMenuEx
                 {
                     ItemsSource = new[]
@@ -339,11 +340,11 @@ internal static class DropDownTransitionTests
                     },
                     MenuDataContext = context
                 };
-                t.Context = new object ();
+                t.Context = new object();
                 t.Open();
                 await Wait(() => t.Menu.IsOpen);
                 Check.Same(context, row.DataContext);
-                t.Context = new object ();
+                t.Context = new object();
                 Check.Same(context, row.DataContext);
             });
             void Add(string name, Func<Trigger, Task> body) => tests.Test((area ? "area fence: " : "button fence: ") + name, async () =>

@@ -2,6 +2,7 @@ using UnoDock.Controls;
 using Path = Microsoft.UI.Xaml.Shapes.Path;
 
 namespace UnoDock.Internal;
+
 internal sealed class DockGuideVisual : DockGuideContainer
 {
     private readonly Border _pane, _selection, _title;

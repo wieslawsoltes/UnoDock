@@ -6,6 +6,7 @@ using UnoDock.VisualValidation;
 using System.Xml.Linq;
 
 namespace UnoDock.Testing;
+
 internal static class MvvmWorkspaceTests
 {
     internal static async Task<int> Run(string output)
@@ -24,7 +25,11 @@ internal static class MvvmWorkspaceTests
             Content = dock,
             Title = "UnoDock MVVM acceptance"
         };
-        window.AppWindow.Resize(new() { Width = 1100, Height = 800 });
+        window.AppWindow.Resize(new()
+        {
+            Width = 1100,
+            Height = 800
+        });
         window.Activate();
         try
         {
@@ -501,8 +506,14 @@ internal static class MvvmWorkspaceTests
     private sealed class MemoryStore : IWorkspaceStorage
     {
         public List<(string Id, string Text)> Writes { get; } = [];
-        public TaskCompletionSource<bool>? Hold { get; set; }
-        public Exception? Failure { get; set; }
+        public TaskCompletionSource<bool>? Hold
+        {
+            get; set;
+        }
+        public Exception? Failure
+        {
+            get; set;
+        }
 
         public async Task WriteAsync(string contentId, string text)
         {

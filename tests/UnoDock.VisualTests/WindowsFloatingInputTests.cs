@@ -194,8 +194,16 @@ internal static class WindowsFloatingInputTests
                 Title = "UnoDock dedicated native input acceptance"
             };
             _registration = Microsoft.Windows.Shell.SystemCommands.RegisterWindow(_window);
-            _window.AppWindow.Move(new() { X = 20, Y = 20 });
-            _window.AppWindow.Resize(new() { Width = 1050, Height = 700 });
+            _window.AppWindow.Move(new()
+            {
+                X = 20,
+                Y = 20
+            });
+            _window.AppWindow.Resize(new()
+            {
+                Width = 1050,
+                Height = 700
+            });
             _window.Activate();
         }
 
@@ -277,7 +285,17 @@ internal static class WindowsFloatingInputTests
 
         internal void Press()
         {
-            Send(new() { Type = 0, Data = new() { Mouse = new() { Flags = 2 } } });
+            Send(new()
+            {
+                Type = 0,
+                Data = new()
+                {
+                    Mouse = new()
+                    {
+                        Flags = 2
+                    }
+                }
+            });
             _pressed = true;
         }
 
@@ -285,13 +303,33 @@ internal static class WindowsFloatingInputTests
         {
             if (!_pressed)
                 return;
-            Send(new() { Type = 0, Data = new() { Mouse = new() { Flags = 4 } } });
+            Send(new()
+            {
+                Type = 0,
+                Data = new()
+                {
+                    Mouse = new()
+                    {
+                        Flags = 4
+                    }
+                }
+            });
             _pressed = false;
         }
 
         internal void KeyDown(ushort key)
         {
-            Send(new() { Type = 1, Data = new() { Keyboard = new() { Key = key } } });
+            Send(new()
+            {
+                Type = 1,
+                Data = new()
+                {
+                    Keyboard = new()
+                    {
+                        Key = key
+                    }
+                }
+            });
             _keys.Add(key);
         }
 
@@ -299,7 +337,18 @@ internal static class WindowsFloatingInputTests
         {
             if (!_keys.Remove(key))
                 return;
-            Send(new() { Type = 1, Data = new() { Keyboard = new() { Key = key, Flags = 2 } } });
+            Send(new()
+            {
+                Type = 1,
+                Data = new()
+                {
+                    Keyboard = new()
+                    {
+                        Key = key,
+                        Flags = 2
+                    }
+                }
+            });
         }
 
         private static void Send(INPUT input)
@@ -308,7 +357,7 @@ internal static class WindowsFloatingInputTests
                 throw new Win32Exception(Marshal.GetLastPInvokeError(), "Dedicated SendInput injection failed.");
         }
 
-        private static nint Handle(Window window) => Uno.UI.Xaml.WindowHelper.GetNativeWindow(window)is Uno.UI.NativeElementHosting.Win32NativeWindow native ? native.Hwnd : throw new InvalidOperationException("A real Win32 Uno host is required.");
+        private static nint Handle(Window window) => Uno.UI.Xaml.WindowHelper.GetNativeWindow(window) is Uno.UI.NativeElementHosting.Win32NativeWindow native ? native.Hwnd : throw new InvalidOperationException("A real Win32 Uno host is required.");
         public void Dispose()
         {
             try

@@ -2,6 +2,7 @@ using System.Collections;
 using UnoDock.Layout;
 
 namespace UnoDock.Testing;
+
 public static class SourceIdentityTests
 {
     public static Task<int> Run(string output)
@@ -80,7 +81,7 @@ public static class SourceIdentityTests
                     },
                     After = () => oldAfter++
                 };
-                Set(manager, new[] { new object () }, tools);
+                Set(manager, new[] { new object() }, tools);
                 Check.Equal(1, Models(manager, tools).Length);
                 Check.Equal(0, oldAfter);
                 Check.Equal(1, newAfter);
@@ -100,7 +101,7 @@ public static class SourceIdentityTests
                     },
                     After = () => after++
                 };
-                var value = new object ();
+                var value = new object();
                 Set(manager, new[] { value }, tools);
                 Check.Equal(2, before);
                 Check.Equal(1, after);
@@ -109,7 +110,7 @@ public static class SourceIdentityTests
             tests.Test(prefix + "replacement during GetEnumerator never evaluates stale Current", () =>
             {
                 using var manager = new DockingManager();
-                var current = new object ();
+                var current = new object();
                 Set(manager, new EnumeratorReplacement(() => Set(manager, new[] { current }, tools)), tools);
                 Check.Same(current, Models(manager, tools).Single().Content);
             });

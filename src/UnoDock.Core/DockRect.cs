@@ -1,4 +1,5 @@
 namespace UnoDock.Core;
+
 public readonly record struct DockRect(double X, double Y, double Width, double Height)
 {
     public double Right => X + Width;

@@ -5,9 +5,13 @@ using UnoDock.Layout;
 using UnoDock.Compatibility;
 
 namespace UnoDock.Controls;
+
 public class AnchorablePaneTitle : LayoutAnchorableTabItem
 {
-    public new LayoutAnchorable? Model { get => base.Model as LayoutAnchorable; set => base.Model = value; }
+    public new LayoutAnchorable? Model
+    {
+        get => base.Model as LayoutAnchorable; set => base.Model = value;
+    }
 
     public AnchorablePaneTitle()
     {

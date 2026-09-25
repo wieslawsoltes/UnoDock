@@ -7,6 +7,7 @@ using UnoDock.Controls;
 using UnoDock.Layout;
 
 namespace UnoDock.Testing;
+
 internal static class AutoHideChromeTests
 {
     internal static void Register(TestRunner tests, DockingManager dock, FrameworkElement scene, Func<LayoutAutoHideWindowControl> window, Func<LayoutAnchorable> model, Func<Task> reset, Func<Task> settle)

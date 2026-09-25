@@ -3,11 +3,15 @@ using System.Xml.Schema;
 using System.Xml.Serialization;
 
 namespace UnoDock.Layout;
+
 public abstract class LayoutGroup<T> : LayoutGroupBase, ILayoutGroup, IXmlSerializable, ILayoutElementWithVisibility where T : class, ILayoutElement
 {
     private bool _visible = true;
     protected LayoutGroup() => Children = new OwnedCollection<T>(this, Changed);
-    public ObservableCollection<T> Children { get; }
+    public ObservableCollection<T> Children
+    {
+        get;
+    }
 
     IEnumerable<ILayoutElement> ILayoutContainer.Children => Children;
     public int ChildrenCount => Children.Count;

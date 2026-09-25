@@ -102,7 +102,11 @@ public static class VisualParityTests
             Content = dock,
             Title = "UnoDock visual regression controls"
         };
-        window.AppWindow.Resize(new() { Width = 1064, Height = 740 });
+        window.AppWindow.Resize(new()
+        {
+            Width = 1064,
+            Height = 740
+        });
         window.Activate();
         try
         {
@@ -125,7 +129,12 @@ public static class VisualParityTests
                 var pane = (LayoutAnchorablePane)tool.Parent!;
                 var presenter = dock.GetLayoutItemFromModel(tool).View;
                 Check.False(dock.FindVisualChildren<LayoutTabItemBase>().Any(t => ReferenceEquals(t.Model, tool) && Visible(t)));
-                pane.Children.Add(new() { Title = "Second", ContentId = "extra", Content = new TextBox() });
+                pane.Children.Add(new()
+                {
+                    Title = "Second",
+                    ContentId = "extra",
+                    Content = new TextBox()
+                });
                 await Settle();
                 Check.True(Visible(Tab(tool)));
                 Check.Same(presenter, dock.GetLayoutItemFromModel(tool).View);
@@ -357,8 +366,16 @@ public static class VisualParityTests
                 {
                     Content = grid
                 };
-                second.AppWindow.Move(new() { X = 1180, Y = 83 });
-                second.AppWindow.Resize(new() { Width = 400, Height = 300 });
+                second.AppWindow.Move(new()
+                {
+                    X = 1180,
+                    Y = 83
+                });
+                second.AppWindow.Resize(new()
+                {
+                    Width = 400,
+                    Height = 300
+                });
                 second.Activate();
                 try
                 {
@@ -424,11 +441,11 @@ public static class VisualParityTests
         var actual = XDocument.Load(Path.Combine(output, name + ".xml"));
         // Text rendering and the length of a rotated label depend on OS fonts. Compare
         // host/editor/rail rectangles, not font-dependent glyph or label pixel extents.
-        static bool Geometry(XElement e) => (string? )e.Attribute("type")is "LayoutPanelControl" or "LayoutDocumentPaneControl" or "LayoutAnchorablePaneControl" or "LayoutAnchorSideControl" or "TextBox" && double.Parse(e.Attribute("width")!.Value, CultureInfo.InvariantCulture) > 0 && double.Parse(e.Attribute("height")!.Value, CultureInfo.InvariantCulture) > 0;
-        var grouped = actual.Root!.Elements("Element").Where(Geometry).GroupBy(e => ((string? )e.Attribute("type"), (string? )e.Attribute("content"))).ToDictionary(g => g.Key, g => new Queue<XElement>(g));
+        static bool Geometry(XElement e) => (string?)e.Attribute("type") is "LayoutPanelControl" or "LayoutDocumentPaneControl" or "LayoutAnchorablePaneControl" or "LayoutAnchorSideControl" or "TextBox" && double.Parse(e.Attribute("width")!.Value, CultureInfo.InvariantCulture) > 0 && double.Parse(e.Attribute("height")!.Value, CultureInfo.InvariantCulture) > 0;
+        var grouped = actual.Root!.Elements("Element").Where(Geometry).GroupBy(e => ((string?)e.Attribute("type"), (string?)e.Attribute("content"))).ToDictionary(g => g.Key, g => new Queue<XElement>(g));
         foreach (var element in expected.Root!.Elements("Element").Where(Geometry))
         {
-            var key = ((string? )element.Attribute("type"), (string? )element.Attribute("content"));
+            var key = ((string?)element.Attribute("type"), (string?)element.Attribute("content"));
             Check.True(grouped.TryGetValue(key, out var queue) && queue.Count > 0, "Missing arranged element " + key);
             var observed = grouped[key].Dequeue();
             foreach (var dimension in new[]

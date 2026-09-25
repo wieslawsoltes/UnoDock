@@ -105,7 +105,7 @@ tests.Test("randomized resize conservation (5000 cases)", () =>
     }
 });
 var area = new DockRect(10, 20, 400, 200);
-foreach (var(point, expected)in new[]
+foreach (var (point, expected) in new[]
 {
     (new DockPoint(11, 120), DockPosition.Left),
     (new DockPoint(409, 120), DockPosition.Right),
@@ -207,7 +207,10 @@ tests.Test("XML canonical attributes and roundtrip", () =>
     node.Attributes["a"] = "first";
     node.Children.Add(new("RootPanel"));
     var text = new StringWriter();
-    using (var writer = XmlWriter.Create(text, new() { OmitXmlDeclaration = true }))
+    using (var writer = XmlWriter.Create(text, new()
+    {
+        OmitXmlDeclaration = true
+    }))
         LayoutSnapshotXml.Write(node, writer);
     Check.True(text.ToString().IndexOf("a=") < text.ToString().IndexOf("z="));
     var copy = LayoutSnapshotXml.Read(new StringReader(text.ToString()));
@@ -218,7 +221,7 @@ tests.Test("XML rejects DTD", () => Check.Throws<XmlException>(() => LayoutSnaps
 tests.Test("XML rejects depth overflow", () => Check.Throws<XmlException>(() => LayoutSnapshotXml.Read(new StringReader("<a><b><c/></b></a>"), new(MaxDepth: 2))));
 tests.Test("XML rejects node overflow", () => Check.Throws<XmlException>(() => LayoutSnapshotXml.Read(new StringReader("<a><b/><c/></a>"), new(MaxNodes: 2))));
 tests.Test("XML rejects oversized attributes", () => Check.Throws<XmlException>(() => LayoutSnapshotXml.Read(new StringReader("<a b='1' c='2'/>"), new(MaxAttributesPerNode: 1))));
-tests.Test("XML rejects character overflow", () => Check.Throws<XmlException>(() => LayoutSnapshotXml.Read(new StringReader("<a title='" + new string ('x', 100) + "'/>"), new(MaxCharacters: 30))));
+tests.Test("XML rejects character overflow", () => Check.Throws<XmlException>(() => LayoutSnapshotXml.Read(new StringReader("<a title='" + new string('x', 100) + "'/>"), new(MaxCharacters: 30))));
 tests.Test("XML rejects text content", () => Check.Throws<XmlException>(() => LayoutSnapshotXml.Read(new StringReader("<a>not a layout</a>"))));
 tests.Test("XML rejects extra roots", () => Check.Throws<XmlException>(() => LayoutSnapshotXml.Read(new StringReader("<a/><b/>"))));
 tests.Test("XML rejects cyclic writes", () =>

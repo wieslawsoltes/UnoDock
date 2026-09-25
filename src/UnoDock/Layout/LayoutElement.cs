@@ -3,6 +3,7 @@ using System.Xml.Schema;
 using System.Xml.Serialization;
 
 namespace UnoDock.Layout;
+
 public abstract partial class LayoutElement : DependencyObject, ILayoutElement
 {
     /// <summary>Writes a bounded, cycle-safe diagnostic snapshot without evaluating user content.</summary>

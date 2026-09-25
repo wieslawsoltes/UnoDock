@@ -9,8 +9,14 @@ public partial class LayoutGridResizerControl : ContentControl
 {
     public static readonly DependencyProperty BackgroundWhileDraggingProperty = DependencyProperty.Register(nameof(BackgroundWhileDragging), typeof(Brush), typeof(LayoutGridResizerControl), new PropertyMetadata(null));
     public static readonly DependencyProperty OpacityWhileDraggingProperty = DependencyProperty.Register(nameof(OpacityWhileDragging), typeof(double), typeof(LayoutGridResizerControl), new PropertyMetadata(.5d));
-    public Brush? BackgroundWhileDragging { get => (Brush? )GetValue(BackgroundWhileDraggingProperty); set => SetValue(BackgroundWhileDraggingProperty, value); }
-    public double OpacityWhileDragging { get => (double)GetValue(OpacityWhileDraggingProperty); set => SetValue(OpacityWhileDraggingProperty, value); }
+    public Brush? BackgroundWhileDragging
+    {
+        get => (Brush?)GetValue(BackgroundWhileDraggingProperty); set => SetValue(BackgroundWhileDraggingProperty, value);
+    }
+    public double OpacityWhileDragging
+    {
+        get => (double)GetValue(OpacityWhileDraggingProperty); set => SetValue(OpacityWhileDraggingProperty, value);
+    }
 
     private readonly Thumb _thumb;
     private readonly Border _feedback = new()
@@ -26,7 +32,10 @@ public partial class LayoutGridResizerControl : ContentControl
     private NativeCompletion? _pendingCompletion;
     private sealed record NativeCompletion(DragCompletedEventArgs Args, long Generation, uint? Pointer)
     {
-        internal bool Released { get; set; }
+        internal bool Released
+        {
+            get; set;
+        }
     }
 
     public bool IsDragging => _dragging;

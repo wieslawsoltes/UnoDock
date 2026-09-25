@@ -5,7 +5,10 @@ namespace UnoDock.Properties;
 /// <summary>Independent English fallback strings. Applications can replace values in Translations by culture name.</summary>
 public class Resources
 {
-    public static CultureInfo? Culture { get; set; }
+    public static CultureInfo? Culture
+    {
+        get; set;
+    }
     public static ResourceManager ResourceManager { get; } = new StringResources();
     public static IDictionary<string, IDictionary<string, string>> Translations { get; } = new Dictionary<string, IDictionary<string, string>>(StringComparer.OrdinalIgnoreCase);
 

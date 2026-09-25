@@ -5,8 +5,8 @@ public static class DockGuideLayout
 {
     public static IReadOnlyList<DockGuideSlot> Create(DockRect host, DockRect pane, bool workspace, bool paneTargets, bool toolTargets, double size = 32, double gap = 4, double inset = 12) => CreateCore(host, pane, workspace, paneTargets, toolTargets, size, gap, inset, size, size);
     /// <summary>Stock geometry measured from the pinned reference's public visual tree:
-    /// 88-DIP three-cell compass; 32x29 horizontal and 29x32 vertical workspace targets.</summary>
-    public static IReadOnlyList<DockGuideSlot> CreateStock(DockRect host, DockRect pane, bool workspace, bool paneTargets, bool toolTargets = false, double size = 88d / 3) => CreateCore(host, pane, workspace, paneTargets, toolTargets, size, 0, 0, size * 12 / 11, size * 87 / 88);
+        /// 88-DIP three-cell compass; 32x29 horizontal and 29x32 vertical workspace targets.</summary>
+        public static IReadOnlyList<DockGuideSlot> CreateStock(DockRect host, DockRect pane, bool workspace, bool paneTargets, bool toolTargets = false, double size = 88d / 3) => CreateCore(host, pane, workspace, paneTargets, toolTargets, size, 0, 0, size * 12 / 11, size * 87 / 88);
     private static IReadOnlyList<DockGuideSlot> CreateCore(DockRect host, DockRect pane, bool workspace, bool paneTargets, bool toolTargets, double size, double gap, double inset, double rootLong, double rootShort)
     {
         Validate(host);

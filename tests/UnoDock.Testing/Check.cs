@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Xml.Linq;
 
 namespace UnoDock.Testing;
+
 public static class Check
 {
     public static void True(bool condition, string? message = null)

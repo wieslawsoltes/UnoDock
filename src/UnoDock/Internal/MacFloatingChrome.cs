@@ -37,7 +37,7 @@ internal sealed class MacFloatingChrome(Window window) : NativeFloatingChrome(wi
         // competing background/title tracking loop over the custom controls.
         SetBoolean(_handle, Sel("setMovable:"), false);
         SetBoolean(_handle, Sel("setMovableByWindowBackground:"), false);
-        foreach (var(button, _)in _buttons)
+        foreach (var (button, _) in _buttons)
             SetBoolean(button, Sel("setHidden:"), true);
         SetFrame(_handle, Sel("setFrame:display:"), frame, true);
     }
@@ -72,7 +72,7 @@ internal sealed class MacFloatingChrome(Window window) : NativeFloatingChrome(wi
             SetBoolean(_handle, Sel("setMovable:"), _movable);
         if (!Boolean(_handle, "isMovableByWindowBackground"))
             SetBoolean(_handle, Sel("setMovableByWindowBackground:"), _backgroundMovable);
-        foreach (var(button, hidden)in _buttons)
+        foreach (var (button, hidden) in _buttons)
             if (Boolean(button, "isHidden"))
                 SetBoolean(button, Sel("setHidden:"), hidden);
         SetFrame(_handle, Sel("setFrame:display:"), frame, true);
@@ -80,7 +80,7 @@ internal sealed class MacFloatingChrome(Window window) : NativeFloatingChrome(wi
 
     protected override void ReleaseCore()
     {
-        foreach (var(button, _)in _buttons)
+        foreach (var (button, _) in _buttons)
             ReleaseObject(button);
         _buttons.Clear();
         var handle = _handle;

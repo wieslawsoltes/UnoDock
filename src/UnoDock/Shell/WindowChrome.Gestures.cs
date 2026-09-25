@@ -2,6 +2,7 @@ using Microsoft.UI.Xaml.Input;
 using UnoDock.Controls;
 
 namespace Microsoft.Windows.Shell;
+
 public partial class WindowChrome
 {
     private sealed partial class Attachment

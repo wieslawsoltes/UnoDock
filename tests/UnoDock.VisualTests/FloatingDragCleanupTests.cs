@@ -231,7 +231,11 @@ internal static class FloatingDragCleanupTests
                 Title = "UnoDock drag cleanup acceptance"
             };
             _registration = Microsoft.Windows.Shell.SystemCommands.RegisterWindow(_window);
-            _window.AppWindow.Resize(new() { Width = 1100, Height = 780 });
+            _window.AppWindow.Resize(new()
+            {
+                Width = 1100,
+                Height = 780
+            });
             _window.Activate();
         }
 
@@ -351,12 +355,12 @@ internal static class FloatingDragCleanupTests
     private static T Get<T>(object owner, string name)
     {
         for (var type = owner.GetType(); type != null; type = type.BaseType)
-            if (type.GetField(name, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)is { } field)
+            if (type.GetField(name, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly) is { } field)
                 return (T)field.GetValue(owner)!;
         throw new MissingFieldException(name);
     }
 
-    private static object? Call(object owner, string name, params object? [] args)
+    private static object? Call(object owner, string name, params object?[] args)
     {
         for (var type = owner.GetType(); type != null; type = type.BaseType)
         {
@@ -367,7 +371,7 @@ internal static class FloatingDragCleanupTests
             {
                 return method.Invoke(owner, args);
             }
-            catch (TargetInvocationException error)when (error.InnerException != null)
+            catch (TargetInvocationException error) when (error.InnerException != null)
             {
                 ExceptionDispatchInfo.Capture(error.InnerException).Throw();
                 throw;

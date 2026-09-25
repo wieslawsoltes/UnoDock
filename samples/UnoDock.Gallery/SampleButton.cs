@@ -4,6 +4,7 @@ using Microsoft.UI.Xaml.Shapes;
 using PathShape = Microsoft.UI.Xaml.Shapes.Path;
 
 namespace UnoDock.Gallery;
+
 internal sealed class SampleButton : Button
 {
     private SamplePalette _palette = SampleChrome.Default(false);

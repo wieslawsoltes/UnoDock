@@ -236,7 +236,7 @@ public static class WindowLifecycleTests
             SystemCommands.MaximizeWindow(window);
             using var text = new StringWriter();
             new XmlLayoutSerializer(host).Serialize(text);
-            var node = XDocument.Parse(text.ToString()).Descendants("LayoutDocument").Single(n => (string? )n.Attribute("ContentId") == "a");
+            var node = XDocument.Parse(text.ToString()).Descendants("LayoutDocument").Single(n => (string?)n.Attribute("ContentId") == "a");
             Check.True((bool)node.Attribute("IsMaximized")!);
             Check.Near(normal.Width, (double)node.Attribute("FloatingWidth")!);
             Check.Near(normal.X, (double)node.Attribute("FloatingLeft")!);
@@ -577,7 +577,7 @@ public static class WindowLifecycleTests
                 using var input = new X11TestInput();
                 await StartKeyboard(f, input);
                 var nav = host.FindVisualChildren<NavigatorWindow>().Single();
-                var selected = (LayoutItem? )nav.SelectedDocument ?? nav.SelectedAnchorable;
+                var selected = (LayoutItem?)nav.SelectedDocument ?? nav.SelectedAnchorable;
                 Check.True(selected != null);
                 input.KeyUp(0xffe3);
                 await Tick();
@@ -739,7 +739,7 @@ public static class WindowLifecycleTests
 #if WINDOWS
         return WinRT.Interop.WindowNative.GetWindowHandle(window);
 #else
-        return Uno.UI.Xaml.WindowHelper.GetNativeWindow(window)is Uno.UI.NativeElementHosting.Win32NativeWindow native ? native.Hwnd : 0;
+        return Uno.UI.Xaml.WindowHelper.GetNativeWindow(window) is Uno.UI.NativeElementHosting.Win32NativeWindow native ? native.Hwnd : 0;
 #endif
     }
 
@@ -807,17 +807,32 @@ public static class WindowLifecycleTests
         private readonly DockingManager _host;
         private readonly LayoutRoot _old;
         private readonly FloatingWindowMode _mode;
-        internal TextBox EditorA2 { get; } = new()
+        internal TextBox EditorA2
+        {
+            get;
+        } = new()
         {
             Text = "second retained editor"
         };
-        internal TextBox EditorB { get; } = new()
+        internal TextBox EditorB
+        {
+            get;
+        } = new()
         {
             Text = "other document"
         };
-        internal LayoutDocument A { get; }
-        internal LayoutDocument B { get; }
-        internal LayoutAnchorable Tool { get; }
+        internal LayoutDocument A
+        {
+            get;
+        }
+        internal LayoutDocument B
+        {
+            get;
+        }
+        internal LayoutAnchorable Tool
+        {
+            get;
+        }
 
         internal Fixture(DockingManager host)
         {
@@ -922,7 +937,7 @@ public static class WindowLifecycleTests
         {
             return method.Invoke(target, args);
         }
-        catch (TargetInvocationException e)when (e.InnerException != null)
+        catch (TargetInvocationException e) when (e.InnerException != null)
         {
             ExceptionDispatchInfo.Capture(e.InnerException).Throw();
             throw;

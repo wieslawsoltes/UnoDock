@@ -83,7 +83,7 @@ internal static class MenuObservations
                 throw new InvalidOperationException("Original default menu is missing: " + scenario);
             var commands = new Dictionary<ICommand, string>();
             foreach (var property in adapter.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public))
-                if (typeof(ICommand).IsAssignableFrom(property.PropertyType) && property.GetIndexParameters().Length == 0 && property.GetValue(adapter)is ICommand command)
+                if (typeof(ICommand).IsAssignableFrom(property.PropertyType) && property.GetIndexParameters().Length == 0 && property.GetValue(adapter) is ICommand command)
                     commands[command] = property.Name;
             menu.DataContext = adapter;
             menu.PlacementTarget = manager;

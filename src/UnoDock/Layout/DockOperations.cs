@@ -169,7 +169,7 @@ public static class DockOperations
         ArgumentNullException.ThrowIfNull(target);
         if (!CanMove(content) || target.Root is not LayoutRoot root || !ReferenceEquals(content.Root, root))
             return false;
-        if (content.FindParent<LayoutFloatingWindow>()is { } floating && root.Manager?.FloatingWindows.Any(w => ReferenceEquals(w.Model, floating) && w.IsContentImmutable) == true)
+        if (content.FindParent<LayoutFloatingWindow>() is { } floating && root.Manager?.FloatingWindows.Any(w => ReferenceEquals(w.Model, floating) && w.IsContentImmutable) == true)
             return false;
         if (asDocument && content is LayoutAnchorable { CanDockAsTabbedDocument: false })
             return false;
@@ -273,7 +273,8 @@ public static class DockOperations
                     {
                         Orientation = orientation
                     },
-                    _ => throw new InvalidOperationException("This split requires a compatible parent group.")};
+                    _ => throw new InvalidOperationException("This split requires a compatible parent group.")
+                };
                 parent.ReplaceChild(targetElement, wrapper);
                 wrapper.InsertChildAt(0, before ? newPane : targetElement);
                 wrapper.InsertChildAt(1, before ? targetElement : newPane);

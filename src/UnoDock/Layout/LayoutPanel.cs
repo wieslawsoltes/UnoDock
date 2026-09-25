@@ -1,6 +1,7 @@
 using System.Xml;
 
 namespace UnoDock.Layout;
+
 [ContentProperty(Name = "Children")]
 public class LayoutPanel : LayoutPositionableGroup<ILayoutPanelElement>, ILayoutPanelElement, ILayoutOrientableGroup
 {
@@ -11,7 +12,10 @@ public class LayoutPanel : LayoutPositionableGroup<ILayoutPanelElement>, ILayout
     }
 
     public LayoutPanel(ILayoutPanelElement firstChild) => Children.Add(firstChild);
-    public Orientation Orientation { get => _orientation; set => Set(ref _orientation, value); }
+    public Orientation Orientation
+    {
+        get => _orientation; set => Set(ref _orientation, value);
+    }
 
     protected override bool GetVisibility() => Children.Any(c => c.IsVisible);
     public override void ReadXml(XmlReader reader) => base.ReadXml(reader);

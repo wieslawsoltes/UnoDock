@@ -5,6 +5,7 @@ using UnoDock.Controls;
 using UnoDock.Layout.Serialization;
 
 namespace UnoDock.Gallery;
+
 [Bindable]
 public sealed class MvvmWorkspace : INotifyPropertyChanged, IDisposable
 {
@@ -109,7 +110,10 @@ public sealed class MvvmWorkspace : INotifyPropertyChanged, IDisposable
     }
 
     public ObservableCollection<WorkspaceDocument> Documents { get; } = [];
-    public ReadOnlyObservableCollection<WorkspaceDocument> Files { get; }
+    public ReadOnlyObservableCollection<WorkspaceDocument> Files
+    {
+        get;
+    }
     public WorkspaceDocument? ActiveDocument => _activeDocument;
 
     public string Status
@@ -514,8 +518,14 @@ public sealed class MvvmWorkspace : INotifyPropertyChanged, IDisposable
         {
             Padding = new(6)
         };
-        grid.RowDefinitions.Add(new() { Height = GridLength.Auto });
-        grid.RowDefinitions.Add(new() { Height = new(1, GridUnitType.Star) });
+        grid.RowDefinitions.Add(new()
+        {
+            Height = GridLength.Auto
+        });
+        grid.RowDefinitions.Add(new()
+        {
+            Height = new(1, GridUnitType.Star)
+        });
         var tools = new StackPanel
         {
             Orientation = Orientation.Horizontal,

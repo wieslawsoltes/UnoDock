@@ -1,6 +1,7 @@
 using Microsoft.UI.Xaml.Input;
 
 namespace UnoDock.Internal;
+
 public sealed class DelegateCommand(Action<object?> execute, Predicate<object?>? canExecute = null) : ICommand
 {
     public DelegateCommand(Action execute, Func<bool>? canExecute = null) : this(_ => execute(), canExecute == null ? null : _ => canExecute())

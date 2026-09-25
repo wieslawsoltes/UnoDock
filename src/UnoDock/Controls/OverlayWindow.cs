@@ -22,7 +22,10 @@ public class OverlayWindow : DockWindowControl
     private readonly Dictionary<ILayoutGroup, DockGuideBackplate> _plates = new(ReferenceEqualityComparer.Instance);
     private IReadOnlyList<DockGuideTarget> _guides = Array.Empty<DockGuideTarget>();
     private long _presentationVersion;
-    public DockDropPlan? CurrentPlan { get; private set; }
+    public DockDropPlan? CurrentPlan
+    {
+        get; private set;
+    }
     public IReadOnlyList<DockGuideTarget> DisplayedGuides => _guides;
     public bool IsOpen => Visibility == Visibility.Visible && (CurrentPlan?.CanExecute == true || _guides.Any(g => g.Plan.CanExecute));
 

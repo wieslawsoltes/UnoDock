@@ -1,4 +1,5 @@
 namespace UnoDock.Layout;
+
 public abstract partial class LayoutContent
 {
     private long _activationVersion;

@@ -68,7 +68,11 @@ public static class MenuQualityTests
             Content = dock,
             Title = "UnoDock compact menus"
         };
-        window.AppWindow.Resize(new() { Width = 1040, Height = 720 });
+        window.AppWindow.Resize(new()
+        {
+            Width = 1040,
+            Height = 720
+        });
         window.Activate();
         using var registration = Microsoft.Windows.Shell.SystemCommands.RegisterWindow(window);
         LayoutDocument doc = null!, other = null!;
@@ -321,7 +325,7 @@ public static class MenuQualityTests
             });
             Add("shared custom menu context follows the current header and restores local overrides", async () =>
             {
-                var own = new object ();
+                var own = new object();
                 var overridden = new MenuFlyoutItem
                 {
                     Text = "Local",
@@ -779,6 +783,6 @@ public static class MenuQualityTests
         }
 
         MenuFlyoutPresenter Presenter() => VisualTreeHelper.GetOpenPopupsForXamlRoot(dock.XamlRoot).SelectMany(p => p.Child is MenuFlyoutPresenter m ? new[] { m } : p.Child.FindVisualChildren<MenuFlyoutPresenter>()).Single();
-        static MenuFlyoutItem Row(MenuFlyout menu, string command) => menu.Items.OfType<MenuFlyoutItem>().Single(r => (string? )r.Tag == command);
+        static MenuFlyoutItem Row(MenuFlyout menu, string command) => menu.Items.OfType<MenuFlyoutItem>().Single(r => (string?)r.Tag == command);
     }
 }

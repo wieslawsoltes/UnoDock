@@ -21,7 +21,10 @@ public sealed class FluentTheme : DictionaryTheme
                 Publish(slot.Dock, slot.Fallback);
     }
 
-    internal ElementTheme RequestedTheme { get; }
+    internal ElementTheme RequestedTheme
+    {
+        get;
+    }
 
     internal void UpdateResources(DockingManager manager)
     {

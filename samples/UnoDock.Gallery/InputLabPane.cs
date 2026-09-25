@@ -5,6 +5,7 @@ using UnoDock.Compatibility;
 using UnoDock.Controls;
 
 namespace UnoDock.Gallery;
+
 internal sealed class InputLabPane : LayoutDocumentPaneControl
 {
     private readonly InputLabState _state;

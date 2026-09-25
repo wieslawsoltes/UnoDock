@@ -7,6 +7,7 @@ using Windows.System;
 using PathShape = Microsoft.UI.Xaml.Shapes.Path;
 
 namespace UnoDock.Gallery;
+
 public sealed partial class GalleryPage : IDisposable
 {
     private readonly Dictionary<string, Action> _sampleCommands = new(StringComparer.Ordinal);
@@ -14,8 +15,14 @@ public sealed partial class GalleryPage : IDisposable
     private ComboBox? _samplePicker, _themePicker;
     private Grid? _sampleShell;
     private bool _selectingSample, _selectingTheme, _pageDisposed;
-    internal SampleKind CurrentSample { get; private set; }
-    internal SampleTheme CurrentSampleTheme { get; private set; }
+    internal SampleKind CurrentSample
+    {
+        get; private set;
+    }
+    internal SampleTheme CurrentSampleTheme
+    {
+        get; private set;
+    }
     internal SamplePropertyInspector? PropertyInspector => _sampleInspector;
 
     private void BuildSampleShell()
@@ -32,7 +39,10 @@ public sealed partial class GalleryPage : IDisposable
         }
 
         )
-            _sampleShell.RowDefinitions.Add(new() { Height = double.IsNaN(height) ? new(1, GridUnitType.Star) : new(height) });
+            _sampleShell.RowDefinitions.Add(new()
+            {
+                Height = double.IsNaN(height) ? new(1, GridUnitType.Star) : new(height)
+            });
         var menu = SampleChrome.CreateMenuBar();
         AddMenu("File", ("New document", "new", AddDocument), ("Save layout", "save", () => Run(Save)), ("Restore layout", "restore", () => Run(Restore)), ("Inspect layout XML", "xml", ShowXml));
         AddMenu("Layout", ("Float / Dock", "float", ToggleFloating), ("Auto-hide / Pin", "pin", TogglePin), ("New vertical tab group", "split-right", () => Split(UnoDock.Core.DockPosition.Right)), ("New horizontal tab group", "split-bottom", () => Split(UnoDock.Core.DockPosition.Bottom)), ("Show hidden tools", "show-tools", ShowHiddenTools), ("Reset current sample", "reset", () => SwitchSample(CurrentSample)));

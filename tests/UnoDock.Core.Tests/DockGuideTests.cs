@@ -41,7 +41,15 @@ internal static class DockGuideGeometryTests
         tests.Test("guide layout translation covariance", () =>
         {
             var a = DockGuideLayout.Create(host, pane, true, true, true);
-            var b = DockGuideLayout.Create(host with { X = -1500, Y = 930 }, pane with { X = pane.X - 1500, Y = pane.Y + 930 }, true, true, true);
+            var b = DockGuideLayout.Create(host with
+            {
+                X = -1500,
+                Y = 930
+            }, pane with
+            {
+                X = pane.X - 1500,
+                Y = pane.Y + 930
+            }, true, true, true);
             Check.Equal(a.Count, b.Count);
             for (var i = 0; i < a.Count; i++)
             {

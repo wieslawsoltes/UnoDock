@@ -2,6 +2,7 @@ using Microsoft.Windows.Shell;
 using UnoDock.Controls;
 
 namespace UnoDock.Gallery;
+
 public sealed partial class GalleryPage
 {
     private void ShowShellLab()
@@ -87,7 +88,7 @@ public sealed partial class GalleryPage
         Add("Apply chrome", Apply);
         Add("Detach chrome", () =>
         {
-            if (Host()is { } host)
+            if (Host() is { } host)
             {
                 WindowChrome.SetWindowChrome(host, null);
                 if (host.NativeWindow is { } native)
@@ -102,7 +103,7 @@ public sealed partial class GalleryPage
             Orientation = Orientation.Horizontal,
             Spacing = 6
         };
-        foreach (var(label, command)in new[]
+        foreach (var (label, command) in new[]
         {
             ("Maximize", SystemCommands.MaximizeWindowCommand),
             ("Minimize", SystemCommands.MinimizeWindowCommand),
@@ -118,7 +119,7 @@ public sealed partial class GalleryPage
             };
             button.Click += (_, _) =>
             {
-                if (Host()is { } host)
+                if (Host() is { } host)
                     command.Execute(null, host);
                 Describe();
             };
@@ -132,7 +133,7 @@ public sealed partial class GalleryPage
         commands.Children.Add(menu);
         menu.Click += (_, _) =>
         {
-            if (Host()is { } host)
+            if (Host() is { } host)
                 SystemCommands.CreateSystemMenu(host).ShowAt(menu);
         };
         stack.Children.Add(commands);

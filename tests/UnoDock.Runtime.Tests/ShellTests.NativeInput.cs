@@ -8,6 +8,7 @@ using UnoDock.Controls;
 using UnoDock.Layout;
 
 namespace UnoDock.Testing;
+
 public static partial class ShellTests
 {
     private static void RegisterNativeInput(TestRunner tests, DockingManager host)
@@ -53,7 +54,10 @@ public static partial class ShellTests
                     // window. Restore focus before injecting a border gesture.
                     Uno.UI.ApplicationHelper.Windows.Single(w => ReferenceEquals(w.Content?.XamlRoot, host.XamlRoot)).Activate();
 #endif
-                    WindowChrome.SetWindowChrome(floating, new() { ResizeBorderThickness = new(12) });
+                    WindowChrome.SetWindowChrome(floating, new()
+                    {
+                        ResizeBorderThickness = new(12)
+                    });
                     await Tick();
                     var converter = (IScreenWindowCoordinates)host.CrossWindowCoordinates!;
                     var start = converter.ToScreen(floating, new(2, floating.ActualHeight / 2));

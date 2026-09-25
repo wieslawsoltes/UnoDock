@@ -5,6 +5,7 @@ using UnoDock.Compatibility;
 using UnoDock.Controls;
 
 namespace UnoDock.Gallery;
+
 internal sealed class InputLabTab(InputLabState state, Action<string> record) : LayoutDocumentTabItem
 {
     protected override void OnPreviewMouseLeftButtonDown(DockMouseButtonEventArgs e)

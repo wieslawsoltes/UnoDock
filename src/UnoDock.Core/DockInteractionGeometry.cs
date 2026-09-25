@@ -20,8 +20,8 @@ public static class DockInteractionGeometry
     }
 
     /// <summary>Time-based, edge-accelerated scrolling. Returns a bounded offset delta, not a velocity.
-    /// A stalled frame is capped to 50 ms; RTL reverses the logical scroll direction.</summary>
-    public static double AutoScrollDelta(double pointerX, double viewportWidth, double offset, double maximumOffset, double elapsedSeconds, bool rightToLeft = false, double edgeWidth = 32, double maximumSpeed = 900)
+        /// A stalled frame is capped to 50 ms; RTL reverses the logical scroll direction.</summary>
+        public static double AutoScrollDelta(double pointerX, double viewportWidth, double offset, double maximumOffset, double elapsedSeconds, bool rightToLeft = false, double edgeWidth = 32, double maximumSpeed = 900)
     {
         if (!double.IsFinite(pointerX))
             throw new ArgumentOutOfRangeException(nameof(pointerX));

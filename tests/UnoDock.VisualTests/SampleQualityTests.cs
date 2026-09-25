@@ -9,6 +9,7 @@ using UnoDock.Themes;
 using Windows.Foundation;
 
 namespace UnoDock.Testing;
+
 internal static class SampleQualityTests
 {
     private sealed class InitializedManager : DockingManager
@@ -60,7 +61,11 @@ internal static class SampleQualityTests
             Content = page,
             Title = "UnoDock sample acceptance"
         };
-        window.AppWindow.Resize(new() { Width = 1100, Height = 830 });
+        window.AppWindow.Resize(new()
+        {
+            Width = 1100,
+            Height = 830
+        });
         window.Activate();
         try
         {

@@ -1,4 +1,5 @@
 namespace UnoDock.Layout;
+
 [Flags]
 public enum AnchorableShowStrategy : byte
 {

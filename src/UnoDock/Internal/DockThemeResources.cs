@@ -1,6 +1,7 @@
 using UnoDock.Themes;
 
 namespace UnoDock.Internal;
+
 internal static class DockThemeResources
 {
     // Null keeps the historical automatic light/dark palette. FluentTheme() is
@@ -27,11 +28,11 @@ internal static class DockThemeResources
     {
         var theme = owner is DockingManager manager ? EffectiveTheme(manager) : owner.ActualTheme;
         for (FrameworkElement? current = owner; current != null; current = VisualTreeHelper.GetParent(current) as FrameworkElement)
-            if (Find(current.Resources, key, theme, skip, new(ReferenceEqualityComparer.Instance))is { } local)
+            if (Find(current.Resources, key, theme, skip, new(ReferenceEqualityComparer.Instance)) is { } local)
                 return local;
         if (Application.Current is not { } app)
             return null;
-        if (Find(app.Resources, key, theme, skip, new(ReferenceEqualityComparer.Instance))is { } application)
+        if (Find(app.Resources, key, theme, skip, new(ReferenceEqualityComparer.Instance)) is { } application)
             return application;
         // Public Uno TryGetValue includes system resources. Use it only after all
         // explicit scopes, and never borrow the opposite application's palette.
@@ -49,14 +50,14 @@ internal static class DockThemeResources
         var name = theme == ElementTheme.Dark ? "Dark" : "Light";
         if (themes.Count > 0)
         {
-            if (themes.Keys.Contains(name) && themes[name] is ResourceDictionary selected && Find(selected, key, theme, skip, visited)is { } selectedValue)
+            if (themes.Keys.Contains(name) && themes[name] is ResourceDictionary selected && Find(selected, key, theme, skip, visited) is { } selectedValue)
                 return selectedValue;
-            if (themes.Keys.Contains("Default") && themes["Default"] is ResourceDictionary defaults && Find(defaults, key, theme, skip, visited)is { } defaultValue)
+            if (themes.Keys.Contains("Default") && themes["Default"] is ResourceDictionary defaults && Find(defaults, key, theme, skip, visited) is { } defaultValue)
                 return defaultValue;
         }
 
         for (var i = dictionary.MergedDictionaries.Count - 1; i >= 0; i--)
-            if (Find(dictionary.MergedDictionaries[i], key, theme, skip, visited)is { } merged)
+            if (Find(dictionary.MergedDictionaries[i], key, theme, skip, visited) is { } merged)
                 return merged;
         return null;
     }

@@ -1,6 +1,7 @@
 using UnoDock.Internal;
 
 namespace UnoDock.Controls;
+
 public partial class NavigatorWindow
 {
     private long _revealVersion;
@@ -53,7 +54,7 @@ public partial class NavigatorWindow
 
     private bool TryReveal(ListBox list, LayoutItem selected)
     {
-        if (XamlRoot == null || !ReferenceEquals(list.XamlRoot, XamlRoot) || list.ContainerFromItem(selected)is not FrameworkElement container || container.ActualHeight <= 0)
+        if (XamlRoot == null || !ReferenceEquals(list.XamlRoot, XamlRoot) || list.ContainerFromItem(selected) is not FrameworkElement container || container.ActualHeight <= 0)
             return false;
         ScrollViewer? scroll = null;
         for (var parent = VisualTreeHelper.GetParent(container); parent != null && !ReferenceEquals(parent, list); parent = VisualTreeHelper.GetParent(parent))

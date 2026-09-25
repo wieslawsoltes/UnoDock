@@ -1,6 +1,7 @@
 using Microsoft.UI.Xaml.Input;
 
 namespace UnoDock.Internal;
+
 internal static class VisualParenting
 {
     internal static void Detach(UIElement element)

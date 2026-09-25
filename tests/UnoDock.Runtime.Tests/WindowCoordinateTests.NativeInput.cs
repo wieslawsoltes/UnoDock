@@ -8,6 +8,7 @@ using UnoDock.Controls;
 using UnoDock.Layout;
 
 namespace UnoDock.Testing;
+
 public static partial class WindowCoordinateTests
 {
     private static void RegisterNativeInput(TestRunner tests, DockingManager host)

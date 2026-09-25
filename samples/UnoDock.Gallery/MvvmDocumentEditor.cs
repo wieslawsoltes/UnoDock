@@ -2,19 +2,32 @@ using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Data;
 
 namespace UnoDock.Gallery;
+
 public sealed class MvvmDocumentEditor : UserControl
 {
     private readonly List<SampleButton> _commands = [];
     private readonly Border _commandFrame = new();
     private readonly Border _statusFrame = new();
-    internal TextBox Editor { get; }
+    internal TextBox Editor
+    {
+        get;
+    }
 
     public MvvmDocumentEditor()
     {
         var grid = new Grid();
-        grid.RowDefinitions.Add(new() { Height = new(31) });
-        grid.RowDefinitions.Add(new() { Height = new(1, GridUnitType.Star) });
-        grid.RowDefinitions.Add(new() { Height = new(23) });
+        grid.RowDefinitions.Add(new()
+        {
+            Height = new(31)
+        });
+        grid.RowDefinitions.Add(new()
+        {
+            Height = new(1, GridUnitType.Star)
+        });
+        grid.RowDefinitions.Add(new()
+        {
+            Height = new(23)
+        });
         var toolbar = new StackPanel
         {
             Orientation = Orientation.Horizontal,

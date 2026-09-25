@@ -1,6 +1,7 @@
 using Windows.Storage;
 
 namespace UnoDock.Gallery;
+
 public sealed partial class GalleryPage
 {
     private MvvmWorkspace? _mvvmWorkspace;

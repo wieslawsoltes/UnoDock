@@ -4,6 +4,7 @@ using UnoDock.Internal;
 using UnoDock.Layout;
 
 namespace UnoDock.Controls;
+
 public class LayoutAnchorGroupControl : ContentControl, ILayoutControl
 {
     private readonly LayoutAnchorGroup _model;
@@ -35,7 +36,7 @@ public class LayoutAnchorGroupControl : ContentControl, ILayoutControl
             child.Update(manager);
         }
 
-        _panel.Orientation = _model.GetSide()is AnchorSide.Left or AnchorSide.Right ? Orientation.Vertical : Orientation.Horizontal;
+        _panel.Orientation = _model.GetSide() is AnchorSide.Left or AnchorSide.Right ? Orientation.Vertical : Orientation.Horizontal;
         VisualParenting.ReconcilePanel(_panel, Children.Cast<UIElement>().ToArray());
         if (manager.AnchorGroupTemplate != null)
             Template = manager.AnchorGroupTemplate;

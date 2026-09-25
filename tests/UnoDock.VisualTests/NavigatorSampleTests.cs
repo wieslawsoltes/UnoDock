@@ -8,6 +8,7 @@ using UnoDock.Layout;
 using UnoDock.VisualValidation;
 
 namespace UnoDock.Testing;
+
 internal static class NavigatorSampleTests
 {
     internal static async Task<int> Run(string output)
@@ -88,13 +89,13 @@ internal static class NavigatorSampleTests
             var active = manager.Layout.ActiveContent;
             await Invoke("policy");
             await Invoke("assign-document");
-            await Wait(() => Current(manager)is { IsLoaded: true, ActualHeight: > 0 });
+            await Wait(() => Current(manager) is { IsLoaded: true, ActualHeight: > 0 });
             var navigator = Current(manager)!;
             Check.Same(active, manager.Layout.ActiveContent);
             Check.True(Status(panel).Contains("Committed: 0", StringComparison.Ordinal));
             var list = navigator.FindVisualChildren<ListBox>().Single(l => l.Name == "PART_DocumentListBox");
             Check.Same(navigator.SelectedDocument, list.SelectedItem);
-            Check.True(list.ContainerFromItem(navigator.SelectedDocument)is FrameworkElement { ActualHeight: > 0 });
+            Check.True(list.ContainerFromItem(navigator.SelectedDocument) is FrameworkElement { ActualHeight: > 0 });
             var closing = 0;
             var closed = 0;
             navigator.Closing += (_, _) => closing++;
@@ -110,7 +111,7 @@ internal static class NavigatorSampleTests
             Check.True(Status(panel).Contains("Committed: 1", StringComparison.Ordinal));
             await ReadyEditor(panel, target);
             await Invoke("open");
-            await Wait(() => Current(manager)is { IsLoaded: true, ActualHeight: > 0 });
+            await Wait(() => Current(manager) is { IsLoaded: true, ActualHeight: > 0 });
             navigator = Current(manager)!;
             navigator.Closing += (_, _) => closing++;
             navigator.Closed += (_, _) => closed++;
@@ -154,7 +155,7 @@ internal static class NavigatorSampleTests
             var active = manager.Layout.ActiveContent;
             manager.FlowDirection = FlowDirection.RightToLeft;
             ((GalleryDockingManager)manager).OpenNavigator();
-            await Wait(() => Current(manager)is { IsLoaded: true, ActualHeight: > 0 });
+            await Wait(() => Current(manager) is { IsLoaded: true, ActualHeight: > 0 });
             var navigator = Current(manager)!;
             panel.UpdateLayout();
             await Task.Delay(50);
@@ -182,7 +183,7 @@ internal static class NavigatorSampleTests
                 await Click("policy");
                 Check.True(Status(panel).Contains("blocked by command", StringComparison.Ordinal));
                 await Click("open");
-                await Wait(() => Current(manager)is { IsLoaded: true, ActualHeight: > 0 });
+                await Wait(() => Current(manager) is { IsLoaded: true, ActualHeight: > 0 });
                 var nav = Current(manager)!;
                 nav.PreviewDocument((LayoutDocumentItem)manager.GetLayoutItemFromModel(target));
                 nav.Focus(FocusState.Keyboard);
@@ -193,7 +194,7 @@ internal static class NavigatorSampleTests
                 Check.True(Status(panel).Contains("Committed: 0", StringComparison.Ordinal));
                 await Click("policy");
                 await Click("open");
-                await Wait(() => Current(manager)is { IsLoaded: true, ActualHeight: > 0 });
+                await Wait(() => Current(manager) is { IsLoaded: true, ActualHeight: > 0 });
                 nav = Current(manager)!;
                 nav.PreviewDocument((LayoutDocumentItem)manager.GetLayoutItemFromModel(target));
                 nav.Focus(FocusState.Keyboard);
@@ -240,7 +241,11 @@ internal static class NavigatorSampleTests
                 Content = page,
                 Title = "UnoDock navigator sample acceptance"
             };
-            window.AppWindow.Resize(new() { Width = 1300, Height = 930 });
+            window.AppWindow.Resize(new()
+            {
+                Width = 1300,
+                Height = 930
+            });
             window.Activate();
             LayoutDocument? document = null;
             try
@@ -268,7 +273,7 @@ internal static class NavigatorSampleTests
     private static NavigatorWindow? Current(DockingManager manager)
     {
         var surface = typeof(DockingManager).GetProperty("Surface", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(manager)!;
-        return (NavigatorWindow? )surface.GetType().GetField("_navigator", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(surface);
+        return (NavigatorWindow?)surface.GetType().GetField("_navigator", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(surface);
     }
 
     private static async Task ReadyEditor(Grid panel, LayoutContent model)

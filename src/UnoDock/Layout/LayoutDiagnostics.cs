@@ -1,6 +1,7 @@
 using System.Globalization;
 
 namespace UnoDock.Layout;
+
 internal static class LayoutDiagnostics
 {
     internal static void Write(ILayoutElement root, TextWriter writer, int indentation)
@@ -13,7 +14,7 @@ internal static class LayoutDiagnostics
         pending.Push((root, indentation));
         while (pending.TryPop(out var entry))
         {
-            writer.Write(new string (' ', Math.Min(entry.Depth, 128) * 2));
+            writer.Write(new string(' ', Math.Min(entry.Depth, 128) * 2));
             writer.Write(entry.Element.GetType().Name);
             if (!seen.Add(entry.Element))
             {

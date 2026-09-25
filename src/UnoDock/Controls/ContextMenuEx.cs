@@ -13,8 +13,14 @@ public class ContextMenuEx : MenuFlyout
         var menu = (ContextMenuEx)d;
         MenuContext.Apply(menu, menu.MenuDataContext);
     }));
-    public IEnumerable? ItemsSource { get => (IEnumerable? )GetValue(ItemsSourceProperty); set => SetValue(ItemsSourceProperty, value); }
-    public object? MenuDataContext { get => GetValue(MenuDataContextProperty); set => SetValue(MenuDataContextProperty, value); }
+    public IEnumerable? ItemsSource
+    {
+        get => (IEnumerable?)GetValue(ItemsSourceProperty); set => SetValue(ItemsSourceProperty, value);
+    }
+    public object? MenuDataContext
+    {
+        get => GetValue(MenuDataContextProperty); set => SetValue(MenuDataContextProperty, value);
+    }
 
     public ContextMenuEx()
     {

@@ -8,6 +8,7 @@ using UnoDock.Controls;
 using UnoDock.Layout;
 
 namespace UnoDock.Testing;
+
 using LayoutPanel = UnoDock.Layout.LayoutPanel;
 
 public static class InteractionTests
@@ -181,7 +182,7 @@ public static class InteractionTests
             tests.Test("X11 stale window ID returns failure without terminating host", () =>
             {
                 var method = typeof(DesktopWindowCoordinates).GetMethod("TryTranslateX11Origins", BindingFlags.NonPublic | BindingFlags.Static)!;
-                Check.Equal(false, (bool)method.Invoke(null, [unchecked((nint)uint.MaxValue), (nint)1, null ])!);
+                Check.Equal(false, (bool)method.Invoke(null, [unchecked((nint)uint.MaxValue), (nint)1, null])!);
             });
             tests.Test("X11 two-window translation tracks native moves and roundtrips", async () =>
             {
@@ -215,8 +216,16 @@ public static class InteractionTests
                 };
                 try
                 {
-                    a.AppWindow.Move(new() { X = 100, Y = 100 });
-                    b.AppWindow.Move(new() { X = 700, Y = 180 });
+                    a.AppWindow.Move(new()
+                    {
+                        X = 100,
+                        Y = 100
+                    });
+                    b.AppWindow.Move(new()
+                    {
+                        X = 700,
+                        Y = 180
+                    });
                     a.Activate();
                     b.Activate();
                     await Task.Delay(150);
@@ -229,7 +238,11 @@ public static class InteractionTests
                     Check.Near(p.X, back.X, 1e-4);
                     Check.Near(p.Y, back.Y, 1e-4);
                     var before = b.AppWindow.Position;
-                    b.AppWindow.Move(new() { X = before.X + 70, Y = before.Y + 40 });
+                    b.AppWindow.Move(new()
+                    {
+                        X = before.X + 70,
+                        Y = before.Y + 40
+                    });
                     await Task.Delay(100);
                     var moved = coordinates.Translate(from!, p, to!);
                     Check.Near(q.X - 70 / to!.XamlRoot!.RasterizationScale, moved.X, 1);
@@ -244,7 +257,7 @@ public static class InteractionTests
             });
             tests.Test("X11 floating tool receives cross-window insertion and returns to main", async () =>
             {
-                var(source, keep, target) = await NativeWorkspace(host);
+                var (source, keep, target) = await NativeWorkspace(host);
                 var floating = host.FloatingWindows.Single();
                 var pane = floating.FindVisualChildren<LayoutAnchorablePaneControl>().Single();
                 var point = new DesktopWindowCoordinates().Translate(ToolHeader(pane), new(40, 15), Surface(host));
@@ -264,7 +277,7 @@ public static class InteractionTests
             });
             tests.Test("X11 native preview is painted in destination window", async () =>
             {
-                var(source, _, target) = await NativeWorkspace(host);
+                var (source, _, target) = await NativeWorkspace(host);
                 var floating = host.FloatingWindows.Single();
                 var pane = floating.FindVisualChildren<LayoutAnchorablePaneControl>().Single();
                 var coordinates = new DesktopWindowCoordinates();
@@ -280,7 +293,7 @@ public static class InteractionTests
             });
             tests.Test("X11 unrelated native window blocks underlying drop targets", async () =>
             {
-                var(source, _, target) = await NativeWorkspace(host);
+                var (source, _, target) = await NativeWorkspace(host);
                 var floating = host.FloatingWindows.Single();
                 var pane = floating.FindVisualChildren<LayoutAnchorablePaneControl>().Single();
                 var point = new DesktopWindowCoordinates().Translate(ToolHeader(pane), new(40, 15), Surface(host));
@@ -296,7 +309,11 @@ public static class InteractionTests
                     blocker.Activate();
                     await Task.Delay(100);
                     Check.True(host.GetDropPlan(source, point) == null, "Drop plan targeted an occluded client.");
-                    blocker.AppWindow.Move(new() { X = 2200, Y = 1100 });
+                    blocker.AppWindow.Move(new()
+                    {
+                        X = 2200,
+                        Y = 1100
+                    });
                     await Task.Delay(100);
                     Check.True(host.GetDropPlan(source, point) != null, "Drop target did not recover after the occluding window moved away.");
                 }
@@ -308,9 +325,13 @@ public static class InteractionTests
             });
             tests.Test("X11 raised main window wins over an overlapping native float", async () =>
             {
-                var(source, _, target) = await NativeWorkspace(host);
+                var (source, _, target) = await NativeWorkspace(host);
                 var floating = host.FloatingWindows.Single();
-                floating.NativeWindow!.AppWindow.Move(new() { X = 300, Y = 100 });
+                floating.NativeWindow!.AppWindow.Move(new()
+                {
+                    X = 300,
+                    Y = 100
+                });
                 await Task.Delay(100);
                 var pane = floating.FindVisualChildren<LayoutAnchorablePaneControl>().Single();
                 var point = new DesktopWindowCoordinates().Translate(ToolHeader(pane), new(40, 15), Surface(host));
@@ -325,23 +346,27 @@ public static class InteractionTests
             });
             tests.Test("X11 docking closes and unmaps its native client before render teardown", async () =>
             {
-                var(_, _, target) = await NativeWorkspace(host);
+                var (_, _, target) = await NativeWorkspace(host);
                 var floating = host.FloatingWindows.Single();
-                floating.NativeWindow!.AppWindow.Move(new() { X = 300, Y = 100 });
+                floating.NativeWindow!.AppWindow.Move(new()
+                {
+                    X = 300,
+                    Y = 100
+                });
                 await Task.Delay(100);
                 var point = new DesktopWindowCoordinates().Translate(floating, new(40, 80), Surface(host));
                 target.Dock();
                 host.Refresh();
                 await Task.Delay(100);
                 Check.True(floating.NativeWindow == null);
-                object? [] query = [Surface(host), point, null ];
+                object?[] query = [Surface(host), point, null];
                 var method = typeof(DesktopWindowCoordinates).GetMethod("TryGetTopmostRoot", BindingFlags.NonPublic | BindingFlags.Instance)!;
                 Check.Equal(true, (bool)method.Invoke(host.CrossWindowCoordinates, query)!);
                 Check.Same(host.XamlRoot, query[2]);
             });
             tests.Test("unsupported cross-window provider omits areas and preserves layout", async () =>
             {
-                var(source, _, _) = await NativeWorkspace(host);
+                var (source, _, _) = await NativeWorkspace(host);
                 var before = source.Parent;
                 host.CrossWindowCoordinates = new UnavailableCoordinates();
                 Check.True(host.GetDropAreas().All(a => double.IsFinite(a.DetectionRect.Width)));
@@ -354,7 +379,7 @@ public static class InteractionTests
         {
             tests.Test("X11 pointer capture docks a main tool into a native window", async () =>
             {
-                var(source, _, target) = await NativeWorkspace(host);
+                var (source, _, target) = await NativeWorkspace(host);
                 var pane = host.FindVisualChildren<LayoutAnchorablePaneControl>().Single();
                 var tab = pane.FindVisualChildren<LayoutAnchorableTabItem>().First(t => ReferenceEquals(t.Model, source));
                 var label = Label(tab);
@@ -597,15 +622,15 @@ public static class InteractionTests
     private static ScrollViewer Header(LayoutCachePaneControl pane) => (ScrollViewer)typeof(LayoutCachePaneControl).GetField("_scroll", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(pane)!;
     private static FrameworkElement Surface(DockingManager host) => (FrameworkElement)typeof(DockingManager).GetField("_surface", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(host)!;
     private static Point At(FrameworkElement from, FrameworkElement to, double x, double y) => from.TransformToVisual(to).TransformPoint(new(from.ActualWidth * x, from.ActualHeight * y));
-    private static object? Call(object value, string method, params object? [] args)
+    private static object? Call(object value, string method, params object?[] args)
     {
         for (var type = value.GetType(); type != null; type = type.BaseType)
-            if (type.GetMethod(method, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.DeclaredOnly)is { } member)
+            if (type.GetMethod(method, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.DeclaredOnly) is { } member)
                 try
                 {
                     return member.Invoke(value, args);
                 }
-                catch (TargetInvocationException e)when (e.InnerException != null)
+                catch (TargetInvocationException e) when (e.InnerException != null)
                 {
                     System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(e.InnerException).Throw();
                 }

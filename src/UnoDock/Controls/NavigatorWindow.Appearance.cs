@@ -4,6 +4,7 @@ using UnoDock.Internal;
 using UnoDock.Layout;
 
 namespace UnoDock.Controls;
+
 public partial class NavigatorWindow
 {
     private readonly Grid _chrome = new();
@@ -40,12 +41,30 @@ public partial class NavigatorWindow
         MaxWidth = 760;
         HorizontalContentAlignment = HorizontalAlignment.Stretch;
         VerticalContentAlignment = VerticalAlignment.Stretch;
-        _chrome.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
-        _chrome.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
-        _chrome.RowDefinitions.Add(new() { Height = new(54) });
-        _chrome.RowDefinitions.Add(new() { Height = GridLength.Auto });
-        _chrome.RowDefinitions.Add(new() { Height = GridLength.Auto });
-        _chrome.RowDefinitions.Add(new() { Height = new(42) });
+        _chrome.ColumnDefinitions.Add(new()
+        {
+            Width = GridLength.Auto
+        });
+        _chrome.ColumnDefinitions.Add(new()
+        {
+            Width = GridLength.Auto
+        });
+        _chrome.RowDefinitions.Add(new()
+        {
+            Height = new(54)
+        });
+        _chrome.RowDefinitions.Add(new()
+        {
+            Height = GridLength.Auto
+        });
+        _chrome.RowDefinitions.Add(new()
+        {
+            Height = GridLength.Auto
+        });
+        _chrome.RowDefinitions.Add(new()
+        {
+            Height = new(42)
+        });
         var details = _details;
         details.Children.Add(_selectionTitle);
         details.Children.Add(_selectionDescription);

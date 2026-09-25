@@ -38,8 +38,8 @@ public static class TabStripSolver
     }
 
     /// <summary>Returns the boundary before/after tabs, including the trailing boundary.
-    /// The origin is the logical leading edge; RTL callers transform their local x first.</summary>
-    public static int InsertionIndex(double position, ReadOnlySpan<double> widths)
+        /// The origin is the logical leading edge; RTL callers transform their local x first.</summary>
+        public static int InsertionIndex(double position, ReadOnlySpan<double> widths)
     {
         if (!double.IsFinite(position))
             throw new ArgumentOutOfRangeException(nameof(position));

@@ -9,6 +9,7 @@ using UnoDock.Converters;
 using UnoDock.Layout;
 
 namespace UnoDock.Testing;
+
 public static partial class ConverterTests
 {
     private static void ExtendedTests(TestRunner tests, DockingManager manager, LayoutDocument document, LayoutAnchorable tool)
@@ -21,7 +22,7 @@ public static partial class ConverterTests
         foreach (var record in cases)
         {
             var key = (string)record.Attribute("Input")!;
-            var target = (string? )record.Attribute("Target") ?? "visibility";
+            var target = (string?)record.Attribute("Target") ?? "visibility";
             var reverse = (bool)record.Attribute("Reverse")!;
             tests.Test($"extended reference {record.Name}: {key} -> {target}, reverse={reverse}", () =>
             {
@@ -37,14 +38,16 @@ public static partial class ConverterTests
                     "empty-string" => "",
                     "integer" => 17,
                     "boolean" => true,
-                    _ => throw new InvalidOperationException("Unknown input " + key)};
+                    _ => throw new InvalidOperationException("Unknown input " + key)
+                };
                 var type = target switch
                 {
                     "image-source" => typeof(ImageSource),
                     "bitmap-image" => typeof(BitmapImage),
                     "uri" => typeof(Uri),
                     "string" => typeof(string),
-                    _ => Target(target)};
+                    _ => Target(target)
+                };
                 Verify(record.Elements().Single(), record.Name == "MultiCase" ? () => reverse ? multi.ConvertBack(Visibility.Visible, [typeof(bool), typeof(bool)], null!, Invariant) : multi.Convert((object[])input!, type, null!, Invariant) : () => reverse ? converter.ConvertBack(input!, type, null!, Invariant) : converter.Convert(input!, type, null!, Invariant), input, manager, document, tool, nameof(UriSourceToBitmapImageConverter));
             });
         }
@@ -65,5 +68,7 @@ public static partial class ConverterTests
             "string" => "true",
             "unset" => DependencyProperty.UnsetValue,
             "nothing" => BindingValue.DoNothing,
-            _ => throw new InvalidOperationException("Unknown multi-value input " + value)}).ToArray()};
+            _ => throw new InvalidOperationException("Unknown multi-value input " + value)
+        }).ToArray()
+    };
 }

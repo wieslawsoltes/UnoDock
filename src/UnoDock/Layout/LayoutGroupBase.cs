@@ -3,6 +3,7 @@ using System.Xml.Schema;
 using System.Xml.Serialization;
 
 namespace UnoDock.Layout;
+
 public abstract class LayoutGroupBase : LayoutElement
 {
     public event EventHandler? ChildrenCollectionChanged;

@@ -3,6 +3,7 @@ using UnoDock.Internal;
 using UnoDock.Layout;
 
 namespace UnoDock.Controls;
+
 public partial class LayoutAutoHideWindowControl
 {
     private ResizeSession? _resizeSession;

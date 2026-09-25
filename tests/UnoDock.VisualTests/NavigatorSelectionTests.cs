@@ -7,6 +7,7 @@ using UnoDock.Controls;
 using UnoDock.Layout;
 
 namespace UnoDock.Testing;
+
 internal static class NavigatorSelectionTests
 {
     internal static void Register(TestRunner tests, DockingManager host, string output)
@@ -597,7 +598,7 @@ internal static class NavigatorSelectionTests
         {
             return surface.GetType().GetMethod(method, BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(surface, args);
         }
-        catch (TargetInvocationException e)when (e.InnerException != null)
+        catch (TargetInvocationException e) when (e.InnerException != null)
         {
             ExceptionDispatchInfo.Capture(e.InnerException).Throw();
             throw;

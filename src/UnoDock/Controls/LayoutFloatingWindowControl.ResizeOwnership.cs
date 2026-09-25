@@ -3,6 +3,7 @@ using UnoDock.Layout;
 using UnoDock.Internal;
 
 namespace UnoDock.Controls;
+
 public abstract partial class LayoutFloatingWindowControl
 {
     private sealed partial class FrameResize
@@ -15,8 +16,14 @@ public abstract partial class LayoutFloatingWindowControl
         private FlowDirection _flowDirection;
         private Thickness _resizeBorder;
         internal bool HasCurrentPolicy(LayoutFloatingWindowControl owner) => owner.MinWidth.Equals(_minimumWidth) && owner.MinHeight.Equals(_minimumHeight) && owner.MaxWidth.Equals(_maximumWidth) && owner.MaxHeight.Equals(_maximumHeight) && owner.FlowDirection == _flowDirection && owner.ResizeBorderThickness.Equals(_resizeBorder);
-        internal bool Revoked { get; private set; }
-        internal bool IsDisposed { get; private set; }
+        internal bool Revoked
+        {
+            get; private set;
+        }
+        internal bool IsDisposed
+        {
+            get; private set;
+        }
 
         internal void Attach(LayoutFloatingWindowControl owner)
         {
@@ -91,7 +98,7 @@ public abstract partial class LayoutFloatingWindowControl
             IsDisposed = true;
             _owner = null;
             var cleanup = new DockCleanup();
-            foreach (var(target, property, token)in _tokens)
+            foreach (var (target, property, token) in _tokens)
                 cleanup.Attempt(() => target.UnregisterPropertyChangedCallback(property, token));
             _tokens.Clear();
             foreach (var node in _nodes)

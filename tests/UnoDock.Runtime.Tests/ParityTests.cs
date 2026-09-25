@@ -12,6 +12,7 @@ using UnoDock.Controls;
 using UnoDock.Layout;
 
 namespace UnoDock.Testing;
+
 using LayoutPanel = UnoDock.Layout.LayoutPanel;
 
 public static class ParityTests
@@ -174,14 +175,14 @@ public static class ParityTests
                 IconTemplate = (DataTemplate)XamlReader.Load("<DataTemplate xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation'><FontIcon Glyph='A'/></DataTemplate>")
             };
             Check.True(item.Icon is FontIcon);
-            var data = new object ();
+            var data = new object();
             item.DataContext = data;
             Check.Same(data, item.Icon.DataContext);
         });
         tests.Test("menu temporary context preserves local contexts", () =>
         {
-            var local = new object ();
-            var context = new object ();
+            var local = new object();
+            var context = new object();
             var menu = new ContextMenuEx();
             var first = new MenuFlyoutItem();
             var second = new MenuFlyoutItem
@@ -193,7 +194,7 @@ public static class ParityTests
             menu.MenuDataContext = context;
             Check.Same(context, first.DataContext);
             Check.Same(local, second.DataContext);
-            var changed = new object ();
+            var changed = new object();
             first.DataContext = changed;
             menu.MenuDataContext = null;
             Check.Same(changed, first.DataContext);

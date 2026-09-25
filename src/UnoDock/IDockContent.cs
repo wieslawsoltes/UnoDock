@@ -11,7 +11,13 @@ namespace UnoDock;
 /// <summary>Optional AOT-safe source-item description. Existing view models can instead use LayoutItemContainerStyle bindings.</summary>
 public interface IDockContent
 {
-    string ContentId { get; }
+    string ContentId
+    {
+        get;
+    }
 
-    string Title { get; }
+    string Title
+    {
+        get;
+    }
 }

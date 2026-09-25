@@ -3,6 +3,7 @@ using System.Xml.Schema;
 using System.Xml.Serialization;
 
 namespace UnoDock.Layout;
+
 [ContentProperty(Name = nameof(RootPanel))]
 public partial class LayoutRoot : LayoutElement, ILayoutContainer, ILayoutRoot, IXmlSerializable
 {
@@ -32,7 +33,10 @@ public partial class LayoutRoot : LayoutElement, ILayoutContainer, ILayoutRoot, 
     }
 
     [System.Xml.Serialization.XmlIgnore]
-    public DockingManager? Manager { get => _manager; internal set => Set(ref _manager, value); }
+    public DockingManager? Manager
+    {
+        get => _manager; internal set => Set(ref _manager, value);
+    }
 
     public LayoutPanel RootPanel
     {
@@ -100,14 +104,26 @@ public partial class LayoutRoot : LayoutElement, ILayoutContainer, ILayoutRoot, 
         }
     }
 
-    public ObservableCollection<LayoutFloatingWindow> FloatingWindows { get; }
-    public ObservableCollection<LayoutAnchorable> Hidden { get; }
+    public ObservableCollection<LayoutFloatingWindow> FloatingWindows
+    {
+        get;
+    }
+    public ObservableCollection<LayoutAnchorable> Hidden
+    {
+        get;
+    }
 
     [System.Xml.Serialization.XmlIgnore]
-    public LayoutContent? LastFocusedDocument { get; internal set; }
+    public LayoutContent? LastFocusedDocument
+    {
+        get; internal set;
+    }
 
     [System.Xml.Serialization.XmlIgnore]
-    public LayoutContent? ActiveContent { get => _active; set => ChangeActiveContent(value); }
+    public LayoutContent? ActiveContent
+    {
+        get => _active; set => ChangeActiveContent(value);
+    }
 
     public IEnumerable<ILayoutElement> Children
     {

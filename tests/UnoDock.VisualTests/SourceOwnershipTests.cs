@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using UnoDock.Layout;
 
 namespace UnoDock.Testing;
+
 public static class SourceOwnershipTests
 {
     public static Task<int> Run(string output)
@@ -21,7 +22,7 @@ public static class SourceOwnershipTests
             {
                 using var manager = new DockingManager();
                 var stale = new PoisonValue();
-                var current = new object ();
+                var current = new object();
                 var sequence = new CallbackSequence([stale], () => Set(manager, new[] { current }, tools));
                 Set(manager, sequence, tools);
                 Check.Equal(1, sequence.Disposed);
@@ -31,7 +32,7 @@ public static class SourceOwnershipTests
             Add("enumerator Current replacement cancels the old snapshot", () =>
             {
                 using var manager = new DockingManager();
-                var current = new object ();
+                var current = new object();
                 var stale = new PoisonValue();
                 var sequence = new CallbackSequence([stale], null, () => Set(manager, new[] { current }, tools));
                 Set(manager, sequence, tools);
@@ -42,7 +43,7 @@ public static class SourceOwnershipTests
             Add("enumerator Dispose replacement is checked before applying either source", () =>
             {
                 using var manager = new DockingManager();
-                var current = new object ();
+                var current = new object();
                 var stale = new PoisonValue();
                 Set(manager, new CallbackSequence([stale], null, null, () => Set(manager, new[] { current }, tools)), tools);
                 Check.Equal(0, stale.Calls);
@@ -69,7 +70,7 @@ public static class SourceOwnershipTests
                 Add("descriptor replacement stops stale publication: " + property, () =>
                 {
                     using var manager = new DockingManager();
-                    var current = new object ();
+                    var current = new object();
                     var descriptor = new CallbackDescriptor(property, () => Set(manager, new[] { current }, tools));
                     Set(manager, new object[] { descriptor }, tools);
                     Check.Same(current, Models(manager, tools).Single().Content);
@@ -78,8 +79,8 @@ public static class SourceOwnershipTests
             Add("BeforeInsert replacement skips default placement and stale AfterInsert", () =>
             {
                 using var manager = new DockingManager();
-                var stale = new object ();
-                var current = new object ();
+                var stale = new object();
+                var current = new object();
                 var after = new List<LayoutContent>();
                 manager.LayoutUpdateStrategy = new Strategy
                 {
@@ -99,8 +100,8 @@ public static class SourceOwnershipTests
             Add("BeforeInsert same-source mutation retries retained value exactly once", () =>
             {
                 using var manager = new DockingManager();
-                var a = new object ();
-                var b = new object ();
+                var a = new object();
+                var b = new object();
                 var source = new ObservableCollection<object>
                 {
                     a
@@ -140,7 +141,7 @@ public static class SourceOwnershipTests
                     }
                 };
                 Set(manager, source, tools);
-                source.Add(new object ());
+                source.Add(new object());
                 using (manager.BeginLayoutUpdate())
                 {
                 }
@@ -160,7 +161,7 @@ public static class SourceOwnershipTests
                         return false;
                     }
                 };
-                Set(manager, new[] { new object () }, tools);
+                Set(manager, new[] { new object() }, tools);
                 Check.Same(expected, Models(manager, tools).Single().Parent);
             });
             Add("BeforeInsert transfer to another manager is never stolen back", () =>
@@ -179,7 +180,7 @@ public static class SourceOwnershipTests
                     },
                     After = (_, _) => calls++
                 };
-                Set(manager, new[] { new object () }, tools);
+                Set(manager, new[] { new object() }, tools);
                 Check.Same(other.Layout, moved!.Root);
                 Check.Equal(0, calls);
                 Check.Equal(0, Models(manager, tools).Length);
@@ -200,7 +201,7 @@ public static class SourceOwnershipTests
                     },
                     After = (_, _) => calls++
                 };
-                Set(manager, new[] { new object () }, tools);
+                Set(manager, new[] { new object() }, tools);
                 Check.Equal(0, calls);
                 Check.True(root.Manager == null);
                 Check.Equal(0, Models(manager, tools).Length);
@@ -209,7 +210,7 @@ public static class SourceOwnershipTests
             {
                 using var manager = new DockingManager();
                 var source = new ObservableCollection<object>();
-                var value = new object ();
+                var value = new object();
                 var strategy = new Strategy
                 {
                     After = (_, _) => throw new ApplicationException("after failure")
@@ -225,7 +226,7 @@ public static class SourceOwnershipTests
             Add("throwing BeforeInsert allows a later retry of the same source entry", () =>
             {
                 using var manager = new DockingManager();
-                var value = new object ();
+                var value = new object();
                 var strategy = new Strategy
                 {
                     Before = (_, _, _) => throw new ApplicationException("before failure")
@@ -244,7 +245,7 @@ public static class SourceOwnershipTests
             {
                 using var manager = new DockingManager();
                 using var other = new DockingManager();
-                var value = new object ();
+                var value = new object();
                 var source = new ObservableCollection<object>
                 {
                     value
@@ -259,8 +260,8 @@ public static class SourceOwnershipTests
             Add("removal cannot delete a model repurposed by application Content replacement", () =>
             {
                 using var manager = new DockingManager();
-                var value = new object ();
-                var replacement = new object ();
+                var value = new object();
+                var replacement = new object();
                 var source = new ObservableCollection<object>
                 {
                     value
@@ -277,7 +278,7 @@ public static class SourceOwnershipTests
             {
                 using var manager = new DockingManager();
                 using var other = new DockingManager();
-                var original = new object ();
+                var original = new object();
                 Set(manager, new[] { original }, tools);
                 LayoutContent foreign = tools ? new LayoutAnchorable() : new LayoutDocument();
                 Place(other.Layout, foreign);
@@ -306,8 +307,8 @@ public static class SourceOwnershipTests
             Add("nulls and duplicate reference entries remain deduplicated", () =>
             {
                 using var manager = new DockingManager();
-                var value = new object ();
-                Set(manager, new object? [] { null, value, value, null }, tools);
+                var value = new object();
+                Set(manager, new object?[] { null, value, value, null }, tools);
                 Check.Equal(1, Models(manager, tools).Length);
                 Check.Same(value, Models(manager, tools).Single().Content);
             });
@@ -360,7 +361,7 @@ public static class SourceOwnershipTests
                 {
                     Before = (_, _, _) =>
                     {
-                        source[0] = new object ();
+                        source[0] = new object();
                         return false;
                     }
                 };
@@ -379,8 +380,8 @@ public static class SourceOwnershipTests
         tests.Test("source ownership: document enumeration replacing tool source never enumerates stale tools", () =>
         {
             using var manager = new DockingManager();
-            var tool = new object ();
-            var doc = new object ();
+            var tool = new object();
+            var doc = new object();
             using (manager.BeginLayoutUpdate())
             {
                 manager.AnchorablesSource = new CallbackSequence([], () => throw new ApplicationException("stale tool enumeration"));
@@ -393,8 +394,8 @@ public static class SourceOwnershipTests
         tests.Test("source ownership: both enumerations complete before either removal", () =>
         {
             using var manager = new DockingManager();
-            var doc = new object ();
-            var tool = new object ();
+            var doc = new object();
+            var tool = new object();
             manager.DocumentsSource = new[]
             {
                 doc

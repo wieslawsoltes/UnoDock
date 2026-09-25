@@ -1,4 +1,5 @@
 namespace UnoDock.Layout;
+
 public static class Extensions
 {
     public static IEnumerable<ILayoutElement> Descendents(this ILayoutElement element)
@@ -49,7 +50,7 @@ public static class Extensions
     {
         if (element is LayoutAnchorSide side)
             return side.Side;
-        if (element.FindParent<LayoutAnchorSide>()is { } parent)
+        if (element.FindParent<LayoutAnchorSide>() is { } parent)
             return parent.Side;
         for (ILayoutElement current = element; current.Parent is { } group; current = group)
         {

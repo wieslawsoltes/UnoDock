@@ -11,7 +11,10 @@ internal abstract class NativeFloatingChrome(Window window) : IDisposable
     protected Window Window { get; } = window;
 
     private readonly int _thread = Environment.CurrentManagedThreadId;
-    protected bool IsDisposed { get; private set; }
+    protected bool IsDisposed
+    {
+        get; private set;
+    }
 
     internal abstract DockRect ReadBounds();
     internal abstract void WriteBounds(DockRect bounds);

@@ -1,4 +1,5 @@
 namespace UnoDock.Layout;
+
 public partial class LayoutRoot
 {
     private bool _changingActivation;

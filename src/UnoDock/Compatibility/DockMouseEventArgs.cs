@@ -15,10 +15,19 @@ public class DockMouseEventArgs : EventArgs
         Owner = owner;
     }
 
-    internal UIElement Owner { get; }
-    public PointerRoutedEventArgs NativeEvent { get; }
+    internal UIElement Owner
+    {
+        get;
+    }
+    public PointerRoutedEventArgs NativeEvent
+    {
+        get;
+    }
     public object OriginalSource => NativeEvent.OriginalSource;
-    public bool Handled { get; set; }
+    public bool Handled
+    {
+        get; set;
+    }
     public uint PointerId => NativeEvent.Pointer.PointerId;
     public PointerDeviceType PointerDeviceType => NativeEvent.Pointer.PointerDeviceType;
 

@@ -1,4 +1,5 @@
 namespace UnoDock.Themes;
+
 public abstract partial class Theme : DependencyObject
 {
     public Theme()

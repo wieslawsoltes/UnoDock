@@ -2,13 +2,20 @@ using UnoDock.Internal;
 using UnoDock.Layout;
 
 namespace UnoDock.Controls;
+
 public abstract partial class LayoutGridControl<T>
 {
     private ResizeSession? _resize;
     private sealed record ResizeSession(LayoutGridResizerControl Splitter, int Index, ILayoutPositionableElement Before, ILayoutPositionableElement After, LayoutRoot Root, DockingManager Manager, bool Horizontal, GridLength BeforeLength, GridLength AfterLength, double BeforePixels, double AfterPixels, double MinBefore, double MinAfter, ILayoutPanelElement[] Order, Canvas Adorner, Border Ghost)
     {
-        internal double Displacement { get; set; }
-        internal bool AbsolutePixels { get; set; }
+        internal double Displacement
+        {
+            get; set;
+        }
+        internal bool AbsolutePixels
+        {
+            get; set;
+        }
     }
 
     private void BeginResize(LayoutGridResizerControl splitter, int index)

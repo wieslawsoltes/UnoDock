@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Xml.Linq;
 
 namespace UnoDock.Testing;
+
 public sealed class TestRunner
 {
     private readonly List<(string Name, Func<Task> Body)> _cases = [];
@@ -10,12 +11,13 @@ public sealed class TestRunner
     {
         body();
         return Task.CompletedTask;
-    }));
+    }
+    ));
     public void Test(string name, Func<Task> body) => _cases.Add((name, body));
     public async Task<int> Run(string directory, string suite)
     {
         var results = new List<TestResult>();
-        foreach (var(name, body)in _cases)
+        foreach (var (name, body) in _cases)
         {
             var watch = Stopwatch.StartNew();
             string? error = null;

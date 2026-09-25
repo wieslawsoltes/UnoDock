@@ -8,7 +8,7 @@ public static class DockSplitSolver
             throw new ArgumentOutOfRangeException(nameof(available));
         var count = items.Length;
         if (count == 0)
-            return[];
+            return [];
         var space = Math.Max(0, available - separator * (count - 1));
         var result = new double[count];
         double fixedTotal = 0, minimumTotal = 0, weights = 0;
@@ -122,5 +122,6 @@ public static class DockSplitSolver
         },
         DockPosition.Bottom => new(area.X, area.Y + area.Height / 2, area.Width, area.Height / 2),
         DockPosition.Inside => area,
-        _ => throw new ArgumentOutOfRangeException(nameof(position))};
+        _ => throw new ArgumentOutOfRangeException(nameof(position))
+    };
 }

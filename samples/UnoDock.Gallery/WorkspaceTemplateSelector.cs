@@ -5,6 +5,7 @@ using UnoDock.Controls;
 using UnoDock.Layout.Serialization;
 
 namespace UnoDock.Gallery;
+
 internal sealed class WorkspaceTemplateSelector : DataTemplateSelector
 {
     protected override DataTemplate SelectTemplateCore(object item) => item switch

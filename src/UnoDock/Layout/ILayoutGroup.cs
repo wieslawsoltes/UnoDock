@@ -1,4 +1,5 @@
 namespace UnoDock.Layout;
+
 public interface ILayoutGroup : ILayoutContainer
 {
     event EventHandler? ChildrenCollectionChanged;

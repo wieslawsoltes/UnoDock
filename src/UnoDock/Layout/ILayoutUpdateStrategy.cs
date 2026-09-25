@@ -1,4 +1,5 @@
 namespace UnoDock.Layout;
+
 public interface ILayoutUpdateStrategy
 {
     bool BeforeInsertAnchorable(LayoutRoot layout, LayoutAnchorable anchorableToShow, ILayoutContainer destinationContainer);

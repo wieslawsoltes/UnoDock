@@ -14,6 +14,7 @@ using UnoDock.Controls;
 using UnoDock.Layout;
 
 namespace UnoDock.Testing;
+
 using LayoutPanel = UnoDock.Layout.LayoutPanel;
 
 public static class InputExtensionTests
@@ -23,7 +24,7 @@ public static class InputExtensionTests
         var tests = new TestRunner();
         tests.Test("pane construction does not dispatch overridable selection callbacks", () =>
         {
-            var(_, pane, a, _) = Pane();
+            var (_, pane, a, _) = Pane();
             var view = new SelectionProbe(pane);
             Check.Equal(0, view.Calls);
             Check.Same(a, view.SelectedItem);
@@ -32,7 +33,7 @@ public static class InputExtensionTests
         });
         tests.Test("selection DP writes update model, item and index before public event", () =>
         {
-            var(_, pane, a, b) = Pane();
+            var (_, pane, a, b) = Pane();
             var view = new SelectionProbe(pane);
             var events = 0;
             view.SelectionChanged += (_, e) =>
@@ -51,7 +52,7 @@ public static class InputExtensionTests
         });
         tests.Test("model selection synchronously updates view dependency properties", () =>
         {
-            var(_, pane, _, b) = Pane();
+            var (_, pane, _, b) = Pane();
             var view = new SelectionProbe(pane);
             b.IsSelected = true;
             Check.Equal(1, view.SelectedIndex);
@@ -61,7 +62,7 @@ public static class InputExtensionTests
         });
         tests.Test("same selection is not emitted twice", () =>
         {
-            var(_, pane, _, b) = Pane();
+            var (_, pane, _, b) = Pane();
             var view = new SelectionProbe(pane);
             view.SelectedItem = b;
             view.SelectedIndex = 1;
@@ -71,7 +72,7 @@ public static class InputExtensionTests
         });
         tests.Test("null item clears selection and flags", () =>
         {
-            var(_, pane, a, _) = Pane();
+            var (_, pane, a, _) = Pane();
             var view = new SelectionProbe(pane);
             view.SelectedItem = null;
             Check.Equal(-1, pane.SelectedContentIndex);
@@ -81,7 +82,7 @@ public static class InputExtensionTests
         });
         tests.Test("foreign selected item is rejected without corrupting model or DP", () =>
         {
-            var(_, pane, a, _) = Pane();
+            var (_, pane, a, _) = Pane();
             var view = new SelectionProbe(pane);
             view.SelectedItem = new LayoutDocument();
             Check.Same(a, pane.SelectedContent);
@@ -99,7 +100,7 @@ public static class InputExtensionTests
         )
             tests.Test("invalid index rolls back both selection properties: " + index, () =>
             {
-                var(_, pane, a, _) = Pane();
+                var (_, pane, a, _) = Pane();
                 var view = new SelectionProbe(pane);
                 Check.Throws<ArgumentOutOfRangeException>(() => view.SelectedIndex = index);
                 Check.Equal(0, view.SelectedIndex);
@@ -109,7 +110,7 @@ public static class InputExtensionTests
             });
         tests.Test("moving selected child changes index without selection notification", () =>
         {
-            var(_, pane, a, _) = Pane();
+            var (_, pane, a, _) = Pane();
             var view = new SelectionProbe(pane);
             pane.Children.Move(0, 1);
             Check.Same(a, view.SelectedItem);
@@ -119,7 +120,7 @@ public static class InputExtensionTests
         });
         tests.Test("inserting before selection preserves identity and updates index", () =>
         {
-            var(_, pane, a, _) = Pane();
+            var (_, pane, a, _) = Pane();
             var view = new SelectionProbe(pane);
             pane.Children.Insert(0, new LayoutDocument());
             Check.Equal(1, view.SelectedIndex);
@@ -129,7 +130,7 @@ public static class InputExtensionTests
         });
         tests.Test("removing selected child emits replacement selection once", () =>
         {
-            var(_, pane, a, b) = Pane();
+            var (_, pane, a, b) = Pane();
             var view = new SelectionProbe(pane);
             pane.Children.Remove(a);
             Check.Same(b, view.SelectedItem);
@@ -139,7 +140,7 @@ public static class InputExtensionTests
         });
         tests.Test("clearing pane emits empty selection", () =>
         {
-            var(_, pane, _, _) = Pane();
+            var (_, pane, _, _) = Pane();
             var view = new SelectionProbe(pane);
             pane.Children.Clear();
             Check.Equal(-1, view.SelectedIndex);
@@ -148,7 +149,7 @@ public static class InputExtensionTests
         });
         tests.Test("selection callback can request another selection without losing it", () =>
         {
-            var(_, pane, a, b) = Pane();
+            var (_, pane, a, b) = Pane();
             var c = new LayoutDocument();
             pane.Children.Add(c);
             var view = new SelectionProbe(pane);
@@ -168,7 +169,7 @@ public static class InputExtensionTests
         });
         tests.Test("model observer reentrant selection is drained in order", () =>
         {
-            var(_, pane, _, b) = Pane();
+            var (_, pane, _, b) = Pane();
             var c = new LayoutDocument();
             pane.Children.Add(c);
             pane.PropertyChanged += (_, e) =>
@@ -183,7 +184,7 @@ public static class InputExtensionTests
         });
         tests.Test("last explicit reentrant selection can withdraw an earlier request", () =>
         {
-            var(_, pane, a, b) = Pane();
+            var (_, pane, a, b) = Pane();
             var c = new LayoutDocument();
             pane.Children.Add(c);
             a.IsSelectedChanged += (_, _) =>
@@ -201,7 +202,7 @@ public static class InputExtensionTests
         });
         tests.Test("internal selected-flag synchronization does not overwrite a queued user request", () =>
         {
-            var(_, pane, a, b) = Pane();
+            var (_, pane, a, b) = Pane();
             var c = new LayoutDocument();
             pane.Children.Add(c);
             a.IsSelectedChanged += (_, _) =>
@@ -216,7 +217,7 @@ public static class InputExtensionTests
         });
         tests.Test("selection callback removal does not enumerate a mutating collection", () =>
         {
-            var(_, pane, a, b) = Pane();
+            var (_, pane, a, b) = Pane();
             var c = new LayoutDocument();
             pane.Children.Add(c);
             a.IsSelectedChanged += (_, _) =>
@@ -230,7 +231,7 @@ public static class InputExtensionTests
         });
         tests.Test("throwing selection subscriber does not poison future transitions", () =>
         {
-            var(_, pane, a, b) = Pane();
+            var (_, pane, a, b) = Pane();
             var view = new SelectionProbe(pane);
             SelectionChangedEventHandler bad = (_, _) => throw new InvalidOperationException("subscriber");
             view.SelectionChanged += bad;
@@ -243,7 +244,7 @@ public static class InputExtensionTests
         });
         tests.Test("nonconvergent model selection observers are bounded and recoverable", () =>
         {
-            var(_, pane, _, _) = Pane();
+            var (_, pane, _, _) = Pane();
             PropertyChangedEventHandler loop = (_, e) =>
             {
                 if (e.PropertyName == nameof(pane.SelectedContent))
@@ -257,7 +258,7 @@ public static class InputExtensionTests
         });
         tests.Test("released pane view no longer observes model changes", () =>
         {
-            var(_, pane, _, _) = Pane();
+            var (_, pane, _, _) = Pane();
             var view = new SelectionProbe(pane);
             Release(view);
             pane.SelectedContentIndex = 1;
@@ -265,7 +266,7 @@ public static class InputExtensionTests
         });
         tests.Test("pane observer does not retain discarded view", () =>
         {
-            var(_, pane, _, _) = Pane();
+            var (_, pane, _, _) = Pane();
             var weak = AbandonView(pane);
             for (var i = 0; i < 3; i++)
             {
@@ -278,7 +279,7 @@ public static class InputExtensionTests
         });
         tests.Test("bindable SelectedIndex supports actual two-way binding", async () =>
         {
-            var(_, pane, _, b) = Pane();
+            var (_, pane, _, b) = Pane();
             var view = new SelectionProbe(pane);
             var source = new SelectionSource();
             view.SetBinding(LayoutCachePaneControl.SelectedIndexProperty, new Binding { Source = source, Path = new PropertyPath(nameof(source.Index)), Mode = BindingMode.TwoWay });
@@ -298,7 +299,7 @@ public static class InputExtensionTests
             using var manager = new SourceProbe();
             var source = new ObservableCollection<object>();
             manager.DocumentsSource = source;
-            source.Add(new object ());
+            source.Add(new object());
             Check.Equal(1, manager.Calls);
             Check.Equal(1, manager.Layout.Descendents().OfType<LayoutDocument>().Count());
         });
@@ -310,11 +311,11 @@ public static class InputExtensionTests
             };
             var source = new ObservableCollection<object>();
             manager.DocumentsSource = source;
-            source.Add(new object ());
+            source.Add(new object());
             Check.Equal(1, manager.Calls);
             Check.Equal(0, manager.Layout.Descendents().OfType<LayoutDocument>().Count());
             manager.Suppress = false;
-            source.Add(new object ());
+            source.Add(new object());
             Check.Equal(2, manager.Layout.Descendents().OfType<LayoutDocument>().Count());
         });
         tests.Test("unknown weak event manager or sender is not accepted", () =>
@@ -324,7 +325,7 @@ public static class InputExtensionTests
             manager.DocumentsSource = source;
             var listener = (IWeakEventListener)manager;
             Check.False(listener.ReceiveWeakEvent(typeof(string), source, EventArgs.Empty));
-            Check.False(listener.ReceiveWeakEvent(typeof(INotifyCollectionChanged), new object (), new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset)));
+            Check.False(listener.ReceiveWeakEvent(typeof(INotifyCollectionChanged), new object(), new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset)));
         });
         tests.Test("replaced source subscription cannot dispatch", () =>
         {
@@ -332,7 +333,7 @@ public static class InputExtensionTests
             var old = new ObservableCollection<object>();
             manager.DocumentsSource = old;
             manager.DocumentsSource = new ObservableCollection<object>();
-            old.Add(new object ());
+            old.Add(new object());
             Check.Equal(0, manager.Calls);
         });
         tests.Test("disposed source listener cannot dispatch", () =>
@@ -341,7 +342,7 @@ public static class InputExtensionTests
             var source = new ObservableCollection<object>();
             manager.DocumentsSource = source;
             manager.Dispose();
-            source.Add(new object ());
+            source.Add(new object());
             Check.Equal(0, manager.Calls);
         });
         tests.Test("worker collection events marshal the override to UI thread", async () =>
@@ -349,7 +350,7 @@ public static class InputExtensionTests
             using var manager = new SourceProbe();
             var source = new ObservableCollection<object>();
             manager.DocumentsSource = source;
-            await Task.Run(() => source.Add(new object ()));
+            await Task.Run(() => source.Add(new object()));
             await Task.Delay(50);
             Check.Equal(1, manager.Calls);
             Check.True(manager.AllOnUi);
@@ -360,7 +361,7 @@ public static class InputExtensionTests
             using var manager = new SourceProbe();
             var source = new ObservableCollection<object>();
             manager.DocumentsSource = source;
-            Task.Run(() => source.Add(new object ())).GetAwaiter().GetResult();
+            Task.Run(() => source.Add(new object())).GetAwaiter().GetResult();
             manager.DocumentsSource = new ObservableCollection<object>();
             await Task.Delay(50);
             Check.Equal(0, manager.Calls);
@@ -374,14 +375,14 @@ public static class InputExtensionTests
             };
             var source = new ObservableCollection<object>();
             manager.DocumentsSource = source;
-            Check.Throws<InvalidOperationException>(() => source.Add(new object ()));
+            Check.Throws<InvalidOperationException>(() => source.Add(new object()));
             manager.Throw = false;
-            source.Add(new object ());
+            source.Add(new object());
             Check.Equal(2, manager.Layout.Descendents().OfType<LayoutDocument>().Count());
         });
         tests.Test("focus hooks observe native transition and activate only after focus", async () =>
         {
-            var(root, _, a, b) = Pane();
+            var (root, _, a, b) = Pane();
             using var manager = new DockingManager
             {
                 Layout = root
@@ -417,7 +418,7 @@ public static class InputExtensionTests
         });
         tests.Test("preview focus cancellation prevents activation and post-focus callback", async () =>
         {
-            var(root, _, a, b) = Pane();
+            var (root, _, a, b) = Pane();
             using var manager = new DockingManager
             {
                 Layout = root
@@ -453,7 +454,7 @@ public static class InputExtensionTests
         });
         tests.Test("completed focus hook can suppress default model activation", async () =>
         {
-            var(root, _, a, b) = Pane();
+            var (root, _, a, b) = Pane();
             using var manager = new DockingManager
             {
                 Layout = root
@@ -487,7 +488,7 @@ public static class InputExtensionTests
         });
         tests.Test("custom pane and tab factories participate in actual rendering", async () =>
         {
-            var(root, pane, _, b) = Pane();
+            var (root, pane, _, b) = Pane();
             using var manager = new FactoryProbe
             {
                 Layout = root,
@@ -524,7 +525,7 @@ public static class InputExtensionTests
             )
                 tests.Test("XTEST protected tab press path: " + mode, async () =>
                 {
-                    var(root, _, a, b) = Pane();
+                    var (root, _, a, b) = Pane();
                     using var manager = new DockingManager
                     {
                         Layout = root
@@ -552,7 +553,7 @@ public static class InputExtensionTests
                 });
             tests.Test("XTEST middle-button hook closes exactly once", async () =>
             {
-                var(root, pane, _, b) = Pane();
+                var (root, pane, _, b) = Pane();
                 using var manager = new DockingManager
                 {
                     Layout = root
@@ -611,7 +612,7 @@ public static class InputExtensionTests
             });
             tests.Test("XTEST disabling a captured custom tab cancels docking immediately", async () =>
             {
-                var(root, pane, _, b) = Pane();
+                var (root, pane, _, b) = Pane();
                 using var manager = new FactoryProbe
                 {
                     Layout = root,
@@ -717,7 +718,10 @@ public static class InputExtensionTests
         };
         var pane = new LayoutDocumentPane(a);
         pane.Children.Add(b);
-        return (new() { RootPanel = new(pane) }, pane, a, b);
+        return (new()
+        {
+            RootPanel = new(pane)
+        }, pane, a, b);
     }
 
     private static void Release(LayoutCachePaneControl view) => typeof(LayoutCachePaneControl).GetMethod("ReleaseViews", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(view, null);
@@ -743,8 +747,16 @@ public static class InputExtensionTests
                 }
             }
         };
-        window.AppWindow.Move(new() { X = 100, Y = 100 });
-        window.AppWindow.Resize(new() { Width = 450, Height = 220 });
+        window.AppWindow.Move(new()
+        {
+            X = 100,
+            Y = 100
+        });
+        window.AppWindow.Resize(new()
+        {
+            Width = 450,
+            Height = 220
+        });
         window.Activate();
         try
         {
@@ -766,7 +778,10 @@ public static class InputExtensionTests
         public DependencyObject? OldFocus, NewFocus;
         public Action? DuringPreview;
         // Use the document base property: this probe tests common content-control activation.
-        public new LayoutContent? Model { get => ((LayoutDocumentControl)this).Model; set => ((LayoutDocumentControl)this).Model = value; }
+        public new LayoutContent? Model
+        {
+            get => ((LayoutDocumentControl)this).Model; set => ((LayoutDocumentControl)this).Model = value;
+        }
 
         protected override void OnPreviewGotKeyboardFocus(DockKeyboardFocusChangedEventArgs e)
         {

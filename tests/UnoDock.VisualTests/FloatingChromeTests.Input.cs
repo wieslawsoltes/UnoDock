@@ -2,6 +2,7 @@ using UnoDock.Core;
 using Windows.Foundation;
 
 namespace UnoDock.Testing;
+
 internal static partial class FloatingChromeTests
 {
     private static void RegisterPhysical(TestRunner tests, bool tools)

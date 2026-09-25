@@ -29,7 +29,7 @@ internal sealed class X11TestInput : IDisposable
         ObjectDisposedException.ThrowIf(_display == 0, this);
         var root = element.XamlRoot ?? throw new InvalidOperationException("Target element is detached.");
         var window = Uno.UI.ApplicationHelper.Windows.Single(w => ReferenceEquals(w.Content?.XamlRoot, root));
-        if (Uno.UI.Xaml.WindowHelper.GetNativeWindow(window)is not Uno.UI.NativeElementHosting.X11NativeWindow native)
+        if (Uno.UI.Xaml.WindowHelper.GetNativeWindow(window) is not Uno.UI.NativeElementHosting.X11NativeWindow native)
             throw new InvalidOperationException("Input test requires an X11 native window.");
         // The independent oracle uses Xlib; production geometry uses checked XCB.
         if (TranslateCoordinates(_display, native.WindowId, DefaultRootWindow(_display), 0, 0, out var x, out var y, out _) == 0)

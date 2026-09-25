@@ -3,6 +3,7 @@ using UnoDock.Compatibility;
 using Microsoft.UI.Xaml.Automation;
 
 namespace UnoDock.Gallery;
+
 public sealed partial class GalleryPage
 {
     private void ShowDropDownLab()

@@ -37,7 +37,12 @@ public static class InputRoutingTrace
             root.RemoveHandler(UIElement.PointerCaptureLostEvent, lost);
             root.RemoveHandler(UIElement.PointerCanceledEvent, cancelled);
             Directory.CreateDirectory(output);
-            await File.WriteAllTextAsync(Path.Combine(output, "input-routing-trace.json"), JsonSerializer.Serialize(new { schema = 1, result, records }, new JsonSerializerOptions { WriteIndented = true }));
+            await File.WriteAllTextAsync(Path.Combine(output, "input-routing-trace.json"), JsonSerializer.Serialize(new
+            {
+                schema = 1,
+                result,
+                records
+            }, new JsonSerializerOptions { WriteIndented = true }));
         }
 
         void Capture(string phase, PointerRoutedEventArgs e)

@@ -1,4 +1,5 @@
 namespace UnoDock.Layout;
+
 internal static class LayoutTree
 {
     internal static void Validate(ILayoutContainer owner, ILayoutElement item)

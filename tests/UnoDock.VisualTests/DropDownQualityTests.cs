@@ -51,7 +51,7 @@ public static class DropDownQualityTests
     {
         internal readonly Button? Button;
         internal readonly Area? Area;
-        internal Control View => (Control? )Button ?? Area!;
+        internal Control View => (Control?)Button ?? Area!;
 
         internal Trigger(bool area)
         {
@@ -137,7 +137,11 @@ public static class DropDownQualityTests
             Title = "UnoDock dropdown contracts",
             Content = root
         };
-        window.AppWindow.Resize(new() { Width = 600, Height = 500 });
+        window.AppWindow.Resize(new()
+        {
+            Width = 600,
+            Height = 500
+        });
         window.Activate();
         using var registration = Microsoft.Windows.Shell.SystemCommands.RegisterWindow(window);
         foreach (var area in new[]
@@ -151,7 +155,7 @@ public static class DropDownQualityTests
             Add("open/close scopes context to retained row", async t =>
             {
                 var menu = NewMenu(out var row);
-                var context = new object ();
+                var context = new object();
                 t.Menu = menu;
                 t.Context = context;
                 t.Open();
@@ -165,8 +169,8 @@ public static class DropDownQualityTests
             Add("closed context changes do not touch menu rows", t =>
             {
                 t.Menu = NewMenu(out var row);
-                t.Context = new object ();
-                t.View.DataContext = new object ();
+                t.Context = new object();
+                t.View.DataContext = new object();
                 Check.Unset(row);
                 return Task.CompletedTask;
             });
@@ -174,7 +178,7 @@ public static class DropDownQualityTests
             {
                 var old = NewMenu(out var row);
                 var replacement = NewMenu(out _);
-                var context = new object ();
+                var context = new object();
                 var opens = 0;
                 old.Opened += (_, _) => opens++;
                 row.DataContextChanged += (_, _) =>
@@ -197,7 +201,7 @@ public static class DropDownQualityTests
             Add("close from DataContextChanged cancels before native showing", async t =>
             {
                 var menu = NewMenu(out var row);
-                var context = new object ();
+                var context = new object();
                 var opens = 0;
                 menu.Opened += (_, _) => opens++;
                 row.DataContextChanged += (_, _) =>
@@ -216,8 +220,8 @@ public static class DropDownQualityTests
             Add("latest nested context request wins", async t =>
             {
                 var menu = NewMenu(out var row);
-                var first = new object ();
-                var latest = new object ();
+                var first = new object();
+                var latest = new object();
                 row.DataContextChanged += (_, _) =>
                 {
                     if (ReferenceEquals(row.DataContext, first))
@@ -233,8 +237,8 @@ public static class DropDownQualityTests
             Add("explicit context updates an open retained row", async t =>
             {
                 var menu = NewMenu(out var row);
-                var first = new object ();
-                var latest = new object ();
+                var first = new object();
+                var latest = new object();
                 t.Menu = menu;
                 t.Context = first;
                 t.Open();
@@ -246,8 +250,8 @@ public static class DropDownQualityTests
             Add("inherited trigger context is live only while open", async t =>
             {
                 var menu = NewMenu(out var row);
-                var first = new object ();
-                var latest = new object ();
+                var first = new object();
+                var latest = new object();
                 t.Menu = menu;
                 t.View.DataContext = first;
                 t.Open();
@@ -257,16 +261,16 @@ public static class DropDownQualityTests
                 Check.Same(latest, row.DataContext);
                 t.Close();
                 await Wait(() => !menu.IsOpen);
-                t.View.DataContext = new object ();
+                t.View.DataContext = new object();
                 Check.Unset(row);
             });
             Add("explicit row context survives opening and cleanup", async t =>
             {
                 var menu = NewMenu(out var row);
-                var local = new object ();
+                var local = new object();
                 row.DataContext = local;
                 t.Menu = menu;
-                t.Context = new object ();
+                t.Context = new object();
                 t.Open();
                 await Wait(() => menu.IsOpen);
                 Check.Same(local, row.DataContext);
@@ -278,10 +282,10 @@ public static class DropDownQualityTests
             {
                 var menu = NewMenu(out var row);
                 t.Menu = menu;
-                t.Context = new object ();
+                t.Context = new object();
                 t.Open();
                 await Wait(() => menu.IsOpen);
-                var local = new object ();
+                var local = new object();
                 row.DataContext = local;
                 t.Close();
                 await Wait(() => !menu.IsOpen);
@@ -291,7 +295,7 @@ public static class DropDownQualityTests
             {
                 var menu = NewMenu(out var row);
                 t.Menu = menu;
-                t.Context = new object ();
+                t.Context = new object();
                 t.Open();
                 await Wait(() => menu.IsOpen);
                 t.View.IsEnabled = false;
@@ -306,7 +310,7 @@ public static class DropDownQualityTests
             {
                 var menu = NewMenu(out var row);
                 t.Menu = menu;
-                t.Context = new object ();
+                t.Context = new object();
                 t.Open();
                 await Wait(() => menu.IsOpen);
                 root.Children.Remove(t.View);
@@ -323,7 +327,7 @@ public static class DropDownQualityTests
                 var old = NewMenu(out var row);
                 var next = NewMenu(out _);
                 t.Menu = old;
-                t.Context = new object ();
+                t.Context = new object();
                 t.Open();
                 await Wait(() => old.IsOpen);
                 t.Menu = next;
@@ -339,7 +343,7 @@ public static class DropDownQualityTests
                 var menu = NewMenu(out var row);
                 menu.Opened += (_, _) => t.Close();
                 t.Menu = menu;
-                t.Context = new object ();
+                t.Context = new object();
                 t.Open();
                 await Task.Delay(150);
                 Check.False(menu.IsOpen);
@@ -352,7 +356,7 @@ public static class DropDownQualityTests
                 var next = NewMenu(out _);
                 menu.Opening += (_, _) => t.Menu = next;
                 t.Menu = menu;
-                t.Context = new object ();
+                t.Context = new object();
                 t.Open();
                 await Task.Delay(150);
                 Check.False(menu.IsOpen);
@@ -364,7 +368,7 @@ public static class DropDownQualityTests
             {
                 var menu = NewMenu(out var row);
                 t.Menu = menu;
-                t.Context = new object ();
+                t.Context = new object();
                 t.Open();
                 await Wait(() => menu.IsOpen);
                 menu.Hide();
@@ -374,7 +378,7 @@ public static class DropDownQualityTests
             Add("failed context assignment cleans up and can be retried", async t =>
             {
                 var menu = NewMenu(out var row);
-                var context = new object ();
+                var context = new object();
                 var fail = true;
                 row.DataContextChanged += (_, _) =>
                 {
@@ -402,8 +406,8 @@ public static class DropDownQualityTests
                 try
                 {
                     var menu = NewMenu(out var row);
-                    var first = new object ();
-                    var last = new object ();
+                    var first = new object();
+                    var last = new object();
                     t.Menu = next.Menu = menu;
                     t.Context = first;
                     next.Context = last;
@@ -432,8 +436,8 @@ public static class DropDownQualityTests
                 try
                 {
                     var menu = NewMenu(out var row);
-                    var first = new object ();
-                    var last = new object ();
+                    var first = new object();
+                    var last = new object();
                     var armed = false;
                     t.Menu = next.Menu = menu;
                     t.Context = first;
@@ -465,7 +469,7 @@ public static class DropDownQualityTests
                 t.Menu = menu;
                 for (var i = 0; i < 5; i++)
                 {
-                    var value = new object ();
+                    var value = new object();
                     t.Context = value;
                     t.Open();
                     await Wait(() => menu.IsOpen);
@@ -516,7 +520,7 @@ public static class DropDownQualityTests
             {
                 await Wait(() => t.View.IsLoaded);
                 t.Menu = NewMenu(out var row);
-                t.Context = new object ();
+                t.Context = new object();
                 t.Button!.Checked += (_, _) => t.Button.IsChecked = false;
                 t.Open();
                 await Task.Delay(120);

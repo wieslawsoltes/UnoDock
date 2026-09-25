@@ -5,6 +5,7 @@ using UnoDock.Compatibility;
 using UnoDock.Controls;
 
 namespace UnoDock.Gallery;
+
 public sealed partial class GalleryPage
 {
     private void ShowInputExtensionsLab()
@@ -48,10 +49,22 @@ public sealed partial class GalleryPage
             Padding = new(14),
             RowSpacing = 8
         };
-        grid.RowDefinitions.Add(new() { Height = GridLength.Auto });
-        grid.RowDefinitions.Add(new() { Height = GridLength.Auto });
-        grid.RowDefinitions.Add(new() { Height = new(1, GridUnitType.Star) });
-        grid.RowDefinitions.Add(new() { Height = new(170) });
+        grid.RowDefinitions.Add(new()
+        {
+            Height = GridLength.Auto
+        });
+        grid.RowDefinitions.Add(new()
+        {
+            Height = GridLength.Auto
+        });
+        grid.RowDefinitions.Add(new()
+        {
+            Height = new(1, GridUnitType.Star)
+        });
+        grid.RowDefinitions.Add(new()
+        {
+            Height = new(170)
+        });
         var caption = new TextBlock
         {
             Text = "Protected input and bindable selection — real overrides, not synthetic events",
@@ -131,7 +144,11 @@ public sealed partial class GalleryPage
                 Title = "UnoDock — Input extensions",
                 Content = grid
             };
-            window.AppWindow.Resize(new() { Width = 1050, Height = 740 });
+            window.AppWindow.Resize(new()
+            {
+                Width = 1050,
+                Height = 740
+            });
             var registration = Microsoft.Windows.Shell.SystemCommands.RegisterWindow(window);
             window.Closed += (_, _) =>
             {

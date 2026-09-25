@@ -23,9 +23,18 @@ public class DropArea<T> : IDropArea, IModelDropArea where T : FrameworkElement
         Refresh();
     }
 
-    public T AreaElement { get; }
-    public Rect DetectionRect { get; private set; }
-    public DropAreaType Type { get; }
+    public T AreaElement
+    {
+        get;
+    }
+    public Rect DetectionRect
+    {
+        get; private set;
+    }
+    public DropAreaType Type
+    {
+        get;
+    }
 
     ILayoutElement? IModelDropArea.Model => AreaElement is DockingManager manager ? manager.Layout.RootPanel : (AreaElement as ILayoutControl)?.Model;
 
@@ -41,7 +50,7 @@ public class DropArea<T> : IDropArea, IModelDropArea where T : FrameworkElement
         {
             DetectionRect = DockCoordinates.Bounds(AreaElement, new Rect(0, 0, AreaElement.ActualWidth, AreaElement.ActualHeight), _relativeTo, converter);
         }
-        catch (Exception e)when (DockCoordinates.IsUnavailable(e))
+        catch (Exception e) when (DockCoordinates.IsUnavailable(e))
         {
             DetectionRect = default;
         }

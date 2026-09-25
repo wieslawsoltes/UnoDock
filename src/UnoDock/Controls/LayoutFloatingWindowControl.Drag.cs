@@ -4,6 +4,7 @@ using UnoDock.Internal;
 using UnoDock.Layout;
 
 namespace UnoDock.Controls;
+
 public abstract partial class LayoutFloatingWindowControl
 {
     private readonly Border _dragHandle = new()
@@ -97,7 +98,7 @@ public abstract partial class LayoutFloatingWindowControl
             if (_window != null && e.Pointer.PointerDeviceType == Microsoft.UI.Input.PointerDeviceType.Mouse)
                 StartDragClock();
         }
-        catch (Exception error)when (DockCoordinates.IsUnavailable(error))
+        catch (Exception error) when (DockCoordinates.IsUnavailable(error))
         {
             FailCaptionDrag(error);
         }
@@ -123,7 +124,7 @@ public abstract partial class LayoutFloatingWindowControl
             MoveCaption(drag, CaptionPoint(e), InputState.ControlDown);
             e.Handled = true;
         }
-        catch (Exception error)when (DockCoordinates.IsUnavailable(error))
+        catch (Exception error) when (DockCoordinates.IsUnavailable(error))
         {
             FailCaptionDrag(error);
         }
@@ -164,7 +165,11 @@ public abstract partial class LayoutFloatingWindowControl
                     if (drag.Window != null)
                         DesktopWindowCoordinates.MoveNative(drag.Window, origin);
                     else
-                        SetBounds(drag.Bounds with { X = origin.X, Y = origin.Y });
+                        SetBounds(drag.Bounds with
+                        {
+                            X = origin.X,
+                            Y = origin.Y
+                        });
                 }
             }
             finally
@@ -191,7 +196,7 @@ public abstract partial class LayoutFloatingWindowControl
                 CompleteCaption(drag, point, InputState.ControlDown);
             e.Handled = true;
         }
-        catch (Exception error)when (DockCoordinates.IsUnavailable(error))
+        catch (Exception error) when (DockCoordinates.IsUnavailable(error))
         {
             FailCaptionDrag(error);
         }
@@ -357,7 +362,7 @@ public abstract partial class LayoutFloatingWindowControl
         }
         else if (msg == 0x216 && _captionDrag == null && _dragCoordinates.TryGetPointer(_window, out var state) && state.LeftDown && !state.EscapeDown)
         {
-            if (BeginCaptionDrag(state.Position, null, true)is { } drag)
+            if (BeginCaptionDrag(state.Position, null, true) is { } drag)
             {
                 StartDragClock();
                 MoveCaption(drag, state.Position, state.ControlDown);
@@ -381,7 +386,7 @@ public abstract partial class LayoutFloatingWindowControl
         var origin = _dragCoordinates.GetNativeOrigin(window);
         if (_captionDrag == null && !OperatingSystem.IsWindows() && e.DidPositionChange && !e.DidSizeChange && _lastNativeOrigin is { } previous && previous != origin && _dragCoordinates.TryGetPointer(window, out var state) && state.LeftDown && !state.EscapeDown && _dragCoordinates.IsNativeCaption(window, state.Position))
         {
-            if (BeginCaptionDrag(state.Position, null, true)is { } drag)
+            if (BeginCaptionDrag(state.Position, null, true) is { } drag)
             {
                 StartDragClock();
                 MoveCaption(drag, state.Position, state.ControlDown);

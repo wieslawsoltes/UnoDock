@@ -1,6 +1,7 @@
 using System.Xml;
 
 namespace UnoDock.Layout;
+
 [ContentProperty(Name = "Children")]
 public class LayoutAnchorSide : LayoutGroup<LayoutAnchorGroup>
 {
@@ -9,7 +10,10 @@ public class LayoutAnchorSide : LayoutGroup<LayoutAnchorGroup>
     {
     }
 
-    public AnchorSide Side { get => _side; private set => Set(ref _side, value); }
+    public AnchorSide Side
+    {
+        get => _side; private set => Set(ref _side, value);
+    }
 
     internal void SetSide(AnchorSide side) => Side = side;
     protected override bool GetVisibility() => Children.Any(c => c.IsVisible);

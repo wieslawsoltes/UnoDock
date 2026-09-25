@@ -4,6 +4,7 @@ using UnoDock.Internal;
 using UnoDock.Layout;
 
 namespace UnoDock.Controls;
+
 internal sealed partial class NavigatorListItem : ListBoxItem
 {
     private DockPalette _palette = DockChrome.Default(false);

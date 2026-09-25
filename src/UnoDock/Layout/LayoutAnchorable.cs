@@ -3,19 +3,41 @@ using System.Xml.Schema;
 using System.Xml.Serialization;
 
 namespace UnoDock.Layout;
+
 public class LayoutAnchorable : LayoutContent
 {
     public override void ConsoleDump(int tab) => base.ConsoleDump(tab);
     private bool _canHide = true, _canAutoHide = true, _canDocument = true;
     private double _autoWidth, _autoHeight, _autoMinWidth = 100, _autoMinHeight = 100;
     public LayoutAnchorable() => CanClose = false;
-    public bool CanHide { get => _canHide; set => Set(ref _canHide, value); }
-    public bool CanAutoHide { get => _canAutoHide; set => Set(ref _canAutoHide, value); }
-    public bool CanDockAsTabbedDocument { get => _canDocument; set => Set(ref _canDocument, value); }
-    public double AutoHideWidth { get => _autoWidth; set => Set(ref _autoWidth, LayoutPositionableGroup<LayoutContent>.Dimension(value)); }
-    public double AutoHideHeight { get => _autoHeight; set => Set(ref _autoHeight, LayoutPositionableGroup<LayoutContent>.Dimension(value)); }
-    public double AutoHideMinWidth { get => _autoMinWidth; set => Set(ref _autoMinWidth, LayoutPositionableGroup<LayoutContent>.Dimension(value)); }
-    public double AutoHideMinHeight { get => _autoMinHeight; set => Set(ref _autoMinHeight, LayoutPositionableGroup<LayoutContent>.Dimension(value)); }
+    public bool CanHide
+    {
+        get => _canHide; set => Set(ref _canHide, value);
+    }
+    public bool CanAutoHide
+    {
+        get => _canAutoHide; set => Set(ref _canAutoHide, value);
+    }
+    public bool CanDockAsTabbedDocument
+    {
+        get => _canDocument; set => Set(ref _canDocument, value);
+    }
+    public double AutoHideWidth
+    {
+        get => _autoWidth; set => Set(ref _autoWidth, LayoutPositionableGroup<LayoutContent>.Dimension(value));
+    }
+    public double AutoHideHeight
+    {
+        get => _autoHeight; set => Set(ref _autoHeight, LayoutPositionableGroup<LayoutContent>.Dimension(value));
+    }
+    public double AutoHideMinWidth
+    {
+        get => _autoMinWidth; set => Set(ref _autoMinWidth, LayoutPositionableGroup<LayoutContent>.Dimension(value));
+    }
+    public double AutoHideMinHeight
+    {
+        get => _autoMinHeight; set => Set(ref _autoMinHeight, LayoutPositionableGroup<LayoutContent>.Dimension(value));
+    }
 
     [System.Xml.Serialization.XmlIgnore]
     public bool IsHidden => Parent is LayoutRoot root && root.Hidden.Contains(this);

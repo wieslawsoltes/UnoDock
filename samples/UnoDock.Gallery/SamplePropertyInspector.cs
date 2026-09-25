@@ -77,7 +77,10 @@ internal sealed class SamplePropertyInspector : UserControl, IDisposable
     private double _nameWidth = 96;
     internal string? SelectedContentId => _document?.ContentId;
     internal int VisibleFieldCount => _entries.Count(row => row.View.Visibility == Visibility.Visible);
-    internal string? LastError { get; private set; }
+    internal string? LastError
+    {
+        get; private set;
+    }
     internal string SelectedPropertyName => _selected?.Field.Name ?? "";
 
     internal double NameColumnWidth
@@ -109,7 +112,10 @@ internal sealed class SamplePropertyInspector : UserControl, IDisposable
         }
 
         )
-            host.RowDefinitions.Add(new() { Height = height });
+            host.RowDefinitions.Add(new()
+            {
+                Height = height
+            });
         host.Children.Add(_heading);
         var modes = new StackPanel
         {
@@ -129,16 +135,28 @@ internal sealed class SamplePropertyInspector : UserControl, IDisposable
         {
             Margin = new(4, 2, 4, 4)
         };
-        search.ColumnDefinitions.Add(new() { Width = new(1, GridUnitType.Star) });
-        search.ColumnDefinitions.Add(new() { Width = new(23) });
+        search.ColumnDefinitions.Add(new()
+        {
+            Width = new(1, GridUnitType.Star)
+        });
+        search.ColumnDefinitions.Add(new()
+        {
+            Width = new(23)
+        });
         search.Children.Add(_search);
         var clear = SampleChrome.Button("×", () => Filter(""), "Clear property search");
         Grid.SetColumn(clear, 1);
         search.Children.Add(clear);
         Grid.SetRow(search, 2);
         host.Children.Add(search);
-        _columns.ColumnDefinitions.Add(new() { Width = new(_nameWidth) });
-        _columns.ColumnDefinitions.Add(new() { Width = new(1, GridUnitType.Star) });
+        _columns.ColumnDefinitions.Add(new()
+        {
+            Width = new(_nameWidth)
+        });
+        _columns.ColumnDefinitions.Add(new()
+        {
+            Width = new(1, GridUnitType.Star)
+        });
         _columns.Children.Add(new TextBlock { Text = "Property", FontSize = 11, Margin = new(4, 3, 3, 3) });
         var valueLabel = new TextBlock
         {
@@ -368,10 +386,22 @@ internal sealed class SamplePropertyInspector : UserControl, IDisposable
             MinHeight = 24,
             BorderThickness = new(0, 0, 0, 1)
         };
-        grid.ColumnDefinitions.Add(new() { Width = new(_nameWidth) });
-        grid.ColumnDefinitions.Add(new() { Width = new(1, GridUnitType.Star) });
-        grid.RowDefinitions.Add(new() { Height = GridLength.Auto });
-        grid.RowDefinitions.Add(new() { Height = GridLength.Auto });
+        grid.ColumnDefinitions.Add(new()
+        {
+            Width = new(_nameWidth)
+        });
+        grid.ColumnDefinitions.Add(new()
+        {
+            Width = new(1, GridUnitType.Star)
+        });
+        grid.RowDefinitions.Add(new()
+        {
+            Height = GridLength.Auto
+        });
+        grid.RowDefinitions.Add(new()
+        {
+            Height = GridLength.Auto
+        });
         var label = new TextBlock
         {
             Text = field.Name,
@@ -464,8 +494,14 @@ internal sealed class SamplePropertyInspector : UserControl, IDisposable
             if (field.Kind == EditorKind.Color)
             {
                 var holder = new Grid();
-                holder.ColumnDefinitions.Add(new() { Width = new(17) });
-                holder.ColumnDefinitions.Add(new() { Width = new(1, GridUnitType.Star) });
+                holder.ColumnDefinitions.Add(new()
+                {
+                    Width = new(17)
+                });
+                holder.ColumnDefinitions.Add(new()
+                {
+                    Width = new(1, GridUnitType.Star)
+                });
                 row.Swatch = new Border
                 {
                     Width = 12,
@@ -483,7 +519,7 @@ internal sealed class SamplePropertyInspector : UserControl, IDisposable
                 input = text;
         }
 
-        var focusTarget = (FrameworkElement? )row.Text ?? row.Boolean ?? (FrameworkElement? )row.Choice ?? input;
+        var focusTarget = (FrameworkElement?)row.Text ?? row.Boolean ?? (FrameworkElement?)row.Choice ?? input;
         AutomationProperties.SetName(focusTarget, field.Name);
         AutomationProperties.SetHelpText(focusTarget, field.Description);
         AutomationProperties.SetAutomationId(focusTarget, "Property-" + field.Name);
@@ -762,7 +798,7 @@ internal sealed class SamplePropertyInspector : UserControl, IDisposable
                 _document.PropertyChanged -= OnDocumentChanged;
             _document = null;
             _content = null;
-            foreach (var(value, property, token)in _tokens)
+            foreach (var (value, property, token) in _tokens)
                 value.UnregisterPropertyChangedCallback(property, token);
             _tokens.Clear();
             _entries.Clear();
@@ -824,7 +860,8 @@ internal sealed class SamplePropertyInspector : UserControl, IDisposable
         {
             1 => new(values[0]),
             2 => new(values[0], values[1], values[0], values[1]),
-            _ => new(values[0], values[1], values[2], values[3])};
+            _ => new(values[0], values[1], values[2], values[3])
+        };
     }
 
     private static string Color(Brush? brush) => brush is SolidColorBrush value ? $"#{value.Color.A:X2}{value.Color.R:X2}{value.Color.G:X2}{value.Color.B:X2}" : brush == null ? "(unset)" : "(brush)";

@@ -97,7 +97,7 @@ internal sealed class ConverterLab : UserControl
                 2 => DependencyProperty.UnsetValue,
                 _ => value
             }, [_model], fallbackValue: "Fallback value", useFallbackValue: true));
-            _bindings.Add(new(_editor, TextBox.TextProperty, () => _model.Edit, value => value, [_model], nameof(LabModel.Edit), writeSource: value => _model.Edit = ((string? )value ?? "").Trim(), convertBack: value => value));
+            _bindings.Add(new(_editor, TextBox.TextProperty, () => _model.Edit, value => value, [_model], nameof(LabModel.Edit), writeSource: value => _model.Edit = ((string?)value ?? "").Trim(), convertBack: value => value));
             _bindings.Add(new(_source, TextBlock.TextProperty, () => "SOURCE MODEL: " + _model.Edit, value => value, [_model], nameof(LabModel.Edit)));
         }
         catch

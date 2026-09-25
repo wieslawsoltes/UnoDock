@@ -4,6 +4,7 @@ using Microsoft.UI.Xaml.Automation.Provider;
 using UnoDock.Layout;
 
 namespace UnoDock.Controls;
+
 public sealed class LayoutPaneAutomationPeer(LayoutCachePaneControl owner) : FrameworkElementAutomationPeer(owner), ISelectionProvider
 {
     private LayoutContent? _lastSelection = owner.SelectedItem as LayoutContent;
@@ -15,9 +16,9 @@ public sealed class LayoutPaneAutomationPeer(LayoutCachePaneControl owner) : Fra
 
     public IRawElementProviderSimple[] GetSelection()
     {
-        if (owner.SelectedItem is not LayoutContent model || !owner.AutomationItems.Any(c => ReferenceEquals(c, model)) || owner.TabFor(model)is not { } tab || CreatePeerForElement(tab)is not { } peer)
-            return[];
-        return[ProviderFromPeer(peer)];
+        if (owner.SelectedItem is not LayoutContent model || !owner.AutomationItems.Any(c => ReferenceEquals(c, model)) || owner.TabFor(model) is not { } tab || CreatePeerForElement(tab) is not { } peer)
+            return [];
+        return [ProviderFromPeer(peer)];
     }
 
     protected override IList<AutomationPeer> GetChildrenCore()
@@ -26,9 +27,9 @@ public sealed class LayoutPaneAutomationPeer(LayoutCachePaneControl owner) : Fra
         var models = owner.AutomationItems.ToArray();
         var peers = new List<AutomationPeer>();
         foreach (var model in models)
-            if (owner.TabFor(model)is { } tab && CreatePeerForElement(tab)is { } peer)
+            if (owner.TabFor(model) is { } tab && CreatePeerForElement(tab) is { } peer)
                 peers.Add(peer);
-        if (owner.SelectedItem is LayoutContent selected && models.Any(m => ReferenceEquals(m, selected)) && selected.Root?.Manager?.GetLayoutItemFromModel(selected).ExistingView is { } view && CreatePeerForElement(view)is { } contentPeer)
+        if (owner.SelectedItem is LayoutContent selected && models.Any(m => ReferenceEquals(m, selected)) && selected.Root?.Manager?.GetLayoutItemFromModel(selected).ExistingView is { } view && CreatePeerForElement(view) is { } contentPeer)
             peers.Add(contentPeer);
         return peers;
     }

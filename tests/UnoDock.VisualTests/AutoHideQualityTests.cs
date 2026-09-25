@@ -14,14 +14,20 @@ public static class AutoHideQualityTests
 {
     private sealed class FocusFlyout : LayoutAutoHideWindowControl
     {
-        public bool Keep { get; set; }
+        public bool Keep
+        {
+            get; set;
+        }
 
         protected override bool HasFocusWithinCore() => Keep || base.HasFocusWithinCore();
     }
 
     private sealed class CallbackTemplateSelector : DataTemplateSelector
     {
-        public Action? Callback { get; set; }
+        public Action? Callback
+        {
+            get; set;
+        }
 
         protected override DataTemplate SelectTemplateCore(object item, DependencyObject container)
         {
@@ -34,7 +40,10 @@ public static class AutoHideQualityTests
 
     private sealed class Manager : DockingManager
     {
-        public Action<DependencyPropertyChangedEventArgs>? HostChanged { get; set; }
+        public Action<DependencyPropertyChangedEventArgs>? HostChanged
+        {
+            get; set;
+        }
 
         protected override LayoutAutoHideWindowControl CreateAutoHideWindowControl() => new FocusFlyout();
         protected override void OnAutoHideWindowChanged(DependencyPropertyChangedEventArgs e)
@@ -67,7 +76,11 @@ public static class AutoHideQualityTests
             Content = scene,
             Title = "UnoDock auto-hide acceptance"
         };
-        window.AppWindow.Resize(new() { Width = 1040, Height = 720 });
+        window.AppWindow.Resize(new()
+        {
+            Width = 1040,
+            Height = 720
+        });
         window.Activate();
         using var registration = Microsoft.Windows.Shell.SystemCommands.RegisterWindow(window);
         LayoutAnchorable tool = null!;
@@ -864,7 +877,7 @@ public static class AutoHideQualityTests
         {
             return (info ?? throw new MissingMethodException(method)).Invoke(target, args);
         }
-        catch (TargetInvocationException e)when (e.InnerException != null)
+        catch (TargetInvocationException e) when (e.InnerException != null)
         {
             ExceptionDispatchInfo.Capture(e.InnerException).Throw();
             throw;

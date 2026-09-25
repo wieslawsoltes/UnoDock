@@ -95,10 +95,26 @@ public static partial class WindowCoordinateTests
             var closed = false;
             try
             {
-                a.AppWindow.Move(new() { X = 73, Y = 97 });
-                a.AppWindow.Resize(new() { Width = 420, Height = 340 });
-                b.AppWindow.Move(new() { X = 581, Y = 173 });
-                b.AppWindow.Resize(new() { Width = 360, Height = 280 });
+                a.AppWindow.Move(new()
+                {
+                    X = 73,
+                    Y = 97
+                });
+                a.AppWindow.Resize(new()
+                {
+                    Width = 420,
+                    Height = 340
+                });
+                b.AppWindow.Move(new()
+                {
+                    X = 581,
+                    Y = 173
+                });
+                b.AppWindow.Resize(new()
+                {
+                    Width = 360,
+                    Height = 280
+                });
                 a.Activate();
                 b.Activate();
                 await Until(() => source.IsLoaded && destination.IsLoaded && source.ActualWidth > 0 && destination.ActualWidth > 0);
@@ -148,7 +164,11 @@ public static partial class WindowCoordinateTests
                 {
                     var previous = adapter.ToScreen(source, default);
                     var oldPosition = a.AppWindow.Position;
-                    a.AppWindow.Move(new() { X = oldPosition.X + 31, Y = oldPosition.Y + 17 });
+                    a.AppWindow.Move(new()
+                    {
+                        X = oldPosition.X + 31,
+                        Y = oldPosition.Y + 17
+                    });
                     await Until(() => Math.Abs(adapter.ToScreen(source, default).X - previous.X) >= 1);
                     var current = adapter.ToScreen(source, default);
                     Check.Near(31, current.X - previous.X, 1);
@@ -317,7 +337,10 @@ public static partial class WindowCoordinateTests
 
     private sealed class ExternalCoordinates : ICrossWindowCoordinates, IDisposable
     {
-        public bool Disposed { get; private set; }
+        public bool Disposed
+        {
+            get; private set;
+        }
 
         public Point Translate(FrameworkElement source, Point point, FrameworkElement destination) => point;
         public void Dispose() => Disposed = true;

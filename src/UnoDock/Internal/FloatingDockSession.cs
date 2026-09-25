@@ -13,9 +13,18 @@ internal sealed class FloatingDockSession : IDisposable
     private readonly (ILayoutElement Node, ILayoutContainer? Parent)[] _nodes;
     private readonly long _enabledToken, _immutableToken, _managerEnabledToken;
     private bool _invalid, _disposed, _consumed;
-    internal LayoutFloatingWindowControl Window { get; }
-    internal LayoutContent[] Contents { get; }
-    internal LayoutContent Representative { get; }
+    internal LayoutFloatingWindowControl Window
+    {
+        get;
+    }
+    internal LayoutContent[] Contents
+    {
+        get;
+    }
+    internal LayoutContent Representative
+    {
+        get;
+    }
 
     internal FloatingDockSession(DockingManager manager, LayoutFloatingWindowControl window)
     {
@@ -31,7 +40,7 @@ internal sealed class FloatingDockSession : IDisposable
         {
             _model
         }.Concat(_model.Descendents()).Select(node => (node, node.Parent)).ToArray();
-        foreach (var(node, _)in _nodes)
+        foreach (var (node, _) in _nodes)
             node.PropertyChanged += OnNodeChanged;
         _manager.LayoutChanged += OnLayoutChanged;
         _enabledToken = window.RegisterPropertyChangedCallback(Control.IsEnabledProperty, Invalidate);
@@ -252,7 +261,7 @@ internal sealed class FloatingDockSession : IDisposable
         if (_disposed)
             return;
         _disposed = true;
-        foreach (var(node, _)in _nodes)
+        foreach (var (node, _) in _nodes)
             node.PropertyChanged -= OnNodeChanged;
         _manager.LayoutChanged -= OnLayoutChanged;
         Window.UnregisterPropertyChangedCallback(Control.IsEnabledProperty, _enabledToken);

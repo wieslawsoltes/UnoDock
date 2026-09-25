@@ -10,12 +10,30 @@ public sealed class DockDropPlan
     private readonly DockingManager? _manager;
     private readonly bool _asDocument;
     private readonly bool _atRoot;
-    public LayoutContent Content { get; }
-    public ILayoutGroup Target { get; }
-    public DockPosition Position { get; }
-    public DropTargetType Type { get; }
-    public int InsertionIndex { get; }
-    public Rect PreviewRect { get; }
+    public LayoutContent Content
+    {
+        get;
+    }
+    public ILayoutGroup Target
+    {
+        get;
+    }
+    public DockPosition Position
+    {
+        get;
+    }
+    public DropTargetType Type
+    {
+        get;
+    }
+    public int InsertionIndex
+    {
+        get;
+    }
+    public Rect PreviewRect
+    {
+        get;
+    }
 
     private DockDropPlan(LayoutContent content, ILayoutGroup target, DropTargetType type, Rect bounds, int insertionIndex)
     {
@@ -72,7 +90,7 @@ public sealed class DockDropPlan
                 return false;
             if (!ReferenceEquals(Content.Root, _root) || !ReferenceEquals(Target.Root, _root) || !DockOperations.CanMove(Content))
                 return false;
-            if (Content.FindParent<LayoutFloatingWindow>()is { } floating && _root.Manager?.FloatingWindows.Any(w => ReferenceEquals(w.Model, floating) && w.IsContentImmutable) == true)
+            if (Content.FindParent<LayoutFloatingWindow>() is { } floating && _root.Manager?.FloatingWindows.Any(w => ReferenceEquals(w.Model, floating) && w.IsContentImmutable) == true)
                 return false;
             if (_atRoot)
                 return ReferenceEquals(Target, _root.RootPanel);

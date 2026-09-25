@@ -27,7 +27,7 @@ internal static class MenuContext
             Clear(menu);
             for (DependencyObject? target = menu.Target; target != null; target = VisualTreeHelper.GetParent(target))
             {
-                if (target.GetValue(ModelProperty)is not LayoutContent model || model.Root?.Manager is not { } manager)
+                if (target.GetValue(ModelProperty) is not LayoutContent model || model.Root?.Manager is not { } manager)
                     continue;
                 Apply(menu, manager.GetLayoutItemFromModel(model));
                 break;
@@ -68,7 +68,7 @@ internal static class MenuContext
                 state.Context = null;
                 // Remove ownership before invoking user code. A reentrant request
                 // is drained next, not allowed to mutate an enumerated collection.
-                foreach (var(item, assigned)in state.Assigned.ToArray())
+                foreach (var (item, assigned) in state.Assigned.ToArray())
                 {
                     state.Assigned.Remove(item);
                     if (ReferenceEquals(item.ReadLocalValue(FrameworkElement.DataContextProperty), assigned))
@@ -104,7 +104,7 @@ internal static class MenuContext
             // an application's local value/binding, even on the exception path.
             state.CleaningAfterFailure = true;
             List<Exception>? failures = null;
-            foreach (var(item, assigned)in state.Assigned.ToArray())
+            foreach (var (item, assigned) in state.Assigned.ToArray())
             {
                 state.Assigned.Remove(item);
                 try

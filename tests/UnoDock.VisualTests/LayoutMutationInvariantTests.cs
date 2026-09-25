@@ -3,6 +3,7 @@ using System.ComponentModel;
 using UnoDock.Layout;
 
 namespace UnoDock.Testing;
+
 internal static class LayoutMutationInvariantTests
 {
     internal static Task<int> Run(string output)

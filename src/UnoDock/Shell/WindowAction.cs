@@ -5,6 +5,7 @@ using UnoDock.Controls;
 using UnoDock.Compatibility;
 
 namespace Microsoft.Windows.Shell;
+
 internal enum WindowAction
 {
     Close,

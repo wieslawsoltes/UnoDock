@@ -9,6 +9,7 @@ using UnoDock.Controls;
 using UnoDock.Layout;
 
 namespace UnoDock.Testing;
+
 internal static class NavigatorCommitTests
 {
     internal static async Task<int> Run(string output)
@@ -22,7 +23,11 @@ internal static class NavigatorCommitTests
         {
             Title = "UnoDock navigator commit acceptance"
         };
-        window.AppWindow.Resize(new() { Width = 1100, Height = 800 });
+        window.AppWindow.Resize(new()
+        {
+            Width = 1100,
+            Height = 800
+        });
         var mutations = new (string Name, Action<Fixture> Mutate)[]
         {
             ("disabled target", f => f.Target.IsEnabled = false),
@@ -437,20 +442,20 @@ internal static class NavigatorCommitTests
         Check.True(predicate(), "Navigator condition did not converge within the bounded wait.");
     }
 
-    private static object? Call(object target, string name, params object? [] args)
+    private static object? Call(object target, string name, params object?[] args)
     {
         try
         {
             return target.GetType().GetMethod(name, BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(target, args);
         }
-        catch (TargetInvocationException error)when (error.InnerException != null)
+        catch (TargetInvocationException error) when (error.InnerException != null)
         {
             ExceptionDispatchInfo.Capture(error.InnerException).Throw();
             throw;
         }
     }
 
-    private static object? Surface(DockingManager host, string name, params object? [] args) => Call(GetSurface(host), name, args);
+    private static object? Surface(DockingManager host, string name, params object?[] args) => Call(GetSurface(host), name, args);
     private static object GetSurface(DockingManager host) => typeof(DockingManager).GetProperty("Surface", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(host)!;
     private sealed class ProbeCommand(Action execute, Func<bool> canExecute) : ICommand
     {
@@ -513,7 +518,7 @@ internal static class NavigatorCommitTests
         internal readonly LayoutContent Target;
         internal NavigatorWindow Nav = null!;
         internal LayoutItem Item => Host.GetLayoutItemFromModel(Target);
-        internal NavigatorWindow? Current => typeof(DockingManager).GetProperty("Surface", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(Host)is { } surface ? surface.GetType().GetField("_navigator", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(surface) as NavigatorWindow : null;
+        internal NavigatorWindow? Current => typeof(DockingManager).GetProperty("Surface", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(Host) is { } surface ? surface.GetType().GetField("_navigator", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(surface) as NavigatorWindow : null;
 
         internal Fixture(bool tool, Window window)
         {

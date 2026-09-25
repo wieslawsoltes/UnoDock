@@ -4,6 +4,7 @@ using UnoDock.Compatibility;
 using UnoDock.Internal;
 
 namespace UnoDock.Controls;
+
 public class DropDownButton : ToggleButton
 {
     public static readonly DependencyProperty DropDownContextMenuProperty = DependencyProperty.Register(nameof(DropDownContextMenu), typeof(MenuFlyout), typeof(DropDownButton), new PropertyMetadata(null, (d, e) => ((DropDownButton)d).MenuChanged(e)));
@@ -33,8 +34,14 @@ public class DropDownButton : ToggleButton
         DataContextChanged += (_, _) => _session.Refresh();
     }
 
-    public MenuFlyout? DropDownContextMenu { get => (MenuFlyout? )GetValue(DropDownContextMenuProperty); set => SetValue(DropDownContextMenuProperty, value); }
-    public object? DropDownContextMenuDataContext { get => GetValue(DropDownContextMenuDataContextProperty); set => SetValue(DropDownContextMenuDataContextProperty, value); }
+    public MenuFlyout? DropDownContextMenu
+    {
+        get => (MenuFlyout?)GetValue(DropDownContextMenuProperty); set => SetValue(DropDownContextMenuProperty, value);
+    }
+    public object? DropDownContextMenuDataContext
+    {
+        get => GetValue(DropDownContextMenuDataContextProperty); set => SetValue(DropDownContextMenuDataContextProperty, value);
+    }
 
     /// <summary>Shows the configured menu through the same lifetime as a native click.</summary>
     public void OpenDropDown() => _session.Open();

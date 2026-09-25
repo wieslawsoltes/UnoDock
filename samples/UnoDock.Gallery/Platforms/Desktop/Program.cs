@@ -1,6 +1,7 @@
 using Uno.UI.Hosting;
 
 namespace UnoDock.Gallery;
+
 internal static class Program
 {
     [STAThread]

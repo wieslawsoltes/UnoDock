@@ -41,13 +41,13 @@ foreach (var directory in directories)
 paths[Path.GetFileName(assemblyPath)] = assemblyPath;
 var references = new List<MetadataReference>();
 var hashes = new SortedDictionary<string, string>(StringComparer.Ordinal);
-foreach (var(name, path)in paths)
+foreach (var (name, path) in paths)
 {
     try
     {
         var reference = MetadataReference.CreateFromFile(path, MetadataReferenceProperties.Assembly);
         // Validate the PE eagerly so native DLLs do not poison symbol resolution.
-        if (reference.GetMetadata()is not AssemblyMetadata)
+        if (reference.GetMetadata() is not AssemblyMetadata)
             continue;
         references.Add(reference);
         hashes[name] = Hash(File.ReadAllBytes(path));
@@ -87,9 +87,19 @@ foreach (var type in types)
         memberRecords.Add(MemberRecord(member));
     }
 
-    records.Add(new { name = MetadataName(type), key = typeLine.Trim(), assembly = type.ContainingAssembly.Identity.Name, attributes = Attributes(type.GetAttributes()), baseClasses, interfaces = type.AllInterfaces.Select(TypeName).Order(StringComparer.Ordinal).ToArray(), members = memberRecords, // Candidates retain their declaring owner. The comparison tool checks
- // intervening hiding declarations; it never treats constructors as inherited.
-    declaredNames = type.GetMembers().Where(m => !m.IsImplicitlyDeclared && m is not IMethodSymbol { AssociatedSymbol: not null }).Select(m => m.MetadataName).Distinct().Order(StringComparer.Ordinal).ToArray(), inheritedMembers = InheritedMembers(type).ToArray() });
+    records.Add(new
+    {
+        name = MetadataName(type),
+        key = typeLine.Trim(),
+        assembly = type.ContainingAssembly.Identity.Name,
+        attributes = Attributes(type.GetAttributes()),
+        baseClasses,
+        interfaces = type.AllInterfaces.Select(TypeName).Order(StringComparer.Ordinal).ToArray(),
+        members = memberRecords, // Candidates retain their declaring owner. The comparison tool checks
+                                 // intervening hiding declarations; it never treats constructors as inherited.
+        declaredNames = type.GetMembers().Where(m => !m.IsImplicitlyDeclared && m is not IMethodSymbol { AssociatedSymbol: not null }).Select(m => m.MetadataName).Distinct().Order(StringComparer.Ordinal).ToArray(),
+        inheritedMembers = InheritedMembers(type).ToArray()
+    });
 }
 
 // A resolved signature is essential: matching unresolved names would give false evidence.
@@ -114,7 +124,8 @@ object MemberRecord(ISymbol member) => new
     {
         IMethodSymbol m => ParameterRecords(m.Parameters),
         IPropertySymbol p => ParameterRecords(p.Parameters),
-        _ => Array.Empty<object>()},
+        _ => Array.Empty<object>()
+    },
     nullableSignature = member.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat.WithMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier))
 };
 IEnumerable<object> InheritedMembers(INamedTypeSymbol type)
@@ -143,7 +154,8 @@ string MemberKey(ISymbol member)
         IEventSymbol e => $"{prefix} event {TypeNameChecked(e.Type)} {e.MetadataName}",
         IPropertySymbol p => $"{prefix} property {Ref(p.RefKind)}{TypeNameChecked(p.Type)} {p.MetadataName}{Parameters(p.Parameters)} {{ {Accessor(p.GetMethod, "get")}{Accessor(p.SetMethod, p.SetMethod?.IsInitOnly == true ? "init" : "set")} }}",
         IMethodSymbol m => $"{prefix} {(m.MethodKind is MethodKind.Constructor or MethodKind.StaticConstructor ? "constructor" : "method")} {Ref(m.RefKind)}{TypeNameChecked(m.ReturnType)} {m.MetadataName}{TypeParameters(m.TypeParameters)}{Parameters(m.Parameters)}",
-        _ => throw new NotSupportedException(member.Kind.ToString())}).Trim();
+        _ => throw new NotSupportedException(member.Kind.ToString())
+    }).Trim();
 }
 
 string TypeNameChecked(ITypeSymbol type)
@@ -215,7 +227,8 @@ static string Access(ISymbol symbol) => symbol.DeclaredAccessibility switch
     Accessibility.Public => "public",
     Accessibility.Protected => "protected",
     Accessibility.ProtectedOrInternal => "protected internal",
-    _ => symbol.DeclaredAccessibility.ToString()};
+    _ => symbol.DeclaredAccessibility.ToString()
+};
 static string Flags(ISymbol symbol) => string.Join(" ", new[] { symbol.IsStatic ? "static" : "", symbol.IsAbstract ? "abstract" : "", symbol.IsVirtual ? "virtual" : "", symbol.IsOverride ? "override" : "", symbol.IsSealed ? "sealed" : "" }.Where(s => s.Length > 0));
 static string TypeFlags(INamedTypeSymbol type) => Flags(type) + (type.IsReadOnly ? " readonly" : "") + (type.IsRefLikeType ? " ref" : "");
 static bool Visible(Accessibility accessibility) => accessibility is Accessibility.Public or Accessibility.Protected or Accessibility.ProtectedOrInternal;
@@ -255,6 +268,7 @@ static string Typed(TypedConstant value) => value.Kind switch
     TypedConstantKind.Array => value.IsNull ? "null" : "[" + string.Join(",", value.Values.Select(Typed)) + "]",
     TypedConstantKind.Type => "typeof(" + TypeName(value.Value as ITypeSymbol) + ")",
     TypedConstantKind.Enum => TypeName(value.Type) + ":" + Constant(value.Value),
-    _ => Constant(value.Value)};
+    _ => Constant(value.Value)
+};
 static string[] Attributes(ImmutableArray<AttributeData> attributes) => attributes.Select(a => TypeName(a.AttributeClass) + "(" + string.Join(",", a.ConstructorArguments.Select(Typed)) + ")" + "{" + string.Join(",", a.NamedArguments.OrderBy(p => p.Key, StringComparer.Ordinal).Select(p => p.Key + "=" + Typed(p.Value))) + "}").Order(StringComparer.Ordinal).ToArray();
 static string Hash(byte[] bytes) => Convert.ToHexStringLower(SHA256.HashData(bytes));

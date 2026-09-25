@@ -5,6 +5,7 @@ using UnoDock.Layout;
 using UnoDock.Compatibility;
 
 namespace UnoDock.Controls;
+
 public class LayoutDocumentPaneControl : LayoutCachePaneControl, ILayoutControl, IRefreshableLayoutControl
 {
     private readonly LayoutDocumentPane _model;

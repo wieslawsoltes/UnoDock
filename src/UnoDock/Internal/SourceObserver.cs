@@ -1,6 +1,7 @@
 using Microsoft.UI.Xaml.Input;
 
 namespace UnoDock.Internal;
+
 internal sealed class SourceObserver : IDisposable
 {
     private readonly WeakReference<DockingManager> _manager;
@@ -23,7 +24,7 @@ internal sealed class SourceObserver : IDisposable
 
     public void Dispose()
     {
-        if (Interlocked.Exchange(ref _source, null)is { } source)
+        if (Interlocked.Exchange(ref _source, null) is { } source)
             source.CollectionChanged -= Changed;
     }
 }

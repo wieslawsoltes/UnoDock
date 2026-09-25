@@ -1,6 +1,7 @@
 using UnoDock.Layout;
 
 namespace UnoDock.Controls;
+
 public partial class LayoutCachePaneControl
 {
     public static readonly DependencyProperty SelectedIndexProperty = DependencyProperty.Register(nameof(SelectedIndex), typeof(int), typeof(LayoutCachePaneControl), new PropertyMetadata(-1, (d, e) => ((LayoutCachePaneControl)d).SelectionRequested(true)));
@@ -8,8 +9,14 @@ public partial class LayoutCachePaneControl
     private bool _writingSelection, _synchronizingSelection, _selectionDirty;
     private LayoutContent? _lastSelection;
     private PaneObserver? _paneObserver;
-    public int SelectedIndex { get => (int)GetValue(SelectedIndexProperty); set => SetValue(SelectedIndexProperty, value); }
-    public object? SelectedItem { get => GetValue(SelectedItemProperty); set => SetValue(SelectedItemProperty, value); }
+    public int SelectedIndex
+    {
+        get => (int)GetValue(SelectedIndexProperty); set => SetValue(SelectedIndexProperty, value);
+    }
+    public object? SelectedItem
+    {
+        get => GetValue(SelectedItemProperty); set => SetValue(SelectedItemProperty, value);
+    }
 
     // Binding the model does not call a virtual member from a constructor.
     internal void BindPane(ILayoutGroup pane)
@@ -44,7 +51,7 @@ public partial class LayoutCachePaneControl
                 Selector.SelectedContentIndex = SelectedIndex;
             else if (SelectedItem == null)
                 Selector.SelectedContentIndex = -1;
-            else if (SelectedItem is LayoutContent model && Pane.IndexOfChild(model)is var position && position >= 0)
+            else if (SelectedItem is LayoutContent model && Pane.IndexOfChild(model) is var position && position >= 0)
                 Selector.SelectedContentIndex = position;
         }
         finally
@@ -96,7 +103,7 @@ public partial class LayoutCachePaneControl
     {
         // Existing cached presenters respond synchronously, without creating views
         // for unvisited tabs. The manager's normal invalidation realizes a new tab.
-        foreach (var(model, tab)in _tabs)
+        foreach (var (model, tab) in _tabs)
             if (tab.LayoutItem?.ExistingView is { } view)
                 view.Visibility = ReferenceEquals(model, Selector?.SelectedContent) ? Visibility.Visible : Visibility.Collapsed;
         base.OnSelectionChanged(e);

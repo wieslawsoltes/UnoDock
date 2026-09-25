@@ -3,6 +3,7 @@ using Microsoft.Windows.Shell;
 using UnoDock.Controls;
 
 namespace UnoDock.Gallery;
+
 public sealed partial class GalleryPage
 {
     private void ShowWindowLifecycleLab()

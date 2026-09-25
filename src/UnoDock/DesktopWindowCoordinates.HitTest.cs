@@ -2,11 +2,12 @@ using System.Runtime.InteropServices;
 using UnoDock.Internal;
 
 namespace UnoDock;
+
 public sealed partial class DesktopWindowCoordinates
 {
     /// <summary>Native stacking query with one explicitly excluded drag source.
-    /// Foreign windows remain occluders; focus order is never a z-order substitute.</summary>
-    internal bool TryGetTopmostRootExcludingWindow(FrameworkElement source, Point point, out XamlRoot? hitRoot, Window? excluded)
+        /// Foreign windows remain occluders; focus order is never a z-order substitute.</summary>
+        internal bool TryGetTopmostRootExcludingWindow(FrameworkElement source, Point point, out XamlRoot? hitRoot, Window? excluded)
     {
         Verify();
         Validate(source, point);
@@ -49,12 +50,12 @@ public sealed partial class DesktopWindowCoordinates
             return true;
         }
 
-        if (OperatingSystem.IsLinux() && GetNative(source)is Uno.UI.NativeElementHosting.X11NativeWindow native)
+        if (OperatingSystem.IsLinux() && GetNative(source) is Uno.UI.NativeElementHosting.X11NativeWindow native)
         {
             var id = Id(native.WindowId);
             var root = RootX11(id);
             var screen = ToScreen(source, point);
-            var ignored = excluded != null && Uno.UI.Xaml.WindowHelper.GetNativeWindow(excluded)is Uno.UI.NativeElementHosting.X11NativeWindow ignoredNative ? TopLevelX11(Id(ignoredNative.WindowId), root) : 0;
+            var ignored = excluded != null && Uno.UI.Xaml.WindowHelper.GetNativeWindow(excluded) is Uno.UI.NativeElementHosting.X11NativeWindow ignoredNative ? TopLevelX11(Id(ignoredNative.WindowId), root) : 0;
             var windows = Uno.UI.ApplicationHelper.Windows.Where(w => w.Content?.XamlRoot != null && !ReferenceEquals(w, excluded)).Select(w => (Window: w, Native: Uno.UI.Xaml.WindowHelper.GetNativeWindow(w) as Uno.UI.NativeElementHosting.X11NativeWindow)).Where(w => w.Native != null).ToDictionary(w => Id(w.Native!.WindowId), w => w.Window.Content!.XamlRoot!);
             hitRoot = Descend(root, 0);
             return true;

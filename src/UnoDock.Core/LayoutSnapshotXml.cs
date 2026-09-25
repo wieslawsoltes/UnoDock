@@ -125,7 +125,7 @@ public static class LayoutSnapshotXml
             if (depth > 128 || !seen.Add(current))
                 throw new InvalidOperationException("Layout snapshots must be bounded ownership trees.");
             writer.WriteStartElement(current.Name);
-            foreach (var(key, value)in current.Attributes)
+            foreach (var (key, value) in current.Attributes)
                 writer.WriteAttributeString(key, value);
             foreach (var child in current.Children)
                 WriteElement(child, depth + 1);

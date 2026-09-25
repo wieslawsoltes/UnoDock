@@ -3,6 +3,7 @@ using System.Xml.Schema;
 using System.Xml.Serialization;
 
 namespace UnoDock.Layout;
+
 [ContentProperty(Name = nameof(RootDocument))]
 public class LayoutDocumentFloatingWindow : LayoutFloatingWindow
 {

@@ -8,6 +8,7 @@ using UnoDock.Layout;
 using UnoDock.Layout.Serialization;
 
 namespace UnoDock.Testing;
+
 using LayoutPanel = UnoDock.Layout.LayoutPanel;
 
 public static class RuntimeTests
@@ -275,7 +276,7 @@ public static class RuntimeTests
         tests.Test("XML restores content by stable identity", () =>
         {
             using var m = new DockingManager();
-            var view = new object ();
+            var view = new object();
             var d = new LayoutDocument
             {
                 ContentId = "doc",
@@ -346,8 +347,8 @@ public static class RuntimeTests
             using var m = new DockingManager();
             var source = new ObservableCollection<object>();
             m.DocumentsSource = source;
-            var a = new object ();
-            var b = new object ();
+            var a = new object();
+            var b = new object();
             source.Add(a);
             source.Add(b);
             Check.Equal(2, m.Layout.Descendents().OfType<LayoutDocument>().Count());

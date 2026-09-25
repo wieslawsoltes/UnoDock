@@ -1,6 +1,7 @@
 using UnoDock.Layout;
 
 namespace UnoDock.Controls;
+
 public abstract partial class LayoutGridControl<T>
 {
     private DockResizeRange ReadResizeRange(LayoutGridResizerControl splitter, int index)
@@ -57,7 +58,10 @@ public abstract partial class LayoutGridControl<T>
     private sealed class ResizeEndpointObserver : IDisposable
     {
         private readonly WeakReference<LayoutGridControl<T>> _owner;
-        internal FrameworkElement? View { get; private set; }
+        internal FrameworkElement? View
+        {
+            get; private set;
+        }
 
         internal ResizeEndpointObserver(LayoutGridControl<T> owner, FrameworkElement view)
         {

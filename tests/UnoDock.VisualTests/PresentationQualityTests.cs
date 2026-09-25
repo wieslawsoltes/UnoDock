@@ -6,6 +6,7 @@ using UnoDock.Gallery;
 using Windows.Foundation;
 
 namespace UnoDock.Testing;
+
 internal static class PresentationQualityTests
 {
     internal static async Task<int> Run(string output)
@@ -72,7 +73,11 @@ internal static class PresentationQualityTests
             Content = page,
             Title = "UnoDock presentation regression"
         };
-        window.AppWindow.Resize(new() { Width = 1100, Height = 830 });
+        window.AppWindow.Resize(new()
+        {
+            Width = 1100,
+            Height = 830
+        });
         window.Activate();
         try
         {
@@ -186,7 +191,7 @@ internal static class PresentationQualityTests
                     using var input = new X11TestInput();
                     var file = page.FindVisualChildren<MenuBar>().Single().Items[0];
                     await input.Click(file);
-                    await Wait(() => FindCommand(page, "new")is { ActualHeight: > 0 });
+                    await Wait(() => FindCommand(page, "new") is { ActualHeight: > 0 });
                     var command = FindCommand(page, "new")!;
                     await input.Click(command);
                     await Wait(() => page.Dock.Layout.Descendents().OfType<LayoutDocument>().Count() == 3);
@@ -201,7 +206,7 @@ internal static class PresentationQualityTests
                     using var input = new X11TestInput();
                     var file = page.FindVisualChildren<MenuBar>().Single().Items[0];
                     await input.Click(file);
-                    await Wait(() => FindCommand(page, "new")is { ActualHeight: > 0 });
+                    await Wait(() => FindCommand(page, "new") is { ActualHeight: > 0 });
                     input.Escape();
                     await Wait(() => FindCommand(page, "new") == null);
                     Check.Equal(2, page.Dock.Layout.Descendents().OfType<LayoutDocument>().Count());

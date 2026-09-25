@@ -31,7 +31,11 @@ internal static class AccessibilityQualityTests
             Title = "UnoDock accessibility provider acceptance"
         };
         using var registration = Microsoft.Windows.Shell.SystemCommands.RegisterWindow(window);
-        window.AppWindow.Resize(new() { Width = 1060, Height = 720 });
+        window.AppWindow.Resize(new()
+        {
+            Width = 1060,
+            Height = 720
+        });
         window.Activate();
         LayoutAnchorablePane first = null!;
         LayoutDocumentPane second = null!;
@@ -684,7 +688,7 @@ internal static class AccessibilityQualityTests
         {
             return target.GetType().GetMethod(name, BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(target, arguments);
         }
-        catch (TargetInvocationException e)when (e.InnerException != null)
+        catch (TargetInvocationException e) when (e.InnerException != null)
         {
             ExceptionDispatchInfo.Capture(e.InnerException).Throw();
             throw;

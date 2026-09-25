@@ -32,11 +32,11 @@ public static class SystemCommands
     public static void RestoreWindow(Window window) => Execute(window, WindowAction.Restore);
     public static void ShowSystemMenu(Window window, Point screenLocation) => ShowMenu(window, screenLocation);
     /// <summary>Register a native WinUI window so commands targeting its descendants can resolve
-    /// the owner. Uno Skia can also discover windows through its public ApplicationHelper.</summary>
-    public static IDisposable RegisterWindow(Window window) => WindowRegistry.Register(window);
+        /// the owner. Uno Skia can also discover windows through its public ApplicationHelper.</summary>
+        public static IDisposable RegisterWindow(Window window) => WindowRegistry.Register(window);
     /// <summary>Builds a live managed menu for a native or in-surface window. It is also the
-    /// non-Windows replacement for an OS system menu. Parameter ownership is explicit.</summary>
-    public static MenuFlyout CreateSystemMenu(object window)
+        /// non-Windows replacement for an OS system menu. Parameter ownership is explicit.</summary>
+        public static MenuFlyout CreateSystemMenu(object window)
     {
         Validate(window);
         var menu = new MenuFlyout();

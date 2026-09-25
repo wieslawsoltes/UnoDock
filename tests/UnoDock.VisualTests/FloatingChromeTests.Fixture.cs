@@ -6,6 +6,7 @@ using UnoDock.Themes;
 using Windows.Foundation;
 
 namespace UnoDock.Testing;
+
 internal static partial class FloatingChromeTests
 {
     internal sealed class Fixture : IDisposable
@@ -23,7 +24,7 @@ internal static partial class FloatingChromeTests
         internal Window Native => Control.NativeWindow ?? throw new InvalidOperationException("The native floating window is missing.");
         internal Border Caption => Control.FindVisualChildren<Border>().Single(b => b.Name == "PART_FloatingDragHandle");
 
-        private readonly object? [] _editors;
+        private readonly object?[] _editors;
         private readonly IDisposable _registration;
         private readonly List<Exception> _errors = [];
         internal Fixture(bool tools)
@@ -69,8 +70,16 @@ internal static partial class FloatingChromeTests
                 Title = "Custom floating chrome acceptance"
             };
             _registration = Microsoft.Windows.Shell.SystemCommands.RegisterWindow(Owner);
-            Owner.AppWindow.Move(new() { X = 20, Y = 20 });
-            Owner.AppWindow.Resize(new() { Width = 1000, Height = 700 });
+            Owner.AppWindow.Move(new()
+            {
+                X = 20,
+                Y = 20
+            });
+            Owner.AppWindow.Resize(new()
+            {
+                Width = 1000,
+                Height = 700
+            });
             Owner.Activate();
         }
 

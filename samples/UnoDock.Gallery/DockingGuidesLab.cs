@@ -1,6 +1,7 @@
 using UnoDock.Controls;
 
 namespace UnoDock.Gallery;
+
 public sealed partial class GalleryPage
 {
     private void ShowDockingGuidesLab()
@@ -16,9 +17,18 @@ public sealed partial class GalleryPage
         {
             RowSpacing = 6
         };
-        panel.RowDefinitions.Add(new() { Height = GridLength.Auto });
-        panel.RowDefinitions.Add(new() { Height = GridLength.Auto });
-        panel.RowDefinitions.Add(new() { Height = new(1, GridUnitType.Star) });
+        panel.RowDefinitions.Add(new()
+        {
+            Height = GridLength.Auto
+        });
+        panel.RowDefinitions.Add(new()
+        {
+            Height = GridLength.Auto
+        });
+        panel.RowDefinitions.Add(new()
+        {
+            Height = new(1, GridUnitType.Star)
+        });
         var controls = new StackPanel
         {
             Orientation = Orientation.Horizontal,
@@ -148,7 +158,12 @@ public sealed partial class GalleryPage
             }
 
             )
-                tools.Children.Add(new() { Title = title, ContentId = "guide-tool:" + title, Content = new TextBox { Text = title, AcceptsReturn = true } });
+                tools.Children.Add(new()
+                {
+                    Title = title,
+                    ContentId = "guide-tool:" + title,
+                    Content = new TextBox { Text = title, AcceptsReturn = true }
+                });
             var properties = new LayoutAnchorablePane(new LayoutAnchorable { Title = "Properties", ContentId = "guide-properties", Content = new TextBox { Text = "CanDockAsTabbedDocument = true" } })
             {
                 DockWidth = new(200)

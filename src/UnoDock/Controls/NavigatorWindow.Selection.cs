@@ -1,6 +1,7 @@
 using UnoDock.Layout;
 
 namespace UnoDock.Controls;
+
 public partial class NavigatorWindow
 {
     private bool _handlingDirectSelection, _hasDirectSelection;
@@ -8,11 +9,11 @@ public partial class NavigatorWindow
     private bool _directSelectionIsDocument;
     private long _directSelectionVersion;
     /// <summary>Highlight a document without invoking its activation command.
-    /// Unlike SelectedDocument assignment, this is an explicit preview operation.</summary>
-    public void PreviewDocument(LayoutDocumentItem? item) => PreviewItem(item);
+        /// Unlike SelectedDocument assignment, this is an explicit preview operation.</summary>
+        public void PreviewDocument(LayoutDocumentItem? item) => PreviewItem(item);
     /// <summary>Highlight a tool without invoking its activation command.
-    /// Unlike SelectedAnchorable assignment, this is an explicit preview operation.</summary>
-    public void PreviewAnchorable(LayoutAnchorableItem? item) => PreviewItem(item);
+        /// Unlike SelectedAnchorable assignment, this is an explicit preview operation.</summary>
+        public void PreviewAnchorable(LayoutAnchorableItem? item) => PreviewItem(item);
     private void PreviewItem(LayoutItem? item)
     {
         if (!DispatcherQueue.HasThreadAccess)

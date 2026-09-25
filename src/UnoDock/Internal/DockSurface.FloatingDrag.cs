@@ -3,6 +3,7 @@ using UnoDock.Controls;
 using UnoDock.Layout;
 
 namespace UnoDock.Internal;
+
 internal sealed partial class DockSurface
 {
     private FloatingDockSession? _floatingDrag;

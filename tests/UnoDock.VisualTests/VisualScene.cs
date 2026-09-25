@@ -5,6 +5,7 @@ using System.Xml.Linq;
 using System.Globalization;
 
 namespace UnoDock.Testing;
+
 public static class VisualScene
 {
     public static void Populate(DockingManager manager)
@@ -103,7 +104,11 @@ public static class VisualScene
             Content = manager,
             Title = "UnoDock visual observations"
         };
-        window.AppWindow.Resize(new() { Width = SceneContent.Width + 64, Height = SceneContent.Height + 100 });
+        window.AppWindow.Resize(new()
+        {
+            Width = SceneContent.Width + 64,
+            Height = SceneContent.Height + 100
+        });
         manager.HorizontalAlignment = HorizontalAlignment.Left;
         manager.VerticalAlignment = VerticalAlignment.Top;
         window.Activate();

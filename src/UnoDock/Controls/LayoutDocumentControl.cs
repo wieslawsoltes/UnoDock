@@ -5,12 +5,16 @@ using UnoDock.Layout;
 using UnoDock.Compatibility;
 
 namespace UnoDock.Controls;
+
 public class LayoutDocumentControl : DockInputControl
 {
     public static readonly DependencyProperty ModelProperty = DependencyProperty.Register(nameof(Model), typeof(LayoutContent), typeof(LayoutDocumentControl), new PropertyMetadata(null, (d, e) => ((LayoutDocumentControl)d).OnModelChanged(e)));
     public static readonly DependencyProperty LayoutItemProperty = DependencyProperty.Register(nameof(LayoutItem), typeof(LayoutItem), typeof(LayoutDocumentControl), new PropertyMetadata(null));
-    public LayoutContent? Model { get => (LayoutContent? )GetValue(ModelProperty); set => SetValue(ModelProperty, value); }
-    public LayoutItem? LayoutItem => (LayoutItem? )GetValue(LayoutItemProperty);
+    public LayoutContent? Model
+    {
+        get => (LayoutContent?)GetValue(ModelProperty); set => SetValue(ModelProperty, value);
+    }
+    public LayoutItem? LayoutItem => (LayoutItem?)GetValue(LayoutItemProperty);
 
     public LayoutDocumentControl()
     {

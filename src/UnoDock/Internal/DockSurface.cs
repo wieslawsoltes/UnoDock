@@ -4,6 +4,7 @@ using UnoDock.Controls;
 using UnoDock.Layout;
 
 namespace UnoDock.Internal;
+
 internal sealed partial class DockSurface : Grid, IDisposable
 {
     private readonly Grid _docked = new();
@@ -30,18 +31,39 @@ internal sealed partial class DockSurface : Grid, IDisposable
     private NavigatorWindow? _navigator;
     private long _navigatorGeneration;
     private bool _disposed;
-    internal DockingManager Manager { get; }
+    internal DockingManager Manager
+    {
+        get;
+    }
 
     internal DockSurface(DockingManager manager)
     {
         Manager = manager;
         _dragScrollTimer.Tick += OnDragScroll;
-        _docked.RowDefinitions.Add(new() { Height = GridLength.Auto });
-        _docked.RowDefinitions.Add(new() { Height = new(1, GridUnitType.Star) });
-        _docked.RowDefinitions.Add(new() { Height = GridLength.Auto });
-        _docked.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
-        _docked.ColumnDefinitions.Add(new() { Width = new(1, GridUnitType.Star) });
-        _docked.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
+        _docked.RowDefinitions.Add(new()
+        {
+            Height = GridLength.Auto
+        });
+        _docked.RowDefinitions.Add(new()
+        {
+            Height = new(1, GridUnitType.Star)
+        });
+        _docked.RowDefinitions.Add(new()
+        {
+            Height = GridLength.Auto
+        });
+        _docked.ColumnDefinitions.Add(new()
+        {
+            Width = GridLength.Auto
+        });
+        _docked.ColumnDefinitions.Add(new()
+        {
+            Width = new(1, GridUnitType.Star)
+        });
+        _docked.ColumnDefinitions.Add(new()
+        {
+            Width = GridLength.Auto
+        });
         Children.Add(_docked);
         Children.Add(_floats);
         Children.Add(_overlay);
@@ -76,7 +98,8 @@ internal sealed partial class DockSurface : Grid, IDisposable
             LayoutDocumentPane p => Manager.CreateDocumentPaneView(p),
             LayoutAnchorablePane p => Manager.CreateAnchorablePaneView(p),
             LayoutAnchorSide p => new LayoutAnchorSideControl(p),
-            _ => throw new ArgumentException("No visual representation for " + model.GetType().Name, nameof(model))};
+            _ => throw new ArgumentException("No visual representation for " + model.GetType().Name, nameof(model))
+        };
         _views.Add(model, view);
         return view;
     }
@@ -256,7 +279,7 @@ internal sealed partial class DockSurface : Grid, IDisposable
 
     internal void BeginDrag(LayoutContent content, FrameworkElement source, PointerRoutedEventArgs args)
     {
-        if (!DockOperations.CanMove(content) || content.FindParent<LayoutFloatingWindow>()is { } f && Manager.FloatingWindows.Any(w => ReferenceEquals(w.Model, f) && w.IsContentImmutable))
+        if (!DockOperations.CanMove(content) || content.FindParent<LayoutFloatingWindow>() is { } f && Manager.FloatingWindows.Any(w => ReferenceEquals(w.Model, f) && w.IsContentImmutable))
             return;
         // Cross-XamlRoot drags require an explicit platform coordinate adapter rather than guessed window-frame offsets.
         if (!ReferenceEquals(source.XamlRoot, XamlRoot) && Manager.CrossWindowCoordinates == null)
@@ -302,7 +325,7 @@ internal sealed partial class DockSurface : Grid, IDisposable
             point = DockCoordinates.Translate(_dragSource, args.GetCurrentPoint(_dragSource).Position, this, Manager.CrossWindowCoordinates);
             return true;
         }
-        catch (Exception e)when (DockCoordinates.IsUnavailable(e))
+        catch (Exception e) when (DockCoordinates.IsUnavailable(e))
         {
             return false;
         }
@@ -318,7 +341,7 @@ internal sealed partial class DockSurface : Grid, IDisposable
     internal IReadOnlyList<IDropArea> GetDropAreas()
     {
         var result = new List<IDropArea>();
-        foreach (var(model, view)in _views)
+        foreach (var (model, view) in _views)
         {
             if (!ReferenceEquals(model.Root, Manager.Layout) || !Visible(view))
                 continue;
@@ -327,7 +350,7 @@ internal sealed partial class DockSurface : Grid, IDisposable
                 LayoutDocumentPane => DropAreaType.DocumentPane,
                 LayoutAnchorablePane => DropAreaType.AnchorablePane,
                 LayoutDocumentPaneGroup { ChildrenCount: 0 } => DropAreaType.DocumentPaneGroup,
-                _ => (DropAreaType? )null
+                _ => (DropAreaType?)null
             };
             if (type != null)
                 result.Add(new DropArea<FrameworkElement>(view, type.Value, this));
@@ -365,7 +388,7 @@ internal sealed partial class DockSurface : Grid, IDisposable
             else
                 floating = FloatingAt(point);
         }
-        catch (Exception error)when (DockCoordinates.IsUnavailable(error))
+        catch (Exception error) when (DockCoordinates.IsUnavailable(error))
         {
             return null;
         }
@@ -426,7 +449,7 @@ internal sealed partial class DockSurface : Grid, IDisposable
         {
             index = position == DockPosition.Inside && pane != null && pane.IsOverHeader(point, this) ? pane.InsertionIndex(point, this) : -1;
         }
-        catch (Exception e)when (DockCoordinates.IsUnavailable(e))
+        catch (Exception e) when (DockCoordinates.IsUnavailable(e))
         {
             return null;
         }
@@ -519,7 +542,7 @@ internal sealed partial class DockSurface : Grid, IDisposable
                 if (new Rect(0, 0, window.ActualWidth, window.ActualHeight).Contains(local))
                     return window;
             }
-            catch (Exception e)when (DockCoordinates.IsUnavailable(e))
+            catch (Exception e) when (DockCoordinates.IsUnavailable(e))
             {
             }
         }
@@ -566,7 +589,7 @@ internal sealed partial class DockSurface : Grid, IDisposable
         var plan = UpdateDragAdorners(_lastDragPoint);
         if (plan?.CanExecute != true)
             return;
-        if (GetView(plan.Target)is not LayoutCachePaneControl pane)
+        if (GetView(plan.Target) is not LayoutCachePaneControl pane)
             return;
         try
         {
@@ -577,7 +600,7 @@ internal sealed partial class DockSurface : Grid, IDisposable
                     UpdateDragAdorners(_lastDragPoint);
             }
         }
-        catch (Exception error)when (DockCoordinates.IsUnavailable(error))
+        catch (Exception error) when (DockCoordinates.IsUnavailable(error))
         {
             CancelDrag();
         }

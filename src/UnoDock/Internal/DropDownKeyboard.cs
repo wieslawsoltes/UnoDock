@@ -4,6 +4,7 @@ using Windows.System;
 using Windows.UI.Core;
 
 namespace UnoDock.Internal;
+
 internal static class DropDownKeyboard
 {
     internal static bool IsContextRequest(Control owner, KeyRoutedEventArgs e)

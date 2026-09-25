@@ -4,6 +4,7 @@ using Microsoft.UI.Xaml.Automation.Provider;
 using UnoDock.Layout;
 
 namespace UnoDock.Controls;
+
 public sealed class LayoutTabAutomationPeer(LayoutTabItemBase owner) : FrameworkElementAutomationPeer(owner), ISelectionItemProvider, IInvokeProvider
 {
     private string? _lastName = Explicit(AutomationProperties.GetName(owner), owner.Model?.Title ?? "");
@@ -26,7 +27,7 @@ public sealed class LayoutTabAutomationPeer(LayoutTabItemBase owner) : Framework
     }
 
     public bool IsSelected => owner.AutomationModel is { IsSelected: true, Parent: ILayoutContentSelector selector } model && ReferenceEquals(selector.SelectedContent, model);
-    public IRawElementProviderSimple? SelectionContainer => owner.AutomationModel != null && owner.FindVisualAncestor<LayoutCachePaneControl>()is { } pane && CreatePeerForElement(pane)is { } peer ? ProviderFromPeer(peer) : null;
+    public IRawElementProviderSimple? SelectionContainer => owner.AutomationModel != null && owner.FindVisualAncestor<LayoutCachePaneControl>() is { } pane && CreatePeerForElement(pane) is { } peer ? ProviderFromPeer(peer) : null;
 
     public void Select()
     {

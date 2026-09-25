@@ -10,6 +10,7 @@ using UnoDock.Layout.Serialization;
 using UnoDock.Core;
 
 namespace UnoDock.Testing;
+
 using LayoutPanel = UnoDock.Layout.LayoutPanel;
 
 /// <summary>Tests against outputs produced by the original public API, not an implementation translation.</summary>
@@ -262,7 +263,7 @@ public static class InteropTests
         new XmlLayoutSerializer(manager).Deserialize(stream);
     }
 
-    private static string Topology(XElement node) => node.Name.LocalName + "[" + (string? )node.Attribute("Orientation") + ":" + (string? )node.Attribute("ContentId") + "](" + string.Join(',', node.Elements().Where(e => e.Name.LocalName is not ("TopSide" or "LeftSide" or "BottomSide" or "RightSide" or "FloatingWindows" or "Hidden")).Select(Topology)) + ")";
+    private static string Topology(XElement node) => node.Name.LocalName + "[" + (string?)node.Attribute("Orientation") + ":" + (string?)node.Attribute("ContentId") + "](" + string.Join(',', node.Elements().Where(e => e.Name.LocalName is not ("TopSide" or "LeftSide" or "BottomSide" or "RightSide" or "FloatingWindows" or "Hidden")).Select(Topology)) + ")";
     private static void CheckContents(XDocument source, LayoutRoot layout)
     {
         var contents = source.Descendants().Where(e => e.Name.LocalName is "LayoutDocument" or "LayoutAnchorable").ToArray();
@@ -284,7 +285,7 @@ public static class InteropTests
 
             )
             {
-                if (node.Attribute(property)is not { } attribute)
+                if (node.Attribute(property) is not { } attribute)
                     continue;
                 var value = content.GetType().GetProperty(property)!.GetValue(content);
                 Check.Equal(bool.Parse(attribute.Value), (bool)value!);

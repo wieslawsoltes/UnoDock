@@ -12,11 +12,23 @@ public sealed class DockKeyboardFocusChangedEventArgs : EventArgs
         NewFocus = newFocus;
     }
 
-    public RoutedEventArgs NativeEvent { get; }
+    public RoutedEventArgs NativeEvent
+    {
+        get;
+    }
     public object OriginalSource => NativeEvent.OriginalSource;
-    public DependencyObject? OldFocus { get; }
-    public DependencyObject? NewFocus { get; }
-    public bool Handled { get; set; }
+    public DependencyObject? OldFocus
+    {
+        get;
+    }
+    public DependencyObject? NewFocus
+    {
+        get;
+    }
+    public bool Handled
+    {
+        get; set;
+    }
     public bool CanCancel => NativeEvent is GettingFocusEventArgs;
 
     public bool Cancel

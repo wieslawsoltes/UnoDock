@@ -2,6 +2,7 @@ using UnoDock.Controls;
 using Windows.Foundation;
 
 namespace UnoDock.Gallery;
+
 public sealed partial class GalleryPage
 {
     private void ShowParityLab()
@@ -194,7 +195,7 @@ public sealed partial class GalleryPage
             var choices = new List<ComboBoxItem>();
             foreach (var group in Dock.Layout.Descendents().OfType<ILayoutGroup>())
                 foreach (var type in Enum.GetValues<DropTargetType>())
-                    if (DockDropPlan.Create(content, group, type, new Rect(0, 0, Math.Max(1, Dock.ActualWidth), Math.Max(1, Dock.ActualHeight)))is { } plan)
+                    if (DockDropPlan.Create(content, group, type, new Rect(0, 0, Math.Max(1, Dock.ActualWidth), Math.Max(1, Dock.ActualHeight))) is { } plan)
                         choices.Add(new ComboBoxItem { Content = $"{type} → {group.GetType().Name} ({group.ChildrenCount} children)", Tag = plan });
             plans.ItemsSource = choices;
             plans.SelectedIndex = choices.Count == 0 ? -1 : 0;

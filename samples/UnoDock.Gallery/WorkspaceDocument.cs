@@ -3,6 +3,7 @@ using System.Windows.Input;
 using Windows.Storage;
 
 namespace UnoDock.Gallery;
+
 [Microsoft.UI.Xaml.Data.Bindable]
 public sealed class WorkspaceDocument : INotifyPropertyChanged, IDockContent
 {
@@ -25,7 +26,10 @@ public sealed class WorkspaceDocument : INotifyPropertyChanged, IDockContent
         _close = new(close, () => IsOpen && !IsSaving);
     }
 
-    public string ContentId { get; }
+    public string ContentId
+    {
+        get;
+    }
 
     public string Name
     {
@@ -67,8 +71,11 @@ public sealed class WorkspaceDocument : INotifyPropertyChanged, IDockContent
     }
 
     /// <summary>CR-based native editing projection. No-op native synchronization must
-    /// not rewrite the original buffer or mark the document dirty.</summary>
-    public string EditorText { get => _editorText ??= WorkspaceTextProjection.ForEditor(_text); set => Text = WorkspaceTextProjection.ApplyEditorEdit(_text, value); }
+        /// not rewrite the original buffer or mark the document dirty.</summary>
+        public string EditorText
+    {
+        get => _editorText ??= WorkspaceTextProjection.ForEditor(_text); set => Text = WorkspaceTextProjection.ApplyEditorEdit(_text, value);
+    }
     public bool IsDirty => !string.Equals(_savedText, _text, StringComparison.Ordinal);
 
     public bool IsReadOnly

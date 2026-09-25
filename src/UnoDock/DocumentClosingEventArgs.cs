@@ -5,6 +5,7 @@ using UnoDock.Layout;
 using UnoDock.Themes;
 
 namespace UnoDock;
+
 public class DocumentClosingEventArgs(LayoutDocument document) : CancelEventArgs
 {
     public LayoutDocument Document { get; private set; } = document;
