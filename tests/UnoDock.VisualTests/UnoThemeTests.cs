@@ -1,4 +1,5 @@
 using System.Reflection;
+using UnoDock.Controls;
 using UnoDock.Layout;
 using UnoDock.Themes;
 
@@ -48,13 +49,13 @@ internal static class UnoThemeTests
         tests.Test("Uno resources: default theme follows host changes without replacing editors or views", async () =>
         {
             using var f = new Fixture(); await f.Show(); f.Manager.Theme = new FluentTheme();
-            var editor = f.Document.Content; var pane = f.Manager.FindVisualChildren<Controls.LayoutDocumentPaneControl>().Single();
+            var editor = f.Document.Content; var pane = f.Manager.FindVisualChildren<LayoutDocumentPaneControl>().Single();
             foreach (var mode in new[] { ElementTheme.Dark, ElementTheme.Light, ElementTheme.Dark })
             {
                 f.Scope.RequestedTheme = mode; await Wait(() => f.Manager.ActualTheme == mode); f.Manager.Refresh();
                 Check.Same(mode == ElementTheme.Light ? f.LightSurface : f.DarkSurface, Property<Brush>(Palette(f.Manager), "Surface"));
                 Check.Same(editor, f.Document.Content);
-                Check.Same(pane, f.Manager.FindVisualChildren<Controls.LayoutDocumentPaneControl>().Single());
+                Check.Same(pane, f.Manager.FindVisualChildren<LayoutDocumentPaneControl>().Single());
             }
         });
         tests.Test("Uno resources: brush replacement at equal dictionary size is observed on refresh", async () =>
