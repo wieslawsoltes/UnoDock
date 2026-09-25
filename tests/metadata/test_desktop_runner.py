@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 """Evidence parsing regressions for isolated, actual-host acceptance."""
 import importlib.util
+import io
+import os
+import sys
 import json
 import tempfile
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 import xml.etree.ElementTree as ET
 
@@ -74,6 +78,37 @@ class DesktopRunnerTests(unittest.TestCase):
     def test_stale_results_rejected_before_launch(self):
         self.path.write_text("old evidence")
         with self.assertRaises(ValueError): runner.run(self.path, self.directory, "all", "not-executed", 1, 1)
+
+    def test_legacy_console_escapes_only_unrepresentable_characters(self):
+        for encoding in ["cp1252", "ascii"]:
+            for error in [False, True]:
+                with self.subTest(encoding=encoding, error=error):
+                    data = io.BytesIO()
+                    with io.TextIOWrapper(data, encoding=encoding) as stream:
+                        with patch.object(runner.sys, "stderr" if error else "stdout", stream):
+                            runner.write_console("PASS infinity=\u221e arrow=\u2192", error=error)
+                        self.assertEqual(b"PASS infinity=\\u221e arrow=\\u2192\n", data.getvalue())
+
+    def test_utf8_console_preserves_unicode(self):
+        data = io.BytesIO()
+        with io.TextIOWrapper(data, encoding="utf-8") as stream:
+            with patch.object(runner.sys, "stdout", stream):
+                runner.write_console("PASS infinity=\u221e arrow=\u2192")
+            self.assertEqual("PASS infinity=\u221e arrow=\u2192\n".encode("utf-8"), data.getvalue())
+
+    def test_log_projection_preserves_raw_bytes_and_child_exit_status(self):
+        raw = "infinity=\u221e arrow=\u2192\n".encode("utf-8")
+        for code in [0, 7]:
+            with self.subTest(code=code):
+                data = io.BytesIO(); log = self.directory / f"child-{code}.log"
+                with io.TextIOWrapper(data, encoding="cp1252") as stream:
+                    with patch.object(runner.sys, "stdout", stream):
+                        result = runner.execute([sys.executable, "-c",
+                            f"import sys; sys.stdout.buffer.write({raw!r}); sys.exit({code})"],
+                            os.environ.copy(), log, 10)
+                    self.assertIn(b"infinity=\\u221e", data.getvalue())
+                self.assertEqual(code, result)
+                self.assertEqual(raw, log.read_bytes())
 
 
 if __name__ == "__main__": unittest.main()

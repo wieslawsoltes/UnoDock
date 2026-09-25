@@ -38,4 +38,10 @@ Every suite must supply complete, uniquely named JUnit cases with no failure,
 error or skip, irrespective of native process exit status. A failed suite does
 not suppress later suites, and an overall deadline cannot turn unrun work into a
 pass. The previous automatic whole-run diagnostic retry is removed. The runner's
-12 parser/manifest regressions complement the 14 native-evidence-gate regressions.
+15 parser/manifest/reporting regressions complement the 14 native-evidence-gate regressions.
+
+Console reporting escapes characters which a legacy console encoding cannot
+represent, while retaining the original child log bytes in the artifact. This
+prevents a Windows code-page error from masking a successful or failing child
+process exit. Dedicated tests cover ASCII, Windows-1252, UTF-8, both output
+streams, and real child processes exiting with both zero and nonzero statuses.

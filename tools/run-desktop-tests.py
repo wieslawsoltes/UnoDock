@@ -17,6 +17,17 @@ import time
 import xml.etree.ElementTree as ET
 
 
+def write_console(text: str, *, error: bool = False) -> None:
+    stream = sys.stderr if error else sys.stdout
+    encoding = getattr(stream, "encoding", None)
+    if encoding:
+        # Keep the log artifact byte-for-byte intact. Only the console projection
+        # escapes characters its encoding cannot represent (for example infinity
+        # on a redirected Windows code page). Reporting must not mask a child exit.
+        text = text.encode(encoding, errors="backslashreplace").decode(encoding)
+    print(text, file=stream, flush=True)
+
+
 def read_manifest(path: Path) -> list[str]:
     data = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(data, list) or not data:
@@ -53,7 +64,7 @@ def execute(command: list[str], env: dict[str, str], log: Path, timeout: float) 
             return subprocess.run(command, env=env, stdout=output, stderr=subprocess.STDOUT, timeout=timeout, check=False).returncode
         finally:
             output.flush()
-            print(log.read_text(encoding="utf-8", errors="replace"), flush=True)
+            write_console(log.read_text(encoding="utf-8", errors="replace"))
 
 
 def run(app: Path, output: Path, selector: str, dotnet: str, per_suite: float, total: float) -> int:
@@ -79,7 +90,7 @@ def run(app: Path, output: Path, selector: str, dotnet: str, per_suite: float, t
         if remaining <= 0:
             raise TimeoutError("The total desktop acceptance deadline expired.")
         env["UNODOCK_TEST_SUITE"] = name
-        print(f"\n=== Real desktop suite: {name} ===", flush=True)
+        write_console(f"\n=== Real desktop suite: {name} ===")
         attempt = time.monotonic()
         error = None
         counts = {}
@@ -90,7 +101,7 @@ def run(app: Path, output: Path, selector: str, dotnet: str, per_suite: float, t
             counts = verify_suite(output / (name + ".xml"), name)
         except (OSError, ValueError, ET.ParseError, subprocess.TimeoutExpired, RuntimeError) as failure:
             error = str(failure)
-            print(f"FAIL {name}: {error}", file=sys.stderr, flush=True)
+            write_console(f"FAIL {name}: {error}", error=True)
         results.append({"suite": name, "seconds": time.monotonic() - attempt, "error": error, **counts})
         # A durable record survives a later timeout without claiming unrun work.
         (output / "isolated-execution.json").write_text(json.dumps({"schema": 1, "planned": suites, "completed": results}, indent=2) + "\n", encoding="utf-8")
@@ -111,7 +122,7 @@ def main() -> int:
     try:
         return run(args.app, args.output, args.selector, args.dotnet, args.suite_timeout, args.total_timeout)
     except (OSError, ValueError, ET.ParseError, subprocess.TimeoutExpired, RuntimeError) as error:
-        print(f"Desktop acceptance incomplete: {error}", file=sys.stderr)
+        write_console(f"Desktop acceptance incomplete: {error}", error=True)
         return 1
 
 
