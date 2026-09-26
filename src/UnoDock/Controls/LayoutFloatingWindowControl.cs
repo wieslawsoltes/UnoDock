@@ -500,6 +500,7 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
             }
 
             _window.Activate();
+            QueueInitialNativeLayout(_window);
         }
         else if (!_window.AppWindow.IsVisible && !_minimized)
             _window.Activate();

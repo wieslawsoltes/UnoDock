@@ -1,0 +1,91 @@
+<UserControl xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:dock="using:UnoDock" xmlns:layout="using:UnoDock.Layout" xmlns:themes="using:UnoDock.Themes" xmlns:gallery="using:UnoDock.Gallery" x:Class="UnoDock.Gallery.XamlDeclarativeWorkspace">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="XamlWorkspaceResources.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <Grid Background="{ThemeResource XamlSample.CanvasBrush}" RowSpacing="8">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <CommandBar Grid.Row="0" DefaultLabelPosition="Right" HorizontalContentAlignment="Left">
+            <AppBarButton Label="Theme" Icon="Setting" Command="{x:Bind Actions.ToggleThemeCommand}"/>
+            <AppBarButton Label="Density" Icon="ViewAll" Command="{x:Bind Actions.CycleDensityCommand}"/>
+            <AppBarButton Label="Float / dock" Icon="NewWindow" Command="{x:Bind Actions.FloatCommand}"/>
+            <AppBarButton Label="Auto-hide" Icon="Pin" Command="{x:Bind Actions.AutoHideCommand}"/>
+            <CommandBar.SecondaryCommands>
+                <AppBarButton Label="Toggle RTL" Command="{x:Bind Actions.DirectionCommand}"/>
+                <AppBarButton Label="Save layout" Icon="Save" Command="{x:Bind Actions.SaveCommand}"/>
+                <AppBarButton Label="Restore layout" Icon="Undo" Command="{x:Bind Actions.RestoreCommand}"/>
+            </CommandBar.SecondaryCommands>
+        </CommandBar>
+        <dock:DockingManager ChromeDensity="Comfortable" x:Name="Dock" Grid.Row="1" Margin="8,0" FloatingWindowMode="InSurface" DocumentHeaderTemplate="{StaticResource XamlSample.HeaderTemplate}" AnchorableTitleTemplate="{StaticResource XamlSample.HeaderTemplate}">
+            <dock:DockingManager.Theme>
+                <themes:FluentTheme/>
+            </dock:DockingManager.Theme>
+            <layout:LayoutRoot>
+                <layout:LayoutRoot.RootPanel>
+                    <layout:LayoutPanel Orientation="Horizontal">
+                        <layout:LayoutAnchorablePane DockWidth="210" DockMinWidth="150">
+                            <layout:LayoutAnchorable Title="Solution Explorer" ContentId="declarative-explorer" CanClose="False">
+                                <StackPanel Padding="16" Spacing="10">
+                                    <TextBlock Text="XAML WORKSPACE" FontWeight="SemiBold"/>
+                                    <TreeView>
+                                        <TreeView.RootNodes>
+                                            <TreeViewNode Content="UnoDock.Gallery" IsExpanded="True">
+                                                <TreeViewNode.Children>
+                                                    <TreeViewNode Content="Workspace.xaml"/>
+                                                    <TreeViewNode Content="Resources.xaml"/>
+                                                    <TreeViewNode Content="Notes.md"/>
+                                                </TreeViewNode.Children>
+                                            </TreeViewNode>
+                                        </TreeView.RootNodes>
+                                    </TreeView>
+                                </StackPanel>
+                            </layout:LayoutAnchorable>
+                        </layout:LayoutAnchorablePane>
+                        <layout:LayoutPanel Orientation="Vertical">
+                            <layout:LayoutDocumentPane>
+                                <layout:LayoutDocument Title="Workspace.xaml" ContentId="declarative-editor" IsActive="True">
+                                    <Grid Padding="20" RowSpacing="14">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="*"/>
+                                        </Grid.RowDefinitions>
+                                        <TextBlock Text="A workspace, declared in XAML" FontSize="24" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                        <TextBox x:Name="Editor" Grid.Row="1" AcceptsReturn="True" TextWrapping="Wrap" VerticalAlignment="Stretch" Text="Edit this text. The layout, tools, tabs and this editor are all compiled from XAML. Change density or theme without losing this buffer."/>
+                                    </Grid>
+                                </layout:LayoutDocument>
+                                <layout:LayoutDocument Title="Notes.md" ContentId="declarative-notes">
+                                    <TextBox Padding="20" AcceptsReturn="True" TextWrapping="Wrap" Text="Document tabs stay at the top. Tool tabs stay at the bottom, following AvalonDock conventions."/>
+                                </layout:LayoutDocument>
+                            </layout:LayoutDocumentPane>
+                            <layout:LayoutAnchorablePane DockHeight="150" DockMinHeight="90">
+                                <layout:LayoutAnchorable Title="Output" ContentId="declarative-output" CanClose="False">
+                                    <TextBox Margin="12" AcceptsReturn="True" IsReadOnly="True" Text="Compiled XAML loaded.&#10;Layout ownership established.&#10;Editor state is retained during docking."/>
+                                </layout:LayoutAnchorable>
+                                <layout:LayoutAnchorable Title="Problems" ContentId="declarative-problems" CanClose="False">
+                                    <TextBlock Margin="16" Text="No problems. Layout dimensions use Uno GridLength values."/>
+                                </layout:LayoutAnchorable>
+                            </layout:LayoutAnchorablePane>
+                        </layout:LayoutPanel>
+                    </layout:LayoutPanel>
+                </layout:LayoutRoot.RootPanel>
+                <layout:LayoutRoot.RightSide>
+                    <layout:LayoutAnchorSide>
+                        <layout:LayoutAnchorGroup>
+                            <layout:LayoutAnchorable Title="Help" ContentId="declarative-help" AutoHideWidth="260">
+                                <TextBlock Margin="20" TextWrapping="Wrap" Text="This tool starts auto-hidden because its layout parent is an anchor group. Its state is declared, not created by page code."/>
+                            </layout:LayoutAnchorable>
+                        </layout:LayoutAnchorGroup>
+                    </layout:LayoutAnchorSide>
+                </layout:LayoutRoot.RightSide>
+            </layout:LayoutRoot>
+        </dock:DockingManager>
+        <TextBlock Grid.Row="2" Margin="12,2,12,8" Text="{x:Bind Actions.Status, Mode=OneWay}" FontSize="12" TextWrapping="Wrap"/>
+    </Grid>
+</UserControl>

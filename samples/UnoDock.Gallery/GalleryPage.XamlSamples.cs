@@ -5,6 +5,7 @@ namespace UnoDock.Gallery;
 public sealed partial class GalleryPage
 {
     private readonly List<Action> _releaseXamlSamples = [];
+    private void ShowXamlSamples() => OpenXamlSample("XAML workspaces", new XamlSamplesPage());
     private void ShowXamlWorkbench() => OpenXamlSample("XAML workbench", new XamlWorkbenchView());
     private void ShowXamlMvvm() => OpenXamlSample("XAML MVVM", new XamlMvvmView());
     private void OpenXamlSample(string title, UserControl view)

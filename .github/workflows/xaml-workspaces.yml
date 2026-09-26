@@ -1,0 +1,70 @@
+name: Compiled consumer XAML workspaces
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: xaml-workspaces-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  workspace-runtime:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Compile consumer XAML and stock templates
+        run: dotnet build samples/UnoDock.Gallery -c Release -f net10.0-desktop -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0 -warnaserror
+      - name: Install isolated native display
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y xvfb libx11-6 libxi6 libxrandr2 libxcursor1 libfontconfig1 libgl1 libice6 libsm6 libxcb1 libxtst6
+      - name: Run consumer workspaces on X11
+        if: runner.os == 'Linux'
+        run: xvfb-run -a -s '-screen 0 2560x1440x24' python3 tools/run-desktop-tests.py --app samples/UnoDock.Gallery/bin/Release/net10.0-desktop/UnoDock.Gallery.dll --output artifacts/workspace-tests --selector xaml-workspaces --suite-timeout 150 --total-timeout 240
+      - name: Run consumer workspaces on Win32 or AppKit
+        if: runner.os != 'Linux'
+        shell: bash
+        run: python3 tools/run-desktop-tests.py --app samples/UnoDock.Gallery/bin/Release/net10.0-desktop/UnoDock.Gallery.dll --output artifacts/workspace-tests --selector xaml-workspaces --suite-timeout 150 --total-timeout 240
+      - name: Require executed cases and all eight rendered captures
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p artifacts/workspace-tests
+          git rev-parse HEAD > artifacts/workspace-tests/source-revision.txt
+          python3 - <<'PY'
+          import json, xml.etree.ElementTree as ET
+          from pathlib import Path
+          p = Path('artifacts/workspace-tests')
+          r = ET.parse(p / 'xaml-workspaces.xml').getroot()
+          cases = r.findall('testcase')
+          assert r.tag == 'testsuite' and r.get('name') == 'xaml-workspaces'
+          assert len(cases) == int(r.get('tests', '-1')) and len(cases) >= 37
+          assert all(c.get('name') for c in cases) and len({c.get('name') for c in cases}) == len(cases)
+          assert not any(int(r.get(k, '0')) for k in ('failures', 'errors', 'skipped'))
+          assert not any(c.find(tag) is not None for c in cases for tag in ('failure', 'error', 'skipped'))
+          execution = json.loads((p / 'isolated-execution.json').read_text())
+          assert execution['planned'] == ['xaml-workspaces'] and len(execution['completed']) == 1
+          result = execution['completed'][0]
+          assert result['suite'] == 'xaml-workspaces' and result['error'] is None
+          assert result['executed'] == result['passed'] == len(cases)
+          for kind in ('declarative', 'mvvm', 'templates', 'palette'):
+              for theme in ('light', 'dark'):
+                  data = (p / f'xaml-{kind}-{theme}.png').read_bytes()
+                  assert len(data) > 1000 and data[:8] == b'\x89PNG\r\n\x1a\n'
+          print('Verified', len(cases), 'actual-host consumer workspace cases and eight captures.')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: xaml-workspaces-${{ runner.os }}
+          path: artifacts/workspace-tests/
+          if-no-files-found: error

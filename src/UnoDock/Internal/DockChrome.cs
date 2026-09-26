@@ -7,10 +7,12 @@ namespace UnoDock.Internal;
 internal static class DockChrome
 {
     [ThreadStatic]
-    private static ControlTemplate? _buttonTemplate;
-    [ThreadStatic]
-    private static ControlTemplate? _thumbTemplate;
-    internal static ControlTemplate ThumbTemplate => _thumbTemplate ??= (ControlTemplate)XamlReader.Load("<ControlTemplate xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation'><Border Background='{TemplateBinding Background}'/></ControlTemplate>");
+    private static Themes.DockChromeResources? _templates;
+    private static Themes.DockChromeResources Templates => _templates ??= new Themes.DockChromeResources();
+
+    internal static T Resource<T>(string key)
+        where T : class => (T)Templates[key];
+    internal static ControlTemplate ThumbTemplate => (ControlTemplate)Templates["UnoDock.ChromeThumbTemplate"];
 
     [ThreadStatic]
     private static Brush? _transparent;
@@ -18,17 +20,7 @@ internal static class DockChrome
 
     [ThreadStatic]
     private static DockPalette? _light, _dark;
-    internal static ControlTemplate ButtonTemplate => _buttonTemplate ??= (ControlTemplate)XamlReader.Load("""
-        <ControlTemplate xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
-          <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
-                  BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}">
-            <ContentPresenter Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}"
-                Foreground="{TemplateBinding Foreground}" Padding="{TemplateBinding Padding}"
-                HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
-                VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}" />
-          </Border>
-        </ControlTemplate>
-        """);
+    internal static ControlTemplate ButtonTemplate => (ControlTemplate)Templates["UnoDock.ChromeButtonTemplate"];
 
     internal static DockPalette Palette(DockingManager manager)
     {

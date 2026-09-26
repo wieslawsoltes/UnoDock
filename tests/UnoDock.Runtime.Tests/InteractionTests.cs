@@ -440,10 +440,20 @@ public static class InteractionTests
                 var label = Label(pane.FindVisualChildren<LayoutDocumentTabItem>().First(t => ReferenceEquals(t.Model, docs[0])));
                 using var input = new X11TestInput();
                 await input.Begin(label, new(20, label.ActualHeight / 2));
+                for (var attempt = 0; attempt < 100 && DragState(host) != UnoDock.Core.DockDragState.Dragging; attempt++)
+                    await Task.Delay(20);
+                Check.Equal(UnoDock.Core.DockDragState.Dragging, DragState(host));
+                var start = scroll.HorizontalOffset;
                 input.MoveTo(scroll, new(scroll.ActualWidth - 2, 15));
-                await Task.Delay(100);
+                for (var attempt = 0; attempt < 100 && scroll.HorizontalOffset <= start; attempt++)
+                    await Task.Delay(20);
+                Check.True(scroll.HorizontalOffset > start, "The edge pointer input did not start scrolling.");
                 var before = scroll.HorizontalOffset;
-                await Task.Delay(250);
+                // Do not issue any more pointer motion. Observe continued
+                // timer-driven scrolling rather than assuming dispatcher
+                // delivery finishes within a fixed 250ms under CI load.
+                for (var attempt = 0; attempt < 100 && scroll.HorizontalOffset <= before + 5; attempt++)
+                    await Task.Delay(20);
                 Check.True(scroll.HorizontalOffset > before + 5, "Scrolling did not continue while the pointer was stationary.");
                 input.Release();
                 await AssertReleasedScrollSettles(host, scroll);

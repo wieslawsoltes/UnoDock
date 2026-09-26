@@ -6,6 +6,9 @@ public abstract partial class Theme : DependencyObject
     {
     }
 
+    internal event EventHandler? Changed;
+    /// <summary>Notify attached managers after a declarative theme setting changes.</summary>
+    protected void InvalidateTheme() => Changed?.Invoke(this, EventArgs.Empty);
     public abstract Uri GetResourceUri();
     public virtual ResourceDictionary GetResourceDictionary() => new()
     {
