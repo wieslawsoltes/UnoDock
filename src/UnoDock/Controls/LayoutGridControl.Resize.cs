@@ -8,6 +8,11 @@ public abstract partial class LayoutGridControl<T>
     private ResizeSession? _resize;
     private sealed record ResizeSession(LayoutGridResizerControl Splitter, int Index, ILayoutPositionableElement Before, ILayoutPositionableElement After, LayoutRoot Root, DockingManager Manager, bool Horizontal, GridLength BeforeLength, GridLength AfterLength, double BeforePixels, double AfterPixels, double MinBefore, double MinAfter, ILayoutPanelElement[] Order, Canvas Adorner, Border Ghost)
     {
+        internal ResizeAxisState[] Axis
+        {
+            get;
+            init;
+        } = [];
         internal double Displacement
         {
             get;
@@ -57,15 +62,18 @@ public abstract partial class LayoutGridControl<T>
             IsHitTestVisible = false
         };
         adorner.Children.Add(ghost);
-        _resize = new(splitter, index, a, b, root, manager, horizontal, horizontal ? a.DockWidth : a.DockHeight, horizontal ? b.DockWidth : b.DockHeight, first, second, minA, minB, _displayed, adorner, ghost);
+        _resize = new(splitter, index, a, b, root, manager, horizontal, horizontal ? a.DockWidth : a.DockHeight, horizontal ? b.DockWidth : b.DockHeight, first, second, minA, minB, _displayed, adorner, ghost)
+        {
+            Axis = CaptureResizeAxis(horizontal)
+        };
         root.Updated += ResizeInvalidated;
         manager.LayoutChanged += ResizeInvalidated;
         Children.Add(adorner);
         PlacePreview(_resize);
     }
 
-    private bool IsStructureCurrent(ResizeSession s) => IsLoaded && s.Splitter.IsEnabled && ReferenceEquals(s.Root, _group.Root) && ReferenceEquals(s.Root, s.Manager.Layout) && (Orientation == Orientation.Horizontal) == s.Horizontal && Children.Contains(s.Splitter) && _group.Children.OfType<ILayoutPanelElement>().Where(c => c.IsVisible).SequenceEqual(s.Order, ReferenceEqualityComparer.Instance) && (s.Horizontal ? s.Before.DockMinWidth : s.Before.DockMinHeight) == s.MinBefore && (s.Horizontal ? s.After.DockMinWidth : s.After.DockMinHeight) == s.MinAfter;
-    private bool IsCurrent(ResizeSession s) => IsStructureCurrent(s) && (s.Horizontal ? s.Before.DockWidth : s.Before.DockHeight) == s.BeforeLength && (s.Horizontal ? s.After.DockWidth : s.After.DockHeight) == s.AfterLength;
+    private bool IsStructureCurrent(ResizeSession s) => IsLoaded && s.Splitter.IsEnabled && ReferenceEquals(s.Root, _group.Root) && ReferenceEquals(s.Root, s.Manager.Layout) && (Orientation == Orientation.Horizontal) == s.Horizontal && Children.Contains(s.Splitter) && _group.Children.OfType<ILayoutPanelElement>().Where(c => c.IsVisible).SequenceEqual(s.Order, ReferenceEqualityComparer.Instance) && (s.Horizontal ? s.Before.DockMinWidth : s.Before.DockMinHeight) == s.MinBefore && (s.Horizontal ? s.After.DockMinWidth : s.After.DockMinHeight) == s.MinAfter && AreResizePeersCurrent(s, false);
+    private bool IsCurrent(ResizeSession s) => IsStructureCurrent(s) && (s.Horizontal ? s.Before.DockWidth : s.Before.DockHeight) == s.BeforeLength && (s.Horizontal ? s.After.DockWidth : s.After.DockHeight) == s.AfterLength && AreResizePeersCurrent(s, true);
     private void ResizeInvalidated(object? sender, EventArgs e) => ValidateResize();
     private void ValidateResize()
     {
@@ -124,17 +132,7 @@ public abstract partial class LayoutGridControl<T>
         if (!commit)
             return;
         var pair = DockSplitSolver.ResizePair(s.BeforePixels, s.AfterPixels, s.Displacement, s.MinBefore, s.MinAfter);
-        var bothStars = s.BeforeLength.IsStar && s.AfterLength.IsStar;
-        var totalPixels = s.BeforePixels + s.AfterPixels;
-        // Preserve the original star ratio plus the requested displacement. Rebuilding
-        // the ratio from rounded device-aligned grid pixels causes a jump at drag start.
-        // Numeric automation requests an absolute arranged size, not a pointer delta.
-        // Anchor its star ratio to the requested pixels so prior arrange rounding
-        // does not accumulate across successive absolute commands. Pointer/arrow
-        // operations retain the original-observed weight-plus-displacement rule.
-        var starDelta = bothStars ? s.AbsolutePixels ? (s.BeforeLength.Value + s.AfterLength.Value) * pair.Before / totalPixels - s.BeforeLength.Value : (s.BeforeLength.Value + s.AfterLength.Value) * s.Displacement / totalPixels : 0;
-        var a = s.BeforeLength.IsStar ? new GridLength(bothStars ? Math.Max(0, s.BeforeLength.Value + starDelta) : pair.Before / totalPixels, GridUnitType.Star) : new GridLength(pair.Before);
-        var b = s.AfterLength.IsStar ? new GridLength(bothStars ? Math.Max(0, s.AfterLength.Value - starDelta) : pair.After / totalPixels, GridUnitType.Star) : new GridLength(pair.After);
+        var (a, b) = CalculateResizeLengths(s, pair.Before, pair.After);
         using var batch = s.Root.BeginUpdate();
         // Property notifications can replace the workspace or edit the other endpoint.
         // Revalidate after each callback, and roll back only values this operation owns.

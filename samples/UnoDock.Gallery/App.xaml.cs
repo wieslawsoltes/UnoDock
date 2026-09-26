@@ -55,6 +55,7 @@ public partial class App : Application
                         ("focus-ownership", true, () => Testing.FocusOwnershipTests.Run(output)),
                         ("docking-guides", true, () => Testing.DockGuideTests.Run(gallery.Dock, output)),
                         ("splitter-quality", true, () => Testing.SplitterQualityTests.Run(gallery.Dock, output)),
+                        ("docking-sizing", true, () => Testing.DockingSizingTests.Run(output)),
                         ("auto-hide-quality", true, () => Testing.AutoHideQualityTests.Run(gallery.Dock, output)),
                         ("menu-quality", true, () => Testing.MenuQualityTests.Run(gallery.Dock, output)),
                         ("menu-context-lifetime", true, () => Testing.MenuContextLifetimeTests.Run(output)),
