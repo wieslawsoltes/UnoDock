@@ -20,6 +20,11 @@ jobs:
           from pathlib import Path
           import base64, gzip, hashlib, subprocess
           encoded = Path('tools/native-inspector.patch.gz.base64').read_text().strip()
+          assert hashlib.sha256(encoded.encode()).hexdigest() == '6f040a0d666df168493a7b672521a4f30daef7d48d33d16af71ee5e9956cf879'
+          repairs = [(1673,1674,'C',''),(1873,1874,'W',''),(1957,1958,'a',''),(2707,2708,'L',''),(3066,3068,'Sq','w'),(5541,5542,'d',''),(5868,5869,'6',''),(5914,5916,'d2',''),(9105,9107,'zi',''),(9916,9918,'H3',''),(11466,11467,'Q','O')]
+          for start, end, old, new in reversed(repairs):
+              assert encoded[start:end] == old
+              encoded = encoded[:start] + new + encoded[end:]
           data = gzip.decompress(base64.b64decode(encoded, validate=True))
           assert len(data) == 38592
           assert hashlib.sha256(data).hexdigest() == '1ec7e597fd7dd2d02703b9f2d8a168b95b9c3d702b618634cafccdfb31554c58'
