@@ -18,8 +18,7 @@ internal static partial class FloatingChromeTests
                 await Wait(() =>
                 {
                     var scale = OperatingSystem.IsMacOS() ? 1 : client.XamlRoot!.RasterizationScale;
-                    return Math.Abs(client.ActualWidth * scale - frame.Width) <= 1 &&
-                        Math.Abs(client.ActualHeight * scale - frame.Height) <= 1;
+                    return Math.Abs(client.ActualWidth * scale - frame.Width) <= 1 && Math.Abs(client.ActualHeight * scale - frame.Height) <= 1;
                 });
                 Near(frame, FloatingChromeProbe.Bounds(native));
                 Check.Same(native, fixture.Native);

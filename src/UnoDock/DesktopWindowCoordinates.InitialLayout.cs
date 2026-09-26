@@ -5,8 +5,8 @@ namespace UnoDock;
 public sealed partial class DesktopWindowCoordinates
 {
     /// <summary>Notify the X11 host of its actual initial client geometry after
-    /// activation. No frame, focus, ownership or input state is changed.</summary>
-    internal void RefreshInitialNativeLayout(Window window)
+        /// activation. No frame, focus, ownership or input state is changed.</summary>
+        internal void RefreshInitialNativeLayout(Window window)
     {
         Verify();
         ArgumentNullException.ThrowIfNull(window);
@@ -37,6 +37,7 @@ public sealed partial class DesktopWindowCoordinates
             Xcb.Free(reply);
             Xcb.Free(error);
         }
+
         reply = Xcb.AttributesReply(connection, Xcb.Attributes(connection, id), out error);
         try
         {
@@ -48,6 +49,7 @@ public sealed partial class DesktopWindowCoordinates
             Xcb.Free(reply);
             Xcb.Free(error);
         }
+
         // Uno's X11 event thread polls the socket before inspecting Xlib's
         // buffered queue. Synchronous pre-show requests can already have moved
         // ConfigureNotify into that queue. Send one checked post-show notice from
@@ -65,7 +67,6 @@ public sealed partial class DesktopWindowCoordinates
         }
 #endif
     }
-
 #if !WINDOWS
     // SendEvent copies the entire 32-byte core event, including the padding.
     [StructLayout(LayoutKind.Sequential, Size = 32)]

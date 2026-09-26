@@ -19,7 +19,8 @@ def contracts(system: str) -> dict[str, tuple[int, set[str]]]:
     result = {}
     for kind, suffix in (("document", "documents"), ("tools", "tools")):
         # Retain every original native-frame, resize and physical-button gate.
-        required = {f"chrome/{kind}: native frame is replaced and caption controls remain real",
+        required = {f"chrome/{kind}: initial client geometry settles without pointer input",
+                    f"chrome/{kind}: native frame is replaced and caption controls remain real",
                     f"chrome/{kind}: system/custom switching retains window, caption and editors",
                     f"chrome/{kind}: late resize events cannot cancel an independently started successor"}
         for edge in EDGES:

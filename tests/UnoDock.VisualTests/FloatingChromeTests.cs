@@ -45,6 +45,7 @@ internal static partial class FloatingChromeTests
         )
         {
             var kind = tools ? "tools" : "document";
+            RegisterInitialLayout(tests, tools);
             tests.Test($"chrome/{kind}: native frame is replaced and caption controls remain real", async () =>
             {
                 using var f = new Fixture(tools);
