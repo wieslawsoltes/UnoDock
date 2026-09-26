@@ -3,7 +3,7 @@ using System.Xml;
 namespace UnoDock.Layout;
 
 [ContentProperty(Name = "Children")]
-public class LayoutDocumentPaneGroup : LayoutPositionableGroup<ILayoutDocumentPane>, ILayoutDocumentPane, ILayoutOrientableGroup
+public partial class LayoutDocumentPaneGroup : LayoutPositionableGroup<ILayoutDocumentPane>, ILayoutDocumentPane, ILayoutOrientableGroup
 {
     public override void ConsoleDump(int tab) => base.ConsoleDump(tab);
     private Orientation _orientation = Orientation.Horizontal;

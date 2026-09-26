@@ -4,7 +4,7 @@ using System.Xml.Serialization;
 
 namespace UnoDock.Layout;
 
-public class LayoutAnchorable : LayoutContent
+public partial class LayoutAnchorable : LayoutContent
 {
     public override void ConsoleDump(int tab) => base.ConsoleDump(tab);
     private bool _canHide = true, _canAutoHide = true, _canDocument = true;

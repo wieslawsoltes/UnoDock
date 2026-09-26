@@ -5,7 +5,7 @@ using System.Xml.Serialization;
 namespace UnoDock.Layout;
 
 [ContentProperty(Name = nameof(RootDocument))]
-public class LayoutDocumentFloatingWindow : LayoutFloatingWindow
+public partial class LayoutDocumentFloatingWindow : LayoutFloatingWindow
 {
     public override void ConsoleDump(int tab) => base.ConsoleDump(tab);
     private LayoutDocument? _document;

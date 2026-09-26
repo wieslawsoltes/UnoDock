@@ -40,8 +40,12 @@ public abstract partial class LayoutElement : DependencyObject, ILayoutElement
     protected virtual void RaisePropertyChanging(string propertyName) => PropertyChanging?.Invoke(this, new(propertyName));
     protected virtual void RaisePropertyChanged(string propertyName)
     {
-        PropertyChanged?.Invoke(this, new(propertyName));
-        (Root as LayoutRoot)?.Invalidate();
+        LayoutMutation.Execute(mutation =>
+        {
+            mutation.Run(() => LayoutXamlProperty.Publish(this, propertyName));
+            mutation.Run(() => PropertyChanged?.Invoke(this, new(propertyName)));
+            mutation.Run(() => (Root as LayoutRoot)?.Invalidate());
+        });
     }
 
     protected bool Set<T>(ref T field, T value, [CallerMemberName] string name = "")

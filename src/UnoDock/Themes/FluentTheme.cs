@@ -14,16 +14,53 @@ public sealed class FluentTheme : DictionaryTheme
         if (!Enum.IsDefined(theme))
             throw new ArgumentOutOfRangeException(nameof(theme));
         RequestedTheme = theme;
-        // Preserve the explicit-theme dictionary contract. These aliases are
-        // refreshed from application resources on use, never cloned/recolored.
-        if (theme != ElementTheme.Default)
-            foreach (var slot in Internal.DockThemeResources.Slots(Internal.DockChrome.Default(theme == ElementTheme.Dark)))
-                Publish(slot.Dock, slot.Fallback);
     }
 
-    internal ElementTheme RequestedTheme
+    public static readonly DependencyProperty RequestedThemeProperty = DependencyProperty.Register(nameof(RequestedTheme), typeof(ElementTheme), typeof(FluentTheme), new PropertyMetadata(ElementTheme.Default, (owner, args) => ((FluentTheme)owner).ChangeRequestedTheme(args)));
+    private bool _restoringTheme;
+    public ElementTheme RequestedTheme
     {
-        get;
+        get => (ElementTheme)GetValue(RequestedThemeProperty);
+        set
+        {
+            if (!Enum.IsDefined(value))
+                throw new ArgumentOutOfRangeException(nameof(value));
+            SetValue(RequestedThemeProperty, value);
+        }
+    }
+
+    internal event EventHandler? Changed;
+    private void ChangeRequestedTheme(DependencyPropertyChangedEventArgs args)
+    {
+        if (_restoringTheme)
+            return;
+        if (!Enum.IsDefined((ElementTheme)args.NewValue))
+        {
+            _restoringTheme = true;
+            try
+            {
+                SetValue(RequestedThemeProperty, args.OldValue);
+            }
+            finally
+            {
+                _restoringTheme = false;
+            }
+
+            throw new ArgumentOutOfRangeException(nameof(RequestedTheme));
+        }
+
+        foreach (var (key, owned) in _published)
+        {
+            if (ThemeResourceDictionary.TryGetValue(key, out var current) && ReferenceEquals(current, owned))
+                ThemeResourceDictionary.Remove(key);
+        }
+
+        _published.Clear();
+        if (RequestedTheme != ElementTheme.Default)
+            foreach (var slot in Internal.DockThemeResources.Slots(Internal.DockChrome.Default(RequestedTheme == ElementTheme.Dark)))
+                if (!ThemeResourceDictionary.Keys.Contains("UnoDock." + slot.Dock))
+                    Publish(slot.Dock, slot.Fallback);
+        Changed?.Invoke(this, EventArgs.Empty);
     }
 
     internal void UpdateResources(DockingManager manager)

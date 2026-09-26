@@ -65,11 +65,12 @@ public partial class DockingManager : Control, IDisposable, UnoDock.Compatibilit
     }
 
     internal void SetAutoHideHost(LayoutAutoHideWindowControl? value) => SetAutoHideWindow(value!);
+    public static readonly DependencyProperty FloatingWindowModeProperty = DependencyProperty.Register(nameof(FloatingWindowMode), typeof(FloatingWindowMode), typeof(DockingManager), new PropertyMetadata(FloatingWindowMode.Auto, (owner, _) => ((DockingManager)owner).InvalidateView()));
     public FloatingWindowMode FloatingWindowMode
     {
-        get;
-        set;
-    } = FloatingWindowMode.Auto;
+        get => (FloatingWindowMode)GetValue(FloatingWindowModeProperty);
+        set => SetValue(FloatingWindowModeProperty, value);
+    }
     public IEnumerable<LayoutFloatingWindowControl> FloatingWindows => _floating;
     public int RealizedContentCount => _items.Values.Count(i => i.IsViewCreated);
     public IEnumerator LogicalChildrenPublic => LogicalChildren;
@@ -215,6 +216,7 @@ public partial class DockingManager : Control, IDisposable, UnoDock.Compatibilit
                 ReconcileSources();
                 break;
             case nameof(Theme):
+                ObserveXamlTheme(Theme as FluentTheme);
                 if (_themeResources != null)
                     Resources.MergedDictionaries.Remove(_themeResources);
                 _themeResources = Theme?.GetResourceDictionary();
@@ -223,7 +225,7 @@ public partial class DockingManager : Control, IDisposable, UnoDock.Compatibilit
                 break;
             case nameof(LayoutItemContainerStyle):
             case nameof(LayoutItemContainerStyleSelector):
-                foreach (var item in _items.Values)
+                foreach (var item in _items.Values.ToArray())
                     ApplyItemStyle(item);
                 break;
         }
@@ -309,6 +311,11 @@ public partial class DockingManager : Control, IDisposable, UnoDock.Compatibilit
 
     protected override void OnApplyTemplate()
     {
+        if (_host != null && ReferenceEquals(_host.Content, _surface))
+        {
+            _host.Content = null;
+        }
+
         base.OnApplyTemplate();
         _host = GetTemplateChild("PART_LayoutHost") as ContentPresenter;
         if (_host != null)
@@ -565,6 +572,7 @@ public partial class DockingManager : Control, IDisposable, UnoDock.Compatibilit
         if (_disposed)
             return;
         _disposed = true;
+        ObserveXamlTheme(null);
         Loaded -= OnLoaded;
         Unloaded -= OnUnloaded;
         _documentObserver?.Dispose();

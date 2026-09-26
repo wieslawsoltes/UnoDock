@@ -7,9 +7,13 @@
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="dock:DockingManager">
+          <Border Background="{TemplateBinding Background}"
+                  BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"
+                  CornerRadius="{TemplateBinding CornerRadius}" Padding="{TemplateBinding Padding}">
           <Grid x:Name="PART_AutoHideArea">
             <ContentPresenter x:Name="PART_LayoutHost" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" />
           </Grid>
+          </Border>
         </ControlTemplate>
       </Setter.Value>
     </Setter>

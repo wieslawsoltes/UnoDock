@@ -1,0 +1,39 @@
+<UserControl xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:dock="using:UnoDock" xmlns:layout="using:UnoDock.Layout" xmlns:controls="using:UnoDock.Controls" xmlns:themes="using:UnoDock.Themes" xmlns:local="using:UnoDock.Gallery" x:Class="UnoDock.Gallery.XamlMvvmView">
+  <UserControl.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries>
+        <themes:WorkbenchResources/>
+      </ResourceDictionary.MergedDictionaries>
+      <DataTemplate x:Key="Editor">
+        <local:XamlDocumentEditor/>
+      </DataTemplate>
+      <Style x:Key="DocumentStyle" TargetType="controls:LayoutItem">
+        <Setter Property="controls:LayoutItemBindings.Bindings">
+          <Setter.Value>
+            <controls:LayoutItemBindingCollection>
+              <controls:LayoutItemBinding Property="Title" Path="Title" Mode="TwoWay"/>
+              <controls:LayoutItemBinding Property="ContentId" Path="ContentId"/>
+              <controls:LayoutItemBinding Property="CanClose" Path="CanClose"/>
+            </controls:LayoutItemBindingCollection>
+          </Setter.Value>
+        </Setter>
+      </Style>
+    </ResourceDictionary>
+  </UserControl.Resources>
+  <Grid Padding="12" RowSpacing="10" Background="{ThemeResource SolidBackgroundFillColorBaseBrush}">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="*"/>
+    </Grid.RowDefinitions>
+    <StackPanel Orientation="Horizontal" Spacing="12">
+      <TextBlock Text="XAML + MVVM" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"/>
+      <Button Content="New document" Click="AddDocument" Style="{StaticResource UnoDock.WorkbenchButtonStyle}"/>
+      <Button Content="Light / Dark" Click="ToggleTheme" Style="{StaticResource UnoDock.WorkbenchButtonStyle}"/>
+    </StackPanel>
+    <dock:DockingManager x:Name="Dock" Grid.Row="1" DocumentsSource="{x:Bind Documents, Mode=OneWay}" LayoutItemTemplate="{StaticResource Editor}" LayoutItemContainerStyle="{StaticResource DocumentStyle}" Style="{StaticResource UnoDock.WorkbenchManagerStyle}" FloatingWindowMode="Native">
+      <dock:DockingManager.Theme>
+        <themes:FluentTheme/>
+      </dock:DockingManager.Theme>
+    </dock:DockingManager>
+  </Grid>
+</UserControl>

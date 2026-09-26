@@ -1,0 +1,69 @@
+name: Compiled XAML workbenches
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: xaml-workbench-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  xaml-runtime:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Compile library, samples and native XAML metadata
+        run: dotnet build samples/UnoDock.Gallery -c Release -f net10.0-desktop -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0 -warnaserror
+      - name: Install headless desktop display
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y xvfb libx11-6 libxi6 libxrandr2 libxcursor1 libfontconfig1 libgl1 libice6 libsm6 libxcb1 libxtst6
+      - name: Execute real XAML workbench on X11
+        if: runner.os == 'Linux'
+        run: xvfb-run -a -s '-screen 0 2560x1440x24' python3 tools/run-desktop-tests.py --app samples/UnoDock.Gallery/bin/Release/net10.0-desktop/UnoDock.Gallery.dll --output artifacts/xaml-tests --selector xaml-workbench --suite-timeout 120 --total-timeout 240
+      - name: Execute real XAML workbench on Windows or AppKit
+        if: runner.os != 'Linux'
+        shell: bash
+        run: python3 tools/run-desktop-tests.py --app samples/UnoDock.Gallery/bin/Release/net10.0-desktop/UnoDock.Gallery.dll --output artifacts/xaml-tests --selector xaml-workbench --suite-timeout 120 --total-timeout 240
+      - name: Require complete suite and retained rendered evidence
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p artifacts/xaml-tests
+          git rev-parse HEAD > artifacts/xaml-tests/source-revision.txt
+          python3 - <<'PY'
+          import json, xml.etree.ElementTree as ET
+          from pathlib import Path
+          path = Path('artifacts/xaml-tests')
+          root = ET.parse(path / 'xaml-workbench.xml').getroot()
+          cases = root.findall('testcase')
+          assert root.tag == 'testsuite' and root.get('name') == 'xaml-workbench'
+          assert len(cases) == int(root.get('tests', '-1')) and len(cases) >= 32
+          assert len({case.get('name') for case in cases}) == len(cases)
+          assert not any(int(root.get(key, '0')) for key in ['failures', 'errors', 'skipped'])
+          assert not any(case.find(tag) is not None for case in cases for tag in ['failure', 'error', 'skipped'])
+          record = json.loads((path / 'isolated-execution.json').read_text())
+          assert record['planned'] == ['xaml-workbench'] and len(record['completed']) == 1
+          result = record['completed'][0]
+          assert result['suite'] == 'xaml-workbench' and result['error'] is None
+          assert result['executed'] == result['passed'] == len(cases)
+          for theme in ['light', 'dark']:
+              image = path / 'visuals' / ('xaml-workbench-' + theme + '.png')
+              assert image.is_file() and image.stat().st_size > 1000
+          print('Verified', len(cases), 'real-host XAML cases and both theme captures.')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: xaml-workbench-${{ runner.os }}
+          path: artifacts/xaml-tests/
+          if-no-files-found: error
