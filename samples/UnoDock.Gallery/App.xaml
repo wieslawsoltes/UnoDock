@@ -10,8 +10,7 @@
     </Grid>
    </DataTemplate>
    <Style x:Key="NoteItemStyle" TargetType="controls:LayoutItem">
-    <Setter Property="controls:LayoutItemBindings.Title"><Setter.Value><controls:LayoutBinding Path="Title" /></Setter.Value></Setter>
-    <Setter Property="controls:LayoutItemBindings.ContentId"><Setter.Value><controls:LayoutBinding Path="ContentId" /></Setter.Value></Setter>
+    <Setter Property="Title" Value="{Binding Title}"/><Setter Property="ContentId" Value="{Binding ContentId}"/>
    </Style>
    <DataTemplate x:Key="WorkspaceDocumentTemplate"><gallery:MvvmDocumentEditor /></DataTemplate>
    <DataTemplate x:Key="WorkspaceToolTemplate"><gallery:MvvmToolPresenter /></DataTemplate>

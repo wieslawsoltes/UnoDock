@@ -22,7 +22,16 @@ internal sealed class DockMenuRow : MenuFlyoutItem
         BorderThickness = new(1);
         CornerRadius = new(0);
         UseSystemFocusVisuals = true;
-        Template = _rowTemplate ??= (ControlTemplate)DockChrome.Resource<ControlTemplate>("UnoDock.MenuRowTemplate");
+        Template = _rowTemplate ??= (ControlTemplate)XamlReader.Load("""
+            <ControlTemplate xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+                <Grid Background="{TemplateBinding Background}"><Grid.ColumnDefinitions><ColumnDefinition Width="29"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                  <Border x:Name="PART_MenuGutter" BorderThickness="0,0,1,0" BorderBrush="White" IsHitTestVisible="False"/>
+                  <TextBlock Grid.Column="1" Text="{TemplateBinding Text}" Foreground="{TemplateBinding Foreground}" FontSize="{TemplateBinding FontSize}"
+                    Margin="6,0,10,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" IsHitTestVisible="False"/>
+                  <Border Grid.ColumnSpan="2" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" IsHitTestVisible="False"/>
+                </Grid>
+            </ControlTemplate>
+            """);
         PointerEntered += (_, _) =>
         {
             _pointer = true;
@@ -80,7 +89,13 @@ internal sealed class DockMenuRow : MenuFlyoutItem
         style.Setters.Add(new Setter(FrameworkElement.MinWidthProperty, palette.MinWidth));
         style.Setters.Add(new Setter(Control.FontSizeProperty, palette.FontSize));
         style.Setters.Add(new Setter(FrameworkElement.FlowDirectionProperty, palette.FlowDirection));
-        style.Setters.Add(new Setter(Control.TemplateProperty, _presenterTemplate ??= (ControlTemplate)DockChrome.Resource<ControlTemplate>("UnoDock.MenuPresenterTemplate")));
+        style.Setters.Add(new Setter(Control.TemplateProperty, _presenterTemplate ??= (ControlTemplate)XamlReader.Load("""
+            <ControlTemplate xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+              <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Padding="{TemplateBinding Padding}">
+                <ScrollViewer HorizontalScrollBarVisibility="Disabled" HorizontalScrollMode="Disabled" VerticalScrollBarVisibility="Auto" VerticalScrollMode="Enabled" IsTabStop="False"><ItemsPresenter/></ScrollViewer>
+              </Border>
+            </ControlTemplate>
+            """)));
         return style;
     }
 }

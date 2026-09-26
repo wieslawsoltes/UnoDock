@@ -1,0 +1,64 @@
+name: Reconcile compiled XAML workspaces
+on:
+  push:
+    branches: [work/preview25-xaml-themes]
+    paths: [.github/workflows/reconcile-xaml-workspaces.yml, tools/reconcile-xaml-workspaces.py]
+permissions:
+  contents: write
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Apply explicit reconciliation of both PR implementations
+        run: python3 tools/reconcile-xaml-workspaces.py
+      - name: Enforce source organization, canonical syntax and consumer contracts
+        run: |
+          dotnet run --project tools/SourceMaintenance -c Release -- --format .
+          dotnet run --project tools/SourceMaintenance -c Release -- --check .
+          dotnet run --project tools/SourceMaintenance -c Release -- --check-format .
+          python3 tests/metadata/test_xaml_sources.py
+          python3 tools/generate-property-adapters.py
+          git diff --exit-code -- 'src/**/*.g.cs' contracts/ tools/ReferenceProbe/
+      - name: Compile actual Uno application and XAML
+        run: dotnet build samples/UnoDock.Gallery -c Release -f net10.0-desktop -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0 -warnaserror
+      - name: Install dedicated native display
+        run: sudo apt-get update && sudo apt-get install -y xvfb libx11-6 libxi6 libxrandr2 libxcursor1 libfontconfig1 libgl1 libice6 libsm6 libxcb1 libxtst6
+      - name: Execute both XAML suites, model invariants and Uno resources
+        run: |
+          for suite in xaml-workspaces xaml-workbench layout-mutation-invariants uno-theme; do
+            xvfb-run -a -s '-screen 0 2560x1440x24' python3 tools/run-desktop-tests.py --app samples/UnoDock.Gallery/bin/Release/net10.0-desktop/UnoDock.Gallery.dll --output artifacts/$suite --selector $suite --suite-timeout 150 --total-timeout 240 || exit 1
+          done
+      - name: Publish validated source and remove integration workers
+        run: |
+          set -euo pipefail
+          git rm tools/reconcile-xaml-workspaces.py .github/workflows/reconcile-xaml-workspaces.yml
+          git add src/ samples/ tests/ docs/
+          git diff --cached --check
+          git config user.name 'Wiesław Šoltés'
+          git config user.email 'wieslawsoltes@users.noreply.github.com'
+          git commit -m 'feat: reconcile compiled workspaces and resource themes with retained XAML binding contracts'
+          git fetch origin work/preview25-xaml-themes
+          test "$(git rev-parse FETCH_HEAD)" = '${{ github.sha }}'
+          git push origin HEAD:work/preview25-xaml-themes
+      - name: Archive exact prepared source even on validation failure
+        if: always()
+        run: |
+          mkdir -p artifacts
+          git add src/ samples/ tests/ docs/
+          git diff --cached --binary > artifacts/reconciliation.patch
+          git write-tree > artifacts/prepared-tree.txt
+          git archive --format=zip "$(git write-tree)" -o artifacts/prepared-source.zip
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: reconciled-xaml-workspaces
+          path: artifacts/
+          if-no-files-found: error

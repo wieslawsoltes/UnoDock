@@ -3,7 +3,7 @@ using System.Xml;
 namespace UnoDock.Layout;
 
 [ContentProperty(Name = "Children")]
-public class LayoutDocumentPane : LayoutPositionableGroup<LayoutContent>, ILayoutDocumentPane, ILayoutContentSelector
+public partial class LayoutDocumentPane : LayoutPositionableGroup<LayoutContent>, ILayoutDocumentPane, ILayoutContentSelector
 {
     public override void ConsoleDump(int tab) => base.ConsoleDump(tab);
     private readonly PaneSelection _selection;

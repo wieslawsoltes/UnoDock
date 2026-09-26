@@ -29,9 +29,21 @@ public sealed partial class NavigatorListBox : ListBox
         VerticalAlignment = VerticalAlignment.Top;
         // No ListBox.SelectionMode or ScrollIntoView calls: they are not implemented
         // by the pinned Uno ListBox. Its existing single-selection model is retained.
-        Template = _template ??= (ControlTemplate)DockChrome.Resource<ControlTemplate>("UnoDock.NavigatorListTemplate");
-        ItemsPanel = _panel ??= (ItemsPanelTemplate)DockChrome.Resource<ItemsPanelTemplate>("UnoDock.NavigatorItemsPanel");
-        ItemTemplate = _itemTemplate ??= (DataTemplate)DockChrome.Resource<DataTemplate>("UnoDock.NavigatorItemTemplate");
+        Template = _template ??= (ControlTemplate)XamlReader.Load("""
+            <ControlTemplate xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+              <ScrollViewer x:Name="NavigatorScrollViewer" Padding="1" Background="{TemplateBinding Background}"
+                  HorizontalScrollBarVisibility="Disabled" HorizontalScrollMode="Disabled"
+                  VerticalScrollBarVisibility="Auto" VerticalScrollMode="Enabled" IsTabStop="False">
+                <ItemsPresenter />
+              </ScrollViewer>
+            </ControlTemplate>
+            """);
+        ItemsPanel = _panel ??= (ItemsPanelTemplate)XamlReader.Load("<ItemsPanelTemplate xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation'><StackPanel /></ItemsPanelTemplate>");
+        ItemTemplate = _itemTemplate ??= (DataTemplate)XamlReader.Load("""
+            <DataTemplate xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+              <TextBlock Text="{Binding Title}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+            </DataTemplate>
+            """);
     }
 
     // LayoutItem inherits FrameworkElement, but it is a model adapter, not an

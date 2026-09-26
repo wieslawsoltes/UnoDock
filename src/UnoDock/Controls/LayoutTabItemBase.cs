@@ -13,9 +13,9 @@ public abstract partial class LayoutTabItemBase : DockInputControl
     private readonly Grid _chrome = new();
     private readonly Border _selectionIndicator = new()
     {
-        Height = 2,
-        VerticalAlignment = VerticalAlignment.Bottom,
+        Name = "PART_SelectedTabIndicator",
         IsHitTestVisible = false,
+        VerticalAlignment = VerticalAlignment.Top,
         Visibility = Visibility.Collapsed
     };
     private readonly DockChromeButton _label;
@@ -196,13 +196,13 @@ public abstract partial class LayoutTabItemBase : DockInputControl
         var tool = Model is LayoutAnchorable && Model.Parent is not LayoutDocumentPane;
         _label.Configure(palette);
         _close.Configure(palette);
-        _label.FontWeight = Model.IsActive && palette.CornerRadius > 0 ? Microsoft.UI.Text.FontWeights.SemiBold : Microsoft.UI.Text.FontWeights.Normal;
-        _label.Padding = new(palette.CornerRadius > 0 ? 8 : 1, 0, palette.CornerRadius > 0 ? 8 : 1, 0);
-        _chrome.CornerRadius = new(palette.CornerRadius, palette.CornerRadius, 0, 0);
-        _selectionIndicator.Background = palette.Accent;
-        _selectionIndicator.Visibility = Model.IsSelected && palette.CornerRadius > 0 ? Visibility.Visible : Visibility.Collapsed;
+        _label.FontWeight = Microsoft.UI.Text.FontWeights.Normal;
         _close.Visibility = !tool && Model.CanClose && Model.IsSelected ? Visibility.Visible : Visibility.Collapsed;
         _chrome.Background = Model.IsSelected ? palette.Surface : palette.Tab;
+        _selectionIndicator.Height = palette.ActiveTabIndicatorThickness;
+        _selectionIndicator.Background = Model.IsActive ? palette.Accent : palette.Border;
+        _selectionIndicator.Margin = new Thickness(3, 0, 3, 0);
+        _selectionIndicator.Visibility = Model.IsSelected && palette.ActiveTabIndicatorThickness > 0 ? Visibility.Visible : Visibility.Collapsed;
         _chrome.BorderBrush = palette.Border;
         _chrome.BorderThickness = tool ? new(0, 0, 1, 0) : new(0, 0, 1, 0);
         _chrome.Padding = new(tool ? 3 : 0, 0, tool ? 3 : 0, 0);

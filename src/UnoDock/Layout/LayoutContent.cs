@@ -9,9 +9,8 @@ public abstract partial class LayoutContent : LayoutElement, IComparable<LayoutC
 {
     public static readonly DependencyProperty TitleProperty = DependencyProperty.Register(nameof(Title), typeof(string), typeof(LayoutContent), new PropertyMetadata(null, (d, e) => ((LayoutContent)d).Notify(nameof(Title))));
     public static readonly DependencyProperty ContentIdProperty = DependencyProperty.Register(nameof(ContentId), typeof(string), typeof(LayoutContent), new PropertyMetadata(null, (d, e) => ((LayoutContent)d).Notify(nameof(ContentId))));
-    public static readonly DependencyProperty ContentProperty = DependencyProperty.Register(nameof(Content), typeof(object), typeof(LayoutContent), new PropertyMetadata(null, (d, _) => ((LayoutContent)d).Notify(nameof(Content))));
-    public static readonly DependencyProperty ToolTipProperty = DependencyProperty.Register(nameof(ToolTip), typeof(object), typeof(LayoutContent), new PropertyMetadata(null, (d, _) => ((LayoutContent)d).Notify(nameof(ToolTip))));
-    public static readonly DependencyProperty IconSourceProperty = DependencyProperty.Register(nameof(IconSource), typeof(ImageSource), typeof(LayoutContent), new PropertyMetadata(null, (d, _) => ((LayoutContent)d).Notify(nameof(IconSource))));
+    private object? _content, _toolTip;
+    private ImageSource? _icon;
     private bool _enabled = true, _canClose = true, _canFloat = true, _active, _selected, _floating, _lastFocused, _maximized;
     private double _left, _top, _width, _height;
     private DateTime? _activated;
@@ -31,18 +30,18 @@ public abstract partial class LayoutContent : LayoutElement, IComparable<LayoutC
     [System.Xml.Serialization.XmlIgnore]
     public object? Content
     {
-        get => (object?)GetValue(ContentProperty);
-        set => SetValue(ContentProperty, value);
+        get => _content;
+        set => Set(ref _content, value);
     }
     public object? ToolTip
     {
-        get => (object?)GetValue(ToolTipProperty);
-        set => SetValue(ToolTipProperty, value);
+        get => _toolTip;
+        set => Set(ref _toolTip, value);
     }
     public ImageSource? IconSource
     {
-        get => (ImageSource?)GetValue(IconSourceProperty);
-        set => SetValue(IconSourceProperty, value);
+        get => _icon;
+        set => Set(ref _icon, value);
     }
     public bool IsEnabled
     {

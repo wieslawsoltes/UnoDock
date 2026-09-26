@@ -58,13 +58,13 @@ internal sealed class DockChromeButton : Button
     internal void Configure(DockPalette palette)
     {
         _palette = palette;
+        CornerRadius = new(palette.ButtonCornerRadius);
         Foreground = palette.Foreground;
         FontSize = palette.FontSize;
-        CornerRadius = new(palette.CornerRadius);
         if (Content is Path path)
         {
-            Width = palette.ButtonSize;
-            Height = palette.ButtonSize;
+            Width = palette.ChromeButtonSize;
+            Height = palette.ChromeButtonSize;
             path.Stroke = palette.Foreground;
             path.Fill = palette.Foreground;
         }

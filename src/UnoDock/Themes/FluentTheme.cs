@@ -4,9 +4,6 @@ namespace UnoDock.Themes;
 /// even when the containing window requests the other theme.</summary>
 public sealed class FluentTheme : DictionaryTheme
 {
-    public static readonly DependencyProperty RequestedThemeProperty = DependencyProperty.Register(nameof(RequestedTheme), typeof(ElementTheme), typeof(FluentTheme), new PropertyMetadata(ElementTheme.Default, (owner, args) => ((FluentTheme)owner).OnSettingChanged(args, true)));
-    public static readonly DependencyProperty DensityProperty = DependencyProperty.Register(nameof(Density), typeof(DockDensity), typeof(FluentTheme), new PropertyMetadata(DockDensity.Compact, (owner, args) => ((FluentTheme)owner).OnSettingChanged(args, false)));
-    private bool _restoringSetting;
     private readonly Dictionary<string, Brush> _published = new(StringComparer.Ordinal);
     public FluentTheme() : this(ElementTheme.Default)
     {
@@ -17,13 +14,10 @@ public sealed class FluentTheme : DictionaryTheme
         if (!Enum.IsDefined(theme))
             throw new ArgumentOutOfRangeException(nameof(theme));
         RequestedTheme = theme;
-        // Preserve the explicit-theme dictionary contract. These aliases are
-        // refreshed from application resources on use, never cloned/recolored.
-        if (theme != ElementTheme.Default)
-            foreach (var slot in Internal.DockThemeResources.Slots(Internal.DockChrome.Default(theme == ElementTheme.Dark)))
-                Publish(slot.Dock, slot.Fallback);
     }
 
+    public static readonly DependencyProperty RequestedThemeProperty = DependencyProperty.Register(nameof(RequestedTheme), typeof(ElementTheme), typeof(FluentTheme), new PropertyMetadata(ElementTheme.Default, (owner, args) => ((FluentTheme)owner).ChangeRequestedTheme(args)));
+    private bool _restoringTheme;
     public ElementTheme RequestedTheme
     {
         get => (ElementTheme)GetValue(RequestedThemeProperty);
@@ -35,46 +29,38 @@ public sealed class FluentTheme : DictionaryTheme
         }
     }
 
-    public DockDensity Density
+    internal event EventHandler? Changed;
+    private void ChangeRequestedTheme(DependencyPropertyChangedEventArgs args)
     {
-        get => (DockDensity)GetValue(DensityProperty);
-        set
-        {
-            if (!Enum.IsDefined(value))
-                throw new ArgumentOutOfRangeException(nameof(value));
-            SetValue(DensityProperty, value);
-        }
-    }
-
-    private void OnSettingChanged(DependencyPropertyChangedEventArgs args, bool theme)
-    {
-        if (_restoringSetting)
+        if (_restoringTheme)
             return;
-        if (theme ? !Enum.IsDefined((ElementTheme)args.NewValue) : !Enum.IsDefined((DockDensity)args.NewValue))
+        if (!Enum.IsDefined((ElementTheme)args.NewValue))
         {
-            _restoringSetting = true;
+            _restoringTheme = true;
             try
             {
-                SetValue(theme ? RequestedThemeProperty : DensityProperty, args.OldValue);
+                SetValue(RequestedThemeProperty, args.OldValue);
             }
             finally
             {
-                _restoringSetting = false;
+                _restoringTheme = false;
             }
 
-            throw new ArgumentOutOfRangeException(theme ? nameof(RequestedTheme) : nameof(Density));
+            throw new ArgumentOutOfRangeException(nameof(RequestedTheme));
         }
 
-        if (theme)
+        foreach (var (key, owned) in _published)
         {
-            // Retire only aliases we supplied; never erase consumer overrides.
-            foreach (var pair in _published)
-                if (ThemeResourceDictionary.TryGetValue(pair.Key, out var value) && ReferenceEquals(value, pair.Value))
-                    ThemeResourceDictionary.Remove(pair.Key);
-            _published.Clear();
+            if (ThemeResourceDictionary.TryGetValue(key, out var current) && ReferenceEquals(current, owned))
+                ThemeResourceDictionary.Remove(key);
         }
 
-        InvalidateTheme();
+        _published.Clear();
+        if (RequestedTheme != ElementTheme.Default)
+            foreach (var slot in Internal.DockThemeResources.Slots(Internal.DockChrome.Default(RequestedTheme == ElementTheme.Dark)))
+                if (!ThemeResourceDictionary.Keys.Contains("UnoDock." + slot.Dock))
+                    Publish(slot.Dock, slot.Fallback);
+        Changed?.Invoke(this, EventArgs.Empty);
     }
 
     internal void UpdateResources(DockingManager manager)

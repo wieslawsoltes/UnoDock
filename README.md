@@ -1,25 +1,18 @@
 # UnoDock
 
-## Compiled XAML workspaces and configurable Uno chrome
+## XAML workbenches and scoped Fluent themes
 
-**Samples > XAML workspaces** opens three compiled XAML examples: declarative
-layout, observable-source MVVM, and replaceable control templates. They include
-real editable content, commands, header/content selectors, theme switching and
-XML layout restoration. The template example also includes a consumer-authored
-Light/Dark/HighContrast palette.
-
-`FluentTheme` now exposes XAML-settable `RequestedTheme` and `Density` properties.
-Compact remains the compatibility default; Comfortable and Touch add larger
-hit targets, rounded chrome and selected-tab emphasis. **View > Uno ... chrome**
-applies these presets to the existing gallery workspaces. Built-in chrome templates
-are compiled resources rather than runtime XAML strings.
-
-For per-item native style bindings use `LayoutItemBindings` and `LayoutBinding`
-inside `LayoutItemContainerStyle`. This preserves the AvalonDock extension point
-without relying on WPF-only scalar setter-binding semantics. See the complete
-[XAML, template and theme contracts](docs/xaml-support.md), including supported
-native binding targets and platform boundaries. No package version or release is
-changed by this source update.
+Compiled **XAML workbench** and **XAML MVVM** samples are available from Samples.
+They use the native layout hierarchy, source bindings, templates, per-item binding
+definitions and optional Light/Dark `WorkbenchResources`. Live theme selection,
+model dependency-property endpoints and manager template properties are supported
+without replacing the existing docking/activation engine. See the
+`ChromeDensity` selects Compact, Comfortable or Spacious retained chrome. The
+XAML MVVM sample now includes source-backed tools, document movement and tool
+hide/auto-hide/tabbed-document policies. Explicit TwoWay item bindings synchronize
+model-side changes without replacing their binding expressions. See the
+[XAML usage and compatibility contract](docs/xaml-workbench.md). This source change
+does not publish a new package version or claim WPF XAML equivalence.
 
 ## Preview 20: direct navigator selection
 
@@ -37,7 +30,7 @@ See [exact behavior, independent observations and safety differences](docs/navig
 Independent AvalonDock-style docking for **Uno Platform 6.7**, using **`UnoDock.*`**
 namespaces and Uno/WinUI controls.
 
-**Version: 0.1.0-preview.20. Full API, behavioral and visual parity is not verified.**
+**Version: 0.1.0-preview.19. Full API, behavioral and visual parity is not verified.**
 The target is the pinned public AvalonDock repository and stock presentation, not
 separately licensed commercial themes. This is not WPF binary compatibility. The
 independently authored implementation is MIT-licensed and is not affiliated with or

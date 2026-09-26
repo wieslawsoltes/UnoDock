@@ -16,7 +16,6 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
     private readonly Dictionary<DependencyProperty, ICommand> _commands = [];
     private DockingManager? _manager;
     private bool _disposed, _attaching;
-    private long _styleGeneration;
     private readonly long _visibilityToken;
     protected LayoutItem() => _visibilityToken = RegisterPropertyChangedCallback(VisibilityProperty, (_, _) => OnVisibilityChanged());
     public LayoutContent LayoutElement
@@ -103,41 +102,66 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
         UpdateView();
     }
 
+    private bool _applyingContainerStyle, _containerStylePending;
+    private Style? _requestedContainerStyle;
+    private long _containerStyleRequest;
     internal void ApplyContainerStyle(Style? style)
     {
-        var generation = ++_styleGeneration;
-        var wasAttaching = _attaching;
-        _attaching = true;
+        if (_disposed)
+            return;
+        _requestedContainerStyle = style;
+        _containerStyleRequest++;
+        _containerStylePending = true;
+        if (_applyingContainerStyle)
+            return;
+        _applyingContainerStyle = true;
         try
         {
-            ClearDefaultBindings();
-            ClearStyleBindings();
-            if (generation != _styleGeneration || _disposed)
-                return;
-            ClearDefaultCommands();
-            if (generation != _styleGeneration || _disposed)
-                return;
-            Style = style;
-            if (generation != _styleGeneration || _disposed)
-                return;
-            ApplyBindingDefinitions();
-            if (generation != _styleGeneration || _disposed)
-                return;
-            SetDefaultBindings();
-            if (generation != _styleGeneration || _disposed)
-                return;
-            InitDefaultCommands();
+            for (var pass = 0; _containerStylePending && !_disposed; pass++)
+            {
+                if (pass == 64)
+                    throw new InvalidOperationException("Layout-item style callbacks did not converge.");
+                _containerStylePending = false;
+                var request = _containerStyleRequest;
+                var requested = _requestedContainerStyle;
+                bool Current() => !_disposed && request == _containerStyleRequest;
+                _attaching = true;
+                try
+                {
+                    ClearXamlBindings();
+                    if (!Current())
+                        continue;
+                    ClearDefaultBindings();
+                    if (!Current())
+                        continue;
+                    ClearDefaultCommands();
+                    if (!Current())
+                        continue;
+                    Style = requested;
+                    if (!Current())
+                        continue;
+                    SetDefaultBindings();
+                    if (!Current())
+                        continue;
+                    InitDefaultCommands();
+                }
+                finally
+                {
+                    _attaching = false;
+                }
+
+                if (!Current())
+                    continue;
+                PublishLiteralStyleValues(Current);
+                if (Current())
+                    RefreshXamlBindings();
+            }
         }
         finally
         {
-            _attaching = wasAttaching;
+            _applyingContainerStyle = false;
+            _requestedContainerStyle = null;
         }
-
-        // Applying a native Style resolves Binding setters synchronously. Those
-        // callbacks were suppressed while defaults were being removed, so replay
-        // the final authored values, not transient default values, into the model.
-        if (!wasAttaching && generation == _styleGeneration)
-            SynchronizeContainerStyle(generation);
     }
 
     private bool HasStyleSetter(DependencyProperty property)
@@ -182,14 +206,7 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
         BindDefault(CanFloatProperty, nameof(LayoutContent.CanFloat));
     }
 
-    protected virtual void ClearDefaultBindings()
-    {
-        foreach (var (property, binding) in _bindings)
-            if (ReferenceEquals(GetBindingExpression(property)?.ParentBinding, binding))
-                ClearValue(property);
-        _bindings.Clear();
-    }
-
+    protected virtual void ClearDefaultBindings() => RetireOwnedBindings(_bindings);
     protected virtual void InitDefaultCommands()
     {
         CommandDefault(ActivateCommandProperty, () => LayoutElement.IsActive = true, () => LayoutElement.IsEnabled);
@@ -204,14 +221,7 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
         CommandDefault(MoveToPreviousTabGroupCommandProperty, () => Move(-1), () => AdjacentPane(-1) != null && DockOperations.CanMove(LayoutElement));
     }
 
-    protected virtual void ClearDefaultCommands()
-    {
-        foreach (var (property, command) in _commands)
-            if (ReferenceEquals(GetValue(property), command))
-                ClearValue(property);
-        _commands.Clear();
-    }
-
+    protected virtual void ClearDefaultCommands() => RetireOwnedCommands();
     protected abstract void Close();
     protected virtual void Float() => LayoutElement.Float();
     protected virtual bool CanExecuteDockAsDocumentCommand() => LayoutElement.Parent is not LayoutDocumentPane && LayoutElement.Root != null && DockOperations.CanMove(LayoutElement);
@@ -219,8 +229,7 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
     {
     }
 
-    protected void OnAdapterPropertyChanged(string name, DependencyPropertyChangedEventArgs args) => SynchronizeAdapterProperty(name);
-    private void SynchronizeAdapterProperty(string name)
+    protected void OnAdapterPropertyChanged(string name, DependencyPropertyChangedEventArgs args)
     {
         if (LayoutElement == null || _attaching || _disposed)
             return;
@@ -250,6 +259,15 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
             case "CanHide" when this is LayoutAnchorableItem tool && LayoutElement is LayoutAnchorable a:
                 a.CanHide = tool.CanHide;
                 break;
+            case "CanMove" when this is LayoutDocumentItem documentItem && LayoutElement is LayoutDocument movable:
+                movable.CanMove = documentItem.CanMove;
+                break;
+            case "CanAutoHide" when this is LayoutAnchorableItem autoHideItem && LayoutElement is LayoutAnchorable autoHideTool:
+                autoHideTool.CanAutoHide = autoHideItem.CanAutoHide;
+                break;
+            case "CanDockAsTabbedDocument" when this is LayoutAnchorableItem dockItem && LayoutElement is LayoutAnchorable dockTool:
+                dockTool.CanDockAsTabbedDocument = dockItem.CanDockAsTabbedDocument;
+                break;
             case "Description" when this is LayoutDocumentItem item && LayoutElement is LayoutDocument d:
                 d.Description = item.Description;
                 break;
@@ -261,6 +279,9 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
 
     private void ModelChanged(object? sender, PropertyChangedEventArgs args)
     {
+        // Unsubscription does not revoke an already captured multicast delivery.
+        if (_disposed)
+            return;
         if (args.PropertyName == nameof(LayoutContent.Content))
         {
             Model = LayoutElement.Content;
@@ -268,10 +289,13 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
             UpdateView();
         }
 
+        var cleanup = new DockCleanup();
+        cleanup.Attempt(() => SynchronizeXamlModelValue(args.PropertyName));
         foreach (var command in _commands.Values.OfType<DelegateCommand>().ToArray())
-            command.RaiseCanExecuteChanged();
-        _defaultMenu?.Refresh();
-        _manager?.InvalidateView();
+            cleanup.Attempt(command.RaiseCanExecuteChanged);
+        cleanup.Attempt(() => _defaultMenu?.Refresh());
+        cleanup.Attempt(() => _manager?.InvalidateView());
+        cleanup.ThrowIfFailed();
     }
 
     internal void UpdateView()
@@ -348,30 +372,6 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
     public new void Dispose()
 #endif
     {
-        if (_disposed)
-            return;
-        _disposed = true;
-        _defaultMenu?.Dispose();
-        _defaultMenu = null;
-        if (LayoutElement != null)
-            LayoutElement.PropertyChanged -= ModelChanged;
-        UnregisterPropertyChangedCallback(VisibilityProperty, _visibilityToken);
-        ClearDefaultBindings();
-        ClearStyleBindings();
-        ClearDefaultCommands();
-        if (_view is { } view)
-        {
-            view.GotFocus -= RememberFocus;
-            _lastFocused = null;
-            VisualParenting.Detach(view);
-            view.Content = null;
-            view.ContentTemplate = null;
-            view.DataContext = null;
-            _view = null;
-        }
-
-        _manager = null;
-        Model = null;
-        DataContext = null;
+        DisposeItemCore();
     }
 }
