@@ -1,0 +1,39 @@
+<UserControl xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:dock="using:UnoDock" xmlns:layout="using:UnoDock.Layout" xmlns:themes="using:UnoDock.Themes" xmlns:gallery="using:UnoDock.Gallery" x:Class="UnoDock.Gallery.XamlMvvmWorkspace">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="XamlWorkspaceResources.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <Grid Background="{ThemeResource XamlSample.CanvasBrush}" RowSpacing="8">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <CommandBar Grid.Row="0" DefaultLabelPosition="Right" HorizontalContentAlignment="Left">
+            <AppBarButton Label="New document" Icon="Add" Command="{x:Bind ViewModel.AddDocumentCommand}"/>
+            <AppBarButton Label="Remove document" Icon="Delete" Command="{x:Bind ViewModel.RemoveDocumentCommand}"/>
+            <AppBarButton Label="Theme" Icon="Setting" Command="{x:Bind Actions.ToggleThemeCommand}"/>
+            <AppBarButton Label="Float / dock" Icon="NewWindow" Command="{x:Bind Actions.FloatCommand}"/>
+            <CommandBar.SecondaryCommands>
+                <AppBarButton Label="Density" Command="{x:Bind Actions.CycleDensityCommand}"/>
+                <AppBarButton Label="Save layout" Command="{x:Bind Actions.SaveCommand}"/>
+                <AppBarButton Label="Restore layout" Command="{x:Bind Actions.RestoreCommand}"/>
+            </CommandBar.SecondaryCommands>
+        </CommandBar>
+        <dock:DockingManager ChromeDensity="Comfortable" x:Name="Dock" Grid.Row="1" Margin="8,0" FloatingWindowMode="InSurface" DocumentsSource="{x:Bind ViewModel.Documents}" AnchorablesSource="{x:Bind ViewModel.Tools}" ActiveContent="{x:Bind ViewModel.ActiveDocument, Mode=TwoWay}" LayoutItemContainerStyle="{StaticResource XamlSample.ItemStyle}" LayoutItemTemplateSelector="{StaticResource XamlSample.TemplateSelector}" DocumentHeaderTemplate="{StaticResource XamlSample.HeaderTemplate}" AnchorableTitleTemplate="{StaticResource XamlSample.HeaderTemplate}">
+            <dock:DockingManager.Theme>
+                <themes:FluentTheme/>
+            </dock:DockingManager.Theme>
+            <layout:LayoutRoot>
+                <layout:LayoutPanel Orientation="Horizontal">
+                    <layout:LayoutDocumentPane/>
+                    <layout:LayoutAnchorablePane DockWidth="230" DockMinWidth="160"/>
+                </layout:LayoutPanel>
+            </layout:LayoutRoot>
+        </dock:DockingManager>
+        <TextBlock Grid.Row="2" Margin="12,2,12,8" Text="{x:Bind Actions.Status, Mode=OneWay}" FontSize="12" TextWrapping="Wrap"/>
+    </Grid>
+</UserControl>

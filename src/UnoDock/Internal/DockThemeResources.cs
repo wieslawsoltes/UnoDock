@@ -6,7 +6,7 @@ internal static class DockThemeResources
 {
     // Null keeps the historical automatic light/dark palette. FluentTheme() is
     // the explicit Uno semantic theme and follows the owning RequestedTheme.
-    internal static bool UsesFluent(DockingManager manager) => manager.Theme is FluentTheme;
+    internal static bool UsesFluent(DockingManager manager) => manager.Theme is FluentTheme or ResourceDictionaryTheme;
     internal static ElementTheme EffectiveTheme(DockingManager manager) => manager.Theme switch
     {
         GenericTheme => ElementTheme.Light,
@@ -34,12 +34,13 @@ internal static class DockThemeResources
     private static object? Find(FrameworkElement owner, string key, ResourceDictionary? skip, string? alternate)
     {
         var theme = owner is DockingManager manager ? EffectiveTheme(manager) : owner.ActualTheme;
+        var themeName = Microsoft.Windows.Shell.SystemParameters2.Current.HighContrast ? "HighContrast" : theme == ElementTheme.Dark ? "Dark" : "Light";
         for (FrameworkElement? current = owner; current != null; current = VisualTreeHelper.GetParent(current) as FrameworkElement)
-            if (Find(current.Resources, key, theme, skip, new(ReferenceEqualityComparer.Instance), alternate) is { } local)
+            if (Find(current.Resources, key, themeName, skip, new(ReferenceEqualityComparer.Instance), alternate) is { } local)
                 return local;
         if (Application.Current is not { } app)
             return null;
-        if (Find(app.Resources, key, theme, skip, new(ReferenceEqualityComparer.Instance), alternate) is { } application)
+        if (Find(app.Resources, key, themeName, skip, new(ReferenceEqualityComparer.Instance), alternate) is { } application)
             return application;
         // Public Uno TryGetValue includes system resources. Use it only after all
         // explicit scopes, and never borrow the opposite application's palette.
@@ -51,7 +52,8 @@ internal static class DockThemeResources
         return alternate != null && app.Resources.TryGetValue(alternate, out system) ? system : null;
     }
 
-    private static object? Find(ResourceDictionary dictionary, string key, ElementTheme theme, ResourceDictionary? skip, HashSet<ResourceDictionary> visited, string? alternate)
+    private static object? Find(ResourceDictionary dictionary, string key, string themeName, ResourceDictionary? skip, HashSet<ResourceDictionary> visited) => Find(dictionary, key, themeName, skip, visited, null);
+    private static object? Find(ResourceDictionary dictionary, string key, string themeName, ResourceDictionary? skip, HashSet<ResourceDictionary> visited, string? alternate)
     {
         if (ReferenceEquals(dictionary, skip) || !visited.Add(dictionary))
             return null;
@@ -59,19 +61,18 @@ internal static class DockThemeResources
             return dictionary[key];
         if (alternate != null && dictionary.Count > 0 && dictionary.Keys.Contains(alternate))
             return dictionary[alternate];
+        for (var i = dictionary.MergedDictionaries.Count - 1; i >= 0; i--)
+            if (Find(dictionary.MergedDictionaries[i], key, themeName, skip, visited, alternate) is { } merged)
+                return merged;
         var themes = dictionary.ThemeDictionaries;
-        var name = theme == ElementTheme.Dark ? "Dark" : "Light";
         if (themes.Count > 0)
         {
-            if (themes.Keys.Contains(name) && themes[name] is ResourceDictionary selected && Find(selected, key, theme, skip, visited, alternate) is { } selectedValue)
-                return selectedValue;
-            if (themes.Keys.Contains("Default") && themes["Default"] is ResourceDictionary defaults && Find(defaults, key, theme, skip, visited, alternate) is { } defaultValue)
-                return defaultValue;
+            if (themes.Keys.Contains(themeName) && themes[themeName] is ResourceDictionary selected)
+                return Find(selected, key, themeName, skip, visited, alternate);
+            if (themes.Keys.Contains("Default") && themes["Default"] is ResourceDictionary defaults)
+                return Find(defaults, key, themeName, skip, visited, alternate);
         }
 
-        for (var i = dictionary.MergedDictionaries.Count - 1; i >= 0; i--)
-            if (Find(dictionary.MergedDictionaries[i], key, theme, skip, visited, alternate) is { } merged)
-                return merged;
         return null;
     }
 }

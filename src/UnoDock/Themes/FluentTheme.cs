@@ -29,7 +29,6 @@ public sealed class FluentTheme : DictionaryTheme
         }
     }
 
-    internal event EventHandler? Changed;
     private void ChangeRequestedTheme(DependencyPropertyChangedEventArgs args)
     {
         if (_restoringTheme)
@@ -60,7 +59,7 @@ public sealed class FluentTheme : DictionaryTheme
             foreach (var slot in Internal.DockThemeResources.Slots(Internal.DockChrome.Default(RequestedTheme == ElementTheme.Dark)))
                 if (!ThemeResourceDictionary.Keys.Contains("UnoDock." + slot.Dock))
                     Publish(slot.Dock, slot.Fallback);
-        Changed?.Invoke(this, EventArgs.Empty);
+        InvalidateTheme();
     }
 
     internal void UpdateResources(DockingManager manager)

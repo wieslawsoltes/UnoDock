@@ -65,12 +65,18 @@ public partial class DockingManager : Control, IDisposable, UnoDock.Compatibilit
     }
 
     internal void SetAutoHideHost(LayoutAutoHideWindowControl? value) => SetAutoHideWindow(value!);
-    public static readonly DependencyProperty FloatingWindowModeProperty = DependencyProperty.Register(nameof(FloatingWindowMode), typeof(FloatingWindowMode), typeof(DockingManager), new PropertyMetadata(FloatingWindowMode.Auto, (owner, _) => ((DockingManager)owner).InvalidateView()));
+    public static readonly DependencyProperty FloatingWindowModeProperty = DependencyProperty.Register(nameof(FloatingWindowMode), typeof(FloatingWindowMode), typeof(DockingManager), new PropertyMetadata(FloatingWindowMode.Auto, (owner, args) => ((DockingManager)owner).ChangeFloatingWindowMode(args)));
     public FloatingWindowMode FloatingWindowMode
     {
         get => (FloatingWindowMode)GetValue(FloatingWindowModeProperty);
-        set => SetValue(FloatingWindowModeProperty, value);
+        set
+        {
+            if (!Enum.IsDefined(value))
+                throw new ArgumentOutOfRangeException(nameof(value));
+            SetValue(FloatingWindowModeProperty, value);
+        }
     }
+
     public IEnumerable<LayoutFloatingWindowControl> FloatingWindows => _floating;
     public int RealizedContentCount => _items.Values.Count(i => i.IsViewCreated);
     public IEnumerator LogicalChildrenPublic => LogicalChildren;
@@ -216,12 +222,8 @@ public partial class DockingManager : Control, IDisposable, UnoDock.Compatibilit
                 ReconcileSources();
                 break;
             case nameof(Theme):
-                ObserveXamlTheme(Theme as FluentTheme);
-                if (_themeResources != null)
-                    Resources.MergedDictionaries.Remove(_themeResources);
-                _themeResources = Theme?.GetResourceDictionary();
-                if (_themeResources != null)
-                    Resources.MergedDictionaries.Add(_themeResources);
+                ObserveXamlTheme(Theme);
+                UpdateThemeDictionary();
                 break;
             case nameof(LayoutItemContainerStyle):
             case nameof(LayoutItemContainerStyleSelector):
@@ -328,6 +330,7 @@ public partial class DockingManager : Control, IDisposable, UnoDock.Compatibilit
         if (_disposed)
             return;
         _loaded = true;
+        ObserveThemeParameters();
         if (!_initialized)
         {
             _initialized = true;
@@ -345,6 +348,7 @@ public partial class DockingManager : Control, IDisposable, UnoDock.Compatibilit
     private void OnUnloaded(object sender, RoutedEventArgs args)
     {
         _loaded = false;
+        ReleaseThemeParameters();
         _surface?.CancelDrag();
         foreach (var window in _floating)
             window.HideHost();
@@ -573,6 +577,7 @@ public partial class DockingManager : Control, IDisposable, UnoDock.Compatibilit
             return;
         _disposed = true;
         ObserveXamlTheme(null);
+        ReleaseThemeParameters();
         Loaded -= OnLoaded;
         Unloaded -= OnUnloaded;
         _documentObserver?.Dispose();
