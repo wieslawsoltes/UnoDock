@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 2f1483fc1d12a485721e8ad74d78053e593c5dc4
+          ref: f18ebf01bf487d57bf2d86575eb38dfe4ebcb3a0
           fetch-depth: 0
       - name: Verify job results, artifact hashes, complete cases and exact source
         env:
@@ -28,12 +28,12 @@ jobs:
           from unittest.mock import patch
 
           repo = 'wieslawsoltes/UnoDock'
-          head = '77e8e3c95419539e461e16664c51acbf47b46776'
-          tested = '2f1483fc1d12a485721e8ad74d78053e593c5dc4'
+          head = '33ce28463073fc1568039e318ad5f569a601e9db'
+          tested = 'f18ebf01bf487d57bf2d86575eb38dfe4ebcb3a0'
           base = '30837351ecfa181874dd121d0a44a528a8b75a3c'
-          tree = '7080220ed248f41a87d7ece2dd9e6d42eb53a788'
-          runs = {'ordinary': (36243099443, 6), 'native': (36243099434, 3),
-                  'chrome': (36243099457, 3), 'xaml': (36243099411, 3), 'source': (36243099414, 1)}
+          tree = '5d45bbdd43c7e2bdcfd5c02090355006dfe13099'
+          runs = {'ordinary': (36243694634, 6), 'native': (36243694639, 3),
+                  'chrome': (36243694618, 3), 'xaml': (36243694615, 3), 'source': (36243694620, 1)}
           out = Path('artifacts/verified-preview26')
           out.mkdir(parents=True, exist_ok=True)
           headers = {'Authorization': 'Bearer ' + os.environ['GH_TOKEN'],
@@ -139,7 +139,7 @@ jobs:
                   content = archive.read(name)
                   assert hashlib.sha1(f'blob {len(content)}\0'.encode() + content).hexdigest() == blobs[name], name
           subprocess.run(['git', 'diff', '--exit-code', base, 'HEAD', '--', 'contracts/', 'tools/ReferenceProbe/', ':(glob)src/**/*.g.cs'], check=True)
-          assert not any('complete-xaml-cleanup' in path for path in blobs)
+          assert not any('complete-xaml-cleanup' in path or 'complete-disposed-notification' in path for path in blobs)
           print('VERIFIED SOURCES', len(blobs), tree, flush=True)
 
           def reports(directory):
@@ -173,7 +173,7 @@ jobs:
               results[name] = {'suites': counts, 'executed': sum(counts.values()), 'failed': 0, 'skipped': 0}
               if name in ('runtime-test-results', 'windows-runtime-test-results'):
                   isolation(directory, counts)
-                  assert counts['xaml-workbench'] == 84 and counts['layout-mutation-invariants'] == 64
+                  assert counts['xaml-workbench'] == 86 and counts['layout-mutation-invariants'] == 64
                   summary = json.loads((directory / 'execution-summary.json').read_text())
                   assert summary['revision'] == tested and summary['executedCases'] == sum(counts.values())
               if name.startswith(('native-docking-', 'custom-floating-chrome-', 'xaml-workbench-')):
@@ -188,9 +188,10 @@ jobs:
                       module.verify(directory)
               if name.startswith('xaml-workbench-'):
                   isolation(directory, counts)
-                  assert counts == {'xaml-workbench': 84}
+                  assert counts == {'xaml-workbench': 86}
                   cases = ET.parse(directory / 'xaml-workbench.xml').getroot().findall('testcase')
-                  assert sum(c.get('name','').startswith('XAML cleanup:') for c in cases) == 14
+                  assert sum(c.get('name','').startswith('XAML cleanup:') for c in cases) == 16
+                  assert sum('in-flight model event' in c.get('name','') for c in cases) == 2
                   captures[name] = {}
                   for image_name in ('xaml-workbench-light', 'xaml-workbench-dark', 'xaml-policies-light', 'xaml-policies-dark', 'xaml-workbench-narrow'):
                       data = (directory / 'visuals' / (image_name + '.png')).read_bytes()
@@ -200,22 +201,26 @@ jobs:
                       captures[name][image_name] = {'width': width, 'height': height, 'sha256': hashlib.sha256(data).hexdigest()}
               print('VERIFIED RESULTS', name, results[name], flush=True)
           assert results['core-and-api-results']['executed'] == 128
-          reproduction = get('actions/artifacts/10906316865')
-          repro_data = download(reproduction)
-          unpack(repro_data, out / 'cleanup-reproduction')
-          before = ET.parse(out / 'cleanup-reproduction/baseline/xaml-workbench.xml').getroot().findall('testcase')
-          after = ET.parse(out / 'cleanup-reproduction/fixed/xaml-workbench.xml').getroot().findall('testcase')
-          failing = [c for c in before if c.find('failure') is not None or c.find('error') is not None]
-          assert len(before) == len(after) == 84 and len(failing) == 10
-          assert all(c.get('name','').startswith('XAML cleanup:') for c in failing)
-          assert not any(c.find(t) is not None for c in after for t in ('failure', 'error', 'skipped'))
-          assert {c.get('name') for c in before} == {c.get('name') for c in after}
+          reproductions = []
+          for id, count, failures, run, label in [(10906316865, 84, 10, 36242827939, 'binding-retirement'),
+                                                 (10906528857, 86, 2, 36243509567, 'disposed-notification')]:
+              reproduction = get(f'actions/artifacts/{id}')
+              directory = out / 'reproductions' / label
+              unpack(download(reproduction), directory)
+              before = ET.parse(directory / 'baseline/xaml-workbench.xml').getroot().findall('testcase')
+              after = ET.parse(directory / 'fixed/xaml-workbench.xml').getroot().findall('testcase')
+              failing = [c for c in before if c.find('failure') is not None or c.find('error') is not None]
+              assert len(before) == len(after) == count and len(failing) == failures
+              assert all(c.get('name','').startswith('XAML cleanup:') for c in failing)
+              assert not any(c.find(t) is not None for c in after for t in ('failure', 'error', 'skipped'))
+              assert {c.get('name') for c in before} == {c.get('name') for c in after}
+              reproductions.append({'run': run, 'artifact': id, 'digest': reproduction['digest'],
+                                    'before': {'executed': count, 'failed': failures}, 'after': {'executed': count, 'failed': 0}})
           (out / 'implementation.patch').write_bytes(subprocess.check_output(['git', 'diff', '--no-ext-diff', base, 'HEAD']))
           (out / 'change-statistics.txt').write_text(git('diff', '--stat', base, 'HEAD') + '\n')
           summary = {'schema': 1, 'head': head, 'tested': tested, 'tree': tree, 'sourceFilesVerified': len(blobs),
                      'jobs': jobs, 'artifacts': artifacts, 'results': results, 'captures': captures,
-                     'cleanupReproduction': {'run': 36242827939, 'artifact': 10906316865, 'digest': reproduction['digest'],
-                                             'before': {'executed': 84, 'failed': 10}, 'after': {'executed': 84, 'failed': 0}}}
+                     'cleanupReproductions': reproductions}
           (out / 'verification.json').write_text(json.dumps(summary, indent=2) + '\n')
           print('FINAL VERIFICATION', json.dumps({**{k:v for k,v in summary.items() if k not in ('jobs','results','captures')},
                   'totals': {k:v['executed'] for k,v in results.items()}}, indent=2))
