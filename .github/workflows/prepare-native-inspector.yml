@@ -31,6 +31,14 @@ jobs:
           Path('/tmp/native-inspector.patch').write_bytes(data)
           subprocess.run(['git', 'apply', '--check', '/tmp/native-inspector.patch'], check=True)
           subprocess.run(['git', 'apply', '/tmp/native-inspector.patch'], check=True)
+          p = Path('tests/UnoDock.VisualTests/NativeInspectorTests.cs')
+          text = p.read_text()
+          old = '                Check.True(peer?.GetPattern(PatternInterface.SelectionItem) is ISelectionItemProvider);\n                ((ISelectionItemProvider)peer!.GetPattern(PatternInterface.SelectionItem)).Select();'
+          new = '                var selection = peer?.GetPattern(PatternInterface.SelectionItem) as ISelectionItemProvider\n                    ?? throw new InvalidOperationException("The native row has no selection provider.");\n                selection.Select();'
+          assert text.count(old) == 1
+          text = text.replace(old, new)
+          assert text.count('UnoDock.VisualValidation.VisualCapture.Save') == 1
+          p.write_text(text.replace('UnoDock.VisualValidation.VisualCapture.Save', 'VisualCapture.Save'))
           PY
       - uses: actions/setup-dotnet@v4
         with:
