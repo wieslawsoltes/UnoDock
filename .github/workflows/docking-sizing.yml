@@ -1,0 +1,70 @@
+name: Multi-pane docking and sizing
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: docking-sizing-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  sizing:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Build actual Uno host with warnings as errors
+        run: dotnet build samples/UnoDock.Gallery -c Release -f net10.0-desktop -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0 -warnaserror
+      - name: Install isolated native display
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y xvfb libx11-6 libxi6 libxrandr2 libxcursor1 libfontconfig1 libgl1 libice6 libsm6 libxcb1 libxtst6
+      - name: Execute multi-pane sizing on X11
+        if: runner.os == 'Linux'
+        run: xvfb-run -a -s '-screen 0 2560x1440x24' python3 tools/run-desktop-tests.py --app samples/UnoDock.Gallery/bin/Release/net10.0-desktop/UnoDock.Gallery.dll --output artifacts/sizing --selector docking-sizing --suite-timeout 150 --total-timeout 240
+      - name: Execute multi-pane sizing on Win32 or AppKit
+        if: runner.os != 'Linux'
+        shell: bash
+        run: python3 tools/run-desktop-tests.py --app samples/UnoDock.Gallery/bin/Release/net10.0-desktop/UnoDock.Gallery.dll --output artifacts/sizing --selector docking-sizing --suite-timeout 150 --total-timeout 240
+      - name: Require complete first-attempt runtime evidence
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p artifacts/sizing
+          git rev-parse HEAD > artifacts/sizing/source-revision.txt
+          python3 - <<'PY'
+          import json, xml.etree.ElementTree as ET
+          from pathlib import Path
+          p = Path('artifacts/sizing')
+          root = ET.parse(p / 'docking-sizing.xml').getroot()
+          cases = root.findall('testcase')
+          names = [case.get('name', '') for case in cases]
+          assert root.tag == 'testsuite' and root.get('name') == 'docking-sizing'
+          assert len(cases) == int(root.get('tests', '-1')) and len(cases) >= 52
+          assert all(names) and len(set(names)) == len(names)
+          assert not any(int(root.get(k, '0')) for k in ('failures', 'errors', 'skipped'))
+          assert not any(case.find(tag) is not None for case in cases for tag in ('failure', 'error', 'skipped'))
+          for horizontal in (True, False):
+              for rtl in (True, False):
+                  assert sum(f'H={horizontal}, RTL={rtl}' in name for name in names) >= 13
+          record = json.loads((p / 'isolated-execution.json').read_text())
+          assert record['planned'] == ['docking-sizing'] and len(record['completed']) == 1
+          result = record['completed'][0]
+          assert result['suite'] == 'docking-sizing' and result['error'] is None
+          assert result['passed'] == result['executed'] == len(cases)
+          print('Verified', len(cases), 'actual-host multi-pane docking and sizing cases.')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: docking-sizing-${{ runner.os }}
+          path: artifacts/sizing/
+          if-no-files-found: error

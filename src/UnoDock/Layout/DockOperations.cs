@@ -275,6 +275,17 @@ public static class DockOperations
                     },
                     _ => throw new InvalidOperationException("This split requires a compatible parent group.")
                 };
+                // The wrapper replaces the target's slot in the outer grid.
+                // Its default 1* / 25 DIP metadata must not replace the consumer's
+                // pixel/star sizing or minimum constraints for that outer slot.
+                if (targetElement is ILayoutPositionableElement slot && wrapper is ILayoutPositionableElement replacement)
+                {
+                    replacement.DockWidth = slot.DockWidth;
+                    replacement.DockHeight = slot.DockHeight;
+                    replacement.DockMinWidth = slot.DockMinWidth;
+                    replacement.DockMinHeight = slot.DockMinHeight;
+                }
+
                 parent.ReplaceChild(targetElement, wrapper);
                 wrapper.InsertChildAt(0, before ? newPane : targetElement);
                 wrapper.InsertChildAt(1, before ? targetElement : newPane);
