@@ -47,8 +47,9 @@ jobs:
           root = ET.parse(path / 'xaml-workbench.xml').getroot()
           cases = root.findall('testcase')
           assert root.tag == 'testsuite' and root.get('name') == 'xaml-workbench'
-          assert len(cases) == int(root.get('tests', '-1')) and len(cases) >= 70
+          assert len(cases) == int(root.get('tests', '-1')) and len(cases) >= 84
           assert len({case.get('name') for case in cases}) == len(cases)
+          assert sum(case.get('name', '').startswith('XAML cleanup:') for case in cases) >= 14
           assert not any(int(root.get(key, '0')) for key in ['failures', 'errors', 'skipped'])
           assert not any(case.find(tag) is not None for case in cases for tag in ['failure', 'error', 'skipped'])
           record = json.loads((path / 'isolated-execution.json').read_text())
@@ -62,7 +63,7 @@ jobs:
               image = path / 'visuals' / (capture + '.png')
               assert image.is_file() and image.stat().st_size > 1000
               assert image.read_bytes()[:8] == b'\x89PNG\r\n\x1a\n'
-          print('Verified', len(cases), 'real-host XAML cases and all five presentation captures.')
+          print('Verified', len(cases), 'real-host XAML cases, cleanup regressions and all five presentation captures.')
           PY
       - uses: actions/upload-artifact@v4
         if: always()

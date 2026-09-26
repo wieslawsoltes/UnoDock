@@ -108,6 +108,32 @@ model and default commands, rather than only changing the adapter's appearance.
 Container-style replacement is serialized too: an application callback which
 selects a newer style prevents stale literal policy values from being published.
 
+## Binding retirement and adapter lifetime
+
+Retiring an owned binding or command can invoke application dependency-property
+callbacks. Cleanup snapshots and retires its ownership records before executing
+these callbacks, attempts every independent removal, and removes only expressions
+or commands whose current identity still matches that snapshot. A binding installed
+by application code during removal of another binding is not cleared by the old
+operation. The normal native binding engine continues to own that replacement.
+
+Disposal becomes terminal before callbacks run. It independently attempts model
+unsubscription, menu disposal, definition/default-binding removal, command removal,
+view detachment and clearing of presenter content/template/data context. Retained
+presenter references are retired before callbacks can attempt to recreate a view.
+A single observer failure retains its identity and stack; multiple cleanup failures
+are reported in occurrence order. Repeated disposal is inert, even when the first
+call reported an error. Disposing an adapter does not dispose or clear its layout
+model's application-owned content payload.
+
+A callback failure while replacing definitions does not roll back arbitrary
+application side effects or install a partially retired request as a successful
+replacement. All old owned bindings are attempted before the error is propagated;
+a subsequent explicit assignment of a new configuration can establish fresh
+bindings. Invalid preflight still leaves the previous bindings untouched. These
+are distinct failure boundaries. Fourteen public-API regressions cover document
+and tool adapters, failure aggregation, recovery and reentrant binding ownership.
+
 ## Theme and lightweight styling
 
 Merge `themes:WorkbenchResources` in an owner scope, then use
@@ -126,7 +152,7 @@ observable-collection notification mechanism.
 
 The default manager template now respects Background, BorderBrush, BorderThickness,
 CornerRadius and Padding. Custom templates retain `PART_LayoutHost` (ContentPresenter)
-and `PART_AutoHideArea`. Retemplating releases the previous host's surface before
+and `PART_AutoHideArea`. Retemplating releases the previous host'ssurface before
 reattaching it, preserving owned content presenters and layout models. Border
 rounding is presentation; arbitrary child clipping is not implicitly added.
 
@@ -226,10 +252,11 @@ explicit native Binding, TwoWay model writes, invalid dimensions, reentrant
 activation, runtime XamlReader construction, model defaults, native/in-surface
 float/dock retention, light/dark resources, live metrics, retemplating, per-item
 binding ownership, literal capability setters and superseded binding definitions.
-The suite has 70 cases. Light/dark workbench and source-backed policy captures, plus
-a narrow workbench capture, are emitted under the suite's visuals. The sample action
-regressions invoke actual buttons through their native automation Invoke provider;
-these cases do not claim physical pointer coverage.
+The suite has 84 cases, including 14 binding/disposal cleanup regressions.
+Light/dark workbench and source-backed policy captures, plus a narrow workbench
+capture, are emitted under the suite's visuals. The sample action regressions
+invoke actual buttons through their native automation Invoke provider; these
+cases do not claim physical pointer coverage.
 
 XamlReader is a trusted-markup feature, not an untrusted document sandbox. Runtime
 markup must use types present in the application's metadata; compiled samples also
