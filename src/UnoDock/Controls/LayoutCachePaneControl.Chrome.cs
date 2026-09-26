@@ -116,6 +116,7 @@ public partial class LayoutCachePaneControl
         var tool = pane is LayoutAnchorablePane;
         _layout.BorderBrush = p.Border;
         _layout.BorderThickness = new(1);
+        _layout.CornerRadius = new(p.PaneCornerRadius);
         _layout.Background = p.Surface;
         _content.Background = p.Surface;
         _content.Margin = new(2, tool ? 0 : 1, 2, 2);
@@ -147,7 +148,9 @@ public partial class LayoutCachePaneControl
         _titleManager = manager;
         var p = DockChrome.Palette(manager);
         _title.FontSize = p.FontSize;
-        _title.Foreground = p.Foreground;
+        _title.Foreground = selected?.IsActive == true || !p.UsesFluentControls ? p.Foreground : p.SecondaryForeground ?? p.Foreground;
+        _title.FontWeight = p.UsesFluentControls ? Microsoft.UI.Text.FontWeights.SemiBold : Microsoft.UI.Text.FontWeights.Normal;
+        _title.Margin = new(p.UsesFluentControls ? p.TabHorizontalPadding : 2, 0, 0, 0);
         _title.Text = selected?.Title ?? "Tools";
         var template = selected == null ? null : manager.HeaderTemplate(selected, _titlePresenter, title: true);
         _titlePresenter.ContentTemplate = template;

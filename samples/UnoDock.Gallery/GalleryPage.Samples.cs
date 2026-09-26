@@ -55,7 +55,7 @@ public sealed partial class GalleryPage : IDisposable
         var toolbar = new StackPanel
         {
             Orientation = Orientation.Horizontal,
-            Spacing = 7,
+            Spacing = 6,
             Margin = new(6, 3, 6, 3)
         };
         toolbar.Children.Add(Label("Sample:"));
@@ -75,13 +75,11 @@ public sealed partial class GalleryPage : IDisposable
         };
         toolbar.Children.Add(_themePicker);
         toolbar.Children.Add(new Border { Width = 1, Margin = new(2, 2, 2, 2), Background = SampleChrome.Color(0xb4b4b4) });
-        Tool("New document", "new", "M 3,1 L 10,1 L 13,4 L 13,15 L 3,15 Z M 10,1 L 10,4 L 13,4 M 5,8 L 11,8 M 8,5 L 8,11");
-        Tool("Save layout", "save", "M 2,2 L 13,2 L 14,3 L 14,14 L 2,14 Z M 5,2 L 5,6 L 11,6 L 11,2 M 5,10 L 11,10 L 11,14 L 5,14 Z");
-        Tool("Restore layout", "restore", "M 3,5 C 5,1 13,2 13,8 C 13,14 5,15 3,11 M 3,1 L 3,5 L 7,5");
-        Tool("Float / Dock", "float", "M 1,5 L 10,5 L 10,14 L 1,14 Z M 5,1 L 14,1 L 14,10 M 8,7 L 14,1 M 10,1 L 14,1 L 14,5");
-        var reset = SampleChrome.Button("Reset layout", () => ExecuteSampleCommand("reset"));
-        reset.Padding = new(8, 1, 8, 1);
-        reset.MinHeight = 24;
+        Tool("New document", "new");
+        Tool("Save layout", "save");
+        Tool("Restore layout", "restore");
+        Tool("Float / Dock", "float");
+        var reset = CreateToolbarButton("Reset layout", "reset", "Reset current layout");
         toolbar.Children.Add(reset);
         var tools = new ScrollViewer
         {
@@ -102,11 +100,12 @@ public sealed partial class GalleryPage : IDisposable
         Grid.SetRow(_status, 3);
         _sampleShell.Children.Add(_status);
         Content = _sampleShell;
-        _themePicker.SelectedIndex = 0;
+        _themePicker.SelectedIndex = (int)SampleTheme.Light;
         _samplePicker.SelectedIndex = 0;
         void AddMenu(string title, params (string Label, string Id, Action Invoke)[] commands)
         {
             var parent = SampleChrome.CreateMenuItem(title);
+            _legacyMenuTemplates.Add(parent, parent.Template);
             foreach (var command in commands)
             {
                 _sampleCommands.Add(command.Id, command.Invoke);
@@ -122,15 +121,10 @@ public sealed partial class GalleryPage : IDisposable
             menu.Items.Add(parent);
         }
 
-        void Tool(string title, string command, string data)
+        void Tool(string title, string command)
         {
-            var icon = (PathShape)Microsoft.UI.Xaml.Markup.XamlReader.Load($"<Path xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation' Data='{data}' StrokeThickness='1' Width='16' Height='16'/>");
-            var button = SampleChrome.Button("", () => ExecuteSampleCommand(command), title);
-            button.Content = icon;
-            button.Width = 26;
-            button.Height = 24;
-            button.Configure(SampleChrome.Default(false));
-            AutomationProperties.SetAutomationId(button, "SampleToolbar-" + command);
+            var button = CreateToolbarButton("", command, title);
+            button.Content = ((DataTemplate)_galleryChrome["Gallery.Icon." + command]).LoadContent();
             toolbar.Children.Add(button);
         }
 
@@ -140,18 +134,16 @@ public sealed partial class GalleryPage : IDisposable
             VerticalAlignment = VerticalAlignment.Center,
             FontSize = 12
         };
-        static ComboBox Picker(string id, string[] items, double width)
+        ComboBox Picker(string id, string[] items, double width)
         {
             var box = new ComboBox
             {
                 ItemsSource = items,
                 Width = width,
-                MinHeight = 0,
-                Height = 27,
-                Padding = new(6, 2, 0, 2),
-                FontSize = 12
+                Style = (Style)_galleryChrome["Gallery.Selector"]
             };
             AutomationProperties.SetAutomationId(box, id);
+            AutomationProperties.SetName(box, id == "ThemeSelector" ? "Workbench theme" : "Sample workspace");
             return box;
         }
     }
@@ -191,14 +183,12 @@ public sealed partial class GalleryPage : IDisposable
         var dark = theme == SampleTheme.Dark;
         RequestedTheme = dark ? ElementTheme.Dark : ElementTheme.Light;
         Dock.Theme = theme == SampleTheme.Generic ? new GenericTheme() : new FluentTheme(RequestedTheme);
+        ApplyGalleryPresentation(theme);
         if (_sampleShell != null)
         {
-            _sampleShell.Background = SampleChrome.Color(dark ? 0x252526u : 0xf0f0f0u);
             foreach (var button in _sampleShell.FindVisualChildren<SampleButton>())
                 button.Configure(SampleChrome.Default(dark));
         }
-
-        _status.Foreground = SampleChrome.Default(dark).Foreground;
     }
 
     private void SetDensity(double fontSize)

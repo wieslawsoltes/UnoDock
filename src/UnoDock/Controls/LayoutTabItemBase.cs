@@ -196,7 +196,11 @@ public abstract partial class LayoutTabItemBase : DockInputControl
         var tool = Model is LayoutAnchorable && Model.Parent is not LayoutDocumentPane;
         _label.Configure(palette);
         _close.Configure(palette);
-        _label.FontWeight = Microsoft.UI.Text.FontWeights.Normal;
+        _label.FontWeight = palette.UsesFluentControls && Model.IsSelected ? Microsoft.UI.Text.FontWeights.SemiBold : Microsoft.UI.Text.FontWeights.Normal;
+        _label.HorizontalContentAlignment = HorizontalAlignment.Left;
+        _label.IsSubdued = !Model.IsSelected;
+        _chrome.CornerRadius = tool ? new(0, 0, palette.TabCornerRadius, palette.TabCornerRadius) : new(palette.TabCornerRadius, palette.TabCornerRadius, 0, 0);
+        _selectionIndicator.CornerRadius = new(palette.UsesFluentControls ? 1 : 0);
         _close.Visibility = !tool && Model.CanClose && Model.IsSelected ? Visibility.Visible : Visibility.Collapsed;
         _chrome.Background = Model.IsSelected ? palette.Surface : palette.Tab;
         _selectionIndicator.Height = palette.ActiveTabIndicatorThickness;
@@ -205,7 +209,8 @@ public abstract partial class LayoutTabItemBase : DockInputControl
         _selectionIndicator.Visibility = Model.IsSelected && palette.ActiveTabIndicatorThickness > 0 ? Visibility.Visible : Visibility.Collapsed;
         _chrome.BorderBrush = palette.Border;
         _chrome.BorderThickness = tool ? new(0, 0, 1, 0) : new(0, 0, 1, 0);
-        _chrome.Padding = new(tool ? 3 : 0, 0, tool ? 3 : 0, 0);
+        var horizontalPadding = palette.UsesFluentControls ? palette.TabHorizontalPadding : tool ? 3 : 0;
+        _chrome.Padding = new(horizontalPadding, 0, horizontalPadding, 0);
         MinHeight = 0;
         Height = tool ? palette.ToolTabHeight - 2 : palette.TabHeight - 1;
         DockVisuals.SetName(_label, Model.Title ?? "Document");

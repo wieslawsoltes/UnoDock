@@ -1,5 +1,4 @@
-using Microsoft.UI.Xaml.Input;
-using Windows.UI;
+using Microsoft.UI.Xaml.Controls.Primitives;
 using Path = Microsoft.UI.Xaml.Shapes.Path;
 
 namespace UnoDock.Internal;
@@ -7,9 +6,25 @@ namespace UnoDock.Internal;
 internal sealed class DockChromeButton : Button
 {
     private DockPalette _palette;
-    private bool _over, _pressed;
+    private bool _over;
+    private bool _fluent;
+    private bool _subdued;
+    private DockControlStateResources? _states;
+    internal bool IsSubdued
+    {
+        get => _subdued;
+        set
+        {
+            if (_subdued == value)
+                return;
+            _subdued = value;
+            Paint();
+        }
+    }
+
     internal DockChromeButton()
     {
+        DefaultStyleKey = typeof(Button);
         MinHeight = 0;
         MinWidth = 0;
         Padding = new(0);
@@ -30,27 +45,15 @@ internal sealed class DockChromeButton : Button
             _over = false;
             Paint();
         };
-        AddHandler(PointerPressedEvent, new PointerEventHandler((_, _) =>
-        {
-            _pressed = true;
-            Paint();
-        }), true);
-        AddHandler(PointerReleasedEvent, new PointerEventHandler((_, _) =>
-        {
-            _pressed = false;
-            Paint();
-        }), true);
-        PointerCaptureLost += (_, _) =>
-        {
-            _pressed = false;
-            Paint();
-        };
+        // ButtonBase owns mouse capture and Space/Enter behavior. A handled or
+        // right-button press must not invent a second visual pressed state.
+        RegisterPropertyChangedCallback(ButtonBase.IsPressedProperty, (_, _) => Paint());
         IsEnabledChanged += (_, _) => Paint();
         GotFocus += (_, _) => Paint();
         LostFocus += (_, _) => Paint();
         Unloaded += (_, _) =>
         {
-            _over = _pressed = false;
+            _over = false;
             Paint();
         };
     }
@@ -58,15 +61,40 @@ internal sealed class DockChromeButton : Button
     internal void Configure(DockPalette palette)
     {
         _palette = palette;
+        if (_fluent != palette.UsesFluentControls)
+        {
+            _fluent = palette.UsesFluentControls;
+            if (_fluent)
+            {
+                // Keep Uno/WinUI's template, CommonStates and system focus
+                // visuals. Only lightweight metric/normal-fill setters change.
+                Style = DockChrome.Resource<Style>("UnoDock.FluentChromeButtonStyle");
+                ClearValue(TemplateProperty);
+            }
+            else
+            {
+                ClearValue(StyleProperty);
+                Template = DockChrome.ButtonTemplate;
+            }
+        }
+
+        if (_fluent)
+        {
+            _states ??= new(this);
+            _states.Set("ButtonBackgroundPointerOver", palette.Hover);
+            _states.Set("ButtonBackgroundPressed", palette.Pressed);
+            _states.Set("ButtonForegroundPointerOver", palette.Foreground);
+            _states.Set("ButtonForegroundPressed", palette.Foreground);
+            _states.Set("ButtonForegroundDisabled", palette.DisabledForeground ?? palette.Foreground);
+        }
+
         CornerRadius = new(palette.ButtonCornerRadius);
-        Foreground = palette.Foreground;
+        BorderThickness = new(_fluent ? 0 : 1);
         FontSize = palette.FontSize;
-        if (Content is Path path)
+        if (Content is Path)
         {
             Width = palette.ChromeButtonSize;
             Height = palette.ChromeButtonSize;
-            path.Stroke = palette.Foreground;
-            path.Fill = palette.Foreground;
         }
 
         Paint();
@@ -74,7 +102,26 @@ internal sealed class DockChromeButton : Button
 
     private void Paint()
     {
-        Background = IsEnabled && _over ? _pressed ? _palette.Pressed : _palette.Hover : DockChrome.Transparent;
+        var foreground = !_fluent ? _palette.Foreground : !IsEnabled ? _palette.DisabledForeground ?? _palette.Foreground : _subdued ? _palette.SecondaryForeground ?? _palette.Foreground : _palette.Foreground;
+        Foreground = foreground;
+        if (Content is Path path)
+        {
+            path.Stroke = foreground;
+            path.Fill = foreground;
+        }
+
+        if (_fluent)
+        {
+            // Native CommonStates paint hover/pressed/disabled on template parts,
+            // including keyboard presses. Do not dim the whole subtree or create
+            // a second focus border around the platform's two-tone focus visual.
+            Background = DockChrome.Transparent;
+            BorderBrush = DockChrome.Transparent;
+            Opacity = 1;
+            return;
+        }
+
+        Background = IsEnabled && (IsPressed || _over) ? IsPressed ? _palette.Pressed : _palette.Hover : DockChrome.Transparent;
         BorderBrush = FocusState == FocusState.Keyboard ? _palette.Accent : null;
         Opacity = IsEnabled ? 1 : .45;
     }
