@@ -9,7 +9,7 @@ namespace UnoDock.Gallery;
 /// <summary>Explicitly registered sample properties, not a reflective PropertyGrid clone.
 /// Every editor belongs to a selection epoch; obsolete native events cannot write to
 /// a former document. Draft text is never written merely because focus moved.</summary>
-internal sealed class SamplePropertyInspector : UserControl, IDisposable
+internal sealed partial class SamplePropertyInspector : UserControl, IDisposable
 {
     private enum EditorKind
     {
@@ -32,37 +32,16 @@ internal sealed class SamplePropertyInspector : UserControl, IDisposable
         internal TextBlock? ReadOnly;
         internal Border? Swatch;
         internal string Displayed = "";
+        internal bool SuppressPresentationBlur;
     }
 
-    private sealed record Category(Border View, SampleButton Button, string Name);
+    private sealed record Category(Border View, ToggleButton Button, string Name);
     private readonly DockingManager _manager;
-    private readonly TextBlock _heading = new()
-    {
-        FontSize = 12,
-        Margin = new(5, 3, 5, 2),
-        TextTrimming = TextTrimming.CharacterEllipsis
-    };
-    private readonly TextBox _search = new()
-    {
-        PlaceholderText = "Search properties",
-        MinHeight = 0,
-        Height = 25,
-        FontSize = 12,
-        Padding = new(4, 1, 4, 1)
-    };
-    private readonly StackPanel _rows = new();
-    private readonly Grid _columns = new();
-    private readonly TextBlock _descriptionTitle = new()
-    {
-        FontSize = 12,
-        FontWeight = Microsoft.UI.Text.FontWeights.SemiBold
-    };
-    private readonly TextBlock _description = new()
-    {
-        FontSize = 11,
-        TextWrapping = TextWrapping.Wrap,
-        MaxLines = 3
-    };
+    private readonly TextBlock _heading;
+    private readonly TextBox _search;
+    private readonly ListView _rows;
+    private readonly Grid _columns;
+    private readonly TextBlock _descriptionTitle, _description;
     private readonly List<Row> _entries = [];
     private readonly List<(DependencyObject Object, DependencyProperty Property, long Token)> _tokens = [];
     private readonly Dictionary<string, Category> _groups = new(StringComparer.Ordinal);
@@ -101,130 +80,45 @@ internal sealed class SamplePropertyInspector : UserControl, IDisposable
         _manager = manager ?? throw new ArgumentNullException(nameof(manager));
         MinWidth = 0;
         IsTabStop = false;
-        var host = new Grid();
-        foreach (var height in new[]
+        Resources.MergedDictionaries.Add(_nativeResources);
+        var host = NativeTemplate<Grid>("Inspector.Shell");
+        _heading = Part<TextBlock>(host, "InspectorHeading");
+        _search = Part<TextBox>(host, "PropertySearch");
+        _rows = Part<ListView>(host, "PropertyRows");
+        _columns = Part<Grid>(host, "PropertyColumns");
+        _descriptionTitle = Part<TextBlock>(host, "DescriptionTitle");
+        _description = Part<TextBlock>(host, "PropertyDescription");
+        _categoryMode = Part<ToggleButton>(host, "CategoryMode");
+        _alphabeticalMode = Part<ToggleButton>(host, "AlphabeticalMode");
+        _rows.ItemsSource = _nativeItems;
+        _rows.SelectionChanged += NativeSelectionChanged;
+        _categoryMode.Click += (_, _) => SetOrder(false);
+        _alphabeticalMode.Click += (_, _) => SetOrder(true);
+        Part<Button>(host, "ClearSearch").Click += (_, _) => Filter("");
+        var divider = Part<Thumb>(host, "NameColumnDivider");
+        divider.DragDelta += (_, args) => ResizeColumn(args.HorizontalChange * (FlowDirection == FlowDirection.RightToLeft ? -1 : 1));
+        divider.KeyDown += (_, args) =>
         {
-            GridLength.Auto,
-            GridLength.Auto,
-            GridLength.Auto,
-            GridLength.Auto,
-            new GridLength(1, GridUnitType.Star),
-            GridLength.Auto
-        }
-
-        )
-            host.RowDefinitions.Add(new()
+            if (args.Key is VirtualKey.Left or VirtualKey.Right)
             {
-                Height = height
-            });
-        host.Children.Add(_heading);
-        var modes = new StackPanel
-        {
-            Orientation = Orientation.Horizontal,
-            Margin = new(4, 0, 4, 0),
-            Spacing = 3
-        };
-        var grouped = SampleChrome.Button("Categories", () => SetOrder(false));
-        grouped.Padding = new(3, 1, 3, 1);
-        var sorted = SampleChrome.Button("A–Z", () => SetOrder(true));
-        sorted.Padding = new(3, 1, 3, 1);
-        modes.Children.Add(grouped);
-        modes.Children.Add(sorted);
-        Grid.SetRow(modes, 1);
-        host.Children.Add(modes);
-        var search = new Grid
-        {
-            Margin = new(4, 2, 4, 4)
-        };
-        search.ColumnDefinitions.Add(new()
-        {
-            Width = new(1, GridUnitType.Star)
-        });
-        search.ColumnDefinitions.Add(new()
-        {
-            Width = new(23)
-        });
-        search.Children.Add(_search);
-        var clear = SampleChrome.Button("×", () => Filter(""), "Clear property search");
-        Grid.SetColumn(clear, 1);
-        search.Children.Add(clear);
-        Grid.SetRow(search, 2);
-        host.Children.Add(search);
-        _columns.ColumnDefinitions.Add(new()
-        {
-            Width = new(_nameWidth)
-        });
-        _columns.ColumnDefinitions.Add(new()
-        {
-            Width = new(1, GridUnitType.Star)
-        });
-        _columns.Children.Add(new TextBlock { Text = "Property", FontSize = 11, Margin = new(4, 3, 3, 3) });
-        var valueLabel = new TextBlock
-        {
-            Text = "Value",
-            FontSize = 11,
-            Margin = new(4, 3, 3, 3)
-        };
-        Grid.SetColumn(valueLabel, 1);
-        _columns.Children.Add(valueLabel);
-        var divider = new Thumb
-        {
-            Width = 5,
-            MinHeight = 0,
-            HorizontalAlignment = HorizontalAlignment.Right,
-            IsTabStop = true,
-            Background = SampleChrome.Color(0xa0a0a0)
-        };
-        AutomationProperties.SetName(divider, "Property name column divider");
-        divider.DragDelta += (_, e) => ResizeColumn(e.HorizontalChange * (FlowDirection == FlowDirection.RightToLeft ? -1 : 1));
-        divider.KeyDown += (_, e) =>
-        {
-            if (e.Key is VirtualKey.Left or VirtualKey.Right)
-            {
-                ResizeColumn((e.Key == VirtualKey.Right ? 8 : -8) * (FlowDirection == FlowDirection.RightToLeft ? -1 : 1));
-                e.Handled = true;
+                ResizeColumn((args.Key == VirtualKey.Right ? 8 : -8) * (FlowDirection == FlowDirection.RightToLeft ? -1 : 1));
+                args.Handled = true;
             }
-            else if (e.Key == VirtualKey.Home)
+            else if (args.Key == VirtualKey.Home)
             {
                 NameColumnWidth = 96;
-                e.Handled = true;
+                args.Handled = true;
             }
         };
         divider.DoubleTapped += (_, _) => NameColumnWidth = 96;
-        _columns.Children.Add(divider);
-        Grid.SetRow(_columns, 3);
-        host.Children.Add(_columns);
-        var scroll = new ScrollViewer
-        {
-            Content = _rows,
-            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled
-        };
-        Grid.SetRow(scroll, 4);
-        host.Children.Add(scroll);
-        var help = new StackPanel
-        {
-            Padding = new(5),
-            Spacing = 3,
-            MinHeight = 66
-        };
-        help.Children.Add(_descriptionTitle);
-        help.Children.Add(_description);
-        var helpBorder = new Border
-        {
-            Child = help,
-            BorderThickness = new(0, 1, 0, 0),
-            BorderBrush = SampleChrome.Color(0xa0a0a0)
-        };
-        Grid.SetRow(helpBorder, 5);
-        host.Children.Add(helpBorder);
         Content = host;
-        AutomationProperties.SetAutomationId(_search, "PropertySearch");
         AutomationProperties.SetName(this, "Document properties");
         _search.TextChanged += (_, _) => ApplyFilter();
         Loaded += OnLoaded;
         Unloaded += OnUnloaded;
         ActualThemeChanged += OnThemeChanged;
         SizeChanged += (_, _) => ApplyColumnWidth();
+        UpdateOrderButtons();
         ShowDescription(null);
     }
 
@@ -380,167 +274,7 @@ internal sealed class SamplePropertyInspector : UserControl, IDisposable
         _tokens.Add((value, property, token));
     }
 
-    private void AddRow(Field field)
-    {
-        var grid = new Grid
-        {
-            MinHeight = 24,
-            BorderThickness = new(0, 0, 0, 1)
-        };
-        grid.ColumnDefinitions.Add(new()
-        {
-            Width = new(_nameWidth)
-        });
-        grid.ColumnDefinitions.Add(new()
-        {
-            Width = new(1, GridUnitType.Star)
-        });
-        grid.RowDefinitions.Add(new()
-        {
-            Height = GridLength.Auto
-        });
-        grid.RowDefinitions.Add(new()
-        {
-            Height = GridLength.Auto
-        });
-        var label = new TextBlock
-        {
-            Text = field.Name,
-            FontSize = 12,
-            Margin = new(4, 4, 3, 2),
-            TextTrimming = TextTrimming.CharacterEllipsis
-        };
-        ToolTipService.SetToolTip(label, field.Description);
-        grid.Children.Add(label);
-        var error = new TextBlock
-        {
-            FontSize = 11,
-            TextWrapping = TextWrapping.Wrap,
-            Margin = new(4, 0, 4, 3),
-            Visibility = Visibility.Collapsed
-        };
-        var row = new Row(field, _epoch, grid, label, error);
-        _entries.Add(row);
-        FrameworkElement input;
-        if (field.Write == null)
-            input = row.ReadOnly = new TextBlock
-            {
-                FontSize = 12,
-                Margin = new(3, 4, 2, 2),
-                TextTrimming = TextTrimming.CharacterEllipsis
-            };
-        else if (field.Kind == EditorKind.Boolean)
-        {
-            var check = row.Boolean = new CheckBox
-            {
-                MinHeight = 0,
-                MinWidth = 0,
-                Height = 24,
-                Padding = new(2, 0, 0, 0),
-                HorizontalAlignment = HorizontalAlignment.Left
-            };
-            check.Checked += (_, _) => Commit(row, "True");
-            check.Unchecked += (_, _) => Commit(row, "False");
-            input = check;
-        }
-        else if (field.Kind == EditorKind.Choice)
-        {
-            var combo = row.Choice = new ComboBox
-            {
-                ItemsSource = field.Choices,
-                MinHeight = 0,
-                MinWidth = 0,
-                Height = 24,
-                FontSize = 12,
-                Padding = new(3, 0, 0, 0),
-                HorizontalAlignment = HorizontalAlignment.Stretch
-            };
-            combo.SelectionChanged += (_, _) =>
-            {
-                if (combo.SelectedItem is string choice)
-                    Commit(row, choice);
-            };
-            input = combo;
-        }
-        else
-        {
-            var text = row.Text = new TextBox
-            {
-                MinHeight = 0,
-                MinWidth = 0,
-                FontSize = 12,
-                Padding = new(3, 1, 3, 1),
-                BorderThickness = new(0),
-                CornerRadius = new(0)
-            };
-            text.LostFocus += (_, _) =>
-            {
-                if (HasDraft(row) && _synchronizing == 0)
-                    Commit(row, text.Text, true);
-            };
-            text.KeyDown += (_, args) =>
-            {
-                if (args.Key == VirtualKey.Enter)
-                {
-                    if (HasDraft(row))
-                        Commit(row, text.Text, true);
-                    args.Handled = true;
-                }
-                else if (args.Key == VirtualKey.Escape)
-                {
-                    Cancel(row);
-                    args.Handled = true;
-                }
-            };
-            if (field.Kind == EditorKind.Color)
-            {
-                var holder = new Grid();
-                holder.ColumnDefinitions.Add(new()
-                {
-                    Width = new(17)
-                });
-                holder.ColumnDefinitions.Add(new()
-                {
-                    Width = new(1, GridUnitType.Star)
-                });
-                row.Swatch = new Border
-                {
-                    Width = 12,
-                    Height = 12,
-                    BorderThickness = new(1),
-                    BorderBrush = SampleChrome.Color(0x808080),
-                    VerticalAlignment = VerticalAlignment.Center
-                };
-                holder.Children.Add(row.Swatch);
-                Grid.SetColumn(text, 1);
-                holder.Children.Add(text);
-                input = holder;
-            }
-            else
-                input = text;
-        }
-
-        var focusTarget = (FrameworkElement?)row.Text ?? row.Boolean ?? (FrameworkElement?)row.Choice ?? input;
-        AutomationProperties.SetName(focusTarget, field.Name);
-        AutomationProperties.SetHelpText(focusTarget, field.Description);
-        AutomationProperties.SetAutomationId(focusTarget, "Property-" + field.Name);
-        focusTarget.GotFocus += (_, _) =>
-        {
-            if (IsCurrent(row))
-                ShowDescription(row);
-        };
-        label.PointerPressed += (_, _) =>
-        {
-            if (IsCurrent(row))
-                ShowDescription(row);
-        };
-        Grid.SetColumn(input, 1);
-        grid.Children.Add(input);
-        Grid.SetRow(error, 1);
-        Grid.SetColumnSpan(error, 2);
-        grid.Children.Add(error);
-    }
-
+    private void AddRow(Field field) => AddNativeRow(field);
     private LayoutContent? CurrentDocument()
     {
         var root = _manager.Layout;
@@ -681,68 +415,8 @@ internal sealed class SamplePropertyInspector : UserControl, IDisposable
         ApplyFilter();
     }
 
-    private void Reorder()
-    {
-        _synchronizing++;
-        try
-        {
-            _rows.Children.Clear();
-            _groups.Clear();
-            var ordered = _alphabetical ? _entries.OrderBy(row => row.Field.Name, StringComparer.Ordinal) : _entries.OrderBy(row => row.Field.Category, StringComparer.Ordinal).ThenBy(row => row.Field.Name, StringComparer.Ordinal);
-            foreach (var row in ordered)
-            {
-                if (!_alphabetical && !_groups.ContainsKey(row.Field.Category))
-                {
-                    var name = row.Field.Category;
-                    var button = SampleChrome.Button("−  " + name, () => ToggleCategory(name), "Toggle " + name + " properties");
-                    button.HorizontalContentAlignment = HorizontalAlignment.Left;
-                    button.Padding = new(4, 1, 3, 1);
-                    var header = new Border
-                    {
-                        Child = button,
-                        MinHeight = 23
-                    };
-                    _groups.Add(name, new(header, button, name));
-                    _rows.Children.Add(header);
-                }
-
-                _rows.Children.Add(row.View);
-            }
-
-            ApplyFilter();
-            ApplyColumnWidth();
-            Paint();
-        }
-        finally
-        {
-            _synchronizing--;
-        }
-    }
-
-    private void ApplyFilter()
-    {
-        var text = _search.Text.Trim();
-        _synchronizing++;
-        try
-        {
-            foreach (var row in _entries)
-            {
-                var match = row.Field.Name.Contains(text, StringComparison.OrdinalIgnoreCase) || row.Field.Category.Contains(text, StringComparison.OrdinalIgnoreCase);
-                row.View.Visibility = match && (text.Length > 0 || _alphabetical || !_collapsed.Contains(row.Field.Category)) ? Visibility.Visible : Visibility.Collapsed;
-            }
-
-            foreach (var group in _groups.Values)
-            {
-                group.Button.Content = (_collapsed.Contains(group.Name) && text.Length == 0 ? "+  " : "−  ") + group.Name;
-                group.View.Visibility = text.Length == 0 || _entries.Any(row => row.Field.Category == group.Name && row.View.Visibility == Visibility.Visible) ? Visibility.Visible : Visibility.Collapsed;
-            }
-        }
-        finally
-        {
-            _synchronizing--;
-        }
-    }
-
+    private void Reorder() => ReorderNativeRows();
+    private void ApplyFilter() => FilterNativeRows();
     private void ResizeColumn(double delta)
     {
         if (double.IsFinite(delta))
@@ -760,35 +434,13 @@ internal sealed class SamplePropertyInspector : UserControl, IDisposable
     private void ShowDescription(Row? row)
     {
         _selected = row;
+        SelectNativeRow(row);
         _descriptionTitle.Text = row?.Field.Name ?? "Document properties";
         _description.Text = row?.Field.Description ?? "Select a property to view its description. Enter applies edits; Escape discards a draft.";
     }
 
     private void OnThemeChanged(FrameworkElement sender, object args) => Paint();
-    private void Paint()
-    {
-        var dark = ActualTheme == ElementTheme.Dark;
-        var foreground = SampleChrome.Color(dark ? 0xf0f0f0u : 0x202020u);
-        var line = SampleChrome.Color(dark ? 0x505050u : 0xd8d8d8u);
-        var category = SampleChrome.Color(dark ? 0x343434u : 0xe8e8e8u);
-        Background = SampleChrome.Color(dark ? 0x252526u : 0xffffffu);
-        _heading.Foreground = _descriptionTitle.Foreground = _description.Foreground = foreground;
-        _columns.Background = category;
-        foreach (var row in _entries)
-        {
-            row.View.BorderBrush = line;
-            row.Label.Foreground = foreground;
-            if (row.ReadOnly != null)
-                row.ReadOnly.Foreground = foreground;
-            row.Error.Foreground = SampleChrome.Color(dark ? 0xff9999u : 0xb42318u);
-        }
-
-        foreach (var group in _groups.Values)
-            group.View.Background = category;
-        foreach (var button in this.FindVisualChildren<SampleButton>())
-            button.Configure(SampleChrome.Default(dark));
-    }
-
+    private void Paint() => UpdateOrderButtons();
     private void ClearSelection()
     {
         _epoch++;
@@ -803,7 +455,8 @@ internal sealed class SamplePropertyInspector : UserControl, IDisposable
                 value.UnregisterPropertyChangedCallback(property, token);
             _tokens.Clear();
             _entries.Clear();
-            _rows.Children.Clear();
+            _nativeItems.Clear();
+            _nativeContainers.Clear();
             _groups.Clear();
             LastError = null;
             ShowDescription(null);
@@ -837,6 +490,7 @@ internal sealed class SamplePropertyInspector : UserControl, IDisposable
         Loaded -= OnLoaded;
         Unloaded -= OnUnloaded;
         ActualThemeChanged -= OnThemeChanged;
+        _rows.SelectionChanged -= NativeSelectionChanged;
     }
 
     private static string Number(double value) => value.ToString("R", CultureInfo.InvariantCulture);

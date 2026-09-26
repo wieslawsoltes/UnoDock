@@ -1,0 +1,60 @@
+name: Native templated property inspector
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: native-inspector-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  inspector:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Test inspector evidence gate
+        shell: bash
+        run: python3 tests/metadata/test_native_inspector_gate.py
+      - name: Compile actual Uno host and compiled inspector templates
+        run: dotnet build samples/UnoDock.Gallery -c Release -f net10.0-desktop -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0 -warnaserror
+      - name: Install isolated X11 display
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y xvfb libx11-6 libxi6 libxrandr2 libxcursor1 libfontconfig1 libgl1 libice6 libsm6 libxcb1 libxtst6
+      - name: Execute native presentation and unchanged behavior suites
+        shell: bash
+        env:
+          UNODOCK_NATIVE_INPUT_TESTS: '1'
+        run: |
+          result=0
+          for suite in native-inspector inspector-quality sample-quality; do
+            args=(python3 tools/run-desktop-tests.py --app samples/UnoDock.Gallery/bin/Release/net10.0-desktop/UnoDock.Gallery.dll --output artifacts/inspector/$suite --selector "$suite" --suite-timeout 180 --total-timeout 240)
+            if [ "$RUNNER_OS" = Linux ]; then
+              xvfb-run -a -s '-screen 0 2560x1440x24' "${args[@]}" || result=1
+            else
+              "${args[@]}" || result=1
+            fi
+          done
+          exit "$result"
+      - name: Require complete first-attempt evidence and captures
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p artifacts/inspector
+          git rev-parse HEAD > artifacts/inspector/source-revision.txt
+          python3 tools/verify-native-inspector.py artifacts/inspector --revision "$(git rev-parse HEAD)"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-inspector-${{ runner.os }}
+          path: artifacts/inspector/
+          if-no-files-found: error
