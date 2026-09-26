@@ -1,0 +1,79 @@
+name: Prepare native inspector controls
+on:
+  push:
+    branches: [work/preview27-native-inspector]
+    paths: [.github/workflows/prepare-native-inspector.yml, tools/native-inspector.patch.gz.base64]
+permissions:
+  contents: write
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - name: Verify and apply the reviewed textual patch
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import base64, gzip, hashlib, subprocess
+          encoded = Path('tools/native-inspector.patch.gz.base64').read_text().strip()
+          data = gzip.decompress(base64.b64decode(encoded, validate=True))
+          assert len(data) == 38592
+          assert hashlib.sha256(data).hexdigest() == '1ec7e597fd7dd2d02703b9f2d8a168b95b9c3d702b618634cafccdfb31554c58'
+          Path('/tmp/native-inspector.patch').write_bytes(data)
+          subprocess.run(['git', 'apply', '--check', '/tmp/native-inspector.patch'], check=True)
+          subprocess.run(['git', 'apply', '/tmp/native-inspector.patch'], check=True)
+          PY
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Validate source layout and canonical formatting
+        run: |
+          dotnet run --project tools/SourceMaintenance -c Release -- --format .
+          dotnet run --project tools/SourceMaintenance -c Release -- --check .
+          dotnet run --project tools/SourceMaintenance -c Release -- --check-format .
+          python3 tools/generate-property-adapters.py
+          git diff --exit-code -- 'src/**/*.g.cs' contracts/ tools/ReferenceProbe/
+      - name: Compile actual Uno XAML host
+        run: dotnet build samples/UnoDock.Gallery -c Release -f net10.0-desktop -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0 -warnaserror
+      - name: Install isolated input display
+        run: sudo apt-get update && sudo apt-get install -y xvfb libx11-6 libxi6 libxrandr2 libxcursor1 libfontconfig1 libgl1 libice6 libsm6 libxcb1 libxtst6
+      - name: Execute original inspector behavior and native control contracts
+        env:
+          UNODOCK_NATIVE_INPUT_TESTS: '1'
+        run: |
+          result=0
+          for suite in inspector-quality native-inspector; do
+            xvfb-run -a -s '-screen 0 2560x1440x24' python3 tools/run-desktop-tests.py --app samples/UnoDock.Gallery/bin/Release/net10.0-desktop/UnoDock.Gallery.dll --output artifacts/$suite --selector $suite --suite-timeout 150 --total-timeout 240 || result=1
+          done
+          exit $result
+      - name: Publish validated source and remove preparation transport
+        run: |
+          set -euo pipefail
+          git rm tools/native-inspector.patch.gz.base64 .github/workflows/prepare-native-inspector.yml
+          git add samples/ tests/
+          git diff --cached --check
+          git config user.name 'Wiesław Šoltés'
+          git config user.email 'wieslawsoltes@users.noreply.github.com'
+          git commit -m 'feat: present the property inspector with native Fluent list and editor controls'
+          git fetch origin work/preview27-native-inspector
+          test "$(git rev-parse FETCH_HEAD)" = '${{ github.sha }}'
+          git push origin HEAD:work/preview27-native-inspector
+      - name: Preserve exact preparation evidence
+        if: always()
+        run: |
+          mkdir -p artifacts
+          test ! -f tools/native-inspector.patch.gz.base64 || cp tools/native-inspector.patch.gz.base64 artifacts/transport.base64
+          git add samples/ tests/
+          git diff --cached --binary > artifacts/prepared.patch
+          git write-tree > artifacts/prepared-tree.txt
+          git archive --format=zip "$(git write-tree)" -o artifacts/prepared-source.zip
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-inspector-preparation
+          path: artifacts/
+          if-no-files-found: error
