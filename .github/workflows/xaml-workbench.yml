@@ -47,9 +47,10 @@ jobs:
           root = ET.parse(path / 'xaml-workbench.xml').getroot()
           cases = root.findall('testcase')
           assert root.tag == 'testsuite' and root.get('name') == 'xaml-workbench'
-          assert len(cases) == int(root.get('tests', '-1')) and len(cases) >= 84
+          assert len(cases) == int(root.get('tests', '-1')) and len(cases) >= 86
           assert len({case.get('name') for case in cases}) == len(cases)
-          assert sum(case.get('name', '').startswith('XAML cleanup:') for case in cases) >= 14
+          assert sum(case.get('name', '').startswith('XAML cleanup:') for case in cases) >= 16
+          assert sum('in-flight model event' in case.get('name', '') for case in cases) == 2
           assert not any(int(root.get(key, '0')) for key in ['failures', 'errors', 'skipped'])
           assert not any(case.find(tag) is not None for case in cases for tag in ['failure', 'error', 'skipped'])
           record = json.loads((path / 'isolated-execution.json').read_text())
