@@ -2,7 +2,7 @@ name: Prepare native property inspector
 on:
   push:
     branches: [work/preview27-native-property-inspector]
-    paths: [.github/workflows/prepare-native-inspector.yml, tools/migrate-native-inspector.py, samples/UnoDock.Gallery/SampleInspectorResources.xaml, samples/UnoDock.Gallery/SamplePropertyInspector.Native.cs, tests/UnoDock.VisualTests/NativeInspectorTests.cs]
+    paths: [.github/workflows/prepare-native-inspector.yml, tools/migrate-native-inspector.py, tools/fix-native-inspector-presentation.py, samples/UnoDock.Gallery/SampleInspectorResources.xaml, samples/UnoDock.Gallery/SamplePropertyInspector.Native.cs, tests/UnoDock.VisualTests/NativeInspectorTests.cs]
 permissions:
   contents: write
 jobs:
@@ -16,8 +16,10 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
-      - name: Apply reviewed presentation-only integration
-        run: python3 tools/migrate-native-inspector.py
+      - name: Apply reviewed presentation-only integration and first-run corrections
+        run: |
+          python3 tools/migrate-native-inspector.py
+          python3 tools/fix-native-inspector-presentation.py
       - name: Canonical source checks and actual Uno XAML compilation
         run: |
           dotnet run --project tools/SourceMaintenance -c Release -- --format .
@@ -42,7 +44,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          git rm tools/migrate-native-inspector.py .github/workflows/prepare-native-inspector.yml
+          git rm tools/migrate-native-inspector.py tools/fix-native-inspector-presentation.py .github/workflows/prepare-native-inspector.yml
           git add samples/ tests/ docs/
           git diff --cached --check
           python3 - <<'PY'
@@ -73,8 +75,6 @@ jobs:
           result={'parent':head,'tree':local_tree,'changedEntries':entries,'refUpdated':False}
           Path('artifacts/prepared-tree.json').write_text(json.dumps(result,indent=2)+'\n')
           print('VALIDATED_TREE', json.dumps(result))
-          # No ref or commit is written by this workflow. The caller must review
-          # the exact result and publish it using the normal authorized connector.
           PY
       - name: Preserve exact prepared source and first-attempt evidence
         if: always()
