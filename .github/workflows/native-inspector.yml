@@ -1,7 +1,7 @@
 name: Native templated property inspector
 on:
   push:
-    branches: [main, work/preview27-native-property-inspector]
+    branches: [main]
   pull_request:
   workflow_dispatch:
 permissions:
