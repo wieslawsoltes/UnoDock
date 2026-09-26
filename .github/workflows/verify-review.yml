@@ -1,0 +1,193 @@
+name: Verify reconciled XAML review
+on:
+  push:
+    branches: [work/preview27-review-evidence]
+    paths: [.github/workflows/verify-review.yml]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: b9a06d9cc63e04a9cc920a2b7a30c5f5e57e6777
+          fetch-depth: 0
+      - name: Verify exact heads, complete runtime evidence and archived sources
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib, importlib.util, io, json, os, subprocess, time, zipfile
+          import urllib.error, urllib.request
+          import xml.etree.ElementTree as ET
+          from pathlib import Path, PurePosixPath
+          from unittest.mock import patch
+
+          head = 'eee58e7f064ae5f5e6033b2b39cf8436261cd1a2'
+          tested = 'b9a06d9cc63e04a9cc920a2b7a30c5f5e57e6777'
+          tree = 'ee0b891b9e36b6c7785bfc0468e804793412091d'
+          base = '4e9510c46c2879f5795a5d3b20c0d664a8795a7e'
+          runs = {'ordinary': (36265472612, 6), 'native': (36265472618, 3),
+                  'chrome': (36265472639, 3), 'workbench': (36265472629, 3),
+                  'workspaces': (36265472620, 3), 'source': (36265472666, 1)}
+          output = Path('artifacts/PR13-verified')
+          output.mkdir(parents=True)
+          headers = {'Authorization': 'Bearer ' + os.environ['GH_TOKEN'],
+                     'Accept': 'application/vnd.github+json', 'User-Agent': 'UnoDock-review-verifier'}
+          def request(path):
+              return urllib.request.Request('https://api.github.com/repos/wieslawsoltes/UnoDock/' + path, headers=headers)
+          def get(path):
+              with urllib.request.urlopen(request(path), timeout=60) as response:
+                  return json.load(response)
+          def git(*args):
+              return subprocess.check_output(['git', *args]).decode().strip()
+          assert git('rev-parse', 'HEAD') == tested
+          assert git('rev-parse', 'HEAD^{tree}') == git('rev-parse', head + '^{tree}') == tree
+          deadline = time.monotonic() + 1080
+          while True:
+              states = {key: get(f'actions/runs/{run}') for key, (run, _) in runs.items()}
+              for key, state in states.items():
+                  assert state['head_sha'] == head
+                  if state['status'] == 'completed' and state['conclusion'] != 'success':
+                      raise RuntimeError(f'{key} failed: {state["conclusion"]}')
+              print('Workflow states:', {key: (s['status'], s['conclusion']) for key, s in states.items()}, flush=True)
+              if all(s['status'] == 'completed' for s in states.values()):
+                  break
+              if time.monotonic() > deadline:
+                  raise TimeoutError('Final workflows did not complete within the verification deadline.')
+              time.sleep(25)
+          jobs = {}
+          for key, (run, count) in runs.items():
+              values = get(f'actions/runs/{run}/jobs?per_page=100')['jobs']
+              assert len(values) == count and all(v['conclusion'] == 'success' for v in values)
+              jobs[key] = [{'id': v['id'], 'name': v['name'], 'conclusion': v['conclusion']} for v in values]
+
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self, *args):
+                  return None
+          def download(artifact):
+              try:
+                  response = urllib.request.build_opener(NoRedirect).open(request(f'actions/artifacts/{artifact["id"]}/zip'), timeout=60)
+              except urllib.error.HTTPError as error:
+                  if error.code not in (301, 302, 303, 307, 308):
+                      raise
+                  location = error.headers['Location']
+                  assert location.startswith('https://')
+                  # Do not forward the repository token to redirected storage.
+                  response = urllib.request.urlopen(location, timeout=120)
+              with response:
+                  content = response.read(128 * 1024 * 1024 + 1)
+              assert len(content) <= 128 * 1024 * 1024
+              assert 'sha256:' + hashlib.sha256(content).hexdigest() == artifact['digest']
+              return content
+          prefixes = {'native': 'native-docking-', 'chrome': 'custom-floating-chrome-',
+                      'workbench': 'xaml-workbench-', 'workspaces': 'xaml-workspaces-'}
+          evidence = {}
+          artifacts = {}
+          source_zip = None
+          for key, (run, _) in runs.items():
+              for artifact in get(f'actions/runs/{run}/artifacts?per_page=100')['artifacts']:
+                  name = artifact['name']
+                  selected = name in ('core-and-api-results', 'runtime-test-results', 'windows-runtime-test-results') if key == 'ordinary' else name.startswith(prefixes[key]) if key in prefixes else False
+                  if not selected:
+                      continue
+                  assert not artifact['expired'] and artifact['workflow_run']['head_sha'] == head
+                  data = download(artifact)
+                  destination = output / 'evidence' / name
+                  destination.mkdir(parents=True)
+                  with zipfile.ZipFile(io.BytesIO(data)) as archive:
+                      for entry in archive.infolist():
+                          path = PurePosixPath(entry.filename)
+                          assert not path.is_absolute() and '..' not in path.parts
+                          if entry.is_dir():
+                              continue
+                          assert entry.file_size < 128 * 1024 * 1024
+                          if name == 'core-and-api-results' and path.name == 'UnoDock-source.zip':
+                              source_zip = archive.read(entry)
+                          # Explicitly exclude dependencies, executables and all fonts.
+                          if path.suffix.lower() not in ('.json', '.xml', '.log', '.txt', '.png'):
+                              continue
+                          file = destination.joinpath(*path.parts)
+                          file.parent.mkdir(parents=True, exist_ok=True)
+                          file.write_bytes(archive.read(entry))
+                  evidence[name] = destination
+                  artifacts[name] = {'id': artifact['id'], 'run': run, 'digest': artifact['digest']}
+          assert len(evidence) == 15 and source_zip is not None
+          blobs = {}
+          for entry in subprocess.check_output(['git', 'ls-tree', '-rz', '--full-tree', 'HEAD']).split(b'\0'):
+              if entry:
+                  metadata, name = entry.split(b'\t', 1)
+                  _, kind, sha = metadata.split()
+                  assert kind == b'blob'
+                  blobs[name.decode()] = sha.decode()
+          with zipfile.ZipFile(io.BytesIO(source_zip)) as archive:
+              names = {e.filename for e in archive.infolist() if not e.is_dir()}
+              assert names == set(blobs)
+              for name in names:
+                  content = archive.read(name)
+                  assert hashlib.sha1(f'blob {len(content)}\0'.encode() + content).hexdigest() == blobs[name], name
+          subprocess.run(['git', 'diff', '--exit-code', base, 'HEAD', '--', 'contracts/', 'tools/ReferenceProbe/', ':(glob)src/**/*.g.cs'], check=True)
+
+          results = {}
+          for name, directory in evidence.items():
+              suites = {}
+              for path in directory.rglob('*.xml'):
+                  root = ET.parse(path).getroot()
+                  if root.tag != 'testsuite':
+                      continue
+                  cases = root.findall('testcase')
+                  names = [c.get('name') for c in cases]
+                  assert cases and len(cases) == int(root.get('tests', '-1'))
+                  assert all(names) and len(set(names)) == len(names)
+                  assert not any(int(root.get(key, '0')) for key in ('failures', 'errors', 'skipped'))
+                  assert not any(c.find(tag) is not None for c in cases for tag in ('failure', 'error', 'skipped'))
+                  suite = root.get('name')
+                  assert suite and suite not in suites
+                  suites[suite] = len(cases)
+              assert suites
+              results[name] = {'suites': suites, 'executed': sum(suites.values()), 'failed': 0, 'skipped': 0}
+              if name in ('runtime-test-results', 'windows-runtime-test-results') or name.startswith(('xaml-workbench-', 'xaml-workspaces-')):
+                  record = json.loads((directory / 'isolated-execution.json').read_text())
+                  assert len(record['planned']) == len(suites) and set(record['planned']) == set(suites)
+                  assert len(record['completed']) == len(suites) and {c['suite'] for c in record['completed']} == set(suites)
+                  for row in record['completed']:
+                      assert row['error'] is None and row['executed'] == row['passed'] == suites[row['suite']]
+              if name in ('runtime-test-results', 'windows-runtime-test-results'):
+                  summary = json.loads((directory / 'execution-summary.json').read_text())
+                  assert summary['revision'] == tested
+                  assert suites['xaml-workbench'] == 86 and suites['xaml-workspaces'] == 37 and suites['layout-mutation-invariants'] == 64
+              if name.startswith(('native-docking-', 'custom-floating-chrome-', 'xaml-workbench-', 'xaml-workspaces-')):
+                  assert (directory / 'source-revision.txt').read_text().strip() == tested
+              if name.startswith(('native-docking-', 'custom-floating-chrome-')):
+                  script = 'tools/verify-floating-chrome.py' if name.startswith('custom-') else 'tools/verify-native-results.py'
+                  spec = importlib.util.spec_from_file_location('gate', script)
+                  module = importlib.util.module_from_spec(spec)
+                  spec.loader.exec_module(module)
+                  system = 'Darwin' if name.endswith('-macOS') else 'Windows' if name.endswith('-Windows') else 'Linux'
+                  with patch.object(module.platform, 'system', return_value=system):
+                      module.verify(directory)
+              if name.startswith('xaml-workspaces-'):
+                  assert suites == {'xaml-workspaces': 37}
+                  for kind in ('declarative', 'mvvm', 'templates', 'palette'):
+                      for mode in ('light', 'dark'):
+                          data = (directory / f'xaml-{kind}-{mode}.png').read_bytes()
+                          assert len(data) > 1000 and data[:8] == b'\x89PNG\r\n\x1a\n'
+              if name.startswith('xaml-workbench-'):
+                  assert suites == {'xaml-workbench': 86}
+              print('VERIFIED', name, results[name], flush=True)
+          summary = {'head': head, 'tested': tested, 'tree': tree, 'sourceFilesVerified': len(blobs),
+                     'jobs': jobs, 'artifacts': artifacts, 'results': results}
+          (output / 'verification.json').write_text(json.dumps(summary, indent=2) + '\n')
+          (output / 'implementation.patch').write_bytes(subprocess.check_output(['git', 'diff', '--no-ext-diff', base, 'HEAD']))
+          print('FINAL VERIFIED SUMMARY', json.dumps(summary, indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: UnoDock-PR13-verified-evidence
+          path: artifacts/PR13-verified/
+          if-no-files-found: error
