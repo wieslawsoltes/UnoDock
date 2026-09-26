@@ -122,8 +122,8 @@
     "WindowsBase.dll": "7301c9d3a8366bbc482732c37b66c423873b74ac029f0bb0c8ffb98053091e7e",
     "WindowsFormsIntegration.dll": "5ed8713c0b6de01c5cd92738a522a5cb89e34df52f0839bc462d1a81e2e98f71",
     "XamlBuildTask.dll": "acb449a26a03b3267b152e10c69868019a7270a1dceafc43e6e52ef91999942b",
-    "Xceed.Wpf.AvalonDock.dll": "dc0215152ba9d0a0f3172e302b47ec9cd6152628927a748f97476eef8187c1bb",
-    "Xceed.Wpf.Toolkit.dll": "1cac07d2146f260a4656e1c79eb4ba7758d007f9c6524439d4d04c3ca2bd6d58",
+    "Xceed.Wpf.AvalonDock.dll": "f8699496ebcc4a5147b51899b54d19bfda421073144da5b3fa1706bf3e3c44cc",
+    "Xceed.Wpf.Toolkit.dll": "6f5a4ec0d3efbad4a1b409e6cb9f35974b32fa9941e5bc48f56074e997e56e31",
     "mscorlib.dll": "f7a62c9392d6762f5b46c76149173e2f265d6ad05aae54290ff40573ab32190e",
     "sysglobl.dll": "e9b2a5e89cc80443540a8e5dffa8b6c612406ece2dd529bad9af78f20d1ded2e"
   },

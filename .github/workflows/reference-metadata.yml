@@ -4,7 +4,7 @@ on:
   push:
     paths: ['tools/ApiMetadata/**', 'tools/ReferenceProbe/**', 'contracts/reference.json', '.github/workflows/reference-metadata.yml']
 permissions:
-  contents: write
+  contents: read
 concurrency:
   group: reference-metadata
   cancel-in-progress: false
@@ -38,12 +38,13 @@ jobs:
           $copyTargets = Join-Path $env:GITHUB_WORKSPACE 'tools/ReferenceProbe/LegacyCopy.targets'
           dotnet build tools/ApiMetadata -c Release
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          New-Item -ItemType Directory -Force 'artifacts/reference-public-metadata' | Out-Null
           foreach ($configuration in @('Release','Debug')) {
             $output = "$stage/bin/$configuration/"
             msbuild $project /nologo /v:minimal /p:Configuration=$configuration /p:TargetFrameworkRootPath=$root /p:OutputPath=$output /p:Deterministic=true /p:GenerateSerializationAssemblies=Off /p:CustomAfterMicrosoftCommonTargets=$copyTargets
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
             $profile = "net40-client-$($configuration.ToLowerInvariant())"
-            $prefix = "contracts/avalondock-metadata-$($configuration.ToLowerInvariant())"
+            $prefix = "artifacts/reference-public-metadata/avalondock-metadata-$($configuration.ToLowerInvariant())"
             dotnet run --no-build --project tools/ApiMetadata -c Release -- "$output/Xceed.Wpf.AvalonDock.dll" $prefix --ref-dir $refs --profile $profile
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
             dotnet run --no-build --project tools/ApiMetadata -c Release -- "$output/Xceed.Wpf.AvalonDock.dll" "$stage/repeat" --ref-dir $refs --profile $profile
@@ -57,28 +58,25 @@ jobs:
           dotnet build tools/ReferenceProbe -c Release -p:ReferenceAssembly="$stage/bin/Release/Xceed.Wpf.AvalonDock.dll"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           Copy-Item "$stage/bin/Release/Xceed.Wpf.Toolkit.dll" 'tools/ReferenceProbe/bin/Release/net48/'
-          & tools/ReferenceProbe/bin/Release/net48/ReferenceProbe.exe contracts/reference-fixtures
+          & tools/ReferenceProbe/bin/Release/net48/ReferenceProbe.exe artifacts/reference-public-metadata/reference-fixtures
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           & tools/ReferenceProbe/bin/Release/net48/ReferenceProbe.exe "$stage/repeat-fixtures"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          Get-ChildItem contracts/reference-fixtures/*.xml | ForEach-Object {
+          Get-ChildItem artifacts/reference-public-metadata/reference-fixtures/*.xml | ForEach-Object {
             if ((Get-FileHash $_.FullName).Hash -ne (Get-FileHash "$stage/repeat-fixtures/$($_.Name)").Hash) { throw "Non-deterministic fixture $($_.Name)" }
           }
       - name: Remove isolated reference implementation
         if: always()
         shell: pwsh
         run: Remove-Item -Recurse -Force -ErrorAction SilentlyContinue (Join-Path $env:RUNNER_TEMP 'avalondock-reference')
-      - name: Commit verified public contracts and behavior fixtures
+      - name: Verify pinned contracts were not modified
         shell: bash
         run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add contracts/avalondock-metadata-*.json contracts/avalondock-metadata-*.txt contracts/reference-fixtures/
-          git diff --cached --quiet || (git commit -m 'test: record resolved public metadata, defaults and original-format layout fixtures' && git pull --rebase origin main && git push origin HEAD:main)
+          python3 tests/metadata/test_namespace_migration.py
+          git diff --exit-code -- contracts/ tools/ReferenceProbe/
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: reference-public-metadata
-          path: |
-            contracts/avalondock-metadata-*
-            contracts/reference-fixtures/
+          path: artifacts/reference-public-metadata/
+          if-no-files-found: error
