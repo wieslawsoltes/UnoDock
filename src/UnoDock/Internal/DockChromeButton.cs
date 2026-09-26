@@ -60,8 +60,11 @@ internal sealed class DockChromeButton : Button
         _palette = palette;
         Foreground = palette.Foreground;
         FontSize = palette.FontSize;
+        CornerRadius = new(palette.CornerRadius);
         if (Content is Path path)
         {
+            Width = palette.ButtonSize;
+            Height = palette.ButtonSize;
             path.Stroke = palette.Foreground;
             path.Fill = palette.Foreground;
         }

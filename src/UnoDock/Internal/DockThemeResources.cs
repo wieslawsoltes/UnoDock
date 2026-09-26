@@ -6,7 +6,7 @@ internal static class DockThemeResources
 {
     // Null keeps the historical automatic light/dark palette. FluentTheme() is
     // the explicit Uno semantic theme and follows the owning RequestedTheme.
-    internal static bool UsesFluent(DockingManager manager) => manager.Theme is FluentTheme;
+    internal static bool UsesFluent(DockingManager manager) => manager.Theme is FluentTheme or ResourceDictionaryTheme;
     internal static ElementTheme EffectiveTheme(DockingManager manager) => manager.Theme switch
     {
         GenericTheme => ElementTheme.Light,
@@ -27,12 +27,13 @@ internal static class DockThemeResources
     internal static object? Find(FrameworkElement owner, string key, ResourceDictionary? skip = null)
     {
         var theme = owner is DockingManager manager ? EffectiveTheme(manager) : owner.ActualTheme;
+        var name = Microsoft.Windows.Shell.SystemParameters2.Current.HighContrast ? "HighContrast" : theme == ElementTheme.Dark ? "Dark" : "Light";
         for (FrameworkElement? current = owner; current != null; current = VisualTreeHelper.GetParent(current) as FrameworkElement)
-            if (Find(current.Resources, key, theme, skip, new(ReferenceEqualityComparer.Instance)) is { } local)
+            if (Find(current.Resources, key, name, skip, new(ReferenceEqualityComparer.Instance)) is { } local)
                 return local;
         if (Application.Current is not { } app)
             return null;
-        if (Find(app.Resources, key, theme, skip, new(ReferenceEqualityComparer.Instance)) is { } application)
+        if (Find(app.Resources, key, name, skip, new(ReferenceEqualityComparer.Instance)) is { } application)
             return application;
         // Public Uno TryGetValue includes system resources. Use it only after all
         // explicit scopes, and never borrow the opposite application's palette.
@@ -40,25 +41,27 @@ internal static class DockThemeResources
         return skip == null && theme == appTheme && app.Resources.TryGetValue(key, out var system) ? system : null;
     }
 
-    private static object? Find(ResourceDictionary dictionary, string key, ElementTheme theme, ResourceDictionary? skip, HashSet<ResourceDictionary> visited)
+    private static object? Find(ResourceDictionary dictionary, string key, string themeName, ResourceDictionary? skip, HashSet<ResourceDictionary> visited)
     {
         if (ReferenceEquals(dictionary, skip) || !visited.Add(dictionary))
             return null;
         if (dictionary.Count > 0 && dictionary.Keys.Contains(key))
             return dictionary[key];
+        // WinUI/Uno precedence: local entries, reverse merged dictionaries,
+        // then the matching theme (Default only when that theme is absent).
+        for (var i = dictionary.MergedDictionaries.Count - 1; i >= 0; i--)
+            if (Find(dictionary.MergedDictionaries[i], key, themeName, skip, visited) is { } merged)
+                return merged;
         var themes = dictionary.ThemeDictionaries;
-        var name = theme == ElementTheme.Dark ? "Dark" : "Light";
+        var name = themeName;
         if (themes.Count > 0)
         {
-            if (themes.Keys.Contains(name) && themes[name] is ResourceDictionary selected && Find(selected, key, theme, skip, visited) is { } selectedValue)
-                return selectedValue;
-            if (themes.Keys.Contains("Default") && themes["Default"] is ResourceDictionary defaults && Find(defaults, key, theme, skip, visited) is { } defaultValue)
-                return defaultValue;
+            if (themes.Keys.Contains(name) && themes[name] is ResourceDictionary selected)
+                return Find(selected, key, themeName, skip, visited);
+            if (themes.Keys.Contains("Default") && themes["Default"] is ResourceDictionary defaults)
+                return Find(defaults, key, themeName, skip, visited);
         }
 
-        for (var i = dictionary.MergedDictionaries.Count - 1; i >= 0; i--)
-            if (Find(dictionary.MergedDictionaries[i], key, theme, skip, visited) is { } merged)
-                return merged;
         return null;
     }
 }

@@ -16,6 +16,7 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
     private readonly Dictionary<DependencyProperty, ICommand> _commands = [];
     private DockingManager? _manager;
     private bool _disposed, _attaching;
+    private long _styleGeneration;
     private readonly long _visibilityToken;
     protected LayoutItem() => _visibilityToken = RegisterPropertyChangedCallback(VisibilityProperty, (_, _) => OnVisibilityChanged());
     public LayoutContent LayoutElement
@@ -104,19 +105,39 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
 
     internal void ApplyContainerStyle(Style? style)
     {
+        var generation = ++_styleGeneration;
+        var wasAttaching = _attaching;
         _attaching = true;
         try
         {
             ClearDefaultBindings();
+            ClearStyleBindings();
+            if (generation != _styleGeneration || _disposed)
+                return;
             ClearDefaultCommands();
+            if (generation != _styleGeneration || _disposed)
+                return;
             Style = style;
+            if (generation != _styleGeneration || _disposed)
+                return;
+            ApplyBindingDefinitions();
+            if (generation != _styleGeneration || _disposed)
+                return;
             SetDefaultBindings();
+            if (generation != _styleGeneration || _disposed)
+                return;
             InitDefaultCommands();
         }
         finally
         {
-            _attaching = false;
+            _attaching = wasAttaching;
         }
+
+        // Applying a native Style resolves Binding setters synchronously. Those
+        // callbacks were suppressed while defaults were being removed, so replay
+        // the final authored values, not transient default values, into the model.
+        if (!wasAttaching && generation == _styleGeneration)
+            SynchronizeContainerStyle(generation);
     }
 
     private bool HasStyleSetter(DependencyProperty property)
@@ -198,7 +219,8 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
     {
     }
 
-    protected void OnAdapterPropertyChanged(string name, DependencyPropertyChangedEventArgs args)
+    protected void OnAdapterPropertyChanged(string name, DependencyPropertyChangedEventArgs args) => SynchronizeAdapterProperty(name);
+    private void SynchronizeAdapterProperty(string name)
     {
         if (LayoutElement == null || _attaching || _disposed)
             return;
@@ -335,6 +357,7 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
             LayoutElement.PropertyChanged -= ModelChanged;
         UnregisterPropertyChangedCallback(VisibilityProperty, _visibilityToken);
         ClearDefaultBindings();
+        ClearStyleBindings();
         ClearDefaultCommands();
         if (_view is { } view)
         {

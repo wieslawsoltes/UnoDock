@@ -48,9 +48,9 @@ public sealed partial class GalleryPage : IDisposable
         var menu = SampleChrome.CreateMenuBar();
         AddMenu("File", ("New document", "new", AddDocument), ("Save layout", "save", () => Run(Save)), ("Restore layout", "restore", () => Run(Restore)), ("Inspect layout XML", "xml", ShowXml));
         AddMenu("Layout", ("Float / Dock", "float", ToggleFloating), ("Auto-hide / Pin", "pin", TogglePin), ("New vertical tab group", "split-right", () => Split(UnoDock.Core.DockPosition.Right)), ("New horizontal tab group", "split-bottom", () => Split(UnoDock.Core.DockPosition.Bottom)), ("Show hidden tools", "show-tools", ShowHiddenTools), ("Reset current sample", "reset", () => SwitchSample(CurrentSample)));
-        AddMenu("Samples", ("Docking", "classic", () => SwitchSample(SampleKind.Classic)), ("IDE workspace", "workspace", () => SwitchSample(SampleKind.Workspace)), ("MVVM binding", "binding", () => SwitchSample(SampleKind.Binding)), ("Add 1,000 tabs", "stress", Stress));
+        AddMenu("Samples", ("Docking", "classic", () => SwitchSample(SampleKind.Classic)), ("IDE workspace", "workspace", () => SwitchSample(SampleKind.Workspace)), ("MVVM binding", "binding", () => SwitchSample(SampleKind.Binding)), ("XAML workspaces", "xaml", ShowXamlSamples), ("Add 1,000 tabs", "stress", Stress));
         AddMenu("Diagnostics", ("Public contracts", "parity", ShowParityLab), ("Converters", "converters", ShowConverterLab), ("Native windows", "windows", ShowNativeWindowLab), ("Window shell", "shell", ShowShellLab), ("Window lifecycle", "lifecycle", ShowWindowLifecycleLab), ("Input extensions", "input", ShowInputExtensionsLab), ("Visual observations", "visual", ShowVisualParityLab), ("Navigator", "navigator", ShowNavigatorLab), ("Docking guides", "guides", ShowDockingGuidesLab), ("Splitters", "splitters", ShowSplitterLab), ("Auto-hide", "autohide", ShowAutoHideLab), ("Menus", "menus", ShowMenuLab));
-        AddMenu("View", ("Left-to-right", "ltr", () => Dock.FlowDirection = FlowDirection.LeftToRight), ("Right-to-left", "rtl", () => Dock.FlowDirection = FlowDirection.RightToLeft), ("Normal density", "normal-density", () => SetDensity(12)), ("Large text", "large-text", () => SetDensity(18)));
+        AddMenu("View", ("Left-to-right", "ltr", () => Dock.FlowDirection = FlowDirection.LeftToRight), ("Right-to-left", "rtl", () => Dock.FlowDirection = FlowDirection.RightToLeft), ("Normal density", "normal-density", () => SetDensity(12)), ("Large text", "large-text", () => SetDensity(18)), ("Uno compact chrome", "chrome-compact", () => SetChromeDensity(DockDensity.Compact)), ("Uno comfortable chrome", "chrome-comfortable", () => SetChromeDensity(DockDensity.Comfortable)), ("Uno touch chrome", "chrome-touch", () => SetChromeDensity(DockDensity.Touch)));
         _sampleShell.Children.Add(menu);
         var toolbar = new StackPanel
         {
@@ -201,6 +201,14 @@ public sealed partial class GalleryPage : IDisposable
         _status.Foreground = SampleChrome.Default(dark).Foreground;
     }
 
+    private void SetChromeDensity(DockDensity density)
+    {
+        if (Dock.Theme is not FluentTheme)
+            SetSampleTheme(CurrentSampleTheme == SampleTheme.Dark ? SampleTheme.Dark : SampleTheme.Light);
+        ((FluentTheme)Dock.Theme!).Density = density;
+        _status.Text = "Uno Fluent chrome: " + density;
+    }
+
     private void SetDensity(double fontSize)
     {
         Dock.Resources["UnoDock.FontSize"] = fontSize;
@@ -240,6 +248,7 @@ public sealed partial class GalleryPage : IDisposable
         ++_workspaceEpoch;
         ++_restoreRequest;
         StopMvvmWorkspace();
+        DisposeXamlSamples();
         _sampleInspector?.Dispose();
         _sampleInspector = null;
         _selectingSample = true;
@@ -381,6 +390,7 @@ public sealed partial class GalleryPage : IDisposable
         ++_workspaceEpoch;
         ++_restoreRequest;
         StopMvvmWorkspace();
+        DisposeXamlSamples();
         _pageDisposed = true;
         _sampleInspector?.Dispose();
         _sampleInspector = null;

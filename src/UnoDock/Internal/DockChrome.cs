@@ -7,10 +7,12 @@ namespace UnoDock.Internal;
 internal static class DockChrome
 {
     [ThreadStatic]
-    private static ControlTemplate? _buttonTemplate;
-    [ThreadStatic]
-    private static ControlTemplate? _thumbTemplate;
-    internal static ControlTemplate ThumbTemplate => _thumbTemplate ??= (ControlTemplate)XamlReader.Load("<ControlTemplate xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation'><Border Background='{TemplateBinding Background}'/></ControlTemplate>");
+    private static Themes.DockChromeResources? _templates;
+    private static Themes.DockChromeResources Templates => _templates ??= new Themes.DockChromeResources();
+
+    internal static T Resource<T>(string key)
+        where T : class => (T)Templates[key];
+    internal static ControlTemplate ThumbTemplate => (ControlTemplate)Templates["UnoDock.ChromeThumbTemplate"];
 
     [ThreadStatic]
     private static Brush? _transparent;
@@ -18,17 +20,7 @@ internal static class DockChrome
 
     [ThreadStatic]
     private static DockPalette? _light, _dark;
-    internal static ControlTemplate ButtonTemplate => _buttonTemplate ??= (ControlTemplate)XamlReader.Load("""
-        <ControlTemplate xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
-          <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
-                  BorderThickness="{TemplateBinding BorderThickness}">
-            <ContentPresenter Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}"
-                Foreground="{TemplateBinding Foreground}" Padding="{TemplateBinding Padding}"
-                HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
-                VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}" />
-          </Border>
-        </ControlTemplate>
-        """);
+    internal static ControlTemplate ButtonTemplate => (ControlTemplate)Templates["UnoDock.ChromeButtonTemplate"];
 
     internal static DockPalette Palette(DockingManager manager)
     {
@@ -36,10 +28,32 @@ internal static class DockChrome
         if (manager.Theme is Themes.FluentTheme fluent)
             fluent.UpdateResources(manager);
         var p = Default(dark);
+        if (manager.Theme is Themes.FluentTheme { Density: not Themes.DockDensity.Compact } density)
+            p = density.Density == Themes.DockDensity.Touch ? p with
+            {
+                FontSize = 14,
+                TitleHeight = 42,
+                TabHeight = 44,
+                ToolTabHeight = 42,
+                RailThickness = 44,
+                CornerRadius = 6,
+                ButtonSize = 36
+            }
+
+            : p with
+            {
+                FontSize = 13,
+                TitleHeight = 28,
+                TabHeight = 32,
+                ToolTabHeight = 30,
+                RailThickness = 32,
+                CornerRadius = 4,
+                ButtonSize = 24
+            };
         var fontSize = N("FontSize", p.FontSize, 8, 32);
-        var textScale = Math.Max(1, fontSize / 12);
+        var textScale = Math.Max(1, fontSize / p.FontSize);
         double Fit(string key, double fallback, double min, double max) => Math.Max(N(key, fallback, min, max), Math.Ceiling(fallback * textScale));
-        return new(B("PaneBrush", p.Surface), B("HeaderBrush", p.Header), B("InactiveTabBrush", p.Tab), B("BorderBrush", p.Border), B("ForegroundBrush", p.Foreground), B("HoverBrush", p.Hover), B("PressedBrush", p.Pressed), B("AccentBrush", p.Accent), B("ActiveTitleBrush", p.ActiveTitle), fontSize, Fit("TitleHeight", p.TitleHeight, 18, 64), Fit("TabHeight", p.TabHeight, 20, 64), Fit("ToolTabHeight", p.ToolTabHeight, 20, 64), Fit("RailThickness", p.RailThickness, 24, 72));
+        return new(B("PaneBrush", p.Surface), B("HeaderBrush", p.Header), B("InactiveTabBrush", p.Tab), B("BorderBrush", p.Border), B("ForegroundBrush", p.Foreground), B("HoverBrush", p.Hover), B("PressedBrush", p.Pressed), B("AccentBrush", p.Accent), B("ActiveTitleBrush", p.ActiveTitle), fontSize, Fit("TitleHeight", p.TitleHeight, 18, 64), Fit("TabHeight", p.TabHeight, 20, 64), Fit("ToolTabHeight", p.ToolTabHeight, 20, 64), Fit("RailThickness", p.RailThickness, 24, 72), N("CornerRadius", p.CornerRadius, 0, 16), N("ButtonSize", p.ButtonSize, 16, 48));
         Brush B(string key, Brush fallback) => DockThemeResources.Brush(manager, key, key switch
         {
             "PaneBrush" => "LayerFillColorDefaultBrush",
@@ -53,7 +67,11 @@ internal static class DockChrome
             "ActiveTitleBrush" => "ControlFillColorInputActiveBrush",
             _ => key
         }, fallback);
-        double N(string key, double fallback, double min, double max) => manager.Resources.TryGetValue("UnoDock." + key, out var value) && value is double d && double.IsFinite(d) ? Math.Clamp(d, min, max) : fallback;
+        double N(string key, double fallback, double min, double max)
+        {
+            var value = DockThemeResources.UsesFluent(manager) ? DockThemeResources.Find(manager, "UnoDock." + key) : manager.Resources.TryGetValue("UnoDock." + key, out var local) ? local : null;
+            return value is double d && double.IsFinite(d) ? Math.Clamp(d, min, max) : fallback;
+        }
     }
 
     internal static DockPalette Default(bool dark) => dark ? _dark ??= CreateDefault(true) : _light ??= CreateDefault(false);

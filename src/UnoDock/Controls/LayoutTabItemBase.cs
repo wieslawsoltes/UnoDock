@@ -11,6 +11,13 @@ public abstract partial class LayoutTabItemBase : DockInputControl
     public static readonly DependencyProperty ModelProperty = DependencyProperty.Register(nameof(Model), typeof(LayoutContent), typeof(LayoutTabItemBase), new PropertyMetadata(null, (d, e) => ((LayoutTabItemBase)d).OnModelChanged(e)));
     public static readonly DependencyProperty LayoutItemProperty = DependencyProperty.Register(nameof(LayoutItem), typeof(LayoutItem), typeof(LayoutTabItemBase), new PropertyMetadata(null));
     private readonly Grid _chrome = new();
+    private readonly Border _selectionIndicator = new()
+    {
+        Height = 2,
+        VerticalAlignment = VerticalAlignment.Bottom,
+        IsHitTestVisible = false,
+        Visibility = Visibility.Collapsed
+    };
     private readonly DockChromeButton _label;
     private readonly Image _icon = new()
     {
@@ -83,6 +90,8 @@ public abstract partial class LayoutTabItemBase : DockInputControl
         Grid.SetColumn(_close, 1);
         _chrome.Children.Add(_label);
         _chrome.Children.Add(_close);
+        Grid.SetColumnSpan(_selectionIndicator, 2);
+        _chrome.Children.Add(_selectionIndicator);
         Content = _chrome;
         InitializeTabAutomation();
     }
@@ -187,7 +196,11 @@ public abstract partial class LayoutTabItemBase : DockInputControl
         var tool = Model is LayoutAnchorable && Model.Parent is not LayoutDocumentPane;
         _label.Configure(palette);
         _close.Configure(palette);
-        _label.FontWeight = Microsoft.UI.Text.FontWeights.Normal;
+        _label.FontWeight = Model.IsActive && palette.CornerRadius > 0 ? Microsoft.UI.Text.FontWeights.SemiBold : Microsoft.UI.Text.FontWeights.Normal;
+        _label.Padding = new(palette.CornerRadius > 0 ? 8 : 1, 0, palette.CornerRadius > 0 ? 8 : 1, 0);
+        _chrome.CornerRadius = new(palette.CornerRadius, palette.CornerRadius, 0, 0);
+        _selectionIndicator.Background = palette.Accent;
+        _selectionIndicator.Visibility = Model.IsSelected && palette.CornerRadius > 0 ? Visibility.Visible : Visibility.Collapsed;
         _close.Visibility = !tool && Model.CanClose && Model.IsSelected ? Visibility.Visible : Visibility.Collapsed;
         _chrome.Background = Model.IsSelected ? palette.Surface : palette.Tab;
         _chrome.BorderBrush = palette.Border;

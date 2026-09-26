@@ -4,6 +4,9 @@ namespace UnoDock.Themes;
 /// even when the containing window requests the other theme.</summary>
 public sealed class FluentTheme : DictionaryTheme
 {
+    public static readonly DependencyProperty RequestedThemeProperty = DependencyProperty.Register(nameof(RequestedTheme), typeof(ElementTheme), typeof(FluentTheme), new PropertyMetadata(ElementTheme.Default, (owner, args) => ((FluentTheme)owner).OnSettingChanged(args, true)));
+    public static readonly DependencyProperty DensityProperty = DependencyProperty.Register(nameof(Density), typeof(DockDensity), typeof(FluentTheme), new PropertyMetadata(DockDensity.Compact, (owner, args) => ((FluentTheme)owner).OnSettingChanged(args, false)));
+    private bool _restoringSetting;
     private readonly Dictionary<string, Brush> _published = new(StringComparer.Ordinal);
     public FluentTheme() : this(ElementTheme.Default)
     {
@@ -21,9 +24,57 @@ public sealed class FluentTheme : DictionaryTheme
                 Publish(slot.Dock, slot.Fallback);
     }
 
-    internal ElementTheme RequestedTheme
+    public ElementTheme RequestedTheme
     {
-        get;
+        get => (ElementTheme)GetValue(RequestedThemeProperty);
+        set
+        {
+            if (!Enum.IsDefined(value))
+                throw new ArgumentOutOfRangeException(nameof(value));
+            SetValue(RequestedThemeProperty, value);
+        }
+    }
+
+    public DockDensity Density
+    {
+        get => (DockDensity)GetValue(DensityProperty);
+        set
+        {
+            if (!Enum.IsDefined(value))
+                throw new ArgumentOutOfRangeException(nameof(value));
+            SetValue(DensityProperty, value);
+        }
+    }
+
+    private void OnSettingChanged(DependencyPropertyChangedEventArgs args, bool theme)
+    {
+        if (_restoringSetting)
+            return;
+        if (theme ? !Enum.IsDefined((ElementTheme)args.NewValue) : !Enum.IsDefined((DockDensity)args.NewValue))
+        {
+            _restoringSetting = true;
+            try
+            {
+                SetValue(theme ? RequestedThemeProperty : DensityProperty, args.OldValue);
+            }
+            finally
+            {
+                _restoringSetting = false;
+            }
+
+            throw new ArgumentOutOfRangeException(theme ? nameof(RequestedTheme) : nameof(Density));
+        }
+
+        if (theme)
+        {
+            // Retire only aliases we supplied; never erase consumer overrides.
+            foreach (var pair in _published)
+                if (ThemeResourceDictionary.TryGetValue(pair.Key, out var value) && ReferenceEquals(value, pair.Value))
+                    ThemeResourceDictionary.Remove(pair.Key);
+            _published.Clear();
+        }
+
+        InvalidateTheme();
     }
 
     internal void UpdateResources(DockingManager manager)
