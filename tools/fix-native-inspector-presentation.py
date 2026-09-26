@@ -1,4 +1,4 @@
-"""Correct the first actual-host native inspector findings without changing legacy assertions."""
+"""Correct actual-host native inspector findings without changing legacy assertions."""
 from pathlib import Path
 pending = {}
 def replace(path, old, new):
@@ -15,14 +15,23 @@ replace(path, '''        input.GotFocus += (_, _) =>
             {
                 ShowDescription(row);
             }
-        };''', '''        input.GotFocus += (_, _) =>
+        };''', '''        if (input is Control focusControl)
         {
-            // Native focus notifications can arrive after presentation moved
-            // focus elsewhere. Do not let that stale event clear the blur fence
-            // or select a row which is no longer the focused native element.
+            // FocusState is authoritative even when a rapid Focus/blur sequence
+            // coalesces the later routed GotFocus/LostFocus notifications.
+            var focusToken = focusControl.RegisterPropertyChangedCallback(Control.FocusStateProperty, (sender, _) =>
+            {
+                if (sender is Control { FocusState: not FocusState.Unfocused })
+                {
+                    row.SuppressPresentationBlur = false;
+                }
+            });
+            _tokens.Add((focusControl, Control.FocusStateProperty, focusToken));
+        }
+        input.GotFocus += (_, _) =>
+        {
             if (IsCurrent(row) && input is Control { FocusState: not FocusState.Unfocused })
             {
-                row.SuppressPresentationBlur = false;
                 ShowDescription(row);
             }
         };''')
@@ -66,7 +75,7 @@ replace(path, '''    private void PreserveDraftDuringPresentation()
         {
             // A dispatcher tick is not a focus-event barrier. Transfer focus to
             // the retained search control before moving/hiding any container;
-            // the actual LostFocus delivery consumes the row's one-use fence.
+            // LostFocus consumes the fence, and a new FocusState clears it.
             _synchronizing++;
             try
             {
@@ -80,11 +89,35 @@ replace(path, '''    private void PreserveDraftDuringPresentation()
     }''')
 path = 'tests/UnoDock.VisualTests/NativeInspectorTests.cs'
 replace(path, '''            var peer = FrameworkElementAutomationPeer.CreatePeerForElement(row);
-            var selection = peer?.GetPattern(PatternInterface.SelectionItem) as ISelectionItemProvider;''', '''            // SelectionItem is exposed by the platform's data peer; the visual
-            // ListViewItemAutomationPeer supplies container metadata instead.
-            var parent = (ListViewAutomationPeer)FrameworkElementAutomationPeer.CreatePeerForElement(f.List);
-            var peer = new ListViewItemDataAutomationPeer(row, parent);
-            var selection = peer.GetPattern(PatternInterface.SelectionItem) as ISelectionItemProvider;''')
+            var selection = peer?.GetPattern(PatternInterface.SelectionItem) as ISelectionItemProvider;
+            Check.True(selection != null);
+            selection!.Select();''', '''            var peer = FrameworkElementAutomationPeer.CreatePeerForElement(row);
+            Check.True(peer is ListViewItemAutomationPeer);
+            Check.Equal(AutomationControlType.ListItem, peer!.GetAutomationControlType());
+            // Uno's data-selection peer rejects this native ListView path. Do
+            // not substitute a custom peer or claim unsupported UIA transport;
+            // select through the native container, with physical input below.
+            row.IsSelected = true;''')
+replace(path, '''            await Wait(() => ReferenceEquals(f.List.SelectedItem, f.Row("FontSize")));
+            Check.Equal("FontSize", f.Inspector.SelectedPropertyName);''', '''            await Wait(() => ReferenceEquals(f.List.SelectedItem, f.Row("FontSize")));
+            await f.Settle();
+            Check.Same(f.Field<TextBox>("FontSize"), Microsoft.UI.Xaml.Input.FocusManager.GetFocusedElement(f.Inspector.XamlRoot!));
+            Check.Equal("FontSize", f.Inspector.SelectedPropertyName);''')
+replace(path, '''        return tests.Run(output, "native-inspector");''', '''        if (OperatingSystem.IsLinux() && Environment.GetEnvironmentVariable("UNODOCK_NATIVE_INPUT_TESTS") == "1")
+        {
+            Add("XTEST: native inspector row click selects and describes the property", async f =>
+            {
+                f.Inspector.Filter("FontSize");
+                await f.Settle();
+                var row = f.Row("FontSize");
+                var label = ((Grid)row.Content).FindVisualChildren<TextBlock>().Single(text => text.Name == "PropertyName");
+                using var input = new X11TestInput();
+                await input.Click(label);
+                await Wait(() => ReferenceEquals(f.List.SelectedItem, row));
+                Check.Equal("FontSize", f.Inspector.SelectedPropertyName);
+            });
+        }
+        return tests.Run(output, "native-inspector");''')
 for path, text in pending.items():
     Path(path).write_text(text)
-print('Corrected native data-peer selection and event-owned presentation blur cleanup.')
+print('Corrected native container selection, physical click coverage and event-owned draft focus state.')
