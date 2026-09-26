@@ -21,6 +21,7 @@ jobs:
         run: |
           python3 tests/metadata/test_source_maintenance.py
           python3 tests/metadata/test_source_formatting.py
+          python3 tests/metadata/test_xaml_sources.py
       - name: Require expanded and token-preserving source formatting
         run: dotnet run --project tools/SourceMaintenance -c Release -- --check-format .
       - name: Preserve generated adapters and compatibility baselines

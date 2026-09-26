@@ -13,7 +13,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.sha }}
-          fetch-depth: 2
+          fetch-depth: 3
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
@@ -43,15 +43,19 @@ jobs:
           patch = lzma.decompress(compressed)
           assert len(patch) == 149522 and hashlib.sha256(patch).hexdigest() == '61e82c9468bbe36136efcc58042ef8eb351c482e54a91e2a3732cf748c0982a7'
           Path('/tmp/xaml-review.patch').write_bytes(patch)
-          subprocess.run(['git', 'apply', '--check', '/tmp/xaml-review.patch'], check=True)
-          subprocess.run(['git', 'apply', '/tmp/xaml-review.patch'], check=True)
-          subprocess.run(['git', 'add', 'src/', 'samples/', 'tests/', 'docs/', 'README.md', '.github/workflows/source-quality.yml'], check=True)
+          # The workflow edit was applied explicitly through the authorized connector.
+          # The job token only publishes product sources, not workflow modifications.
+          exclude = '--exclude=.github/workflows/source-quality.yml'
+          subprocess.run(['git', 'apply', exclude, '--check', '/tmp/xaml-review.patch'], check=True)
+          subprocess.run(['git', 'apply', exclude, '/tmp/xaml-review.patch'], check=True)
+          subprocess.run(['git', 'add', 'src/', 'samples/', 'tests/', 'docs/', 'README.md'], check=True)
           paths = subprocess.check_output(['git', 'diff', '--cached', '--name-only'], text=True).splitlines()
           allowed = ('src/UnoDock/', 'samples/UnoDock.Gallery/', 'tests/UnoDock.VisualTests/XamlWorkspaceTests')
-          exact = {'README.md', 'docs/xaml-support.md', 'tests/metadata/test_xaml_sources.py', '.github/workflows/source-quality.yml'}
-          assert len(paths) == 48 and all(path.startswith(allowed) or path in exact for path in paths), paths
+          exact = {'README.md', 'docs/xaml-support.md', 'tests/metadata/test_xaml_sources.py'}
+          assert len(paths) == 47 and all(path.startswith(allowed) or path in exact for path in paths), paths
+          assert 'python3 tests/metadata/test_xaml_sources.py' in Path('.github/workflows/source-quality.yml').read_text()
           subprocess.run(['git', 'diff', '--cached', '--stat'], check=True)
-          print('Verified complete reviewed patch and allowed 48-file source scope.')
+          print('Verified exact reviewed patch and allowed source scope.')
           PY
       - name: Canonical source organization and formatting
         run: |
@@ -62,7 +66,7 @@ jobs:
           python3 tests/metadata/test_source_formatting.py
           python3 tests/metadata/test_xaml_sources.py
           python3 tools/generate-property-adapters.py
-          git diff HEAD --exit-code -- 'src/**/*.g.cs' contracts/ tools/ReferenceProbe/
+          git diff HEAD --exit-code -- 'src/**/*.g.cs' contracts/ tools/ReferenceProbe/ .github/
           git diff --check
       - name: Build actual Uno desktop host with warnings as errors
         run: dotnet build samples/UnoDock.Gallery -c Release -f net10.0-desktop -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0 -warnaserror
@@ -78,16 +82,17 @@ jobs:
         run: |
           set -euo pipefail
           git rm .github/workflows/prepare-xaml-review.yml
-          git add src/ samples/ tests/ docs/ README.md .github/workflows/source-quality.yml
+          git add src/ samples/ tests/ docs/ README.md
           git diff --cached --check
           git config user.name 'Wiesław Šoltés'
           git config user.email 'wieslawsoltes@users.noreply.github.com'
           git commit -m 'feat: compiled XAML workspaces, binding adapters and configurable Uno themes'
+          git rev-parse HEAD > artifacts/prepared-revision.txt
+          git diff 04e4336ac91bafc11100fb91d5cc721a093a9d5b HEAD > artifacts/implementation.patch
+          git archive -o artifacts/prepared-source.zip HEAD
           git fetch origin work/preview25-xaml-themes
           test "$(git rev-parse FETCH_HEAD)" = '${{ github.sha }}'
           git push origin HEAD:work/preview25-xaml-themes
-          git rev-parse HEAD > artifacts/prepared-revision.txt
-          git diff 04e4336ac91bafc11100fb91d5cc721a093a9d5b HEAD > artifacts/implementation.patch
       - uses: actions/upload-artifact@v4
         if: always()
         with:
