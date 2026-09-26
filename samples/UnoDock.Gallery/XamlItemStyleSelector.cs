@@ -7,6 +7,16 @@ public sealed class XamlItemStyleSelector : StyleSelector
         get;
         set;
     }
+    public Style? ToolStyle
+    {
+        get;
+        set;
+    }
 
-    protected override Style? SelectStyleCore(object item, DependencyObject container) => item is XamlDocument ? DocumentStyle : null;
+    protected override Style? SelectStyleCore(object item, DependencyObject container) => item switch
+    {
+        XamlDocument => DocumentStyle,
+        XamlTool => ToolStyle,
+        _ => null
+    };
 }

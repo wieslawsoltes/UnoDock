@@ -15,14 +15,15 @@ internal static partial class FloatingChromeTests
                 await f.Show();
                 using var input = new PointerInput();
                 f.Native.Activate();
-                var before = FloatingChromeProbe.Bounds(f.Native);
                 var grip = f.Grip(edge);
-                var down = new Point(grip.ActualWidth / 2, grip.ActualHeight / 2);
-                input.MoveTo(grip, down);
-                await Task.Delay(70);
-                input.Press();
-                await Task.Delay(70);
+                // Native frame notifications and XAML arrange need not complete
+                // together. Settle geometry before one real press, then observe
+                // capture rather than assuming delivery within a fixed delay.
+                await input.PressOn(grip);
+                await Wait(() => f.Control.IsResizing);
                 Check.True(f.Control.IsResizing, "The native press did not capture a resize grip.");
+                var before = FloatingChromeProbe.Bounds(f.Native);
+                var down = new Point(grip.ActualWidth / 2, grip.ActualHeight / 2);
                 // The owner does not move; do not resolve the finish against a grip
                 // which itself changes screen position as its frame is resized.
                 var startInOwner = input.OwnerPoint(grip, down, f.Manager);
@@ -41,15 +42,13 @@ internal static partial class FloatingChromeTests
             await f.Show();
             using var input = new PointerInput();
             f.Native.Activate();
-            var before = FloatingChromeProbe.Bounds(f.Native);
             var grip = f.Grip(ChromeHit.BottomRight);
+            await input.PressOn(grip);
+            await Wait(() => f.Control.IsResizing);
+            Check.True(f.Control.IsResizing);
+            var before = FloatingChromeProbe.Bounds(f.Native);
             var down = new Point(grip.ActualWidth / 2, grip.ActualHeight / 2);
             var ownerPoint = input.OwnerPoint(grip, down, f.Manager);
-            input.MoveTo(grip, down);
-            await Task.Delay(60);
-            input.Press();
-            await Task.Delay(60);
-            Check.True(f.Control.IsResizing);
             input.MoveTo(f.Manager, new(ownerPoint.X + 45, ownerPoint.Y + 30));
             await Task.Delay(100);
             input.EscapeDown();

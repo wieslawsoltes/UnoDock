@@ -63,6 +63,8 @@ internal sealed class DockChromeButton : Button
         FontSize = palette.FontSize;
         if (Content is Path path)
         {
+            Width = palette.ChromeButtonSize;
+            Height = palette.ChromeButtonSize;
             path.Stroke = palette.Foreground;
             path.Fill = palette.Foreground;
         }

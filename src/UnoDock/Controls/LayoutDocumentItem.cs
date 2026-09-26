@@ -18,6 +18,7 @@ public partial class LayoutDocumentItem : LayoutItem
     protected override void SetDefaultBindings()
     {
         base.SetDefaultBindings();
+        BindDefault(CanMoveProperty, nameof(LayoutDocument.CanMove));
         BindDefault(DescriptionProperty, nameof(LayoutDocument.Description));
     }
 }

@@ -15,6 +15,10 @@ internal static class XamlWorkbenchTests
     {
         var tests = new TestRunner();
         XamlStructureTests.Add(tests);
+        XamlModelBindingTests.Add(tests);
+        XamlBindingCleanupTests.Add(tests);
+        XamlDisposedNotificationTests.Add(tests);
+        XamlPresentationTests.Add(tests, output);
         foreach (var type in new[]
         {
             typeof(LayoutDocument),

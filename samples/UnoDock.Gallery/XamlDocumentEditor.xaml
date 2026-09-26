@@ -2,9 +2,22 @@
   <Grid Padding="16" RowSpacing="12" Background="{ThemeResource LayerFillColorDefaultBrush}">
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto"/>
+      <RowDefinition Height="Auto"/>
       <RowDefinition Height="*"/>
     </Grid.RowDefinitions>
     <TextBox Header="Document title" Text="{Binding Title, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.AutomationId="XamlEditorTitle"/>
-    <TextBox Grid.Row="1" Text="{Binding Text, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" FontFamily="monospace" FontSize="13" AutomationProperties.AutomationId="XamlEditorText"/>
+    <Grid Grid.Row="1" ColumnSpacing="12">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*"/>
+        <ColumnDefinition Width="*"/>
+      </Grid.ColumnDefinitions>
+      <CheckBox MinWidth="0" IsChecked="{Binding CanClose, Mode=TwoWay}" VerticalAlignment="Top">
+        <TextBlock Text="Allow close" TextWrapping="Wrap"/>
+      </CheckBox>
+      <CheckBox Grid.Column="1" MinWidth="0" IsChecked="{Binding CanMove, Mode=TwoWay}" VerticalAlignment="Top">
+        <TextBlock Text="Allow movement" TextWrapping="Wrap"/>
+      </CheckBox>
+    </Grid>
+    <TextBox Grid.Row="2" Text="{Binding Text, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" FontFamily="monospace" FontSize="13" AutomationProperties.AutomationId="XamlEditorText"/>
   </Grid>
 </UserControl>
