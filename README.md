@@ -7,6 +7,10 @@ They use the native layout hierarchy, source bindings, templates, per-item bindi
 definitions and optional Light/Dark `WorkbenchResources`. Live theme selection,
 model dependency-property endpoints and manager template properties are supported
 without replacing the existing docking/activation engine. See the
+`ChromeDensity` selects Compact, Comfortable or Spacious retained chrome. The
+XAML MVVM sample now includes source-backed tools, document movement and tool
+hide/auto-hide/tabbed-document policies. Explicit TwoWay item bindings synchronize
+model-side changes without replacing their binding expressions. See the
 [XAML usage and compatibility contract](docs/xaml-workbench.md). This source change
 does not publish a new package version or claim WPF XAML equivalence.
 

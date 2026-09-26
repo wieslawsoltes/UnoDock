@@ -3,15 +3,15 @@ using System.Runtime.CompilerServices;
 namespace UnoDock.Gallery;
 
 [Microsoft.UI.Xaml.Data.Bindable]
-public sealed class XamlDocument : INotifyPropertyChanged, IDockContent
+public sealed class XamlTool : INotifyPropertyChanged, IDockContent
 {
-    private string _title = "Workspace.xaml", _text = "// Edit this buffer, float its tab, and dock it back.\r// The same editor and binding are retained.";
-    private bool _canClose = true, _canMove = true;
+    private string _title = "Inspector", _text = "This tool is created from AnchorablesSource. Its metadata, policy and content template are bound in XAML.";
+    private bool _canHide = true, _canAutoHide = true, _canDockAsTabbedDocument = true;
     public string ContentId
     {
         get;
         set;
-    } = "xaml-document";
+    } = "xaml-tool";
     public string Title
     {
         get => _title;
@@ -22,15 +22,20 @@ public sealed class XamlDocument : INotifyPropertyChanged, IDockContent
         get => _text;
         set => Set(ref _text, value);
     }
-    public bool CanClose
+    public bool CanHide
     {
-        get => _canClose;
-        set => Set(ref _canClose, value);
+        get => _canHide;
+        set => Set(ref _canHide, value);
     }
-    public bool CanMove
+    public bool CanAutoHide
     {
-        get => _canMove;
-        set => Set(ref _canMove, value);
+        get => _canAutoHide;
+        set => Set(ref _canAutoHide, value);
+    }
+    public bool CanDockAsTabbedDocument
+    {
+        get => _canDockAsTabbedDocument;
+        set => Set(ref _canDockAsTabbedDocument, value);
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;

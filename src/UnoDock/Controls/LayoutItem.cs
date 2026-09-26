@@ -273,6 +273,15 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
             case "CanHide" when this is LayoutAnchorableItem tool && LayoutElement is LayoutAnchorable a:
                 a.CanHide = tool.CanHide;
                 break;
+            case "CanMove" when this is LayoutDocumentItem documentItem && LayoutElement is LayoutDocument movable:
+                movable.CanMove = documentItem.CanMove;
+                break;
+            case "CanAutoHide" when this is LayoutAnchorableItem autoHideItem && LayoutElement is LayoutAnchorable autoHideTool:
+                autoHideTool.CanAutoHide = autoHideItem.CanAutoHide;
+                break;
+            case "CanDockAsTabbedDocument" when this is LayoutAnchorableItem dockItem && LayoutElement is LayoutAnchorable dockTool:
+                dockTool.CanDockAsTabbedDocument = dockItem.CanDockAsTabbedDocument;
+                break;
             case "Description" when this is LayoutDocumentItem item && LayoutElement is LayoutDocument d:
                 d.Description = item.Description;
                 break;
@@ -291,10 +300,13 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
             UpdateView();
         }
 
+        var cleanup = new DockCleanup();
+        cleanup.Attempt(() => SynchronizeXamlModelValue(args.PropertyName));
         foreach (var command in _commands.Values.OfType<DelegateCommand>().ToArray())
-            command.RaiseCanExecuteChanged();
-        _defaultMenu?.Refresh();
-        _manager?.InvalidateView();
+            cleanup.Attempt(command.RaiseCanExecuteChanged);
+        cleanup.Attempt(() => _defaultMenu?.Refresh());
+        cleanup.Attempt(() => _manager?.InvalidateView());
+        cleanup.ThrowIfFailed();
     }
 
     internal void UpdateView()

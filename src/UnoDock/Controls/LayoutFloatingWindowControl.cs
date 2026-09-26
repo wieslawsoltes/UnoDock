@@ -373,12 +373,15 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
         _caption.Foreground = palette.Foreground;
         _caption.FontSize = palette.FontSize;
         _caption.Margin = new Thickness(8, 3, 8, 3);
+        // Keep WindowChrome's explicitly owned caption MinHeight independent.
+        _caption.MinHeight = Math.Max(0, palette.TitleHeight - 6);
         foreach (var button in _title.FindVisualChildren<Button>())
         {
             button.Foreground = palette.Foreground;
             button.FontSize = palette.FontSize;
-            button.MinHeight = 0;
-            button.MinWidth = 0;
+            button.MinHeight = palette.ChromeButtonSize;
+            button.MinWidth = palette.ChromeButtonSize;
+            button.CornerRadius = new CornerRadius(palette.ButtonCornerRadius);
             button.Padding = new Thickness(7, 2, 7, 2);
         }
 

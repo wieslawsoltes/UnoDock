@@ -7,7 +7,17 @@ public sealed class XamlContentTemplateSelector : DataTemplateSelector
         get;
         set;
     }
+    public DataTemplate? ToolTemplate
+    {
+        get;
+        set;
+    }
 
-    protected override DataTemplate? SelectTemplateCore(object item) => item is XamlDocument ? DocumentTemplate : null;
+    protected override DataTemplate? SelectTemplateCore(object item) => item switch
+    {
+        XamlDocument => DocumentTemplate,
+        XamlTool => ToolTemplate,
+        _ => null
+    };
     protected override DataTemplate? SelectTemplateCore(object item, DependencyObject container) => SelectTemplateCore(item);
 }

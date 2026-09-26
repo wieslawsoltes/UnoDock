@@ -1,4 +1,4 @@
-<UserControl xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:dock="using:UnoDock" xmlns:layout="using:UnoDock.Layout" xmlns:controls="using:UnoDock.Controls" xmlns:themes="using:UnoDock.Themes" xmlns:local="using:UnoDock.Gallery" x:Class="UnoDock.Gallery.XamlMvvmView">
+<UserControl xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:dock="using:UnoDock" xmlns:controls="using:UnoDock.Controls" xmlns:themes="using:UnoDock.Themes" xmlns:local="using:UnoDock.Gallery" xmlns:layout="using:UnoDock.Layout" x:Class="UnoDock.Gallery.XamlMvvmView">
   <UserControl.Resources>
     <ResourceDictionary>
       <ResourceDictionary.MergedDictionaries>
@@ -7,6 +7,10 @@
       <DataTemplate x:Key="Editor">
         <local:XamlDocumentEditor/>
       </DataTemplate>
+      <DataTemplate x:Key="ToolEditor">
+        <local:XamlToolEditor/>
+      </DataTemplate>
+      <local:XamlContentTemplateSelector x:Key="ContentTemplates" DocumentTemplate="{StaticResource Editor}" ToolTemplate="{StaticResource ToolEditor}"/>
       <Style x:Key="DocumentStyle" TargetType="controls:LayoutItem">
         <Setter Property="controls:LayoutItemBindings.Bindings">
           <Setter.Value>
@@ -14,10 +18,25 @@
               <controls:LayoutItemBinding Property="Title" Path="Title" Mode="TwoWay"/>
               <controls:LayoutItemBinding Property="ContentId" Path="ContentId"/>
               <controls:LayoutItemBinding Property="CanClose" Path="CanClose"/>
+              <controls:LayoutItemBinding Property="CanMove" Path="CanMove"/>
             </controls:LayoutItemBindingCollection>
           </Setter.Value>
         </Setter>
       </Style>
+      <Style x:Key="ToolStyle" TargetType="controls:LayoutAnchorableItem">
+        <Setter Property="controls:LayoutItemBindings.Bindings">
+          <Setter.Value>
+            <controls:LayoutItemBindingCollection>
+              <controls:LayoutItemBinding Property="Title" Path="Title" Mode="TwoWay"/>
+              <controls:LayoutItemBinding Property="ContentId" Path="ContentId"/>
+              <controls:LayoutItemBinding Property="CanHide" Path="CanHide" Mode="TwoWay"/>
+              <controls:LayoutItemBinding Property="CanAutoHide" Path="CanAutoHide" Mode="TwoWay"/>
+              <controls:LayoutItemBinding Property="CanDockAsTabbedDocument" Path="CanDockAsTabbedDocument" Mode="TwoWay"/>
+            </controls:LayoutItemBindingCollection>
+          </Setter.Value>
+        </Setter>
+      </Style>
+      <local:XamlItemStyleSelector x:Key="ItemStyles" DocumentStyle="{StaticResource DocumentStyle}" ToolStyle="{StaticResource ToolStyle}"/>
     </ResourceDictionary>
   </UserControl.Resources>
   <Grid Padding="12" RowSpacing="10" Background="{ThemeResource SolidBackgroundFillColorBaseBrush}">
@@ -25,15 +44,26 @@
       <RowDefinition Height="Auto"/>
       <RowDefinition Height="*"/>
     </Grid.RowDefinitions>
-    <StackPanel Orientation="Horizontal" Spacing="12">
-      <TextBlock Text="XAML + MVVM" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"/>
-      <Button Content="New document" Click="AddDocument" Style="{StaticResource UnoDock.WorkbenchButtonStyle}"/>
-      <Button Content="Light / Dark" Click="ToggleTheme" Style="{StaticResource UnoDock.WorkbenchButtonStyle}"/>
-    </StackPanel>
-    <dock:DockingManager x:Name="Dock" Grid.Row="1" DocumentsSource="{x:Bind Documents, Mode=OneWay}" LayoutItemTemplate="{StaticResource Editor}" LayoutItemContainerStyle="{StaticResource DocumentStyle}" Style="{StaticResource UnoDock.WorkbenchManagerStyle}" FloatingWindowMode="Native">
+    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" HorizontalScrollMode="Enabled" VerticalScrollMode="Disabled">
+      <StackPanel Orientation="Horizontal" Spacing="12">
+        <TextBlock Text="XAML + MVVM" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"/>
+        <Button Content="New document" Click="AddDocument" AutomationProperties.AutomationId="XamlAddDocument" Style="{StaticResource UnoDock.WorkbenchButtonStyle}"/>
+        <Button Content="New tool" Click="AddTool" AutomationProperties.AutomationId="XamlAddTool" Style="{StaticResource UnoDock.WorkbenchButtonStyle}"/>
+        <Button Content="Show tools" Click="ShowTools" AutomationProperties.AutomationId="XamlShowTools" Style="{StaticResource UnoDock.WorkbenchButtonStyle}"/>
+        <Button Content="Light / Dark" Click="ToggleTheme" Style="{StaticResource UnoDock.WorkbenchButtonStyle}"/>
+        <local:XamlDensityPicker x:Name="DensityPicker"/>
+      </StackPanel>
+    </ScrollViewer>
+    <dock:DockingManager x:Name="Dock" Grid.Row="1" DocumentsSource="{x:Bind Documents, Mode=OneWay}" AnchorablesSource="{x:Bind Tools, Mode=OneWay}" LayoutItemTemplateSelector="{StaticResource ContentTemplates}" LayoutItemContainerStyleSelector="{StaticResource ItemStyles}" ChromeDensity="{Binding Density, ElementName=DensityPicker}" Style="{StaticResource UnoDock.WorkbenchManagerStyle}" FloatingWindowMode="Native">
       <dock:DockingManager.Theme>
         <themes:FluentTheme/>
       </dock:DockingManager.Theme>
+      <layout:LayoutRoot>
+        <layout:LayoutPanel Orientation="Horizontal">
+          <layout:LayoutDocumentPane DockMinWidth="220"/>
+          <layout:LayoutAnchorablePane DockWidth="300" DockMinWidth="220"/>
+        </layout:LayoutPanel>
+      </layout:LayoutRoot>
     </dock:DockingManager>
   </Grid>
 </UserControl>

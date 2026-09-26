@@ -67,6 +67,15 @@ public sealed partial class LayoutItemBinding : DependencyObject
 
     internal Binding CreateBinding()
     {
+        if (string.IsNullOrWhiteSpace(Property))
+            throw new ArgumentException("A binding target property is required.");
+        if (!Enum.IsDefined(Mode))
+            throw new ArgumentOutOfRangeException(nameof(Mode));
+        if (!Enum.IsDefined(UpdateSourceTrigger))
+            throw new ArgumentOutOfRangeException(nameof(UpdateSourceTrigger));
+        var selectors = (Source != null ? 1 : 0) + (!string.IsNullOrEmpty(ElementName) ? 1 : 0) + (RelativeSource != null ? 1 : 0);
+        if (selectors > 1)
+            throw new ArgumentException("Specify only one of Source, ElementName or RelativeSource.");
         var result = new Binding
         {
             Path = new PropertyPath(Path),

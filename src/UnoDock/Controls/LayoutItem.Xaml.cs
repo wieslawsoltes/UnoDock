@@ -124,6 +124,12 @@ public abstract partial class LayoutItem
             model.Description = document.Description;
         if (current() && this is LayoutAnchorableItem tool && LayoutElement is Layout.LayoutAnchorable anchorable && HasStyleSetter(LayoutAnchorableItem.CanHideProperty))
             anchorable.CanHide = tool.CanHide;
+        if (current() && this is LayoutDocumentItem movableItem && LayoutElement is Layout.LayoutDocument movable && HasStyleSetter(LayoutDocumentItem.CanMoveProperty))
+            movable.CanMove = movableItem.CanMove;
+        if (current() && this is LayoutAnchorableItem autoHideItem && LayoutElement is Layout.LayoutAnchorable autoHide && HasStyleSetter(LayoutAnchorableItem.CanAutoHideProperty))
+            autoHide.CanAutoHide = autoHideItem.CanAutoHide;
+        if (current() && this is LayoutAnchorableItem dockItem && LayoutElement is Layout.LayoutAnchorable dock && HasStyleSetter(LayoutAnchorableItem.CanDockAsTabbedDocumentProperty))
+            dock.CanDockAsTabbedDocument = dockItem.CanDockAsTabbedDocument;
     }
 
     private DependencyProperty BindingProperty(string name) => name switch
@@ -145,6 +151,9 @@ public abstract partial class LayoutItem
         nameof(NewVerticalTabGroupCommand) => NewVerticalTabGroupCommandProperty,
         nameof(MoveToNextTabGroupCommand) => MoveToNextTabGroupCommandProperty,
         nameof(MoveToPreviousTabGroupCommand) => MoveToPreviousTabGroupCommandProperty,
+        "CanMove" when this is LayoutDocumentItem => LayoutDocumentItem.CanMoveProperty,
+        "CanAutoHide" when this is LayoutAnchorableItem => LayoutAnchorableItem.CanAutoHideProperty,
+        "CanDockAsTabbedDocument" when this is LayoutAnchorableItem => LayoutAnchorableItem.CanDockAsTabbedDocumentProperty,
         "Description" when this is LayoutDocumentItem => LayoutDocumentItem.DescriptionProperty,
         "CanHide" when this is LayoutAnchorableItem => LayoutAnchorableItem.CanHideProperty,
         "HideCommand" when this is LayoutAnchorableItem => LayoutAnchorableItem.HideCommandProperty,

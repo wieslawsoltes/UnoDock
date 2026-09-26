@@ -13,6 +13,8 @@ public partial class LayoutAnchorableItem : LayoutItem
     protected override void SetDefaultBindings()
     {
         base.SetDefaultBindings();
+        BindDefault(CanAutoHideProperty, nameof(LayoutAnchorable.CanAutoHide));
+        BindDefault(CanDockAsTabbedDocumentProperty, nameof(LayoutAnchorable.CanDockAsTabbedDocument));
         BindDefault(CanHideProperty, nameof(LayoutAnchorable.CanHide));
     }
 

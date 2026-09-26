@@ -24,40 +24,53 @@ internal static class DockThemeResources
         return Find(manager, key) as Brush ?? Find(manager, systemKey) as Brush ?? fallback;
     }
 
-    internal static object? Find(FrameworkElement owner, string key, ResourceDictionary? skip = null)
+    internal static object? FindMetric(DockingManager owner, string name)
+    {
+        var key = "UnoDock." + name;
+        return owner.ChromeDensity == DockChromeDensity.Default ? Find(owner, key) : Find(owner, "UnoDock." + owner.ChromeDensity + "." + name, null, key);
+    }
+
+    internal static object? Find(FrameworkElement owner, string key, ResourceDictionary? skip = null) => Find(owner, key, skip, null);
+    private static object? Find(FrameworkElement owner, string key, ResourceDictionary? skip, string? alternate)
     {
         var theme = owner is DockingManager manager ? EffectiveTheme(manager) : owner.ActualTheme;
         for (FrameworkElement? current = owner; current != null; current = VisualTreeHelper.GetParent(current) as FrameworkElement)
-            if (Find(current.Resources, key, theme, skip, new(ReferenceEqualityComparer.Instance)) is { } local)
+            if (Find(current.Resources, key, theme, skip, new(ReferenceEqualityComparer.Instance), alternate) is { } local)
                 return local;
         if (Application.Current is not { } app)
             return null;
-        if (Find(app.Resources, key, theme, skip, new(ReferenceEqualityComparer.Instance)) is { } application)
+        if (Find(app.Resources, key, theme, skip, new(ReferenceEqualityComparer.Instance), alternate) is { } application)
             return application;
         // Public Uno TryGetValue includes system resources. Use it only after all
         // explicit scopes, and never borrow the opposite application's palette.
         var appTheme = app.RequestedTheme == ApplicationTheme.Dark ? ElementTheme.Dark : ElementTheme.Light;
-        return skip == null && theme == appTheme && app.Resources.TryGetValue(key, out var system) ? system : null;
+        if (skip != null || theme != appTheme)
+            return null;
+        if (app.Resources.TryGetValue(key, out var system))
+            return system;
+        return alternate != null && app.Resources.TryGetValue(alternate, out system) ? system : null;
     }
 
-    private static object? Find(ResourceDictionary dictionary, string key, ElementTheme theme, ResourceDictionary? skip, HashSet<ResourceDictionary> visited)
+    private static object? Find(ResourceDictionary dictionary, string key, ElementTheme theme, ResourceDictionary? skip, HashSet<ResourceDictionary> visited, string? alternate)
     {
         if (ReferenceEquals(dictionary, skip) || !visited.Add(dictionary))
             return null;
         if (dictionary.Count > 0 && dictionary.Keys.Contains(key))
             return dictionary[key];
+        if (alternate != null && dictionary.Count > 0 && dictionary.Keys.Contains(alternate))
+            return dictionary[alternate];
         var themes = dictionary.ThemeDictionaries;
         var name = theme == ElementTheme.Dark ? "Dark" : "Light";
         if (themes.Count > 0)
         {
-            if (themes.Keys.Contains(name) && themes[name] is ResourceDictionary selected && Find(selected, key, theme, skip, visited) is { } selectedValue)
+            if (themes.Keys.Contains(name) && themes[name] is ResourceDictionary selected && Find(selected, key, theme, skip, visited, alternate) is { } selectedValue)
                 return selectedValue;
-            if (themes.Keys.Contains("Default") && themes["Default"] is ResourceDictionary defaults && Find(defaults, key, theme, skip, visited) is { } defaultValue)
+            if (themes.Keys.Contains("Default") && themes["Default"] is ResourceDictionary defaults && Find(defaults, key, theme, skip, visited, alternate) is { } defaultValue)
                 return defaultValue;
         }
 
         for (var i = dictionary.MergedDictionaries.Count - 1; i >= 0; i--)
-            if (Find(dictionary.MergedDictionaries[i], key, theme, skip, visited) is { } merged)
+            if (Find(dictionary.MergedDictionaries[i], key, theme, skip, visited, alternate) is { } merged)
                 return merged;
         return null;
     }

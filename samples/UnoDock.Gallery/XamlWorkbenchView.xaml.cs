@@ -5,7 +5,13 @@ namespace UnoDock.Gallery;
 
 public sealed partial class XamlWorkbenchView : UserControl, IDisposable
 {
-    public XamlDocument Document { get; } = new();
+    public XamlDocument Document
+    {
+        get;
+    } = new()
+    {
+        ContentId = "xaml:document"
+    };
     public DockingManager Manager => Dock;
 
     private string? _savedLayout;
@@ -20,7 +26,7 @@ public sealed partial class XamlWorkbenchView : UserControl, IDisposable
         };
     }
 
-    private LayoutDocument? FindDocument() => Dock.Layout.Descendents().OfType<LayoutDocument>().FirstOrDefault(d => d.ContentId == "xaml:document");
+    private LayoutDocument? FindDocument() => Dock.Layout.Descendents().OfType<LayoutDocument>().FirstOrDefault(d => ReferenceEquals(d.Content, Document));
     private void ToggleTheme(object sender, RoutedEventArgs e)
     {
         RequestedTheme = ActualTheme == ElementTheme.Dark ? ElementTheme.Light : ElementTheme.Dark;

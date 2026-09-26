@@ -35,11 +35,35 @@ internal static class DockChrome
         var dark = DockThemeResources.EffectiveTheme(manager) == ElementTheme.Dark;
         if (manager.Theme is Themes.FluentTheme fluent)
             fluent.UpdateResources(manager);
-        var p = Default(dark);
+        var legacy = Default(dark);
+        var p = manager.ChromeDensity switch
+        {
+            DockChromeDensity.Comfortable => legacy with
+            {
+                TitleHeight = 26,
+                TabHeight = 28,
+                ToolTabHeight = 26,
+                RailThickness = 30,
+                ChromeButtonSize = 20
+            },
+            DockChromeDensity.Spacious => legacy with
+            {
+                TitleHeight = 32,
+                TabHeight = 36,
+                ToolTabHeight = 32,
+                RailThickness = 38,
+                ChromeButtonSize = 28
+            },
+            _ => legacy
+        };
         var fontSize = N("FontSize", p.FontSize, 8, 32);
         var textScale = Math.Max(1, fontSize / 12);
-        double Fit(string key, double fallback, double min, double max) => Math.Max(N(key, fallback, min, max), Math.Ceiling(fallback * textScale));
-        return new(B("PaneBrush", p.Surface), B("HeaderBrush", p.Header), B("InactiveTabBrush", p.Tab), B("BorderBrush", p.Border), B("ForegroundBrush", p.Foreground), B("HoverBrush", p.Hover), B("PressedBrush", p.Pressed), B("AccentBrush", p.Accent), B("ActiveTitleBrush", p.ActiveTitle), fontSize, Fit("TitleHeight", p.TitleHeight, 18, 64), Fit("TabHeight", p.TabHeight, 20, 64), Fit("ToolTabHeight", p.ToolTabHeight, 20, 64), Fit("RailThickness", p.RailThickness, 24, 72), N("ButtonCornerRadius", 0, 0, 12));
+        double Fit(string key, double fallback, double textFloor, double min, double max) => Math.Max(N(key, fallback, min, max), Math.Ceiling(textFloor * textScale));
+        var titleHeight = Fit("TitleHeight", p.TitleHeight, legacy.TitleHeight, 18, 64);
+        var tabHeight = Fit("TabHeight", p.TabHeight, legacy.TabHeight, 20, 64);
+        var toolTabHeight = Fit("ToolTabHeight", p.ToolTabHeight, legacy.ToolTabHeight, 20, 64);
+        var buttonSize = Math.Min(N("ChromeButtonSize", p.ChromeButtonSize, 12, 40), Math.Min(titleHeight - 2, Math.Min(tabHeight - 2, toolTabHeight - 2)));
+        return new(B("PaneBrush", p.Surface), B("HeaderBrush", p.Header), B("InactiveTabBrush", p.Tab), B("BorderBrush", p.Border), B("ForegroundBrush", p.Foreground), B("HoverBrush", p.Hover), B("PressedBrush", p.Pressed), B("AccentBrush", p.Accent), B("ActiveTitleBrush", p.ActiveTitle), fontSize, titleHeight, tabHeight, toolTabHeight, Fit("RailThickness", p.RailThickness, legacy.RailThickness, 24, 72), N("ButtonCornerRadius", 0, 0, 12), buttonSize, N("ActiveTabIndicatorThickness", 0, 0, 6));
         Brush B(string key, Brush fallback) => DockThemeResources.Brush(manager, key, key switch
         {
             "PaneBrush" => "LayerFillColorDefaultBrush",
@@ -57,7 +81,7 @@ internal static class DockChrome
         {
             object? value;
             if (DockThemeResources.UsesFluent(manager))
-                value = DockThemeResources.Find(manager, "UnoDock." + key);
+                value = DockThemeResources.FindMetric(manager, key);
             else
                 manager.Resources.TryGetValue("UnoDock." + key, out value);
             return value is double number && double.IsFinite(number) ? Math.Clamp(number, min, max) : fallback;
