@@ -1,0 +1,94 @@
+name: Transfer reviewed docking sizing source
+on:
+  push:
+    branches: [work/preview28-source-transfer]
+    paths: [.github/workflows/transfer-docking-sizing.yml]
+permissions:
+  contents: write
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Apply byte-verified local patch to the exact merged baseline
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import base64, gzip, hashlib, subprocess
+          from pathlib import Path
+          base = '3e27daa3d87aecc25f367402cf694428e66a6762'
+          payload = Path('tools/docking-sizing.patch.gz.base64').read_text().strip()
+          compressed = base64.b64decode(payload, validate=True)
+          assert hashlib.sha256(compressed).hexdigest() == '64ba8ee91d52af13979bb7cf383430472e62fc52e46c3c7556b393e015c9b3ee'
+          data = gzip.decompress(compressed)
+          subprocess.run(['git', 'checkout', '--detach', base], check=True)
+          assert subprocess.check_output(['git', 'rev-parse', 'HEAD^{tree}'], text=True).strip() == '7be4ccc7d6b6b6392a8a8991a748f93128e6de47'
+          subprocess.run(['git', 'apply', '--index', '--whitespace=error'], input=data, check=True)
+          tree = subprocess.check_output(['git', 'write-tree'], text=True).strip()
+          assert tree == 'c895e83055bab770c2cee4c1aef5c98b1297a091', tree
+          subprocess.run(['git', 'diff', '--cached', '--check'], check=True)
+          subprocess.run(['git', 'diff', '--cached', '--exit-code', '--', 'contracts/', 'tools/ReferenceProbe/', ':(glob)src/**/*.g.cs'], check=True)
+          Path('artifacts').mkdir(exist_ok=True)
+          Path('artifacts/implementation.patch').write_bytes(data)
+          print('Exact locally reviewed tree:', tree)
+          PY
+      - name: Canonical formatting and compile real Uno SDK
+        run: |
+          dotnet run --project tools/SourceMaintenance -c Release -- --check .
+          dotnet run --project tools/SourceMaintenance -c Release -- --check-format .
+          dotnet build samples/UnoDock.Gallery -c Release -f net10.0-desktop -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0 -warnaserror
+      - name: Install isolated native display
+        run: sudo apt-get update && sudo apt-get install -y xvfb libx11-6 libxi6 libxrandr2 libxcursor1 libfontconfig1 libgl1 libice6 libsm6 libxcb1 libxtst6
+      - name: Run new sizing and unchanged splitter regression suites
+        shell: bash
+        run: |
+          for suite in docking-sizing splitter-quality; do
+            xvfb-run -a -s '-screen 0 2560x1440x24' python3 tools/run-desktop-tests.py --app samples/UnoDock.Gallery/bin/Release/net10.0-desktop/UnoDock.Gallery.dll --output artifacts/$suite --selector "$suite" --suite-timeout 180 --total-timeout 240
+          done
+      - name: Store Git objects without moving a branch or creating a commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import base64, json, os, subprocess, urllib.request
+          from pathlib import Path
+          base = '3e27daa3d87aecc25f367402cf694428e66a6762'
+          expected = 'c895e83055bab770c2cee4c1aef5c98b1297a091'
+          def git(*args):
+              return subprocess.check_output(['git', *args], text=True).strip()
+          assert git('rev-parse', 'HEAD') == base and git('write-tree') == expected
+          assert git('diff', '--name-only') == ''
+          paths = git('diff', '--cached', '--name-only').splitlines()
+          assert len(paths) == 7
+          def post(path, value):
+              request = urllib.request.Request('https://api.github.com/repos/wieslawsoltes/UnoDock/' + path,
+                  data=json.dumps(value).encode(), method='POST',
+                  headers={'Authorization': 'Bearer ' + os.environ['GH_TOKEN'], 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json'})
+              with urllib.request.urlopen(request, timeout=60) as response:
+                  return json.load(response)
+          entries = []
+          for path in paths:
+              data = Path(path).read_bytes()
+              blob = post('git/blobs', {'content': base64.b64encode(data).decode(), 'encoding': 'base64'})
+              assert blob['sha'] == git('hash-object', path)
+              entries.append({'path': path, 'mode': '100644', 'type': 'blob', 'sha': blob['sha']})
+          remote = post('git/trees', {'base_tree': git('rev-parse', 'HEAD^{tree}'), 'tree': entries})
+          assert remote['sha'] == expected
+          record = {'base': base, 'tree': expected, 'entries': entries, 'refsUpdated': False}
+          Path('artifacts/prepared-tree.json').write_text(json.dumps(record, indent=2) + '\n')
+          print('VALIDATED_SOURCE_TREE', json.dumps(record))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: docking-sizing-source-preparation
+          path: artifacts/
+          if-no-files-found: error
