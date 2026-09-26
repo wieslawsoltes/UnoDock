@@ -9,10 +9,23 @@ internal static class XamlBindingCleanupTests
 {
     internal static void Add(TestRunner tests)
     {
-        foreach (var tool in new[] { false, true })
+        foreach (var tool in new[]
+        {
+            false,
+            true
+        }
+
+        )
         {
             var category = tool ? "tool" : "document";
-            foreach (var stage in new[] { "definition", "default", "command" })
+            foreach (var stage in new[]
+            {
+                "definition",
+                "default",
+                "command"
+            }
+
+            )
             {
                 tests.Test($"XAML cleanup: {category} disposal completes after {stage} observer failure", () =>
                 {
@@ -81,7 +94,6 @@ internal static class XamlBindingCleanupTests
                 Check.Same(second, failures[1]);
                 AssertDisposed(fixture, view);
             });
-
             tests.Test($"XAML cleanup: {category} failed replacement retires all old source bindings", () =>
             {
                 using var fixture = new Fixture(tool);
@@ -89,7 +101,10 @@ internal static class XamlBindingCleanupTests
                 var item = fixture.Item;
                 var title = fixture.Model.Title;
                 var id = fixture.Model.ContentId;
-                var next = new XamlDocument { Title = "Replacement source" };
+                var next = new XamlDocument
+                {
+                    Title = "Replacement source"
+                };
                 var failure = new InvalidOperationException("replace cleanup");
                 var token = item.RegisterPropertyChangedCallback(LayoutItem.TitleProperty, (_, _) => throw failure);
                 Exception? error;
@@ -116,14 +131,21 @@ internal static class XamlBindingCleanupTests
                 fixture.Model.Title = "Recovered reverse binding";
                 Check.Equal(fixture.Model.Title, next.Title);
             });
-
             tests.Test($"XAML cleanup: {category} a callback-installed application binding survives retirement", () =>
             {
                 using var fixture = new Fixture(tool);
                 fixture.Bind(fixture.Source);
                 var item = fixture.Item;
-                var application = new XamlDocument { Title = "Application-owned identity" };
-                var binding = new Binding { Source = application, Path = new("Title"), Mode = BindingMode.OneWay };
+                var application = new XamlDocument
+                {
+                    Title = "Application-owned identity"
+                };
+                var binding = new Binding
+                {
+                    Source = application,
+                    Path = new("Title"),
+                    Mode = BindingMode.OneWay
+                };
                 var failure = new InvalidOperationException("replacement callback");
                 var observed = false;
                 var token = item.RegisterPropertyChangedCallback(LayoutItem.TitleProperty, (_, _) =>
@@ -156,7 +178,6 @@ internal static class XamlBindingCleanupTests
                 Check.Same(binding, item.GetBindingExpression(LayoutItem.ContentIdProperty)?.ParentBinding);
                 Check.Equal(application.Title, item.ContentId);
             });
-
             tests.Test($"XAML cleanup: {category} disposal during replacement cannot install a successor binding", () =>
             {
                 using var fixture = new Fixture(tool);
@@ -199,7 +220,15 @@ internal static class XamlBindingCleanupTests
         Check.False(item.IsViewCreated);
         Check.Throws<ObjectDisposedException>(() => _ = item.View);
         Check.True(view.Content == null && view.ContentTemplate == null && view.DataContext == null);
-        foreach (var property in new[] { LayoutItem.TitleProperty, LayoutItem.ContentIdProperty, LayoutItem.CanCloseProperty, LayoutItem.CanFloatProperty })
+        foreach (var property in new[]
+        {
+            LayoutItem.TitleProperty,
+            LayoutItem.ContentIdProperty,
+            LayoutItem.CanCloseProperty,
+            LayoutItem.CanFloatProperty
+        }
+
+        )
         {
             Check.True(item.GetBindingExpression(property) == null, "A retired adapter retained an owned binding.");
         }
@@ -210,11 +239,13 @@ internal static class XamlBindingCleanupTests
 
     private sealed class Fixture : IDisposable
     {
-        internal readonly XamlDocument Source = new() { Title = "Source title" };
+        internal readonly XamlDocument Source = new()
+        {
+            Title = "Source title"
+        };
         internal readonly LayoutContent Model;
         internal readonly DockingManager Manager;
         internal readonly LayoutItem Item;
-
         internal Fixture(bool tool)
         {
             Model = tool ? new LayoutAnchorable() : new LayoutDocument();
@@ -222,17 +253,20 @@ internal static class XamlBindingCleanupTests
             Model.ContentId = "model-id";
             Model.Content = Source;
             ILayoutPanelElement pane = tool ? new LayoutAnchorablePane((LayoutAnchorable)Model) : new LayoutDocumentPane((LayoutDocument)Model);
-            Manager = new DockingManager { Layout = new() { RootPanel = new(pane) }, FloatingWindowMode = FloatingWindowMode.InSurface };
+            Manager = new DockingManager
+            {
+                Layout = new()
+                {
+                    RootPanel = new(pane)
+                },
+                FloatingWindowMode = FloatingWindowMode.InSurface
+            };
             Item = Manager.GetLayoutItemFromModel(Model);
         }
 
         internal void Bind(XamlDocument source)
         {
-            LayoutItemBindings.SetBindings(Item, new()
-            {
-                new() { Property = "Title", Path = "Title", Source = source, Mode = BindingMode.TwoWay },
-                new() { Property = "ContentId", Path = "Title", Source = source, Mode = BindingMode.TwoWay }
-            });
+            LayoutItemBindings.SetBindings(Item, new() { new() { Property = "Title", Path = "Title", Source = source, Mode = BindingMode.TwoWay }, new() { Property = "ContentId", Path = "Title", Source = source, Mode = BindingMode.TwoWay } });
         }
 
         public void Dispose() => Manager.Dispose();

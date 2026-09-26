@@ -93,15 +93,7 @@ public abstract partial class LayoutItem
         }
     }
 
-    private void ClearXamlBindings()
-    {
-        var bindings = _xamlBindings.ToArray();
-        _xamlBindings.Clear();
-        foreach (var (property, binding) in bindings)
-            if (ReferenceEquals(GetBindingExpression(property)?.ParentBinding, binding))
-                ClearValue(property);
-    }
-
+    private void ClearXamlBindings() => RetireOwnedBindings(_xamlBindings);
     private void PublishLiteralStyleValues(Func<bool> current)
     {
         if (_disposed || LayoutElement == null || !current())

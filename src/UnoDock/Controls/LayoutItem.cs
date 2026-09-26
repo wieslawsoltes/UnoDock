@@ -206,14 +206,7 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
         BindDefault(CanFloatProperty, nameof(LayoutContent.CanFloat));
     }
 
-    protected virtual void ClearDefaultBindings()
-    {
-        foreach (var (property, binding) in _bindings)
-            if (ReferenceEquals(GetBindingExpression(property)?.ParentBinding, binding))
-                ClearValue(property);
-        _bindings.Clear();
-    }
-
+    protected virtual void ClearDefaultBindings() => RetireOwnedBindings(_bindings);
     protected virtual void InitDefaultCommands()
     {
         CommandDefault(ActivateCommandProperty, () => LayoutElement.IsActive = true, () => LayoutElement.IsEnabled);
@@ -228,14 +221,7 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
         CommandDefault(MoveToPreviousTabGroupCommandProperty, () => Move(-1), () => AdjacentPane(-1) != null && DockOperations.CanMove(LayoutElement));
     }
 
-    protected virtual void ClearDefaultCommands()
-    {
-        foreach (var (property, command) in _commands)
-            if (ReferenceEquals(GetValue(property), command))
-                ClearValue(property);
-        _commands.Clear();
-    }
-
+    protected virtual void ClearDefaultCommands() => RetireOwnedCommands();
     protected abstract void Close();
     protected virtual void Float() => LayoutElement.Float();
     protected virtual bool CanExecuteDockAsDocumentCommand() => LayoutElement.Parent is not LayoutDocumentPane && LayoutElement.Root != null && DockOperations.CanMove(LayoutElement);
@@ -383,30 +369,6 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
     public new void Dispose()
 #endif
     {
-        if (_disposed)
-            return;
-        _disposed = true;
-        _defaultMenu?.Dispose();
-        _defaultMenu = null;
-        if (LayoutElement != null)
-            LayoutElement.PropertyChanged -= ModelChanged;
-        UnregisterPropertyChangedCallback(VisibilityProperty, _visibilityToken);
-        ClearXamlBindings();
-        ClearDefaultBindings();
-        ClearDefaultCommands();
-        if (_view is { } view)
-        {
-            view.GotFocus -= RememberFocus;
-            _lastFocused = null;
-            VisualParenting.Detach(view);
-            view.Content = null;
-            view.ContentTemplate = null;
-            view.DataContext = null;
-            _view = null;
-        }
-
-        _manager = null;
-        Model = null;
-        DataContext = null;
+        DisposeItemCore();
     }
 }
