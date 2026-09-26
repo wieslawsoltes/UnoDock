@@ -4,7 +4,7 @@ using System.Xml.Serialization;
 
 namespace UnoDock.Layout;
 
-public class LayoutDocument : LayoutContent
+public partial class LayoutDocument : LayoutContent
 {
     public override void ConsoleDump(int tab) => base.ConsoleDump(tab);
     private bool _canMove = true, _visible = true;

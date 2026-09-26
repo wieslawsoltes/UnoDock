@@ -1,5 +1,15 @@
 # UnoDock
 
+## XAML workbenches and scoped Fluent themes
+
+Compiled **XAML workbench** and **XAML MVVM** samples are available from Samples.
+They use the native layout hierarchy, source bindings, templates, per-item binding
+definitions and optional Light/Dark `WorkbenchResources`. Live theme selection,
+model dependency-property endpoints and manager template properties are supported
+without replacing the existing docking/activation engine. See the
+[XAML usage and compatibility contract](docs/xaml-workbench.md). This source change
+does not publish a new package version or claim WPF XAML equivalence.
+
 ## Preview 20: direct navigator selection
 
 `SelectedDocument` and `SelectedAnchorable` assignments now request activation rather

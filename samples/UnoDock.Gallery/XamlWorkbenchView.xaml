@@ -1,0 +1,73 @@
+<UserControl x:Class="UnoDock.Gallery.XamlWorkbenchView"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:dock="using:UnoDock" xmlns:layout="using:UnoDock.Layout" xmlns:themes="using:UnoDock.Themes" xmlns:local="using:UnoDock.Gallery" xmlns:controls="using:UnoDock.Controls">
+  <UserControl.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries><themes:WorkbenchResources/></ResourceDictionary.MergedDictionaries>
+      <DataTemplate x:Key="DocumentEditor"><local:XamlDocumentEditor/></DataTemplate>
+      <local:XamlContentTemplateSelector x:Key="ContentTemplates" DocumentTemplate="{StaticResource DocumentEditor}"/>
+      <Style x:Key="DocumentStyle" TargetType="controls:LayoutItem">
+        <Setter Property="controls:LayoutItemBindings.Bindings">
+          <Setter.Value>
+            <controls:LayoutItemBindingCollection>
+              <controls:LayoutItemBinding Property="Title" Path="Title" Mode="TwoWay"/>
+              <controls:LayoutItemBinding Property="ContentId" Path="ContentId"/>
+              <controls:LayoutItemBinding Property="CanClose" Path="CanClose"/>
+            </controls:LayoutItemBindingCollection>
+          </Setter.Value>
+        </Setter>
+      </Style>
+      <local:XamlItemStyleSelector x:Key="ItemStyles" DocumentStyle="{StaticResource DocumentStyle}"/>
+      <DataTemplate x:Key="DocumentHeader">
+        <StackPanel Orientation="Horizontal" Spacing="6">
+          <Path Data="M 1,1 L 8,1 L 11,4 L 11,13 L 1,13 Z M 8,1 L 8,4 L 11,4" Width="12" Height="14"
+            Stroke="{ThemeResource TextFillColorPrimaryBrush}" StrokeThickness="1"/>
+          <TextBlock Text="{Binding Title}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+        </StackPanel>
+      </DataTemplate>
+    </ResourceDictionary>
+  </UserControl.Resources>
+  <Grid Padding="12" RowSpacing="10" Background="{ThemeResource SolidBackgroundFillColorBaseBrush}">
+    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+    <Grid>
+      <TextBlock Text="XAML WORKBENCH" FontSize="16" FontWeight="SemiBold"/>
+      <TextBlock Text="Declarative layout · retained editors" FontSize="12" Opacity="0.65" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+    </Grid>
+    <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="8">
+      <Button Content="Light / Dark" Click="ToggleTheme" Style="{StaticResource UnoDock.WorkbenchButtonStyle}"/>
+      <Button Content="Float / Dock" Click="ToggleFloating" Style="{StaticResource UnoDock.WorkbenchButtonStyle}"/>
+      <Button Content="Auto-hide / Pin" Click="ToggleNotes" Style="{StaticResource UnoDock.WorkbenchButtonStyle}"/>
+      <Button Content="Save / Restore layout" Click="ToggleLayout" Style="{StaticResource UnoDock.WorkbenchButtonStyle}"/>
+      <CheckBox Content="Allow close" IsChecked="{x:Bind Document.CanClose, Mode=TwoWay}"/>
+    </StackPanel>
+    <dock:DockingManager x:Name="Dock" Grid.Row="2" FloatingWindowMode="Native"
+      Style="{StaticResource UnoDock.WorkbenchManagerStyle}" LayoutItemTemplateSelector="{StaticResource ContentTemplates}"
+      LayoutItemContainerStyleSelector="{StaticResource ItemStyles}" DocumentHeaderTemplate="{StaticResource DocumentHeader}">
+      <dock:DockingManager.Theme><themes:FluentTheme RequestedTheme="Default"/></dock:DockingManager.Theme>
+      <layout:LayoutRoot>
+        <layout:LayoutPanel Orientation="Horizontal">
+          <layout:LayoutAnchorablePane DockWidth="210" DockMinWidth="140">
+            <layout:LayoutAnchorable Title="Workspace" ContentId="xaml:workspace" CanClose="False" CanHide="False">
+              <StackPanel Padding="12" Spacing="12">
+                <TextBlock Text="EXPLORER" FontWeight="SemiBold" FontSize="11" Opacity="0.65"/>
+                <TextBlock Text="Workspace.xaml" FontSize="13"/>
+                <TextBlock Text="Model, templates, resources and bindings are declared in XAML." TextWrapping="Wrap" Opacity="0.7"/>
+                <TextBlock Text="Drag the document tab or the native floating caption to dock." TextWrapping="Wrap" Opacity="0.7"/>
+              </StackPanel>
+            </layout:LayoutAnchorable>
+          </layout:LayoutAnchorablePane>
+          <layout:LayoutDocumentPane>
+            <layout:LayoutDocument ContentId="xaml:document" Title="{x:Bind Document.Title, Mode=OneWay}"
+              Content="{x:Bind Document}" CanClose="{x:Bind Document.CanClose, Mode=OneWay}" Description="Compiled XAML document"/>
+          </layout:LayoutDocumentPane>
+          <layout:LayoutAnchorablePane DockWidth="220" DockMinWidth="140">
+            <layout:LayoutAnchorable Title="Notes" ContentId="xaml:notes" CanClose="False" AutoHideWidth="240">
+              <TextBox Margin="10" AcceptsReturn="True" TextWrapping="Wrap" Text="Inline XAML editor. Float or auto-hide this tool without losing its text."/>
+            </layout:LayoutAnchorable>
+          </layout:LayoutAnchorablePane>
+        </layout:LayoutPanel>
+      </layout:LayoutRoot>
+    </dock:DockingManager>
+    <TextBlock x:Name="Status" Grid.Row="3" Text="Ready · XAML-created layout and native floating windows" FontSize="11" Opacity="0.7"/>
+  </Grid>
+</UserControl>

@@ -107,6 +107,7 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
         _attaching = true;
         try
         {
+            ClearXamlBindings();
             ClearDefaultBindings();
             ClearDefaultCommands();
             Style = style;
@@ -117,6 +118,9 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
         {
             _attaching = false;
         }
+
+        PublishLiteralStyleValues();
+        RefreshXamlBindings();
     }
 
     private bool HasStyleSetter(DependencyProperty property)
@@ -334,6 +338,7 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
         if (LayoutElement != null)
             LayoutElement.PropertyChanged -= ModelChanged;
         UnregisterPropertyChangedCallback(VisibilityProperty, _visibilityToken);
+        ClearXamlBindings();
         ClearDefaultBindings();
         ClearDefaultCommands();
         if (_view is { } view)
