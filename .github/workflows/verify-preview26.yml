@@ -1,0 +1,228 @@
+name: Verify preview26 acceptance evidence
+on:
+  push:
+    branches: [work/preview26-verification]
+    paths: [.github/workflows/verify-preview26.yml]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 2f1483fc1d12a485721e8ad74d78053e593c5dc4
+          fetch-depth: 0
+      - name: Verify job results, artifact hashes, complete cases and exact source
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib, importlib.util, io, json, os, struct, subprocess, time
+          import urllib.error, urllib.request, zipfile
+          import xml.etree.ElementTree as ET
+          from pathlib import Path, PurePosixPath
+          from unittest.mock import patch
+
+          repo = 'wieslawsoltes/UnoDock'
+          head = '77e8e3c95419539e461e16664c51acbf47b46776'
+          tested = '2f1483fc1d12a485721e8ad74d78053e593c5dc4'
+          base = '30837351ecfa181874dd121d0a44a528a8b75a3c'
+          tree = '7080220ed248f41a87d7ece2dd9e6d42eb53a788'
+          runs = {'ordinary': (36243099443, 6), 'native': (36243099434, 3),
+                  'chrome': (36243099457, 3), 'xaml': (36243099411, 3), 'source': (36243099414, 1)}
+          out = Path('artifacts/verified-preview26')
+          out.mkdir(parents=True, exist_ok=True)
+          headers = {'Authorization': 'Bearer ' + os.environ['GH_TOKEN'],
+                     'Accept': 'application/vnd.github+json', 'User-Agent': 'UnoDock-evidence-check'}
+          def request(path):
+              return urllib.request.Request('https://api.github.com/repos/' + repo + '/' + path, headers=headers)
+          def get(path):
+              with urllib.request.urlopen(request(path), timeout=60) as response:
+                  return json.load(response)
+          def git(*args):
+              return subprocess.check_output(['git', *args]).decode().strip()
+          assert git('rev-parse', 'HEAD') == tested
+          assert git('rev-parse', 'HEAD^{tree}') == tree == git('rev-parse', head + '^{tree}')
+          deadline = time.monotonic() + 1080
+          while True:
+              states = {name: get(f'actions/runs/{run}') for name, (run, _) in runs.items()}
+              for name, state in states.items():
+                  assert state['head_sha'] == head and state['run_attempt'] == 1
+                  if state['status'] == 'completed' and state['conclusion'] != 'success':
+                      raise RuntimeError(f'{name}: final-head workflow is {state["conclusion"]}')
+              print('FINAL WORKFLOWS', {n: (s['status'], s['conclusion']) for n, s in states.items()}, flush=True)
+              if all(s['status'] == 'completed' for s in states.values()):
+                  break
+              if time.monotonic() >= deadline:
+                  raise TimeoutError('Final-head workflows did not complete within the verification deadline.')
+              time.sleep(25)
+          jobs = {}
+          for name, (run, count) in runs.items():
+              values = get(f'actions/runs/{run}/jobs?per_page=100')['jobs']
+              assert len(values) == count and all(v['conclusion'] == 'success' for v in values), name
+              jobs[name] = [{'id': v['id'], 'name': v['name'], 'result': v['conclusion']} for v in values]
+
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self, *args):
+                  return None
+          def download(artifact):
+              assert not artifact['expired']
+              try:
+                  response = urllib.request.build_opener(NoRedirect).open(request(f'actions/artifacts/{artifact["id"]}/zip'), timeout=60)
+              except urllib.error.HTTPError as error:
+                  if error.code not in (301, 302, 303, 307, 308):
+                      raise
+                  location = error.headers['Location']
+                  assert location.startswith('https://')
+                  # Do not forward GitHub credentials to the signed storage URL.
+                  response = urllib.request.urlopen(location, timeout=120)
+              with response:
+                  data = response.read(64 * 1024 * 1024 + 1)
+              assert len(data) <= 64 * 1024 * 1024
+              assert 'sha256:' + hashlib.sha256(data).hexdigest() == artifact['digest'], artifact['name']
+              return data
+          def unpack(data, directory):
+              directory.mkdir(parents=True, exist_ok=True)
+              with zipfile.ZipFile(io.BytesIO(data)) as archive:
+                  for entry in archive.infolist():
+                      path = PurePosixPath(entry.filename)
+                      assert not path.is_absolute() and '..' not in path.parts
+                      if entry.is_dir() or path.suffix.lower() not in ('.json', '.xml', '.txt', '.log', '.png'):
+                          continue
+                      assert entry.file_size < 64 * 1024 * 1024
+                      target = directory.joinpath(*path.parts)
+                      target.parent.mkdir(parents=True, exist_ok=True)
+                      target.write_bytes(archive.read(entry))
+          artifacts = {}
+          directories = {}
+          source_archive = None
+          for kind, (run, _) in runs.items():
+              items = get(f'actions/runs/{run}/artifacts?per_page=100')['artifacts']
+              for artifact in items:
+                  name = artifact['name']
+                  selected = (name in ('core-and-api-results', 'runtime-test-results', 'windows-runtime-test-results')
+                              if kind == 'ordinary' else name.startswith('native-docking-') if kind == 'native'
+                              else name.startswith('custom-floating-chrome-') if kind == 'chrome'
+                              else name.startswith('xaml-workbench-') if kind == 'xaml' else False)
+                  if not selected:
+                      continue
+                  assert artifact['workflow_run']['head_sha'] == head
+                  data = download(artifact)
+                  if name == 'core-and-api-results':
+                      with zipfile.ZipFile(io.BytesIO(data)) as archive:
+                          sources = [n for n in archive.namelist() if n.endswith('UnoDock-source.zip')]
+                          assert len(sources) == 1
+                          source_archive = archive.read(sources[0])
+                  directory = out / 'evidence' / name
+                  unpack(data, directory)
+                  directories[name] = directory
+                  artifacts[name] = {'id': artifact['id'], 'sha256': artifact['digest'], 'run': run}
+          assert len(artifacts) == 12 and source_archive is not None, sorted(artifacts)
+          core = directories['core-and-api-results']
+          checksum = list(core.rglob('source-sha256.txt'))
+          assert len(checksum) == 1 and checksum[0].read_text().split()[0] == hashlib.sha256(source_archive).hexdigest()
+          blobs = {}
+          for entry in subprocess.check_output(['git', 'ls-tree', '-rz', '--full-tree', 'HEAD']).split(b'\0'):
+              if entry:
+                  metadata, filename = entry.split(b'\t', 1)
+                  _, kind, sha = metadata.split()
+                  assert kind == b'blob'
+                  blobs[filename.decode()] = sha.decode()
+          with zipfile.ZipFile(io.BytesIO(source_archive)) as archive:
+              names = {e.filename for e in archive.infolist() if not e.is_dir()}
+              assert names == set(blobs), 'Archived source set differs from the tested tree.'
+              for name in names:
+                  content = archive.read(name)
+                  assert hashlib.sha1(f'blob {len(content)}\0'.encode() + content).hexdigest() == blobs[name], name
+          subprocess.run(['git', 'diff', '--exit-code', base, 'HEAD', '--', 'contracts/', 'tools/ReferenceProbe/', ':(glob)src/**/*.g.cs'], check=True)
+          assert not any('complete-xaml-cleanup' in path for path in blobs)
+          print('VERIFIED SOURCES', len(blobs), tree, flush=True)
+
+          def reports(directory):
+              result = {}
+              for path in directory.rglob('*.xml'):
+                  root = ET.parse(path).getroot()
+                  if root.tag != 'testsuite':
+                      continue
+                  cases = root.findall('testcase')
+                  assert cases and len(cases) == int(root.get('tests', '-1')), path
+                  assert not any(int(root.get(k, '0')) for k in ('failures', 'errors', 'skipped')), path
+                  assert not any(c.find(t) is not None for c in cases for t in ('failure', 'error', 'skipped')), path
+                  names = [c.get('name') for c in cases]
+                  assert all(names) and len(set(names)) == len(names)
+                  name = root.get('name')
+                  assert name and name not in result
+                  result[name] = len(cases)
+              return result
+          def isolation(directory, counts):
+              record = json.loads((directory / 'isolated-execution.json').read_text())
+              assert len(record['planned']) == len(counts) and set(record['planned']) == set(counts)
+              assert len(record['completed']) == len(counts)
+              assert {row['suite'] for row in record['completed']} == set(counts)
+              for row in record['completed']:
+                  assert row['error'] is None and row['executed'] == row['passed'] == counts[row['suite']], row
+          results = {}
+          captures = {}
+          for name, directory in directories.items():
+              counts = reports(directory)
+              assert counts
+              results[name] = {'suites': counts, 'executed': sum(counts.values()), 'failed': 0, 'skipped': 0}
+              if name in ('runtime-test-results', 'windows-runtime-test-results'):
+                  isolation(directory, counts)
+                  assert counts['xaml-workbench'] == 84 and counts['layout-mutation-invariants'] == 64
+                  summary = json.loads((directory / 'execution-summary.json').read_text())
+                  assert summary['revision'] == tested and summary['executedCases'] == sum(counts.values())
+              if name.startswith(('native-docking-', 'custom-floating-chrome-', 'xaml-workbench-')):
+                  assert (directory / 'source-revision.txt').read_text().strip() == tested
+              if name.startswith(('native-docking-', 'custom-floating-chrome-')):
+                  script = 'tools/verify-floating-chrome.py' if name.startswith('custom-') else 'tools/verify-native-results.py'
+                  spec = importlib.util.spec_from_file_location('gate', script)
+                  module = importlib.util.module_from_spec(spec)
+                  spec.loader.exec_module(module)
+                  system = 'Darwin' if name.endswith('-macOS') else 'Windows' if name.endswith('-Windows') else 'Linux'
+                  with patch.object(module.platform, 'system', return_value=system):
+                      module.verify(directory)
+              if name.startswith('xaml-workbench-'):
+                  isolation(directory, counts)
+                  assert counts == {'xaml-workbench': 84}
+                  cases = ET.parse(directory / 'xaml-workbench.xml').getroot().findall('testcase')
+                  assert sum(c.get('name','').startswith('XAML cleanup:') for c in cases) == 14
+                  captures[name] = {}
+                  for image_name in ('xaml-workbench-light', 'xaml-workbench-dark', 'xaml-policies-light', 'xaml-policies-dark', 'xaml-workbench-narrow'):
+                      data = (directory / 'visuals' / (image_name + '.png')).read_bytes()
+                      assert len(data) > 1000 and data[:8] == b'\x89PNG\r\n\x1a\n' and data[12:16] == b'IHDR'
+                      width, height = struct.unpack('>II', data[16:24])
+                      assert width > 100 and height > 100
+                      captures[name][image_name] = {'width': width, 'height': height, 'sha256': hashlib.sha256(data).hexdigest()}
+              print('VERIFIED RESULTS', name, results[name], flush=True)
+          assert results['core-and-api-results']['executed'] == 128
+          reproduction = get('actions/artifacts/10906316865')
+          repro_data = download(reproduction)
+          unpack(repro_data, out / 'cleanup-reproduction')
+          before = ET.parse(out / 'cleanup-reproduction/baseline/xaml-workbench.xml').getroot().findall('testcase')
+          after = ET.parse(out / 'cleanup-reproduction/fixed/xaml-workbench.xml').getroot().findall('testcase')
+          failing = [c for c in before if c.find('failure') is not None or c.find('error') is not None]
+          assert len(before) == len(after) == 84 and len(failing) == 10
+          assert all(c.get('name','').startswith('XAML cleanup:') for c in failing)
+          assert not any(c.find(t) is not None for c in after for t in ('failure', 'error', 'skipped'))
+          assert {c.get('name') for c in before} == {c.get('name') for c in after}
+          (out / 'implementation.patch').write_bytes(subprocess.check_output(['git', 'diff', '--no-ext-diff', base, 'HEAD']))
+          (out / 'change-statistics.txt').write_text(git('diff', '--stat', base, 'HEAD') + '\n')
+          summary = {'schema': 1, 'head': head, 'tested': tested, 'tree': tree, 'sourceFilesVerified': len(blobs),
+                     'jobs': jobs, 'artifacts': artifacts, 'results': results, 'captures': captures,
+                     'cleanupReproduction': {'run': 36242827939, 'artifact': 10906316865, 'digest': reproduction['digest'],
+                                             'before': {'executed': 84, 'failed': 10}, 'after': {'executed': 84, 'failed': 0}}}
+          (out / 'verification.json').write_text(json.dumps(summary, indent=2) + '\n')
+          print('FINAL VERIFICATION', json.dumps({**{k:v for k,v in summary.items() if k not in ('jobs','results','captures')},
+                  'totals': {k:v['executed'] for k,v in results.items()}}, indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: UnoDock-PR15-verified-evidence
+          path: artifacts/verified-preview26/
+          if-no-files-found: error
