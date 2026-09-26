@@ -279,6 +279,9 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
 
     private void ModelChanged(object? sender, PropertyChangedEventArgs args)
     {
+        // Unsubscription does not revoke an already captured multicast delivery.
+        if (_disposed)
+            return;
         if (args.PropertyName == nameof(LayoutContent.Content))
         {
             Model = LayoutElement.Content;

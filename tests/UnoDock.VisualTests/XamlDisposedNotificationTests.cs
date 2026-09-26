@@ -8,14 +8,26 @@ internal static class XamlDisposedNotificationTests
 {
     internal static void Add(TestRunner tests)
     {
-        foreach (var tool in new[] { false, true })
+        foreach (var tool in new[]
+        {
+            false,
+            true
+        }
+
+        )
         {
             tests.Test("XAML cleanup: " + (tool ? "tool" : "document") + " in-flight model event cannot revive disposed state", () =>
             {
                 LayoutItem? item = null;
                 LayoutContent model = tool ? new LayoutAnchorable() : new LayoutDocument();
-                var original = new XamlDocument { Title = "Original payload" };
-                var replacement = new XamlDocument { Title = "Replacement payload" };
+                var original = new XamlDocument
+                {
+                    Title = "Original payload"
+                };
+                var replacement = new XamlDocument
+                {
+                    Title = "Replacement payload"
+                };
                 model.Content = original;
                 var callbacks = 0;
                 // This subscriber precedes the adapter's ModelChanged subscriber.
@@ -30,7 +42,14 @@ internal static class XamlDisposedNotificationTests
                     }
                 };
                 ILayoutPanelElement pane = tool ? new LayoutAnchorablePane((LayoutAnchorable)model) : new LayoutDocumentPane((LayoutDocument)model);
-                using var manager = new DockingManager { Layout = new() { RootPanel = new(pane) }, FloatingWindowMode = FloatingWindowMode.InSurface };
+                using var manager = new DockingManager
+                {
+                    Layout = new()
+                    {
+                        RootPanel = new(pane)
+                    },
+                    FloatingWindowMode = FloatingWindowMode.InSurface
+                };
                 item = manager.GetLayoutItemFromModel(model);
                 var view = item.View;
                 LayoutItemBindings.SetBindings(item, new() { new() { Property = "Title", Path = "Title", Mode = Microsoft.UI.Xaml.Data.BindingMode.TwoWay } });

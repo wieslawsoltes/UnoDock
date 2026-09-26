@@ -132,7 +132,11 @@ replacement. All old owned bindings are attempted before the error is propagated
 a subsequent explicit assignment of a new configuration can establish fresh
 bindings. Invalid preflight still leaves the previous bindings untouched. These
 are distinct failure boundaries. Fourteen public-API regressions cover document
-and tool adapters, failure aggregation, recovery and reentrant binding ownership.
+and tool adapters, failure aggregation, recovery and reentrant binding ownership. Two additional
+cases deliver a model event captured before disposal: a subscriber registered
+before the adapter disposes it first, and the remaining captured delivery must
+not repopulate its cleared Model, DataContext or presenter. The model itself
+retains its new application payload.
 
 ## Theme and lightweight styling
 
@@ -152,7 +156,7 @@ observable-collection notification mechanism.
 
 The default manager template now respects Background, BorderBrush, BorderThickness,
 CornerRadius and Padding. Custom templates retain `PART_LayoutHost` (ContentPresenter)
-and `PART_AutoHideArea`. Retemplating releases the previous host'ssurface before
+and `PART_AutoHideArea`. Retemplating releases the previous host's surface before
 reattaching it, preserving owned content presenters and layout models. Border
 rounding is presentation; arbitrary child clipping is not implicitly added.
 
@@ -252,7 +256,7 @@ explicit native Binding, TwoWay model writes, invalid dimensions, reentrant
 activation, runtime XamlReader construction, model defaults, native/in-surface
 float/dock retention, light/dark resources, live metrics, retemplating, per-item
 binding ownership, literal capability setters and superseded binding definitions.
-The suite has 84 cases, including 14 binding/disposal cleanup regressions.
+The suite has 86 cases, including 16 binding/disposal cleanup regressions.
 Light/dark workbench and source-backed policy captures, plus a narrow workbench
 capture, are emitted under the suite's visuals. The sample action regressions
 invoke actual buttons through their native automation Invoke provider; these
