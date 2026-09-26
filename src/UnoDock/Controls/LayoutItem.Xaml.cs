@@ -102,27 +102,27 @@ public abstract partial class LayoutItem
                 ClearValue(property);
     }
 
-    private void PublishLiteralStyleValues()
+    private void PublishLiteralStyleValues(Func<bool> current)
     {
-        if (_disposed || LayoutElement == null)
+        if (_disposed || LayoutElement == null || !current())
             return;
-        if (HasStyleSetter(TitleProperty))
+        if (current() && HasStyleSetter(TitleProperty))
             LayoutElement.Title = Title;
-        if (HasStyleSetter(ContentIdProperty))
+        if (current() && HasStyleSetter(ContentIdProperty))
             LayoutElement.ContentId = ContentId;
-        if (HasStyleSetter(IconSourceProperty))
+        if (current() && HasStyleSetter(IconSourceProperty))
             LayoutElement.IconSource = IconSource;
-        if (HasStyleSetter(CanCloseProperty))
+        if (current() && HasStyleSetter(CanCloseProperty))
             LayoutElement.CanClose = CanClose;
-        if (HasStyleSetter(CanFloatProperty))
+        if (current() && HasStyleSetter(CanFloatProperty))
             LayoutElement.CanFloat = CanFloat;
-        if (HasStyleSetter(IsSelectedProperty))
+        if (current() && HasStyleSetter(IsSelectedProperty))
             LayoutElement.IsSelected = IsSelected;
-        if (HasStyleSetter(IsActiveProperty))
+        if (current() && HasStyleSetter(IsActiveProperty))
             LayoutElement.IsActive = IsActive;
-        if (this is LayoutDocumentItem document && LayoutElement is Layout.LayoutDocument model && HasStyleSetter(LayoutDocumentItem.DescriptionProperty))
+        if (current() && this is LayoutDocumentItem document && LayoutElement is Layout.LayoutDocument model && HasStyleSetter(LayoutDocumentItem.DescriptionProperty))
             model.Description = document.Description;
-        if (this is LayoutAnchorableItem tool && LayoutElement is Layout.LayoutAnchorable anchorable && HasStyleSetter(LayoutAnchorableItem.CanHideProperty))
+        if (current() && this is LayoutAnchorableItem tool && LayoutElement is Layout.LayoutAnchorable anchorable && HasStyleSetter(LayoutAnchorableItem.CanHideProperty))
             anchorable.CanHide = tool.CanHide;
     }
 

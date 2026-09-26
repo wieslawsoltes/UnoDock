@@ -5,7 +5,7 @@ using System.Xml.Serialization;
 namespace UnoDock.Layout;
 
 [ContentProperty(Name = nameof(RootPanel))]
-public class LayoutAnchorableFloatingWindow : LayoutFloatingWindow, ILayoutElementWithVisibility
+public partial class LayoutAnchorableFloatingWindow : LayoutFloatingWindow, ILayoutElementWithVisibility
 {
     public override void ConsoleDump(int tab) => base.ConsoleDump(tab);
     private LayoutAnchorablePaneGroup? _panel;

@@ -45,7 +45,8 @@ policy, activation, selection, floating coordinates, document movement/descripti
 tool hide/auto-hide/document-docking policy and auto-hide dimensions. Concrete
 panels, pane groups and panes also expose their dimensions, minimum dimensions,
 floating geometry, maximized/reposition/duplicate policy, orientation and selection
-where applicable. There are 83 new endpoints across these model types; Title and
+where applicable. Root panels, all four root sides, root ActiveContent, floating-window
+root slots and anchorable visibility also have guarded native endpoints. There are 92 new endpoints across these model types; Title and
 ContentId keep their existing native properties. FloatingWindowMode and
 FluentTheme.RequestedTheme are now native DPs as well.
 
@@ -59,10 +60,9 @@ are sequential, not an atomic multi-property notification transport.
 Use `x:Bind` for compiled Page/UserControl sources, or a normal `Binding` with an
 explicit Source for a nonvisual layout node. Do not assume WPF logical-tree
 DataContext inheritance on nonvisual objects. Read-only placement/state properties
-remain observable binding sources, not arbitrary writable DP targets. Structural
-slots/collections retain their ownership setters: declarative object syntax and
-compiled x:Bind work, but they have not all been replaced with ordinary Binding
-targets. WPF markup extensions, triggers and arbitrary WPF resources are not WinUI
+remain observable binding sources, not arbitrary writable DP targets. Structural slots invoke their existing ownership setters through their DP endpoints.
+Collections retain their get-only ownership collection; declare children inline
+or use DocumentsSource/AnchorablesSource rather than replacing the child list. WPF markup extensions, triggers and arbitrary WPF resources are not WinUI
 XAML and are not emulated.
 
 ## Source-backed items and AvalonDock-style container conventions
@@ -105,6 +105,8 @@ are rejected before retiring the old bindings. Reentrant collection replacement 
 serialized with a bounded convergence check and cannot finish an obsolete plan.
 Literal container-style metadata and capability setters are synchronized to the
 model and default commands, rather than only changing the adapter's appearance.
+Container-style replacement is serialized too: an application callback which
+selects a newer style prevents stale literal policy values from being published.
 
 ## Theme and lightweight styling
 

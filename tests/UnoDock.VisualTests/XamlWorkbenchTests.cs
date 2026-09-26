@@ -14,6 +14,7 @@ internal static class XamlWorkbenchTests
     internal static async Task<int> Run(string output)
     {
         var tests = new TestRunner();
+        XamlStructureTests.Add(tests);
         foreach (var type in new[]
         {
             typeof(LayoutDocument),

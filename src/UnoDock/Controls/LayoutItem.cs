@@ -102,25 +102,66 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
         UpdateView();
     }
 
+    private bool _applyingContainerStyle, _containerStylePending;
+    private Style? _requestedContainerStyle;
+    private long _containerStyleRequest;
     internal void ApplyContainerStyle(Style? style)
     {
-        _attaching = true;
+        if (_disposed)
+            return;
+        _requestedContainerStyle = style;
+        _containerStyleRequest++;
+        _containerStylePending = true;
+        if (_applyingContainerStyle)
+            return;
+        _applyingContainerStyle = true;
         try
         {
-            ClearXamlBindings();
-            ClearDefaultBindings();
-            ClearDefaultCommands();
-            Style = style;
-            SetDefaultBindings();
-            InitDefaultCommands();
+            for (var pass = 0; _containerStylePending && !_disposed; pass++)
+            {
+                if (pass == 64)
+                    throw new InvalidOperationException("Layout-item style callbacks did not converge.");
+                _containerStylePending = false;
+                var request = _containerStyleRequest;
+                var requested = _requestedContainerStyle;
+                bool Current() => !_disposed && request == _containerStyleRequest;
+                _attaching = true;
+                try
+                {
+                    ClearXamlBindings();
+                    if (!Current())
+                        continue;
+                    ClearDefaultBindings();
+                    if (!Current())
+                        continue;
+                    ClearDefaultCommands();
+                    if (!Current())
+                        continue;
+                    Style = requested;
+                    if (!Current())
+                        continue;
+                    SetDefaultBindings();
+                    if (!Current())
+                        continue;
+                    InitDefaultCommands();
+                }
+                finally
+                {
+                    _attaching = false;
+                }
+
+                if (!Current())
+                    continue;
+                PublishLiteralStyleValues(Current);
+                if (Current())
+                    RefreshXamlBindings();
+            }
         }
         finally
         {
-            _attaching = false;
+            _applyingContainerStyle = false;
+            _requestedContainerStyle = null;
         }
-
-        PublishLiteralStyleValues();
-        RefreshXamlBindings();
     }
 
     private bool HasStyleSetter(DependencyProperty property)

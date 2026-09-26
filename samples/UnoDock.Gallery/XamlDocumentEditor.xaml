@@ -1,10 +1,10 @@
-<UserControl x:Class="UnoDock.Gallery.XamlDocumentEditor"
-  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+<UserControl xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Class="UnoDock.Gallery.XamlDocumentEditor">
   <Grid Padding="16" RowSpacing="12" Background="{ThemeResource LayerFillColorDefaultBrush}">
-    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="*"/>
+    </Grid.RowDefinitions>
     <TextBox Header="Document title" Text="{Binding Title, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.AutomationId="XamlEditorTitle"/>
-    <TextBox Grid.Row="1" Text="{Binding Text, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-      AcceptsReturn="True" TextWrapping="Wrap" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-      FontFamily="monospace" FontSize="13" AutomationProperties.AutomationId="XamlEditorText"/>
+    <TextBox Grid.Row="1" Text="{Binding Text, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" FontFamily="monospace" FontSize="13" AutomationProperties.AutomationId="XamlEditorText"/>
   </Grid>
 </UserControl>

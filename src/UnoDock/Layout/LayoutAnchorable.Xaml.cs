@@ -13,4 +13,5 @@ public partial class LayoutAnchorable
     public static readonly DependencyProperty AutoHideHeightProperty = LayoutXamlProperty.Register<LayoutAnchorable, double>(nameof(AutoHideHeight), 0d, owner => owner.AutoHideHeight, (owner, value) => owner.AutoHideHeight = value);
     public static readonly DependencyProperty AutoHideMinWidthProperty = LayoutXamlProperty.Register<LayoutAnchorable, double>(nameof(AutoHideMinWidth), 100d, owner => owner.AutoHideMinWidth, (owner, value) => owner.AutoHideMinWidth = value);
     public static readonly DependencyProperty AutoHideMinHeightProperty = LayoutXamlProperty.Register<LayoutAnchorable, double>(nameof(AutoHideMinHeight), 100d, owner => owner.AutoHideMinHeight, (owner, value) => owner.AutoHideMinHeight = value);
+    public static readonly DependencyProperty IsVisibleProperty = LayoutXamlProperty.Register<LayoutAnchorable, bool>(nameof(IsVisible), false, owner => owner.IsVisible, (owner, value) => owner.IsVisible = value);
 }

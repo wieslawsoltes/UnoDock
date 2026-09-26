@@ -225,7 +225,7 @@ public partial class DockingManager : Control, IDisposable, UnoDock.Compatibilit
                 break;
             case nameof(LayoutItemContainerStyle):
             case nameof(LayoutItemContainerStyleSelector):
-                foreach (var item in _items.Values)
+                foreach (var item in _items.Values.ToArray())
                     ApplyItemStyle(item);
                 break;
         }
