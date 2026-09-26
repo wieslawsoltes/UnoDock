@@ -1,0 +1,104 @@
+name: Integrate validated XAML workbench
+on:
+  push:
+    branches: [work/preview25-xaml-workbench]
+    paths: [.github/workflows/apply-xaml-workbench.yml]
+permissions:
+  contents: write
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 2
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Verify transport and apply the exact locally tested patch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD^)" = 04e4336ac91bafc11100fb91d5cc721a093a9d5b
+          python3 - <<'PY'
+          import base64, gzip, hashlib, json, os, subprocess, urllib.request
+          from pathlib import Path
+          parts = [('cb759a18a9b50463182d9b316d3d93caf5ca8f5a', 'cb759a18a9b50463182d9b316d3d93caf5ca8f5a'),
+                   ('bd4eea209182b1abea7a6f6a7c7f5f0bf726520f', 'c2b2d64f1dd355a610193f1140dc4cd9f3e8f6d9'),
+                   ('9c0db6d20a28a14a4674e76d357654a29debdaf4', '9c0db6d20a28a14a4674e76d357654a29debdaf4')]
+          def blob_sha(data):
+              return hashlib.sha1(f'blob {len(data)}\0'.encode() + data).hexdigest()
+          compressed = bytearray()
+          for sha, expected in parts:
+              request = urllib.request.Request('https://api.github.com/repos/wieslawsoltes/UnoDock/git/blobs/' + sha,
+                  headers={'Authorization': 'Bearer ' + os.environ['GH_TOKEN'], 'Accept': 'application/vnd.github+json'})
+              with urllib.request.urlopen(request, timeout=60) as response:
+                  payload = json.load(response)
+              data = base64.b64decode(payload['content'])
+              assert blob_sha(data) == sha
+              if sha != expected:
+                  # Correct the single known extra base64 character introduced in
+                  # transport. Both the original object and corrected bytes are
+                  # independently pinned; the full patch and final tree are too.
+                  encoded = base64.b64encode(data).decode()
+                  assert encoded.count('GozZZONxsRTd0') == 1
+                  encoded = encoded.replace('GozZZONxsRTd0', 'GozZONxsRTd0')
+                  data = base64.b64decode(encoded + '=' * (-len(encoded) % 4))
+              assert blob_sha(data) == expected
+              compressed.extend(data)
+          patch = gzip.decompress(compressed)
+          assert len(patch) == 117418
+          assert hashlib.sha256(patch).hexdigest() == 'e7094df025112d86301ae42c84e86600260386219f9b8b513b3b1dc7e4d51af8'
+          Path('/tmp/xaml-workbench.patch').write_bytes(patch)
+          subprocess.run(['git','apply','--check','--index','/tmp/xaml-workbench.patch'],check=True)
+          subprocess.run(['git','apply','--index','/tmp/xaml-workbench.patch'],check=True)
+          PY
+          git rm .github/workflows/apply-xaml-workbench.yml
+          test "$(git write-tree)" = 3c5c3613cb75b2ef133d284fa1d74b301fb71680
+      - name: Canonical formatting and source invariants
+        run: |
+          dotnet run --project tools/SourceMaintenance -c Release -- --format .
+          dotnet run --project tools/SourceMaintenance -c Release -- --check .
+          dotnet run --project tools/SourceMaintenance -c Release -- --check-format .
+          python3 tools/generate-property-adapters.py
+          git diff HEAD^ --exit-code -- 'src/**/*.g.cs' contracts/ tools/ReferenceProbe/
+          git diff --check
+      - name: Build actual Uno application and portable core tests
+        run: |
+          dotnet build samples/UnoDock.Gallery -c Release -f net10.0-desktop -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0 -warnaserror
+          dotnet run --project tests/UnoDock.Core.Tests -c Release -- artifacts/core-tests
+      - name: Install dedicated desktop test display
+        run: sudo apt-get update && sudo apt-get install -y xvfb libx11-6 libxi6 libxrandr2 libxcursor1 libfontconfig1 libgl1 libice6 libsm6 libxcb1 libxtst6
+      - name: Run the compiled XAML and model-invariant suites
+        run: |
+          xvfb-run -a -s '-screen 0 2560x1440x24' python3 tools/run-desktop-tests.py --app samples/UnoDock.Gallery/bin/Release/net10.0-desktop/UnoDock.Gallery.dll --output artifacts/xaml-tests --selector xaml-workbench
+          xvfb-run -a -s '-screen 0 2560x1440x24' python3 tools/run-desktop-tests.py --app samples/UnoDock.Gallery/bin/Release/net10.0-desktop/UnoDock.Gallery.dll --output artifacts/invariant-tests --selector layout-mutation-invariants
+      - name: Preserve the verified product tree on this branch only
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add src/ samples/ tests/ docs/ README.md
+          git diff --cached --check
+          git config user.name 'Wiesław Šoltés'
+          git config user.email 'wieslawsoltes@users.noreply.github.com'
+          git commit -m 'feat: bindable layout models, portable item bindings and compiled XAML workbenches'
+          git fetch origin work/preview25-xaml-workbench
+          test "$(git rev-parse FETCH_HEAD)" = '${{ github.sha }}'
+          git push origin HEAD:work/preview25-xaml-workbench
+          git archive --format=zip -o artifacts/UnoDock-xaml-source.zip HEAD
+          git rev-parse HEAD > artifacts/source-revision.txt
+          git rev-parse HEAD^{tree} > artifacts/source-tree.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: xaml-integration-evidence
+          path: artifacts/
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: xaml-source-formatter
+          path: tools/SourceMaintenance/bin/Release/net10.0/
