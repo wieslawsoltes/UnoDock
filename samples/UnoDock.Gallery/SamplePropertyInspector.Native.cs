@@ -13,13 +13,10 @@ internal sealed partial class SamplePropertyInspector
     private readonly Dictionary<FrameworkElement, ListViewItem> _nativeContainers = new(ReferenceEqualityComparer.Instance);
     private readonly ToggleButton _categoryMode, _alphabeticalMode;
     private bool _selectingNativeRow;
-
-    private T NativeTemplate<T>(string name) where T : FrameworkElement =>
-        ((DataTemplate)_nativeResources[name]).LoadContent() as T ?? throw new InvalidOperationException("Invalid compiled inspector template: " + name);
-
-    private static T Part<T>(FrameworkElement root, string name) where T : FrameworkElement =>
-        root.FindVisualChildren<T>().Single(element => element.Name == name);
-
+    private T NativeTemplate<T>(string name)
+        where T : FrameworkElement => ((DataTemplate)_nativeResources[name]).LoadContent() as T ?? throw new InvalidOperationException("Invalid compiled inspector template: " + name);
+    private static T Part<T>(FrameworkElement root, string name)
+        where T : FrameworkElement => root.FindVisualChildren<T>().Single(element => element.Name == name);
     private void AddNativeRow(Field field)
     {
         var kind = field.Write == null ? "ReadOnly" : field.Kind.ToString();
@@ -65,6 +62,7 @@ internal sealed partial class SamplePropertyInspector
                     row.SuppressPresentationBlur = false;
                     return;
                 }
+
                 if (HasDraft(row) && _synchronizing == 0)
                 {
                     Commit(row, text.Text, true);
@@ -78,6 +76,7 @@ internal sealed partial class SamplePropertyInspector
                     {
                         Commit(row, text.Text, true);
                     }
+
                     args.Handled = true;
                 }
                 else if (args.Key == VirtualKey.Escape)
@@ -90,16 +89,30 @@ internal sealed partial class SamplePropertyInspector
             {
                 row.Swatch = Part<Border>(grid, "ColorSwatch");
             }
+
             input = text;
         }
 
         AutomationProperties.SetName(input, field.Name);
         AutomationProperties.SetHelpText(input, field.Description);
         AutomationProperties.SetAutomationId(input, "Property-" + field.Name);
+        if (input is Control focusControl)
+        {
+            // FocusState is authoritative even when a rapid Focus/blur sequence
+            // coalesces the later routed GotFocus/LostFocus notifications.
+            var focusToken = focusControl.RegisterPropertyChangedCallback(Control.FocusStateProperty, (sender, _) =>
+            {
+                if (sender is Control { FocusState: not FocusState.Unfocused })
+                {
+                    row.SuppressPresentationBlur = false;
+                }
+            });
+            _tokens.Add((focusControl, Control.FocusStateProperty, focusToken));
+        }
+
         input.GotFocus += (_, _) =>
         {
-            row.SuppressPresentationBlur = false;
-            if (IsCurrent(row))
+            if (IsCurrent(row) && input is Control { FocusState: not FocusState.Unfocused })
             {
                 ShowDescription(row);
             }
@@ -128,6 +141,7 @@ internal sealed partial class SamplePropertyInspector
             };
             _nativeContainers.Add(view, container);
         }
+
         return container;
     }
 
@@ -140,9 +154,7 @@ internal sealed partial class SamplePropertyInspector
         {
             var desired = new List<ListViewItem>();
             var seen = new HashSet<string>(StringComparer.Ordinal);
-            var ordered = _alphabetical
-                ? _entries.OrderBy(row => row.Field.Name, StringComparer.Ordinal)
-                : _entries.OrderBy(row => row.Field.Category, StringComparer.Ordinal).ThenBy(row => row.Field.Name, StringComparer.Ordinal);
+            var ordered = _alphabetical ? _entries.OrderBy(row => row.Field.Name, StringComparer.Ordinal) : _entries.OrderBy(row => row.Field.Category, StringComparer.Ordinal).ThenBy(row => row.Field.Name, StringComparer.Ordinal);
             foreach (var row in ordered)
             {
                 if (!_alphabetical && seen.Add(row.Field.Category))
@@ -154,20 +166,25 @@ internal sealed partial class SamplePropertyInspector
                         var button = Part<ToggleButton>(header, "CategoryToggle");
                         AutomationProperties.SetName(button, "Toggle " + name + " properties");
                         AutomationProperties.SetAutomationId(button, "PropertyCategory-" + name);
-                        button.Click += (_, _) =>
+                        void ChangeCategory(bool expanded)
                         {
-                            if (!_disposed && _groups.TryGetValue(name, out var current) && ReferenceEquals(current.Button, button))
+                            if (_synchronizing == 0 && !_disposed && _groups.TryGetValue(name, out var current) && ReferenceEquals(current.Button, button) && expanded == _collapsed.Contains(name))
                             {
                                 ToggleCategory(name);
                             }
-                        };
+                        }
+
+                        button.Checked += (_, _) => ChangeCategory(true);
+                        button.Unchecked += (_, _) => ChangeCategory(false);
                         group = new Category(header, button, name);
                         _groups.Add(name, group);
                     }
+
                     var container = NativeContainer(group.View);
                     container.IsTabStop = false;
                     desired.Add(container);
                 }
+
                 desired.Add(NativeContainer(row.View));
             }
 
@@ -179,11 +196,13 @@ internal sealed partial class SamplePropertyInspector
                 {
                     return;
                 }
+
                 var item = desired[index];
                 if (index < _nativeItems.Count && ReferenceEquals(_nativeItems[index], item))
                 {
                     continue;
                 }
+
                 var previous = _nativeItems.IndexOf(item);
                 if (previous >= 0)
                 {
@@ -194,14 +213,17 @@ internal sealed partial class SamplePropertyInspector
                     _nativeItems.Insert(index, item);
                 }
             }
+
             while (_nativeItems.Count > desired.Count && epoch == _epoch && !_disposed)
             {
                 _nativeItems.RemoveAt(_nativeItems.Count - 1);
             }
+
             if (_disposed || epoch != _epoch)
             {
                 return;
             }
+
             FilterNativeRows();
             ApplyColumnWidth();
             UpdateOrderButtons();
@@ -227,13 +249,13 @@ internal sealed partial class SamplePropertyInspector
                 row.View.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
                 NativeContainer(row.View).Visibility = row.View.Visibility;
             }
+
             foreach (var group in _groups.Values)
             {
                 var expanded = !_collapsed.Contains(group.Name) || text.Length > 0;
                 group.Button.IsChecked = expanded;
                 group.Button.Content = (expanded ? "−  " : "+  ") + group.Name;
-                group.View.Visibility = !_alphabetical && (text.Length == 0 || _entries.Any(row => row.Field.Category == group.Name && row.View.Visibility == Visibility.Visible))
-                    ? Visibility.Visible : Visibility.Collapsed;
+                group.View.Visibility = !_alphabetical && (text.Length == 0 || _entries.Any(row => row.Field.Category == group.Name && row.View.Visibility == Visibility.Visible)) ? Visibility.Visible : Visibility.Collapsed;
                 NativeContainer(group.View).Visibility = group.View.Visibility;
             }
         }
@@ -245,24 +267,35 @@ internal sealed partial class SamplePropertyInspector
 
     private void PreserveDraftDuringPresentation()
     {
+        var moveFocus = false;
         foreach (var row in _entries)
         {
-            if (row.Text is not { FocusState: not FocusState.Unfocused } text)
+            if (row.Text is not { } text)
             {
                 continue;
             }
-            row.SuppressPresentationBlur = true;
-            var epoch = _epoch;
-            DispatcherQueue.TryEnqueue(() =>
+
+            if (text.FocusState != FocusState.Unfocused || HasDraft(row))
             {
-                // A stable focused editor still needs its next real user blur.
-                // An editor hidden by this presentation keeps only the pending
-                // blur suppression; GotFocus resets it on a later interaction.
-                if (epoch == _epoch && text.FocusState != FocusState.Unfocused)
-                {
-                    row.SuppressPresentationBlur = false;
-                }
-            });
+                row.SuppressPresentationBlur = true;
+                moveFocus |= text.FocusState != FocusState.Unfocused;
+            }
+        }
+
+        if (moveFocus)
+        {
+            // A dispatcher tick is not a focus-event barrier. Transfer focus to
+            // the retained search control before moving/hiding any container;
+            // LostFocus consumes the fence, and a new FocusState clears it.
+            _synchronizing++;
+            try
+            {
+                _search.Focus(FocusState.Programmatic);
+            }
+            finally
+            {
+                _synchronizing--;
+            }
         }
     }
 
@@ -278,8 +311,8 @@ internal sealed partial class SamplePropertyInspector
         {
             return;
         }
-        if (_rows.SelectedItem is ListViewItem { Content: Grid view } &&
-            _entries.FirstOrDefault(row => ReferenceEquals(row.View, view)) is { } selected && IsCurrent(selected))
+
+        if (_rows.SelectedItem is ListViewItem { Content: Grid view } && _entries.FirstOrDefault(row => ReferenceEquals(row.View, view)) is { } selected && IsCurrent(selected))
         {
             ShowDescription(selected);
         }
@@ -291,11 +324,11 @@ internal sealed partial class SamplePropertyInspector
         {
             return;
         }
+
         _selectingNativeRow = true;
         try
         {
-            _rows.SelectedItem = row != null && _nativeContainers.TryGetValue(row.View, out var container) && _nativeItems.Contains(container)
-                ? container : null;
+            _rows.SelectedItem = row != null && _nativeContainers.TryGetValue(row.View, out var container) && _nativeItems.Contains(container) ? container : null;
         }
         finally
         {

@@ -29,9 +29,12 @@ internal static class NativeInspectorTests
         {
             var row = f.Row("FontSize");
             var peer = FrameworkElementAutomationPeer.CreatePeerForElement(row);
-            var selection = peer?.GetPattern(PatternInterface.SelectionItem) as ISelectionItemProvider;
-            Check.True(selection != null);
-            selection!.Select();
+            Check.True(peer is ListViewItemAutomationPeer);
+            Check.Equal(AutomationControlType.ListItem, peer!.GetAutomationControlType());
+            // Uno's data-selection peer rejects this native ListView path. Do
+            // not substitute a custom peer or claim unsupported UIA transport;
+            // select through the native container, with physical input below.
+            row.IsSelected = true;
             await Wait(() => f.Inspector.SelectedPropertyName == "FontSize");
             Check.Same(row, f.List.SelectedItem);
             Check.True(AutomationProperties.GetHelpText(row).Contains("DIPs", StringComparison.Ordinal));
@@ -42,6 +45,8 @@ internal static class NativeInspectorTests
             await f.Settle();
             Check.True(f.Field<TextBox>("FontSize").Focus(FocusState.Programmatic));
             await Wait(() => ReferenceEquals(f.List.SelectedItem, f.Row("FontSize")));
+            await f.Settle();
+            Check.Same(f.Field<TextBox>("FontSize"), Microsoft.UI.Xaml.Input.FocusManager.GetFocusedElement(f.Inspector.XamlRoot!));
             Check.Equal("FontSize", f.Inspector.SelectedPropertyName);
         });
         Add("native inspector: native category toggle updates collapse state", async f =>
@@ -144,7 +149,16 @@ internal static class NativeInspectorTests
             stale.IsChecked = false;
             Check.True(before.CanFloat && next.CanFloat);
         });
-        foreach (var mode in new[] { "light", "dark", "rtl", "narrow", "invalid" })
+        foreach (var mode in new[]
+        {
+            "light",
+            "dark",
+            "rtl",
+            "narrow",
+            "invalid"
+        }
+
+        )
         {
             Add("native inspector: Fluent presentation retains editors: " + mode, async f =>
             {
@@ -155,14 +169,17 @@ internal static class NativeInspectorTests
                 {
                     f.Inspector.FlowDirection = FlowDirection.RightToLeft;
                 }
+
                 if (mode == "narrow")
                 {
                     f.Page.Width = 640;
                 }
+
                 if (mode == "invalid")
                 {
                     f.Inspector.TryEdit("FontSize", "NaN");
                 }
+
                 f.Inspector.NameColumnWidth = 112;
                 await f.Settle();
                 Check.Same(editor, f.Field<TextBox>("FontSize"));
@@ -173,6 +190,7 @@ internal static class NativeInspectorTests
                 await VisualCapture.Save(f.Page, path);
             });
         }
+
         Add("native inspector: disposing rejects retained row callbacks", async f =>
         {
             var input = f.Field<CheckBox>("CanFloat");
@@ -184,8 +202,22 @@ internal static class NativeInspectorTests
             Check.Throws<ObjectDisposedException>(() => f.Inspector.TryEdit("Title", "stale"));
             await Task.CompletedTask;
         });
-        return tests.Run(output, "native-inspector");
+        if (OperatingSystem.IsLinux() && Environment.GetEnvironmentVariable("UNODOCK_NATIVE_INPUT_TESTS") == "1")
+        {
+            Add("XTEST: native inspector row click selects and describes the property", async f =>
+            {
+                f.Inspector.Filter("FontSize");
+                await f.Settle();
+                var row = f.Row("FontSize");
+                var label = ((Grid)row.Content).FindVisualChildren<TextBlock>().Single(text => text.Name == "PropertyName");
+                using var input = new X11TestInput();
+                await input.Click(label);
+                await Wait(() => ReferenceEquals(f.List.SelectedItem, row));
+                Check.Equal("FontSize", f.Inspector.SelectedPropertyName);
+            });
+        }
 
+        return tests.Run(output, "native-inspector");
         void Add(string name, Func<Fixture, Task> body) => tests.Test(name, async () =>
         {
             using var fixture = new Fixture();
@@ -196,7 +228,11 @@ internal static class NativeInspectorTests
 
     private sealed class Fixture : IDisposable
     {
-        internal readonly GalleryPage Page = new() { Width = 1000, Height = 720 };
+        internal readonly GalleryPage Page = new()
+        {
+            Width = 1000,
+            Height = 720
+        };
         private readonly Window _window;
         internal SamplePropertyInspector Inspector => Page.PropertyInspector!;
         internal LayoutDocument Document => Page.Dock.Layout.Descendents().OfType<LayoutDocument>().Single(document => document.ContentId == "document2");
@@ -206,8 +242,16 @@ internal static class NativeInspectorTests
 
         internal Fixture()
         {
-            _window = new Window { Content = Page, Title = "UnoDock native property inspector acceptance" };
-            _window.AppWindow.Resize(new() { Width = 1100, Height = 830 });
+            _window = new Window
+            {
+                Content = Page,
+                Title = "UnoDock native property inspector acceptance"
+            };
+            _window.AppWindow.Resize(new()
+            {
+                Width = 1100,
+                Height = 830
+            });
             _window.Activate();
         }
 
@@ -225,9 +269,9 @@ internal static class NativeInspectorTests
             await Task.Delay(70);
         }
 
-        internal T Field<T>(string name) where T : FrameworkElement => Inspector.FindVisualChildren<T>().Single(element => AutomationProperties.GetAutomationId(element) == "Property-" + name);
+        internal T Field<T>(string name)
+            where T : FrameworkElement => Inspector.FindVisualChildren<T>().Single(element => AutomationProperties.GetAutomationId(element) == "Property-" + name);
         internal ListViewItem Row(string name) => List.Items.OfType<ListViewItem>().Single(item => AutomationProperties.GetAutomationId(item) == "PropertyRow-" + name);
-
         public void Dispose()
         {
             _window.Content = null;
@@ -242,6 +286,7 @@ internal static class NativeInspectorTests
         {
             await Task.Delay(25);
         }
+
         Check.True(predicate(), "Native inspector did not reach the required state.");
     }
 }

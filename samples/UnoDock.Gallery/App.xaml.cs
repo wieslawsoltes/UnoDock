@@ -61,6 +61,7 @@ public partial class App : Application
                         ("sample-quality", true, () => Testing.SampleQualityTests.Run(gallery, output)),
                         ("presentation-quality", true, () => Testing.PresentationQualityTests.Run(output)),
                         ("inspector-quality", true, () => Testing.InspectorQualityTests.Run(output)),
+                        ("native-inspector", true, () => Testing.NativeInspectorTests.Run(output)),
                         ("restore-ownership", true, () => Testing.RestoreOwnershipTests.Run(output)),
                         ("mvvm-workspace", true, () => Testing.MvvmWorkspaceTests.Run(output)),
                         ("source-ownership", true, () => Testing.SourceOwnershipTests.Run(output)),
