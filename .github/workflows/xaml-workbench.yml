@@ -47,7 +47,7 @@ jobs:
           root = ET.parse(path / 'xaml-workbench.xml').getroot()
           cases = root.findall('testcase')
           assert root.tag == 'testsuite' and root.get('name') == 'xaml-workbench'
-          assert len(cases) == int(root.get('tests', '-1')) and len(cases) >= 32
+          assert len(cases) == int(root.get('tests', '-1')) and len(cases) >= 70
           assert len({case.get('name') for case in cases}) == len(cases)
           assert not any(int(root.get(key, '0')) for key in ['failures', 'errors', 'skipped'])
           assert not any(case.find(tag) is not None for case in cases for tag in ['failure', 'error', 'skipped'])
@@ -56,10 +56,13 @@ jobs:
           result = record['completed'][0]
           assert result['suite'] == 'xaml-workbench' and result['error'] is None
           assert result['executed'] == result['passed'] == len(cases)
-          for theme in ['light', 'dark']:
-              image = path / 'visuals' / ('xaml-workbench-' + theme + '.png')
+          captures = ['xaml-workbench-light', 'xaml-workbench-dark',
+                      'xaml-policies-light', 'xaml-policies-dark', 'xaml-workbench-narrow']
+          for capture in captures:
+              image = path / 'visuals' / (capture + '.png')
               assert image.is_file() and image.stat().st_size > 1000
-          print('Verified', len(cases), 'real-host XAML cases and both theme captures.')
+              assert image.read_bytes()[:8] == b'\x89PNG\r\n\x1a\n'
+          print('Verified', len(cases), 'real-host XAML cases and all five presentation captures.')
           PY
       - uses: actions/upload-artifact@v4
         if: always()
