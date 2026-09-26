@@ -1,0 +1,91 @@
+name: Prepare native property inspector
+on:
+  push:
+    branches: [work/preview27-native-property-inspector]
+    paths: [.github/workflows/prepare-native-inspector.yml, tools/migrate-native-inspector.py, samples/UnoDock.Gallery/SampleInspectorResources.xaml, samples/UnoDock.Gallery/SamplePropertyInspector.Native.cs, tests/UnoDock.VisualTests/NativeInspectorTests.cs]
+permissions:
+  contents: write
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Apply reviewed presentation-only integration
+        run: python3 tools/migrate-native-inspector.py
+      - name: Canonical source checks and actual Uno XAML compilation
+        run: |
+          dotnet run --project tools/SourceMaintenance -c Release -- --format .
+          dotnet run --project tools/SourceMaintenance -c Release -- --check .
+          dotnet run --project tools/SourceMaintenance -c Release -- --check-format .
+          python3 tools/generate-property-adapters.py
+          git diff --exit-code -- 'src/**/*.g.cs' contracts/ tools/ReferenceProbe/
+          dotnet build samples/UnoDock.Gallery -c Release -f net10.0-desktop -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0 -warnaserror
+      - name: Install isolated native display
+        run: sudo apt-get update && sudo apt-get install -y xvfb libx11-6 libxi6 libxrandr2 libxcursor1 libfontconfig1 libgl1 libice6 libsm6 libxcb1 libxtst6
+      - name: Execute new presentation cases and unchanged inspector/sample acceptance
+        env:
+          UNODOCK_NATIVE_INPUT_TESTS: '1'
+        run: |
+          result=0
+          for suite in native-inspector inspector-quality sample-quality; do
+            xvfb-run -a -s '-screen 0 2560x1440x24' python3 tools/run-desktop-tests.py --app samples/UnoDock.Gallery/bin/Release/net10.0-desktop/UnoDock.Gallery.dll --output artifacts/$suite --selector $suite --suite-timeout 180 --total-timeout 240 || result=1
+          done
+          exit "$result"
+      - name: Remove preparation helpers and store only the validated Git tree
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git rm tools/migrate-native-inspector.py .github/workflows/prepare-native-inspector.yml
+          git add samples/ tests/ docs/
+          git diff --cached --check
+          python3 - <<'PY'
+          import base64, json, os, subprocess, urllib.request
+          from pathlib import Path
+          repo='wieslawsoltes/UnoDock'
+          head=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+          base_tree=subprocess.check_output(['git','rev-parse','HEAD^{tree}'],text=True).strip()
+          local_tree=subprocess.check_output(['git','write-tree'],text=True).strip()
+          def post(path, value):
+              request=urllib.request.Request('https://api.github.com/repos/'+repo+'/'+path,
+                  data=json.dumps(value).encode(), method='POST',
+                  headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'], 'Accept':'application/vnd.github+json', 'Content-Type':'application/json'})
+              with urllib.request.urlopen(request,timeout=60) as response: return json.load(response)
+          entries=[]
+          for path in subprocess.check_output(['git','diff','--cached','--name-only','-z','HEAD']).decode().split('\0'):
+              if not path: continue
+              file=Path(path)
+              if not file.exists():
+                  entries.append({'path':path,'mode':'100644','type':'blob','sha':None})
+              else:
+                  blob=post('git/blobs',{'encoding':'base64','content':base64.b64encode(file.read_bytes()).decode()})
+                  expected=subprocess.check_output(['git','hash-object',path],text=True).strip()
+                  assert blob['sha']==expected
+                  entries.append({'path':path,'mode':'100644','type':'blob','sha':blob['sha']})
+          remote=post('git/trees',{'base_tree':base_tree,'tree':entries})
+          assert remote['sha']==local_tree
+          result={'parent':head,'tree':local_tree,'changedEntries':entries,'refUpdated':False}
+          Path('artifacts/prepared-tree.json').write_text(json.dumps(result,indent=2)+'\n')
+          print('VALIDATED_TREE', json.dumps(result))
+          # No ref or commit is written by this workflow. The caller must review
+          # the exact result and publish it using the normal authorized connector.
+          PY
+      - name: Preserve exact prepared source and first-attempt evidence
+        if: always()
+        run: |
+          mkdir -p artifacts
+          git add samples/ tests/ docs/
+          git archive --format=zip "$(git write-tree)" -o artifacts/UnoDock-native-inspector-source.zip
+          git diff HEAD > artifacts/prepared.patch
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-inspector-preparation
+          path: artifacts/
+          if-no-files-found: error

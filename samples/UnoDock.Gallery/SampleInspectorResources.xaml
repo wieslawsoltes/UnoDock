@@ -1,0 +1,193 @@
+<ResourceDictionary
+    x:Class="UnoDock.Gallery.SampleInspectorResources"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+  <!-- Keep the platform templates, focus visuals and automation peers. These are
+       lightweight property overrides, not a second Button/ListView implementation. -->
+  <Style x:Key="Inspector.ActionStyle" TargetType="Button">
+    <Setter Property="MinWidth" Value="28" />
+    <Setter Property="MinHeight" Value="28" />
+    <Setter Property="Padding" Value="6,3" />
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="CornerRadius" Value="3" />
+  </Style>
+  <Style x:Key="Inspector.ModeStyle" TargetType="ToggleButton">
+    <Setter Property="MinWidth" Value="0" />
+    <Setter Property="MinHeight" Value="28" />
+    <Setter Property="Padding" Value="6,3" />
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="CornerRadius" Value="3" />
+  </Style>
+  <Style x:Key="Inspector.ContainerStyle" TargetType="ListViewItem">
+    <Setter Property="MinWidth" Value="0" />
+    <Setter Property="MinHeight" Value="0" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="Margin" Value="0" />
+    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+    <Setter Property="VerticalContentAlignment" Value="Stretch" />
+  </Style>
+  <Style x:Key="Inspector.RowStyle" TargetType="Grid">
+    <Setter Property="MinHeight" Value="28" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0,0,0,1" />
+    <Setter Property="BorderBrush" Value="{ThemeResource ControlStrokeColorDefaultBrush}" />
+  </Style>
+  <Style x:Key="Inspector.LabelStyle" TargetType="TextBlock">
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="Margin" Value="6,4,4,4" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+    <Setter Property="Foreground" Value="{ThemeResource TextFillColorPrimaryBrush}" />
+  </Style>
+  <Style x:Key="Inspector.ErrorStyle" TargetType="TextBlock">
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="Margin" Value="6,2,6,5" />
+    <Setter Property="TextWrapping" Value="Wrap" />
+    <Setter Property="Foreground" Value="{ThemeResource SystemFillColorCriticalBrush}" />
+    <Setter Property="Visibility" Value="Collapsed" />
+  </Style>
+  <Style x:Key="Inspector.TextStyle" TargetType="TextBox">
+    <Setter Property="MinWidth" Value="0" />
+    <Setter Property="MinHeight" Value="26" />
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="Padding" Value="4,2" />
+    <Setter Property="Margin" Value="2,1" />
+    <Setter Property="CornerRadius" Value="3" />
+  </Style>
+
+  <DataTemplate x:Key="Inspector.Shell">
+    <Grid Background="{ThemeResource LayerFillColorDefaultBrush}">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="*" />
+        <RowDefinition Height="Auto" />
+      </Grid.RowDefinitions>
+      <TextBlock x:Name="InspectorHeading" Margin="6,5,6,4" FontSize="12"
+                 FontWeight="SemiBold" TextTrimming="CharacterEllipsis"
+                 Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+      <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="4" Margin="4,0,4,2">
+        <ToggleButton x:Name="CategoryMode" Content="Categories"
+                      Style="{StaticResource Inspector.ModeStyle}"
+                      AutomationProperties.Name="Group properties by category" />
+        <ToggleButton x:Name="AlphabeticalMode" Content="A–Z"
+                      Style="{StaticResource Inspector.ModeStyle}"
+                      AutomationProperties.Name="Sort properties alphabetically" />
+      </StackPanel>
+      <Grid Grid.Row="2" Margin="4,2,4,4" ColumnSpacing="3">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <TextBox x:Name="PropertySearch" PlaceholderText="Search properties"
+                 MinWidth="0" MinHeight="28" FontSize="12" Padding="5,3"
+                 AutomationProperties.AutomationId="PropertySearch"
+                 AutomationProperties.Name="Search document properties" />
+        <Button x:Name="ClearSearch" Grid.Column="1" Content="×"
+                Style="{StaticResource Inspector.ActionStyle}"
+                AutomationProperties.Name="Clear property search" />
+      </Grid>
+      <Grid x:Name="PropertyColumns" Grid.Row="3"
+            Background="{ThemeResource SolidBackgroundFillColorBaseBrush}">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="96" />
+          <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <TextBlock Text="Property" Style="{StaticResource Inspector.LabelStyle}" />
+        <TextBlock Grid.Column="1" Text="Value" Style="{StaticResource Inspector.LabelStyle}" />
+        <Thumb x:Name="NameColumnDivider" Width="5" MinHeight="0"
+               HorizontalAlignment="Right" IsTabStop="True"
+               Background="{ThemeResource ControlStrokeColorDefaultBrush}"
+               AutomationProperties.Name="Property name column divider" />
+      </Grid>
+      <ListView x:Name="PropertyRows" Grid.Row="4"
+                SelectionMode="Single" IsItemClickEnabled="False"
+                ItemContainerStyle="{StaticResource Inspector.ContainerStyle}"
+                HorizontalContentAlignment="Stretch" BorderThickness="0" Padding="0"
+                ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                AutomationProperties.AutomationId="PropertyTable"
+                AutomationProperties.Name="Document property rows">
+        <ListView.ItemsPanel>
+          <!-- The inspector has a bounded registered field set and promises to
+               retain editable drafts even when rows are filtered or reordered.
+               Do not recycle those editor instances as generic data-grid cells. -->
+          <ItemsPanelTemplate><StackPanel /></ItemsPanelTemplate>
+        </ListView.ItemsPanel>
+      </ListView>
+      <Border Grid.Row="5" BorderThickness="0,1,0,0"
+              BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}">
+        <StackPanel Padding="6" Spacing="4" MinHeight="66">
+          <TextBlock x:Name="DescriptionTitle" FontSize="12" FontWeight="SemiBold"
+                     Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+          <TextBlock x:Name="PropertyDescription" FontSize="11" TextWrapping="Wrap" MaxLines="3"
+                     Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+        </StackPanel>
+      </Border>
+    </Grid>
+  </DataTemplate>
+
+  <DataTemplate x:Key="Inspector.Category">
+    <Border Background="{ThemeResource SolidBackgroundFillColorBaseBrush}" MinHeight="28">
+      <ToggleButton x:Name="CategoryToggle" HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Left"
+                    Style="{StaticResource Inspector.ModeStyle}" />
+    </Border>
+  </DataTemplate>
+
+  <DataTemplate x:Key="Inspector.Text">
+    <Grid Style="{StaticResource Inspector.RowStyle}">
+      <Grid.ColumnDefinitions><ColumnDefinition Width="96" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+      <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+      <TextBlock x:Name="PropertyName" Style="{StaticResource Inspector.LabelStyle}" />
+      <TextBox x:Name="TextEditor" Grid.Column="1" Style="{StaticResource Inspector.TextStyle}" />
+      <TextBlock x:Name="PropertyError" Grid.Row="1" Grid.ColumnSpan="2" Style="{StaticResource Inspector.ErrorStyle}" />
+    </Grid>
+  </DataTemplate>
+  <DataTemplate x:Key="Inspector.Boolean">
+    <Grid Style="{StaticResource Inspector.RowStyle}">
+      <Grid.ColumnDefinitions><ColumnDefinition Width="96" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+      <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+      <TextBlock x:Name="PropertyName" Style="{StaticResource Inspector.LabelStyle}" />
+      <CheckBox x:Name="BooleanEditor" Grid.Column="1" MinWidth="0" MinHeight="28"
+                Padding="4,0" HorizontalAlignment="Left" />
+      <TextBlock x:Name="PropertyError" Grid.Row="1" Grid.ColumnSpan="2" Style="{StaticResource Inspector.ErrorStyle}" />
+    </Grid>
+  </DataTemplate>
+  <DataTemplate x:Key="Inspector.Choice">
+    <Grid Style="{StaticResource Inspector.RowStyle}">
+      <Grid.ColumnDefinitions><ColumnDefinition Width="96" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+      <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+      <TextBlock x:Name="PropertyName" Style="{StaticResource Inspector.LabelStyle}" />
+      <ComboBox x:Name="ChoiceEditor" Grid.Column="1" MinWidth="0" MinHeight="28"
+                FontSize="12" Padding="4,2" Margin="2,1" HorizontalAlignment="Stretch" />
+      <TextBlock x:Name="PropertyError" Grid.Row="1" Grid.ColumnSpan="2" Style="{StaticResource Inspector.ErrorStyle}" />
+    </Grid>
+  </DataTemplate>
+  <DataTemplate x:Key="Inspector.Color">
+    <Grid Style="{StaticResource Inspector.RowStyle}">
+      <Grid.ColumnDefinitions><ColumnDefinition Width="96" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+      <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+      <TextBlock x:Name="PropertyName" Style="{StaticResource Inspector.LabelStyle}" />
+      <Grid Grid.Column="1">
+        <Grid.ColumnDefinitions><ColumnDefinition Width="18" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+        <Border x:Name="ColorSwatch" Width="12" Height="12" BorderThickness="1"
+                BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}" VerticalAlignment="Center" />
+        <TextBox x:Name="TextEditor" Grid.Column="1" Style="{StaticResource Inspector.TextStyle}" />
+      </Grid>
+      <TextBlock x:Name="PropertyError" Grid.Row="1" Grid.ColumnSpan="2" Style="{StaticResource Inspector.ErrorStyle}" />
+    </Grid>
+  </DataTemplate>
+  <DataTemplate x:Key="Inspector.ReadOnly">
+    <Grid Style="{StaticResource Inspector.RowStyle}">
+      <Grid.ColumnDefinitions><ColumnDefinition Width="96" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+      <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+      <TextBlock x:Name="PropertyName" Style="{StaticResource Inspector.LabelStyle}" />
+      <TextBlock x:Name="ReadOnlyValue" Grid.Column="1" IsTextSelectionEnabled="True"
+                 Style="{StaticResource Inspector.LabelStyle}" />
+      <TextBlock x:Name="PropertyError" Grid.Row="1" Grid.ColumnSpan="2" Style="{StaticResource Inspector.ErrorStyle}" />
+    </Grid>
+  </DataTemplate>
+</ResourceDictionary>
