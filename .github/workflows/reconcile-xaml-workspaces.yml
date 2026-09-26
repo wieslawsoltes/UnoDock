@@ -2,7 +2,7 @@ name: Reconcile compiled XAML workspaces
 on:
   push:
     branches: [work/preview25-xaml-themes]
-    paths: [.github/workflows/reconcile-xaml-workspaces.yml, tools/reconcile-xaml-workspaces.py]
+    paths: [.github/workflows/reconcile-xaml-workspaces.yml, tools/reconcile-xaml-workspaces.py, tools/reconcile-floating-mode.py]
 permissions:
   contents: write
 jobs:
@@ -18,7 +18,9 @@ jobs:
         with:
           dotnet-version: '10.0.x'
       - name: Apply explicit reconciliation of both PR implementations
-        run: python3 tools/reconcile-xaml-workspaces.py
+        run: |
+          python3 tools/reconcile-xaml-workspaces.py
+          python3 tools/reconcile-floating-mode.py
       - name: Enforce source organization, canonical syntax and consumer contracts
         run: |
           dotnet run --project tools/SourceMaintenance -c Release -- --format .
@@ -39,7 +41,7 @@ jobs:
       - name: Publish validated source and remove integration workers
         run: |
           set -euo pipefail
-          git rm tools/reconcile-xaml-workspaces.py .github/workflows/reconcile-xaml-workspaces.yml
+          git rm tools/reconcile-xaml-workspaces.py tools/reconcile-floating-mode.py .github/workflows/reconcile-xaml-workspaces.yml
           git add src/ samples/ tests/ docs/
           git diff --cached --check
           git config user.name 'Wiesław Šoltés'
