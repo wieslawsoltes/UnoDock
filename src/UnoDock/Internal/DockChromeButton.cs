@@ -35,6 +35,8 @@ internal sealed partial class DockChromeButton : Button
         Template = DockChrome.ButtonTemplate;
         UseSystemFocusVisuals = true;
         Configure(DockChrome.Default(false));
+        if (OperatingSystem.IsBrowser())
+            Loaded += (_, _) => Paint();
         PointerEntered += (_, _) =>
         {
             _over = true;
@@ -106,7 +108,11 @@ internal sealed partial class DockChromeButton : Button
     private void Paint()
     {
         var foreground = !_fluent ? _palette.Foreground : !IsEnabled ? _palette.DisabledForeground ?? _palette.Foreground : _subdued ? _palette.SecondaryForeground ?? _palette.Foreground : _palette.Foreground;
-        Foreground = foreground;
+        // The pinned browser renderer can stall in inherited brush propagation
+        // before attachment. Retain the latest palette and publish the same brush
+        // at Loaded; desktop/offscreen presentation keeps its existing contract.
+        if (!OperatingSystem.IsBrowser() || IsLoaded)
+            Foreground = foreground;
         PaintIcon();
         if (_fluent)
         {
