@@ -20,8 +20,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Integrate reviewed browser host
-        run: python3 tools/prepare-browser-workspace.py
+      - name: Integrate reviewed browser host and retired-session guards
+        run: |
+          python3 tools/prepare-browser-workspace.py
+          python3 tools/prepare-browser-refinements.py
       - name: Verify protocol and canonical C# sources
         run: |
           node --test tests/browser/session.test.mjs
@@ -33,7 +35,7 @@ jobs:
       - name: Preserve compiled integration on the review branch
         run: |
           set -euo pipefail
-          git add src/ samples/
+          git add src/ samples/ README.md
           git diff --cached --check
           git config user.name 'Wiesław Šoltés'
           git config user.email 'wieslawsoltes@users.noreply.github.com'
@@ -70,6 +72,7 @@ jobs:
           git rev-parse HEAD > artifacts/review/source-revision.txt
           git diff > artifacts/review/uncommitted.patch
           git archive --format=zip -o artifacts/review/source.zip HEAD
+          if [ -f tests/browser/package-lock.json ]; then cp tests/browser/package-lock.json artifacts/review/; fi
       - uses: actions/upload-artifact@v4
         if: always()
         with:
