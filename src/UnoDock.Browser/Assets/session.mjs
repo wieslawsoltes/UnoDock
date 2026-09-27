@@ -47,6 +47,13 @@ export class WorkspaceState {
     ready(id) {
         const window = this.windows.get(id);
         if (!window) throw new Error('Window is not registered.');
+        // A reload preserves WindowProxy identity, not the authority of a previous
+        // editor/runtime. Rotate all owned leases before publishing its replacement.
+        if (window.ready) {
+            for (const item of this.items.values()) {
+                if (item.owner === id) { item.lease++; item.revision++; }
+            }
+        }
         window.ready = true;
         this.commit();
     }
