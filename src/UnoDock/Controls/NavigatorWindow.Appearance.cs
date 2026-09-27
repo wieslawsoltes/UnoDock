@@ -95,6 +95,13 @@ public partial class NavigatorWindow
     internal void UpdateAppearance()
     {
         var palette = DockChrome.Palette(_manager);
+        var fluent = palette.UsesFluentControls;
+        CornerRadius = new(fluent ? Number("NavigatorCornerRadius", 8, 0, 24) : 0);
+        BorderThickness = new(fluent ? 1 : 3);
+        Padding = new(fluent ? 8 : 5);
+        _chrome.RowDefinitions[3].Height = new(fluent ? 8 : 42);
+        _toolHeading.FontWeight = _documentHeading.FontWeight = fluent ? Microsoft.UI.Text.FontWeights.SemiBold : Microsoft.UI.Text.FontWeights.Bold;
+        _selectionTitle.FontWeight = fluent ? Microsoft.UI.Text.FontWeights.SemiBold : Microsoft.UI.Text.FontWeights.Normal;
         var dark = _manager.ActualTheme == ElementTheme.Dark && _manager.Theme is not Themes.GenericTheme;
         // An explicit dictionary palette can disagree with RequestedTheme/OS mode.
         // Never combine its foreground with unrelated stock-light backgrounds.
@@ -122,7 +129,7 @@ public partial class NavigatorWindow
 
         var rowPalette = palette with
         {
-            Tab = Brush("NavigatorSelectionBrush", usePalette ? palette.Tab : LightSelection),
+            Tab = Brush("NavigatorSelectionBrush", fluent ? palette.Hover : usePalette ? palette.Tab : LightSelection),
             Border = Brush("NavigatorSelectionBorderBrush", usePalette ? palette.Border : LightSelectionBorder)
         };
         if (_defaultDocuments is NavigatorListBox documents)
@@ -130,7 +137,14 @@ public partial class NavigatorWindow
         if (_defaultAnchorables is NavigatorListBox tools)
             tools.Configure(rowPalette, Background);
         UpdateSelectedDetails();
-        Brush Brush(string key, Brush fallback) => _manager.Resources.TryGetValue("UnoDock." + key, out var b) && b is Brush value ? value : fallback;
+        Brush Brush(string key, Brush fallback) => Resource(key) as Brush ?? fallback;
+        double Number(string key, double fallback, double min, double max) => Resource(key) is double number && double.IsFinite(number) ? Math.Clamp(number, min, max) : fallback;
+        object? Resource(string key)
+        {
+            if (fluent)
+                return DockThemeResources.FindMetric(_manager, key);
+            return _manager.Resources.TryGetValue("UnoDock." + key, out var value) ? value : null;
+        }
     }
 
     [ThreadStatic]

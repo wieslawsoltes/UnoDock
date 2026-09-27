@@ -85,12 +85,16 @@ public partial class NavigatorWindow : DockWindowControl
     {
         list.SelectionChanged += ListSelectionChanged;
         list.Tapped += ListTapped;
+        if (list is NavigatorListBox native)
+            native.ItemInvoked += SelectAndCommitItem;
     }
 
     private void Detach(ListBox list)
     {
         list.SelectionChanged -= ListSelectionChanged;
         list.Tapped -= ListTapped;
+        if (list is NavigatorListBox native)
+            native.ItemInvoked -= SelectAndCommitItem;
     }
 
     private void ListSelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -107,16 +111,25 @@ public partial class NavigatorWindow : DockWindowControl
             if (current is ListBoxItem container)
             {
                 var item = container.Content as LayoutItem ?? container.DataContext as LayoutItem;
-                // Never activate the previous selection after tapping a stale container.
+                // Preserve the original unhandled path for ineligible legacy taps.
                 if (!Eligible(item))
                     return;
-                var session = _sessionVersion;
-                Select(item);
-                if (session == _sessionVersion && ReferenceEquals(_selected, item) && Eligible(item))
-                    CloseNavigatorForInput(true);
+                SelectAndCommitItem(item);
                 e.Handled = true;
                 return;
             }
+    }
+
+    private void SelectAndCommitItem(LayoutItem? item)
+    {
+        // Both legacy row taps and native Fluent button activation use the same
+        // eligibility, session-generation and application-command transaction.
+        if (_sessionRoot == null || !Eligible(item))
+            return;
+        var session = _sessionVersion;
+        Select(item);
+        if (session == _sessionVersion && ReferenceEquals(_selected, item) && Eligible(item))
+            CloseNavigatorForInput(true);
     }
 
     internal void Initialize()

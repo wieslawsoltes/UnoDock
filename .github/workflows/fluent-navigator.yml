@@ -1,0 +1,98 @@
+name: Fluent navigator controls
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: fluent-navigator-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  navigator:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Build actual Uno SDK and compiled row template
+        run: dotnet build samples/UnoDock.Gallery -c Release -f net10.0-desktop -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0 -warnaserror
+      - name: Install isolated X11 display
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y xvfb libx11-6 libxi6 libxrandr2 libxcursor1 libfontconfig1 libgl1 libice6 libsm6 libxcb1 libxtst6
+      - name: Run native Fluent navigator acceptance
+        shell: bash
+        env:
+          UNODOCK_NATIVE_INPUT_TESTS: '1'
+        run: |
+          args=(python3 tools/run-desktop-tests.py --app samples/UnoDock.Gallery/bin/Release/net10.0-desktop/UnoDock.Gallery.dll --output artifacts/fluent-navigator --selector fluent-navigator --suite-timeout 120 --total-timeout 180)
+          if [ "$RUNNER_OS" = Linux ]; then
+            xvfb-run -a -s '-screen 0 2560x1440x24' "${args[@]}"
+          else
+            "${args[@]}"
+          fi
+      - name: Require named cases, native process evidence and all rendered scenes
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p artifacts/fluent-navigator
+          git rev-parse HEAD > artifacts/fluent-navigator/source-revision.txt
+          python3 - <<'PY'
+          import json, os, struct, xml.etree.ElementTree as ET
+          from pathlib import Path
+          path = Path('artifacts/fluent-navigator')
+          root = ET.parse(path / 'fluent-navigator.xml').getroot()
+          cases = root.findall('testcase')
+          names = [case.get('name', '') for case in cases]
+          expected = {
+              f'Fluent navigator: {theme} {name}'
+              for theme in ('Light', 'Dark')
+              for name in (
+                  'native button composition preserves ListBox contracts',
+                  'preview moves indicator without activating editors',
+                  'native Invoke commits the requested command exactly once',
+                  'vetoed native action cannot fall back to model activation',
+                  'consumer selection brushes and active hover refresh retain identity',
+                  'theme and density changes retain rows, sources and editors',
+                  'Generic round trip retains containers and legacy geometry',
+                  'pending native action cannot revive a closed session')
+          }
+          expected.update(f'Fluent navigator: {theme} tool action honors eligibility={allowed}'
+                          for theme in ('Light', 'Dark') for allowed in ('False', 'True'))
+          expected.update('Fluent navigator: ' + name for name in (
+              'far-row reveal follows arranged native row sizes',
+              'reentrant command selection cannot activate an obsolete native row',
+              'corner overrides are scoped, finite and bounded'))
+          for scene in ('light', 'dark', 'rtl', 'large-text', 'narrow'):
+              expected.add('Fluent navigator: rendered native selection and frame: ' + scene)
+              data = (path / 'visuals' / ('fluent-navigator-' + scene + '.png')).read_bytes()
+              assert len(data) > 1000 and data[:8] == b'\x89PNG\r\n\x1a\n'
+              assert data[12:16] == b'IHDR' and min(struct.unpack('>II', data[16:24])) > 100
+          if os.environ['RUNNER_OS'] == 'Linux':
+              expected.add('XTEST Fluent navigator: a real row click commits only its target')
+              expected.add('XTEST Fluent navigator: held pointer previews native pressed state before one release commit')
+          assert root.tag == 'testsuite' and root.get('name') == 'fluent-navigator'
+          assert len(cases) == int(root.get('tests', '-1')) and len(cases) >= len(expected)
+          assert all(names) and len(names) == len(set(names)) and expected.issubset(names)
+          assert not any(int(root.get(key, '0')) for key in ('failures', 'errors', 'skipped'))
+          assert not any(case.find(tag) is not None for case in cases for tag in ('failure', 'error', 'skipped'))
+          record = json.loads((path / 'isolated-execution.json').read_text())
+          assert record['planned'] == ['fluent-navigator'] and len(record['completed']) == 1
+          completed = record['completed'][0]
+          assert completed['suite'] == 'fluent-navigator' and completed['error'] is None
+          assert completed['executed'] == completed['passed'] == len(cases)
+          print('Verified', len(cases), 'executed navigator cases and five captures.')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fluent-navigator-${{ runner.os }}
+          path: artifacts/fluent-navigator/
+          if-no-files-found: error

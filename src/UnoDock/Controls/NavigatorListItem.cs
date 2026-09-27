@@ -42,13 +42,16 @@ internal sealed partial class NavigatorListItem : ListBoxItem
         _surface = surface;
         FontSize = palette.FontSize;
         Foreground = palette.Foreground;
-        Height = RowHeight(palette.FontSize);
+        Height = palette.UsesFluentControls ? Math.Max(RowHeight(palette.FontSize), Math.Max(28, palette.TabHeight)) : RowHeight(palette.FontSize);
+        ConfigureFluentTemplate();
         Paint();
     }
 
     internal static double RowHeight(double fontSize) => Math.Max(24, Math.Ceiling(fontSize * 1.4 + 6));
     private void Paint()
     {
+        if (PaintFluent())
+            return;
         Background = IsSelected ? _palette.Tab : _hovered ? _palette.Hover : _surface;
         BorderBrush = IsSelected ? _palette.Border : DockChrome.Transparent;
     }
