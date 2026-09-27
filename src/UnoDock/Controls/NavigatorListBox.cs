@@ -13,6 +13,7 @@ public sealed partial class NavigatorListBox : ListBox
     private static ItemsPanelTemplate? _panel;
     [ThreadStatic]
     private static DataTemplate? _itemTemplate;
+    internal event Action<LayoutItem>? ItemInvoked;
     private DockPalette _palette = DockChrome.Default(false);
     private Brush _surface = DockChrome.Transparent;
     public NavigatorListBox()
@@ -43,7 +44,25 @@ public sealed partial class NavigatorListBox : ListBox
     {
         base.PrepareContainerForItemOverride(element, item);
         if (element is NavigatorListItem row)
+        {
+            row.Invoked -= RowInvoked;
+            row.Invoked += RowInvoked;
             row.Configure(_palette, _surface);
+        }
+    }
+
+    protected override void ClearContainerForItemOverride(DependencyObject element, object item)
+    {
+        if (element is NavigatorListItem row)
+            row.Invoked -= RowInvoked;
+        base.ClearContainerForItemOverride(element, item);
+    }
+
+    private void RowInvoked(NavigatorListItem row)
+    {
+        // A retained native button must not revive an obsolete list container.
+        if (IsLoaded && row.Content is LayoutItem item && ReferenceEquals(ContainerFromItem(item), row))
+            ItemInvoked?.Invoke(item);
     }
 
     internal void Configure(DockPalette palette, Brush surface)

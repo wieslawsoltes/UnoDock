@@ -22,6 +22,27 @@
     <ControlTemplate x:Key="UnoDock.ChromeThumbTemplate" TargetType="Thumb">
         <Border Background="{TemplateBinding Background}"/>
     </ControlTemplate>
+    <!-- Keep the public ListBoxItem contract and compose its Fluent row from
+         a stock Button. The Button retains the platform template and states. -->
+    <ControlTemplate x:Key="UnoDock.FluentNavigatorRowTemplate" TargetType="ListBoxItem">
+        <Grid>
+            <Button x:Name="PART_NavigatorAction"
+                    Style="{StaticResource UnoDock.FluentChromeButtonStyle}"
+                    Content="{TemplateBinding Content}"
+                    ContentTemplate="{TemplateBinding ContentTemplate}"
+                    Foreground="{TemplateBinding Foreground}"
+                    FontSize="{TemplateBinding FontSize}"
+                    Padding="{TemplateBinding Padding}"
+                    CornerRadius="{TemplateBinding CornerRadius}"
+                    HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                    HorizontalContentAlignment="Stretch" VerticalContentAlignment="Center"
+                    IsEnabled="{TemplateBinding IsEnabled}" IsTabStop="False" />
+            <Border x:Name="PART_NavigatorSelection" Width="3" Height="16"
+                    CornerRadius="1.5" HorizontalAlignment="Left"
+                    VerticalAlignment="Center" IsHitTestVisible="False"
+                    Visibility="Collapsed" />
+        </Grid>
+    </ControlTemplate>
     <ControlTemplate x:Key="UnoDock.NavigatorListTemplate" TargetType="ListBox">
         <ScrollViewer x:Name="NavigatorScrollViewer" Padding="1" Background="{TemplateBinding Background}" HorizontalScrollBarVisibility="Disabled" HorizontalScrollMode="Disabled" VerticalScrollBarVisibility="Auto" VerticalScrollMode="Enabled" IsTabStop="False">
             <ItemsPresenter/>

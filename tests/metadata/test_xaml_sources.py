@@ -39,12 +39,26 @@ class XamlSources(unittest.TestCase):
             'UnoDock.ChromeButtonTemplate': ('ControlTemplate', 'ContentControl'),
             'UnoDock.ChromeThumbTemplate': ('ControlTemplate', 'Thumb'),
             'UnoDock.NavigatorListTemplate': ('ControlTemplate', 'ListBox'),
+            'UnoDock.FluentNavigatorRowTemplate': ('ControlTemplate', 'ListBoxItem'),
             'UnoDock.NavigatorItemTemplate': ('DataTemplate', None),
             'UnoDock.NavigatorItemsPanel': ('ItemsPanelTemplate', None),
             'UnoDock.MenuRowTemplate': ('ControlTemplate', 'MenuFlyoutItem'),
             'UnoDock.MenuPresenterTemplate': ('ControlTemplate', 'MenuFlyoutPresenter'),
         })
-        self.assertEqual(len(keys), 10)
+        self.assertEqual(len(keys), 11)
+
+    def test_fluent_navigator_composes_a_native_button_without_copying_its_template(self):
+        root = ET.parse(ROOT / 'src/UnoDock/Themes/DockChromeResources.xaml').getroot()
+        template = next(child for child in root if child.get(X + 'Key') == 'UnoDock.FluentNavigatorRowTemplate')
+        button = template.find('.//' + UI + 'Button')
+        self.assertIsNotNone(button)
+        self.assertEqual('PART_NavigatorAction', button.get(X + 'Name'))
+        self.assertEqual('{StaticResource UnoDock.FluentChromeButtonStyle}', button.get('Style'))
+        self.assertIsNone(button.get('Template'))
+        self.assertFalse(button.findall('.//' + UI + 'ControlTemplate'))
+        marker = template.find('.//' + UI + 'Border')
+        self.assertEqual('False', marker.get('IsHitTestVisible'))
+        self.assertEqual('PART_NavigatorSelection', marker.get(X + 'Name'))
 
     def test_fluent_styles_inherit_native_templates_without_copying_them(self):
         root = ET.parse(ROOT / 'src/UnoDock/Themes/DockChromeResources.xaml').getroot()

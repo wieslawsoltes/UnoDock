@@ -34,6 +34,7 @@ public partial class App : Application
                     var requested = Environment.GetEnvironmentVariable("UNODOCK_TEST_SUITE");
                     var suites = new (string Name, bool Windows, Func<Task<int>> Run)[]
                     {
+                        ("fluent-navigator", true, () => Testing.FluentNavigatorTests.Run(output)),
                         ("fluent-state-resources", true, () => Testing.FluentStateResourceTests.Run(output)),
                         ("xaml-workspaces", true, () => Testing.XamlWorkspaceTests.Run(output)),
                         ("xaml-workbench", true, () => Testing.XamlWorkbenchTests.Run(output)),
