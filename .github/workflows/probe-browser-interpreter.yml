@@ -1,0 +1,78 @@
+name: Probe browser interpreter compilation
+on:
+  push:
+    branches: [work/browser-workspace-pages]
+    paths: [.github/workflows/probe-browser-interpreter.yml]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  probe:
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [ssa, jiterpreter]
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 36312920160
+          name: browser-site-preview
+          github-token: ${{ github.token }}
+          path: artifacts/serve/UnoDock
+      - name: Apply diagnostic runtime option to published bootstrap only
+        env:
+          VARIANT: ${{ matrix.variant }}
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import os
+          files=list(Path('artifacts/serve/UnoDock/gallery').rglob('uno-config.js'))
+          assert len(files)==1
+          p=files[0]; text=p.read_text(); assert 'config.environmentVariables' in text
+          option='config.environmentVariables["MONO_INTERPRETER_OPTIONS"] = "-ssa";' if os.environ['VARIANT']=='ssa' else 'config.environmentVariables["MONO_ENV_OPTIONS"] = "--jiterpreter-traces-enabled=false --jiterpreter-jit-call-enabled=false --jiterpreter-interp-entry-enabled=false";'
+          p.write_text(text+'\n'+option+'\n')
+          print('RUNTIME OPTION',option)
+          print('MONO BOOT VERSION HINTS')
+          for file in Path('artifacts/serve/UnoDock/gallery/_framework').glob('*boot*.json'):
+              print(file, file.read_text()[:1200])
+          PY
+      - name: Install acceptance browser
+        working-directory: tests/browser
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npx playwright install --with-deps chromium > /tmp/chromium-install.log 2>&1
+      - name: Observe actual runtime without application source changes
+        working-directory: tests/browser
+        run: |
+          python3 -m http.server 8765 --directory ../../artifacts/serve > ../../artifacts/http.log 2>&1 &
+          server=$!
+          trap 'kill "$server" || true' EXIT
+          timeout 50s node --input-type=module <<'JS'
+          import { chromium } from 'playwright';
+          import fs from 'node:fs/promises';
+          const browser=await chromium.launch();const page=await browser.newPage();
+          page.on('console', m=>console.log('BROWSER',m.type(),m.text().slice(0,1500)));
+          page.on('pageerror',e=>console.log('ERROR',e.stack));
+          page.goto('http://127.0.0.1:8765/UnoDock/playground/',{waitUntil:'domcontentloaded',timeout:10000}).catch(e=>console.log('NAV',e.message));
+          await new Promise(resolve=>setTimeout(resolve,25000));
+          const state=await Promise.race([page.evaluate(()=>({applied:window.UnoDockBrowser?.applied,frame:document.querySelector('iframe')?.contentDocument?.body.innerText.slice(0,2000)})),new Promise(resolve=>setTimeout(()=>resolve('UI unresponsive'),3000))]);
+          console.log('RUNTIME RESULT',JSON.stringify(state));
+          if(state!=='UI unresponsive') {
+              await page.screenshot({path:'../../artifacts/interpreter-probe.png',timeout:4000}).catch(()=>{});
+              await fs.writeFile('../../artifacts/state.json',JSON.stringify(state));
+          }
+          process.exit(0);
+          JS
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-interpreter-${{ matrix.variant }}
+          path: |
+            artifacts/interpreter-probe.png
+            artifacts/state.json
