@@ -63,7 +63,6 @@ public sealed partial class BrowserTextView : UserControl, IBrowserDockView
     }
 
     private static string Canonical(string value) => value.Replace("\r\n", "\n", StringComparison.Ordinal).Replace('\r', '\n');
-
     void IDisposable.Dispose()
     {
         _disposed = true;

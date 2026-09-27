@@ -46,7 +46,10 @@ class WindowHub {
         for (const [id, handle] of this.handles) {
             if (id === 'main') continue;
             let inaccessible = false;
-            try { inaccessible = handle.ref.closed || handle.ref.location.origin !== location.origin; }
+            try {
+                const starting = handle.pending && handle.ref.location.href === 'about:blank' && Date.now() - handle.born <= 90000;
+                inaccessible = handle.ref.closed || (!starting && handle.ref.location.origin !== location.origin);
+            }
             catch { inaccessible = true; }
             if (inaccessible || (handle.pending && Date.now() - handle.born > 90000)) {
                 this.state.retire(id); this.handles.delete(id);
@@ -77,6 +80,11 @@ class WindowHub {
             case 'move': this.state.transfer(id, request.id, request.lease, request.destination, request.zone || 'center'); break;
             case 'float': {
                 const item = this.state.owned(id, request.id, request.lease);
+                for (const [existingId, existing] of this.handles) {
+                    if (existing.pending?.owner === id && existing.pending.id === item.id && existing.pending.lease === item.lease) {
+                        existing.ref.focus(); return existingId;
+                    }
+                }
                 if (this.handles.size >= MAX_WINDOWS) throw Error('Eight workspace windows are already open. Reuse a window with Move.');
                 const childId = uid(), childCap = uid();
                 const url = new URL(here); url.hash = new URLSearchParams({ window: childId, cap: childCap, session: this.session }).toString();
