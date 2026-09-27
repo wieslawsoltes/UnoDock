@@ -30,12 +30,12 @@ public sealed partial class GalleryPage
         var fluent = theme != SampleTheme.Generic;
         if (fluent)
         {
-            if (!Dock.Resources.MergedDictionaries.Contains(_galleryWorkbench))
-                Dock.Resources.MergedDictionaries.Add(_galleryWorkbench);
+            if (!_sampleShell.Resources.MergedDictionaries.Contains(_galleryWorkbench))
+                _sampleShell.Resources.MergedDictionaries.Add(_galleryWorkbench);
             var managerStyle = (Style)_galleryWorkbench["UnoDock.WorkbenchManagerStyle"];
             if (_appliedGalleryTheme != theme)
             {
-                // Resolve the owner-scoped palette before style ThemeResources
+                // Resolve the scoped palette before style ThemeResources
                 // capture their values. Merely reassigning an identical Style on
                 // the pinned host can leave the previous theme's frame brushes.
                 Dock.Refresh();
@@ -60,7 +60,7 @@ public sealed partial class GalleryPage
         }
         else
         {
-            Dock.Resources.MergedDictionaries.Remove(_galleryWorkbench);
+            _sampleShell.Resources.MergedDictionaries.Remove(_galleryWorkbench);
             if (ReferenceEquals(Dock.Style, _galleryWorkbench["UnoDock.WorkbenchManagerStyle"]))
                 Dock.ClearValue(StyleProperty);
             _sampleShell.ClearValue(StyleProperty);

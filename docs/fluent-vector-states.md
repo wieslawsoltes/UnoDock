@@ -11,9 +11,9 @@ focus visuals. Retemplating releases the previous presenter's callback before
 observing its replacement. The Generic painter and templates without that standard
 presenter use their existing fallback.
 
-The Gallery workbench dictionary now belongs to the manager's resource scope.
-On an actual theme change, its palette is resolved before the Gallery renews its
-own manager style. Assigning that identical style before resolution retained a
+The Gallery workbench dictionary remains in the shell resource scope. On an
+actual theme change, its palette is resolved before the Gallery renews its own
+manager style. Assigning that identical style before resolution retained a
 light outer-frame border in a dark workspace. Repeated same-theme selections do
 not reapply it; application local Background/BorderBrush values retain precedence.
 The layout model, native window, manager template and editor instances remain.
@@ -30,7 +30,18 @@ Both suites run once each in separate native processes; dedicated CI requires
 every named resource case and exact process/JUnit count agreement. Visual-state
 cases are presentation tests, not evidence of physical pointer or OS contrast input.
 
-The local combined source passed 43/43 presentation cases and 30/30 independent
-resource cases on Uno/X11, including the held-Space palette-switch assertion.
-Earlier failing resource and frame investigations are not substituted for that
-combined-source acceptance. Final PR-head CI remains the merge requirement.
+The first combined source passed 43/43 presentation cases and 30/30 independent
+resource cases locally and its dedicated three-platform Fluent workflow. Full
+ordinary regression then caught a presentation-scope regression: placing the
+workbench dictionary directly in the manager contaminated its deliberately local
+legacy resource lookup when a consumer selected null/Generic outside the sample
+handler. The dictionary is retained in the original shell scope; only the required
+palette-before-style ordering is changed. All original navigator assertions and
+the library's legacy resource precedence are unchanged.
+
+With the scope correction, all 43 local Fluent presentation cases pass again. A
+separate navigator run passed the five originally failing color cases but timed
+out later without complete JUnit; it is diagnostic evidence, not a passing full
+suite. Earlier failed resource, frame and host investigations remain separate
+from final-head acceptance. The exact PR-head ordinary, native and source CI
+results establish merge readiness, not these partial local diagnostics.
