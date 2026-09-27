@@ -34,11 +34,31 @@ jobs:
           patch.write_bytes(data)
           subprocess.run(['git','apply','--check',str(patch)], check=True)
           subprocess.run(['git','apply',str(patch)], check=True)
+          def replace(path, old, new):
+              p = Path(path); text = p.read_text()
+              assert text.count(old) == 1, path
+              p.write_text(text.replace(old, new))
+          replace('tests/UnoDock.VisualTests/FluentNavigatorTests.cs',
+              'XTEST Fluent navigator: held Space previews native pressed state before one release commit',
+              'XTEST Fluent navigator: held pointer previews native pressed state before one release commit')
+          replace('tests/UnoDock.VisualTests/FluentNavigatorTests.cs',
+              '                await Task.Delay(80);\n                Check.True(button.Focus(FocusState.Keyboard));\n                await Task.Delay(50);\n                input.KeyDown(0x20);\n                await Wait(() => button.IsPressed);\n                Check.Equal(0, count);\n                input.KeyUp(0x20);',
+              '                await Task.Delay(80);\n                // The navigator owns keyboard focus; nested actions deliberately\n                // add no Tab stops. Test their native capture/pressed lifecycle\n                // with physical pointer input, not a forced keyboard focus.\n                input.Press();\n                await Wait(() => button.IsPressed);\n                Check.Equal(0, count);\n                input.Release();')
+          replace('.github/workflows/fluent-navigator.yml', 'held Space previews native pressed state', 'held pointer previews native pressed state')
+          replace('src/UnoDock/Controls/NavigatorWindow.cs',
+              '                var item = container.Content as LayoutItem ?? container.DataContext as LayoutItem;\n                SelectAndCommitItem(item);',
+              '                var item = container.Content as LayoutItem ?? container.DataContext as LayoutItem;\n                // Preserve the original unhandled path for ineligible legacy taps.\n                if (!Eligible(item))\n                    return;\n                SelectAndCommitItem(item);')
+          replace('docs/fluent-navigator.md', 'Linux XTEST row-click and held-Space cases.', 'Linux XTEST row-click and held-pointer cases.')
+          replace('docs/fluent-navigator.md',
+              'cases inject actual pointer/keyboard input and verify the selected target, no\npremature Space activation, and a single commit.',
+              'cases inject actual pointer input and verify the selected target, no premature\nactivation while pressed, and a single release commit. Existing Enter/Escape\nkeyboard cases still exercise the navigator-owned focus and command path.')
+          p = Path('docs/fluent-navigator.md')
+          p.write_text(p.read_text() + '\nThe first hosted preparation passed all 276 unchanged navigator-quality, commit\nand revocation cases and 29 of the 30 new cases. Its new held-Space fixture\nincorrectly tried to focus an intentionally non-tab-stop inner action and failed\nthat setup assertion. The revised fixture uses physical pointer capture to test\nnative pressed/release behavior without changing the production focus contract.\nThat first run remains failed; only a complete later execution is acceptance.\n')
           PY
           git rm -r tools/fluent-transfer tools/fluent-navigator.patch.gz.b64 .github/workflows/prepare-fluent-navigator.yml
           git add .github/workflows/fluent-navigator.yml docs/ samples/ src/ tests/
           git diff --cached --check
-          test "$(git write-tree)" = c0b2bd2e11ab0b29b33f84205cc7a07cabb2b2ce
+          test "$(git write-tree)" = e1d7d808285797af4d54e9cc1ee3b1691588521f
           git diff --cached --stat
       - name: Check source conventions and compiled XAML contracts
         run: |
@@ -66,7 +86,7 @@ jobs:
         run: |
           set -euo pipefail
           git diff --exit-code
-          test "$(git write-tree)" = c0b2bd2e11ab0b29b33f84205cc7a07cabb2b2ce
+          test "$(git write-tree)" = e1d7d808285797af4d54e9cc1ee3b1691588521f
           git config user.name 'Wiesław Šoltés'
           git config user.email 'wieslawsoltes@users.noreply.github.com'
           git commit -m 'feat: compose a Fluent navigator with stock buttons and retained selection transactions'
