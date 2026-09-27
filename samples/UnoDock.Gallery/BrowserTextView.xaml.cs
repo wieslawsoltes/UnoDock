@@ -33,7 +33,10 @@ public sealed partial class BrowserTextView : UserControl, IBrowserDockView
             AutomationProperties.SetName(PayloadEditor, "Editor " + item.Id);
             AutomationProperties.SetName(TitleEditor, "Title " + item.Id);
         }
-        finally { _updating = false; }
+        finally
+        {
+            _updating = false;
+        }
     }
 
     private void OnChanged(object sender, TextChangedEventArgs args)
@@ -42,7 +45,7 @@ public sealed partial class BrowserTextView : UserControl, IBrowserDockView
             _commit(TitleEditor.Text, PayloadEditor.Text);
     }
 
-    public void Dispose()
+    void IDisposable.Dispose()
     {
         _disposed = true;
         TitleEditor.TextChanged -= OnChanged;

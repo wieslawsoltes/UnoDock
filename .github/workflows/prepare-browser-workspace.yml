@@ -30,7 +30,7 @@ jobs:
           dotnet run --project tools/SourceMaintenance -c Release -- --format .
           dotnet run --project tools/SourceMaintenance -c Release -- --check .
           dotnet run --project tools/SourceMaintenance -c Release -- --check-format .
-      - name: Compile desktop API compatibility
+      - name: Compile desktop API and explicit view lifetime contract
         run: dotnet build samples/UnoDock.Gallery -c Release -f net10.0-desktop -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0 -warnaserror
       - name: Preserve compiled integration on the review branch
         run: |
@@ -64,8 +64,8 @@ jobs:
           python3 -m http.server 8765 --directory ../../artifacts/serve > ../../artifacts/http.log 2>&1 &
           server=$!
           trap 'kill "$server" || true' EXIT
-          npx playwright test
-      - name: Preserve source and result diagnostics
+          npx playwright test --max-failures=1
+      - name: Preserve source and runtime failure diagnostics
         if: always()
         run: |
           mkdir -p artifacts/review
@@ -73,6 +73,7 @@ jobs:
           git diff > artifacts/review/uncommitted.patch
           git archive --format=zip -o artifacts/review/source.zip HEAD
           if [ -f tests/browser/package-lock.json ]; then cp tests/browser/package-lock.json artifacts/review/; fi
+          find artifacts/browser-tests -name error-context.md -exec cat {} \; 2>/dev/null || true
       - uses: actions/upload-artifact@v4
         if: always()
         with:
