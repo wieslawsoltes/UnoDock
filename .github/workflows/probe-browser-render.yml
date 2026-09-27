@@ -1,0 +1,87 @@
+name: Probe first browser render
+on:
+  push:
+    branches: [work/browser-workspace-pages]
+    paths: [.github/workflows/probe-browser-render.yml]
+permissions:
+  contents: read
+jobs:
+  probe:
+    strategy:
+      fail-fast: false
+      matrix:
+        theme: [fluent, generic]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Instrument render boundaries in this diagnostic build only
+        env:
+          PROBE_THEME: ${{ matrix.theme }}
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import os
+          def replace(path, old, new, count=1):
+              p=Path(path); text=p.read_text(); assert text.count(old)==count, (path,old,text.count(old)); p.write_text(text.replace(old,new))
+          p='src/UnoDock/DockingManager.cs'
+          replace(p,'    internal void RenderNow()\n    {','    internal void RenderNow()\n    {\n        Console.WriteLine("RENDER: manager begin");')
+          replace(p,'            _surface.Update();','            Console.WriteLine("RENDER: surface begin");\n            _surface.Update();\n            Console.WriteLine("RENDER: surface end");')
+          p='src/UnoDock/Internal/DockSurface.cs'
+          replace(p,'        _docked.RequestedTheme = DockThemeResources.EffectiveTheme(Manager);','        Console.WriteLine("RENDER: effective theme");\n        _docked.RequestedTheme = DockThemeResources.EffectiveTheme(Manager);\n        Console.WriteLine("RENDER: palette begin");')
+          replace(p,'        _docked.Background = DockChrome.Palette(Manager).Header;','        _docked.Background = DockChrome.Palette(Manager).Header;\n        Console.WriteLine("RENDER: palette end");')
+          replace(p,'        UpdateView(root.RootPanel);','        Console.WriteLine("RENDER: panel update");\n        UpdateView(root.RootPanel);\n        Console.WriteLine("RENDER: panel done");')
+          replace(p,'        FrameworkElement view = model switch','        Console.WriteLine("RENDER: constructing " + model.GetType().Name);\n        FrameworkElement view = model switch')
+          replace(p,'        _views.Add(model, view);','        Console.WriteLine("RENDER: constructed " + model.GetType().Name);\n        _views.Add(model, view);')
+          p='src/UnoDock/Controls/LayoutGridControl.cs'
+          replace(p,'            surface.UpdateView(models[i]);','            Console.WriteLine("RENDER: child update " + models[i].GetType().Name);\n            surface.UpdateView(models[i]);\n            Console.WriteLine("RENDER: child done " + models[i].GetType().Name);')
+          p='src/UnoDock/Internal/DockChromeButton.cs'
+          replace(p,'    internal void Configure(DockPalette palette)\n    {','    internal void Configure(DockPalette palette)\n    {\n        Console.WriteLine("RENDER: button configure " + palette.UsesFluentControls);')
+          replace(p,'        _states?.Refresh(this);','        _states?.Refresh(this);\n        Console.WriteLine("RENDER: button configured");')
+          p='samples/UnoDock.Gallery/BrowserWorkspacePage.xaml.cs'
+          replace(p,'            Status.Text = "Browser workspace startup failed: " + error.Message;','            Console.WriteLine("BROWSER ERROR: " + error);\n            Status.Text = "Browser workspace startup failed: " + error.Message;')
+          if os.environ['PROBE_THEME']=='generic':
+              replace(p,'            _session = new BrowserDockingSession(', '            Dock.Theme = new UnoDock.Themes.GenericTheme();\n            _session = new BrowserDockingSession(')
+          PY
+      - name: Compile actual browser source
+        run: |
+          dotnet workload install wasm-tools > /tmp/wasm-install.log 2>&1
+          dotnet publish samples/UnoDock.Gallery -c Release -f net10.0-browserwasm -p:UnoDockTargetFrameworks=net10.0-browserwasm -p:UnoDockLibraryFrameworks=net10.0 -p:WasmShellWebAppBasePath=/UnoDock/gallery/ -o artifacts/publish > /tmp/wasm-publish.log 2>&1 || { tail -100 /tmp/wasm-publish.log; exit 1; }
+          python3 -m pip install Markdown==3.8.2
+          python3 tools/build-browser-site.py --publish artifacts/publish --output artifacts/serve/UnoDock
+          python3 tools/check-browser-site.py artifacts/serve/UnoDock
+      - name: Install browser
+        working-directory: tests/browser
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npx playwright install --with-deps chromium > /tmp/chromium-install.log 2>&1
+      - name: Trace render initialization
+        working-directory: tests/browser
+        run: |
+          python3 -m http.server 8765 --directory ../../artifacts/serve > ../../artifacts/http.log 2>&1 &
+          server=$!
+          trap 'kill "$server" || true' EXIT
+          timeout 50s node --input-type=module <<'JS'
+          import { chromium } from 'playwright';
+          const browser = await chromium.launch();
+          const page = await browser.newPage();
+          let count=0;
+          page.on('console', m => { if(count++<150)console.log('BROWSER', m.type(), m.text().slice(0, 3000)); });
+          page.on('pageerror', e => console.log('PAGE ERROR', e.stack));
+          page.goto('http://127.0.0.1:8765/UnoDock/playground/',{waitUntil:'domcontentloaded',timeout:10000}).catch(e=>console.log('NAV',e.message));
+          await new Promise(resolve=>setTimeout(resolve,30000));
+          const result=await Promise.race([page.evaluate(()=>({applied:window.UnoDockBrowser?.applied,frame:document.querySelector('iframe')?.contentDocument?.body.innerText.slice(0,3000)})),new Promise(resolve=>setTimeout(()=>resolve('UI unresponsive'),3000))]);
+          console.log('FINAL STATE',JSON.stringify(result));
+          process.exit(0);
+          JS
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-render-${{ matrix.theme }}
+          path: artifacts/serve/UnoDock/
