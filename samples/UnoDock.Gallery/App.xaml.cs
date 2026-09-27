@@ -7,6 +7,8 @@ public partial class App : Application
     public App() => InitializeComponent();
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
+        if (TryLaunchBrowserWorkspace())
+            return;
         _window = new Window
         {
             Title = "UnoDock Samples"

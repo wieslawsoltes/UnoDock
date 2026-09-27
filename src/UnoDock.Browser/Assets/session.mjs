@@ -17,7 +17,7 @@ export class WorkspaceState {
         this.theme = 'light';
         this.items = new Map();
         this.windows = new Map([['main', { id: 'main', title: 'Main workspace', ready: false }]]);
-        this.save = save;
+        this.save = () => {};
         this.storageError = '';
         if (restored !== null) {
             if (restored.schema !== 1 || !Array.isArray(restored.items) || restored.items.length > 200) throw new TypeError('Unsupported workspace journal.');
@@ -27,6 +27,7 @@ export class WorkspaceState {
                 if (item.closed) this.items.get(item.id).closed = true;
             }
         }
+        this.save = save;
     }
     commit() {
         this.sequence++;

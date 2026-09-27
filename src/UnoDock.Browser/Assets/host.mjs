@@ -6,7 +6,7 @@ const here = new URL(location.href);
 const fragment = new URLSearchParams(location.hash.slice(1));
 const windowId = fragment.get('window') || 'main';
 const capability = fragment.get('cap') || crypto.randomUUID();
-let active = '', applied = null, errorText = '', dragging = false, rootHub;
+let active = '', requestedActive = '', applied = null, errorText = '', dragging = false, rootHub;
 const $ = id => document.getElementById(id);
 const uid = () => crypto.randomUUID();
 
@@ -31,6 +31,9 @@ class WindowHub {
         }
     }
     check(id, cap, ref) {
+        // A child can retain a function from a document which has navigated away.
+        // WindowProxy identity alone must not authorize that retired broker.
+        if (window.closed || window.UnoDockBrowserHub !== this) throw Error('The primary workspace session has ended. Recover the journal in a main workspace.');
         const handle = this.handles.get(id);
         if (!handle || handle.cap !== cap || handle.ref !== ref || ref.closed) throw Error('This window does not own a registered workspace host.');
         return handle;
@@ -126,7 +129,7 @@ function execute(request) {
     catch (error) { errorText = error.message; throw error; }
 }
 function safe(request) {
-    try { const value = execute(request); errorText = ''; render(); return value; }
+    try { const value = execute(request); if (request.op !== 'read' && request.op !== 'cancelDrag') errorText = ''; render(); return value; }
     catch { render(); return null; }
 }
 function selected(snapshot) { return snapshot.items.find(item => item.id === active) || snapshot.items[0]; }
@@ -135,13 +138,16 @@ window.UnoDockBrowser = Object.freeze({
         try {
             const request = typeof json === 'string' ? JSON.parse(json) : json;
             if (request.op === 'activate') { active = request.id; return JSON.stringify({ ok: true }); }
-            const value = execute(request); return JSON.stringify({ ok: true, value });
+            const value = execute(request);
+            if (request.op === 'read' || request.op === 'ready') value.active = requestedActive;
+            return JSON.stringify({ ok: true, value });
         } catch (error) { return JSON.stringify({ ok: false, error: error.message }); }
     },
     report(json) {
         applied = typeof json === 'string' ? JSON.parse(json) : json;
         document.documentElement.dataset.unoReady = 'true';
-        if (applied.active) active = applied.active;
+        if (applied.active === requestedActive) requestedActive = '';
+        if (!requestedActive && applied.active) active = applied.active;
         render();
     },
     get applied() { return applied; },
@@ -173,7 +179,7 @@ function render() {
             chip.textContent = value.title; chip.dataset.content = value.id;
             chip.setAttribute('aria-pressed', String(value.id === item?.id));
             chip.title = 'Drag to another browser window, or select and use Float / Move';
-            chip.onclick = () => { active = value.id; safe({ op: 'read' }); };
+            chip.onclick = () => { active = requestedActive = value.id; safe({ op: 'read' }); };
             let ticket;
             chip.ondragstart = event => {
                 ticket = safe({ op: 'drag', id: value.id, lease: value.lease });
@@ -222,6 +228,18 @@ document.addEventListener('dragenter', event => { if (event.dataTransfer?.types.
 document.addEventListener('dragover', event => { if (event.dataTransfer?.types.includes(MIME)) event.preventDefault(); });
 document.addEventListener('keydown', event => { if (event.key === 'Escape') $('zones').hidden = true; });
 document.addEventListener('dragleave', event => { if (!event.relatedTarget && (event.clientX <= 0 || event.clientY <= 0)) $('zones').hidden = true; });
+$('app').addEventListener('load', () => {
+    try {
+        const document = $('app').contentDocument;
+        // Cross-document drags enter the actual Uno frame rather than the outer
+        // shell. Reveal browser-owned targets before accepting the drop.
+        for (const eventName of ['dragenter', 'dragover']) document?.addEventListener(eventName, event => {
+            if (event.dataTransfer?.types.includes(MIME)) {
+                event.preventDefault(); $('zones').hidden = false;
+            }
+        });
+    } catch { errorText = 'The Uno application must be hosted on the same origin.'; }
+});
 if (connection) $('app').src = '../gallery/?browser-workspace=1';
 render();
 setInterval(render, 250);

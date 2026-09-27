@@ -8,7 +8,6 @@ public sealed partial class BrowserTextView : UserControl, IBrowserDockView
     private readonly Action<string, string> _commit;
     private bool _updating = true;
     private bool _disposed;
-
     public FrameworkElement View => this;
     public string Payload => PayloadEditor.Text;
 

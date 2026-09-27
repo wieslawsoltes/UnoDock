@@ -89,7 +89,7 @@ src/
 samples/
   UnoDock.Gallery/       Desktop, WebAssembly, and compiled-XAML samples
 site/                   Documentation shell and browser workspace host
- tests/                 Runtime, browser, source, and compatibility tests
+tests/                  Runtime, browser, source, and compatibility tests
 ```
 
 Application content remains application-owned. In a browser, separate windows have separate runtimes: use an `IBrowserDockViewFactory` to reconstruct an editor from its portable payload. A CLR object or `UIElement` is never presented as transferable between runtimes. [Architecture →](docs/architecture.md)

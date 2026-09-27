@@ -6,8 +6,10 @@ namespace UnoDock.Gallery;
 public sealed partial class BrowserWorkspacePage : UserControl
 {
     private BrowserDockingSession? _session;
-    private readonly DispatcherTimer _timer = new() { Interval = TimeSpan.FromMilliseconds(150) };
-
+    private readonly DispatcherTimer _timer = new()
+    {
+        Interval = TimeSpan.FromMilliseconds(150)
+    };
     public BrowserWorkspacePage()
     {
         InitializeComponent();
@@ -49,7 +51,6 @@ public sealed partial class BrowserWorkspacePage : UserControl
     }
 
     private void DockSelected(object sender, RoutedEventArgs args) => Dock.Layout.ActiveContent?.Dock();
-
     private void AutoHideSelected(object sender, RoutedEventArgs args)
     {
         if (Dock.Layout.ActiveContent is LayoutAnchorable tool)
