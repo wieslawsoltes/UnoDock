@@ -1,0 +1,81 @@
+name: Prepare verified Fluent navigator
+on:
+  push:
+    branches: [work/preview31-fluent-navigator]
+    paths: [.github/workflows/prepare-fluent-navigator.yml]
+permissions:
+  contents: write
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Reconstruct exact reviewed source and remove transfer files
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import base64, gzip, hashlib, subprocess
+          from pathlib import Path
+          parts = [Path(f'tools/fluent-transfer/{i:02d}.txt') for i in range(1,6)]
+          encoded = ''.join(path.read_text().strip() for path in parts)
+          assert len(encoded) == 16960, len(encoded)
+          data = gzip.decompress(base64.b64decode(encoded, validate=True))
+          assert len(data) == 50599
+          assert hashlib.sha256(data).hexdigest() == 'f50e9736d902c93701b921bd71a19192410f7517ebe68b0962e0f0bdbc7b2e50'
+          patch = Path('/tmp/fluent-navigator.patch')
+          patch.write_bytes(data)
+          subprocess.run(['git','apply','--check',str(patch)], check=True)
+          subprocess.run(['git','apply',str(patch)], check=True)
+          PY
+          git rm -r tools/fluent-transfer tools/fluent-navigator.patch.gz.b64 .github/workflows/prepare-fluent-navigator.yml
+          git add .github/workflows/fluent-navigator.yml docs/ samples/ src/ tests/
+          git diff --cached --check
+          test "$(git write-tree)" = c0b2bd2e11ab0b29b33f84205cc7a07cabb2b2ce
+          git diff --cached --stat
+      - name: Check source conventions and compiled XAML contracts
+        run: |
+          dotnet run --project tools/SourceMaintenance -c Release -- --check .
+          dotnet run --project tools/SourceMaintenance -c Release -- --check-format .
+          python3 tests/metadata/test_xaml_sources.py
+          python3 tools/generate-property-adapters.py
+          git diff --exit-code
+      - name: Compile actual Uno SDK and XAML
+        run: dotnet build samples/UnoDock.Gallery -c Release -f net10.0-desktop -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0 -warnaserror
+      - name: Install dedicated native display
+        run: sudo apt-get update && sudo apt-get install -y xvfb libx11-6 libxi6 libxrandr2 libxcursor1 libfontconfig1 libgl1 libice6 libsm6 libxcb1 libxtst6
+      - name: Exercise new native controls and unchanged navigator regression
+        env:
+          UNODOCK_NATIVE_INPUT_TESTS: '1'
+        shell: bash
+        run: |
+          result=0
+          for suite in fluent-navigator navigator-quality navigator-commit navigator-revocation; do
+            xvfb-run -a -s '-screen 0 2560x1440x24' python3 tools/run-desktop-tests.py --app samples/UnoDock.Gallery/bin/Release/net10.0-desktop/UnoDock.Gallery.dll --output artifacts/$suite --selector "$suite" --suite-timeout 180 --total-timeout 240 || result=1
+          done
+          exit "$result"
+      - name: Publish validated implementation only
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --exit-code
+          test "$(git write-tree)" = c0b2bd2e11ab0b29b33f84205cc7a07cabb2b2ce
+          git config user.name 'Wiesław Šoltés'
+          git config user.email 'wieslawsoltes@users.noreply.github.com'
+          git commit -m 'feat: compose a Fluent navigator with stock buttons and retained selection transactions'
+          git fetch origin work/preview31-fluent-navigator
+          test "$(git rev-parse FETCH_HEAD)" = '${{ github.sha }}'
+          git push origin HEAD:work/preview31-fluent-navigator
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fluent-navigator-preparation
+          path: artifacts/
+          if-no-files-found: warn
