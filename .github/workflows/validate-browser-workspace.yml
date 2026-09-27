@@ -20,29 +20,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Preserve pending popup authority during its initial about-blank navigation
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          p=Path('src/UnoDock.Browser/Assets/host.mjs'); text=p.read_text()
-          old='            try { inaccessible = handle.ref.closed || handle.ref.location.origin !== location.origin; }'
-          assert text.count(old)==1
-          new='''            try {
-                          const starting = handle.pending && handle.ref.location.href === 'about:blank' && Date.now() - handle.born <= 90000;
-                          inaccessible = handle.ref.closed || (!starting && handle.ref.location.origin !== location.origin);
-                      }'''
-          text=text.replace(old,new)
-          old="                if (this.handles.size >= MAX_WINDOWS) throw Error('Eight workspace windows are already open. Reuse a window with Move.');"
-          assert text.count(old)==1
-          new='''                for (const [existingId, existing] of this.handles) {
-                              if (existing.pending?.owner === id && existing.pending.id === item.id && existing.pending.lease === item.lease) {
-                                  existing.ref.focus(); return existingId;
-                              }
-                          }
-          '''+old
-          p.write_text(text.replace(old,new))
-          PY
-      - name: Verify portable ownership and documentation contracts
+      - name: Verify ownership, documentation and source contracts
         run: |
           node --test tests/browser/session.test.mjs tests/browser/session-lifetime.test.mjs
           python3 tests/metadata/test_browser_site.py
@@ -51,7 +29,7 @@ jobs:
           dotnet run --project tools/SourceMaintenance -c Release -- --check-format .
       - name: Compile desktop API compatibility
         run: dotnet build samples/UnoDock.Gallery -c Release -f net10.0-desktop -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0 -warnaserror
-      - name: Commit the reviewed integration and formatter output
+      - name: Preserve canonical source formatting
         run: |
           set -euo pipefail
           git add src/ samples/
@@ -59,31 +37,31 @@ jobs:
           git config user.name 'Wiesław Šoltés'
           git config user.email 'wieslawsoltes@users.noreply.github.com'
           if ! git diff --cached --quiet; then
-            git commit -m 'fix: preserve popup startup leases and canonical browser source formatting'
+            git commit -m 'style: apply canonical browser source formatting'
             git fetch origin work/browser-workspace-pages
             test "$(git rev-parse FETCH_HEAD)" = '${{ github.sha }}'
             git push origin HEAD:work/browser-workspace-pages
           fi
-      - name: Publish real Uno WebAssembly and validate all site routes
+      - name: Publish actual Uno WebAssembly and validate routes
         run: |
           dotnet workload install wasm-tools > /tmp/wasm-tools.log 2>&1
           dotnet publish samples/UnoDock.Gallery -c Release -f net10.0-browserwasm -p:UnoDockTargetFrameworks=net10.0-browserwasm -p:UnoDockLibraryFrameworks=net10.0 -p:WasmShellWebAppBasePath=/UnoDock/gallery/ -o artifacts/publish > /tmp/wasm-publish.log 2>&1 || { tail -100 /tmp/wasm-publish.log; exit 1; }
           python3 -m pip install Markdown==3.8.2
           python3 tools/build-browser-site.py --publish artifacts/publish --output artifacts/serve/UnoDock
           python3 tools/check-browser-site.py artifacts/serve/UnoDock
-      - name: Install locked browser runner
+      - name: Install the locked browser runner
         working-directory: tests/browser
         run: |
           npm ci --ignore-scripts --no-audit --no-fund
           npx playwright install --with-deps chromium > /tmp/browser-install.log 2>&1
-      - name: Execute original browser acceptance with first-failure diagnostics
+      - name: Run every original multi-window browser scenario
         working-directory: tests/browser
         run: |
           python3 -m http.server 8765 --directory ../../artifacts/serve > ../../artifacts/http.log 2>&1 &
           server=$!
           trap 'kill "$server" || true' EXIT
-          npx playwright test --max-failures=1
-      - name: Retain exact source and original browser diagnostics
+          npx playwright test
+      - name: Preserve exact source and runtime diagnostics
         if: always()
         run: |
           mkdir -p artifacts/review
