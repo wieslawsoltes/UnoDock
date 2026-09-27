@@ -33,9 +33,35 @@ class XamlSources(unittest.TestCase):
         root = ET.parse(ROOT / 'src/UnoDock/Themes/DockChromeResources.xaml').getroot()
         keys = [child.get(X + 'Key') for child in root]
         self.assertEqual(len(keys), len(set(keys)))
-        self.assertEqual(len(keys), 7)
-        for template in root.findall(UI + 'ControlTemplate'):
-            self.assertTrue(template.get('TargetType'))
+        templates = {child.get(X + 'Key'): (child.tag.removeprefix(UI), child.get('TargetType'))
+                     for child in root if child.tag != UI + 'Style'}
+        self.assertEqual(templates, {
+            'UnoDock.ChromeButtonTemplate': ('ControlTemplate', 'ContentControl'),
+            'UnoDock.ChromeThumbTemplate': ('ControlTemplate', 'Thumb'),
+            'UnoDock.NavigatorListTemplate': ('ControlTemplate', 'ListBox'),
+            'UnoDock.NavigatorItemTemplate': ('DataTemplate', None),
+            'UnoDock.NavigatorItemsPanel': ('ItemsPanelTemplate', None),
+            'UnoDock.MenuRowTemplate': ('ControlTemplate', 'MenuFlyoutItem'),
+            'UnoDock.MenuPresenterTemplate': ('ControlTemplate', 'MenuFlyoutPresenter'),
+        })
+        self.assertEqual(len(keys), 10)
+
+    def test_fluent_styles_inherit_native_templates_without_copying_them(self):
+        root = ET.parse(ROOT / 'src/UnoDock/Themes/DockChromeResources.xaml').getroot()
+        styles = {child.get(X + 'Key'): child for child in root.findall(UI + 'Style')}
+        expected = {
+            'UnoDock.FluentChromeButtonStyle': ('Button', 'DefaultButtonStyle'),
+            'UnoDock.FluentMenuRowStyle': ('MenuFlyoutItem', 'DefaultMenuFlyoutItemStyle'),
+            'UnoDock.FluentMenuPresenterStyle': ('MenuFlyoutPresenter', 'DefaultMenuFlyoutPresenterStyle'),
+        }
+        self.assertEqual(set(expected), set(styles))
+        for key, (target, base) in expected.items():
+            style = styles[key]
+            self.assertEqual(target, style.get('TargetType'))
+            self.assertEqual('{StaticResource ' + base + '}', style.get('BasedOn'))
+            self.assertFalse(style.findall('.//' + UI + 'ControlTemplate'))
+            self.assertFalse(any(setter.get('Property') == 'Template'
+                                 for setter in style.findall(UI + 'Setter')))
 
     def test_custom_templates_keep_required_docking_parts(self):
         root = ET.parse(ROOT / 'samples/UnoDock.Gallery/XamlTemplateWorkspace.xaml').getroot()

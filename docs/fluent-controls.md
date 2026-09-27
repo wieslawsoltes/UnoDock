@@ -108,3 +108,41 @@ Windows runtime acceptance uses Uno Skia Win32; native WinUI is compiled/package
 Browser runtime, pure Wayland, physical AppKit input, mixed-DPI hardware and full
 WPF/binary/pixel equivalence are not established here. No release version change
 or package publication is part of this work.
+
+## Live visual-state resources and application ownership
+
+Palette changes also refresh a button or menu row that is already in PointerOver,
+Pressed or Disabled. Merely replacing a dictionary entry does not invalidate an
+already-entered native state setter in the pinned host; without refresh, a hovered
+tab could retain its previous light brush in a dark workspace. UnoDock replays
+that control's existing CommonStates transition with animations disabled when its
+resolved brush identities change. It does not inject input, execute a command,
+replace the template, change native IsPressed or replace the focus-state group.
+Applications can observe the visual-state transitions. A callback which chooses
+another state, changes the palette or replaces/unloads the template revokes the
+old replay instead of being overwritten by it. Temporary observation ends in a
+finally block. Observer errors are not swallowed.
+
+The forwarded brushes occupy one low-priority merged resource dictionary with
+separate Light and Dark dictionaries. No application ThemeDictionaries entry is
+replaced, including HighContrast. Direct values, merged dictionaries and explicit
+same-scope theme overrides retain precedence and brush identity. Replacing the
+control's Resources detaches the old fallback and installs one in the new scope;
+returning to Generic removes only the owned fallback. Repeated theme changes do
+not accumulate dictionaries. Updating a resource still requires the existing
+manager Refresh contract; this is not automatic observation of arbitrary
+ResourceDictionary edits. Mutable application brushes are not cloned or recolored.
+
+Fourteen additional common cases exercise active button/menu states during
+palette and theme changes, resource ownership, replacements, Generic round trips
+and application-controlled state changes. One Linux XTEST case holds a real Space
+press during a live palette change and requires zero early clicks and exactly one
+on key release. These supplement the original 24 common/two Linux input cases:
+final focused coverage is 38 cases on Windows/AppKit and 41 on Linux. VSM-only
+cases are presentation tests, not claims of physical pointer automation.
+
+The source contract now separately verifies the seven original compiled templates
+and all three native-based Fluent styles by exact key and TargetType. It rejects
+copied ControlTemplates or Template setters inside those styles. The previous
+flat resource-count check incorrectly rejected the added styles; the original
+template identities remain required rather than weakening that contract.

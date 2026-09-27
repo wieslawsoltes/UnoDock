@@ -73,6 +73,8 @@ internal sealed class DockChromeButton : Button
             }
             else
             {
+                _states?.Detach();
+                _states = null;
                 ClearValue(StyleProperty);
                 Template = DockChrome.ButtonTemplate;
             }
@@ -98,6 +100,7 @@ internal sealed class DockChromeButton : Button
         }
 
         Paint();
+        _states?.Refresh(this);
     }
 
     private void Paint()

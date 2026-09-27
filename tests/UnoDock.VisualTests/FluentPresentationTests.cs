@@ -351,6 +351,7 @@ internal static class FluentPresentationTests
                 )
                     Check.True(contrast["UnoDock." + key] is Brush, "Missing high-contrast resource: " + key);
             });
+            FluentResourceRefreshTests.Add(tests, page, window);
             if (OperatingSystem.IsLinux() && Environment.GetEnvironmentVariable("UNODOCK_NATIVE_INPUT_TESTS") == "1")
             {
                 foreach (var mode in new[]

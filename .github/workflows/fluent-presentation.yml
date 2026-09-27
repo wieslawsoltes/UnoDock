@@ -50,7 +50,7 @@ jobs:
           cases = root.findall('testcase')
           names = [case.get('name', '') for case in cases]
           assert root.tag == 'testsuite' and root.get('name') == 'fluent-presentation'
-          assert len(cases) == int(root.get('tests', '-1')) and len(cases) >= (26 if os.environ['RUNNER_OS'] == 'Linux' else 24)
+          assert len(cases) == int(root.get('tests', '-1')) and len(cases) >= (41 if os.environ['RUNNER_OS'] == 'Linux' else 38)
           assert all(names) and len(set(names)) == len(names)
           assert not any(int(root.get(k, '0')) for k in ('failures', 'errors', 'skipped'))
           assert not any(case.find(tag) is not None for case in cases for tag in ('failure', 'error', 'skipped'))
@@ -62,7 +62,21 @@ jobs:
           assert 'Fluent: resource bindings survive repeated themes and a Generic round trip' in names
           assert 'Fluent: native Button states resolve scoped palette brushes without copying them' in names
           assert 'Fluent: native menu states retain scoped application brush identities' in names
+          for kind in ('button', 'menu'):
+              for state in ('PointerOver', 'Pressed'):
+                  for change in ('theme change', 'palette replacement'):
+                      assert f'Fluent resources: active {kind} {state} follows {change}' in names
+          for name in (
+              'construction preserves application theme dictionaries',
+              'application state overrides remain authoritative in Light',
+              'application state overrides remain authoritative in Dark',
+              'replacing a control resource scope retains the application scope',
+              'repeated Generic round trips release only the owned fallback',
+              'native state callbacks may supersede palette replay',
+          ):
+              assert 'Fluent resources: ' + name in names
           if os.environ['RUNNER_OS'] == 'Linux':
+              assert 'XTEST Fluent: live palette repaint preserves held input and activates only on release' in names
               for mode in ('Light', 'Generic'):
                   assert 'XTEST Fluent: keyboard press uses ButtonBase state and activates once in ' + mode in names
           record = json.loads((p / 'isolated-execution.json').read_text())

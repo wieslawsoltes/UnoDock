@@ -60,6 +60,8 @@ internal sealed class DockMenuRow : MenuFlyoutItem
             }
             else
             {
+                _states?.Detach();
+                _states = null;
                 ClearValue(StyleProperty);
                 Template = _rowTemplate;
             }
@@ -82,6 +84,7 @@ internal sealed class DockMenuRow : MenuFlyoutItem
         Height = palette.RowHeight;
         FlowDirection = palette.FlowDirection;
         Paint();
+        _states?.Refresh(this);
     }
 
     private void Paint()
