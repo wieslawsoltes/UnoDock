@@ -5,21 +5,21 @@
 
   <!-- Keep the platform templates, focus visuals and automation peers. These are
        lightweight property overrides, not a second Button/ListView implementation. -->
-  <Style x:Key="Inspector.ActionStyle" TargetType="Button">
+  <Style x:Key="Inspector.ActionStyle" TargetType="Button" BasedOn="{StaticResource DefaultButtonStyle}">
     <Setter Property="MinWidth" Value="28" />
     <Setter Property="MinHeight" Value="28" />
     <Setter Property="Padding" Value="6,3" />
     <Setter Property="FontSize" Value="12" />
     <Setter Property="CornerRadius" Value="3" />
   </Style>
-  <Style x:Key="Inspector.ModeStyle" TargetType="ToggleButton">
+  <Style x:Key="Inspector.ModeStyle" TargetType="ToggleButton" BasedOn="{StaticResource DefaultToggleButtonStyle}">
     <Setter Property="MinWidth" Value="0" />
     <Setter Property="MinHeight" Value="28" />
     <Setter Property="Padding" Value="6,3" />
     <Setter Property="FontSize" Value="12" />
     <Setter Property="CornerRadius" Value="3" />
   </Style>
-  <Style x:Key="Inspector.ContainerStyle" TargetType="ListViewItem">
+  <Style x:Key="Inspector.ContainerStyle" TargetType="ListViewItem" BasedOn="{StaticResource DefaultListViewItemStyle}">
     <Setter Property="MinWidth" Value="0" />
     <Setter Property="MinHeight" Value="0" />
     <Setter Property="Padding" Value="0" />
@@ -47,7 +47,7 @@
     <Setter Property="Foreground" Value="{ThemeResource SystemFillColorCriticalBrush}" />
     <Setter Property="Visibility" Value="Collapsed" />
   </Style>
-  <Style x:Key="Inspector.TextStyle" TargetType="TextBox">
+  <Style x:Key="Inspector.TextStyle" TargetType="TextBox" BasedOn="{StaticResource DefaultTextBoxStyle}">
     <Setter Property="MinWidth" Value="0" />
     <Setter Property="MinHeight" Value="26" />
     <Setter Property="FontSize" Value="12" />
@@ -133,7 +133,47 @@
     <Border Background="{ThemeResource SolidBackgroundFillColorBaseBrush}" MinHeight="28">
       <ToggleButton x:Name="CategoryToggle" HorizontalAlignment="Stretch"
                     HorizontalContentAlignment="Left"
-                    Style="{StaticResource Inspector.ModeStyle}" />
+                    Style="{StaticResource Inspector.ModeStyle}">
+        <ToggleButton.Resources>
+          <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
+              <ResourceDictionary x:Key="Light">
+                <SolidColorBrush x:Key="ToggleButtonBackgroundChecked" Color="#06000000" />
+                <SolidColorBrush x:Key="ToggleButtonForegroundChecked" Color="#E4000000" />
+                <SolidColorBrush x:Key="ToggleButtonBorderBrushChecked" Color="#1A000000" />
+                <SolidColorBrush x:Key="ToggleButtonBackgroundCheckedPointerOver" Color="#0F000000" />
+                <SolidColorBrush x:Key="ToggleButtonForegroundCheckedPointerOver" Color="#E4000000" />
+                <SolidColorBrush x:Key="ToggleButtonBorderBrushCheckedPointerOver" Color="#1A000000" />
+                <SolidColorBrush x:Key="ToggleButtonBackgroundCheckedPressed" Color="#06000000" />
+                <SolidColorBrush x:Key="ToggleButtonForegroundCheckedPressed" Color="#E4000000" />
+                <SolidColorBrush x:Key="ToggleButtonBorderBrushCheckedPressed" Color="#1A000000" />
+              </ResourceDictionary>
+              <ResourceDictionary x:Key="Dark">
+                <SolidColorBrush x:Key="ToggleButtonBackgroundChecked" Color="#0FFFFFFF" />
+                <SolidColorBrush x:Key="ToggleButtonForegroundChecked" Color="#FFFFFF" />
+                <SolidColorBrush x:Key="ToggleButtonBorderBrushChecked" Color="#18FFFFFF" />
+                <SolidColorBrush x:Key="ToggleButtonBackgroundCheckedPointerOver" Color="#16FFFFFF" />
+                <SolidColorBrush x:Key="ToggleButtonForegroundCheckedPointerOver" Color="#FFFFFF" />
+                <SolidColorBrush x:Key="ToggleButtonBorderBrushCheckedPointerOver" Color="#18FFFFFF" />
+                <SolidColorBrush x:Key="ToggleButtonBackgroundCheckedPressed" Color="#0FFFFFFF" />
+                <SolidColorBrush x:Key="ToggleButtonForegroundCheckedPressed" Color="#FFFFFF" />
+                <SolidColorBrush x:Key="ToggleButtonBorderBrushCheckedPressed" Color="#18FFFFFF" />
+              </ResourceDictionary>
+              <ResourceDictionary x:Key="HighContrast">
+                <SolidColorBrush x:Key="ToggleButtonBackgroundChecked" Color="{ThemeResource SystemColorWindowColor}" />
+                <SolidColorBrush x:Key="ToggleButtonForegroundChecked" Color="{ThemeResource SystemColorWindowTextColor}" />
+                <SolidColorBrush x:Key="ToggleButtonBorderBrushChecked" Color="{ThemeResource SystemColorWindowTextColor}" />
+                <SolidColorBrush x:Key="ToggleButtonBackgroundCheckedPointerOver" Color="{ThemeResource SystemColorHighlightColor}" />
+                <SolidColorBrush x:Key="ToggleButtonForegroundCheckedPointerOver" Color="{ThemeResource SystemColorHighlightTextColor}" />
+                <SolidColorBrush x:Key="ToggleButtonBorderBrushCheckedPointerOver" Color="{ThemeResource SystemColorWindowTextColor}" />
+                <SolidColorBrush x:Key="ToggleButtonBackgroundCheckedPressed" Color="{ThemeResource SystemColorWindowColor}" />
+                <SolidColorBrush x:Key="ToggleButtonForegroundCheckedPressed" Color="{ThemeResource SystemColorWindowTextColor}" />
+                <SolidColorBrush x:Key="ToggleButtonBorderBrushCheckedPressed" Color="{ThemeResource SystemColorWindowTextColor}" />
+              </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+          </ResourceDictionary>
+        </ToggleButton.Resources>
+      </ToggleButton>
     </Border>
   </DataTemplate>
 

@@ -2,38 +2,60 @@
   <ResourceDictionary.ThemeDictionaries>
     <ResourceDictionary x:Key="Light">
       <SolidColorBrush x:Key="UnoDock.PaneBrush" Color="#FFFFFF"/>
-      <SolidColorBrush x:Key="UnoDock.HeaderBrush" Color="#F5F6F8"/>
-      <SolidColorBrush x:Key="UnoDock.InactiveTabBrush" Color="#EBEDF1"/>
-      <SolidColorBrush x:Key="UnoDock.BorderBrush" Color="#D0D5DE"/>
-      <SolidColorBrush x:Key="UnoDock.ForegroundBrush" Color="#20252D"/>
-      <SolidColorBrush x:Key="UnoDock.HoverBrush" Color="#E8EDF5"/>
-      <SolidColorBrush x:Key="UnoDock.PressedBrush" Color="#D7E1F0"/>
-      <SolidColorBrush x:Key="UnoDock.AccentBrush" Color="#2563EB"/>
-      <SolidColorBrush x:Key="UnoDock.ActiveTitleBrush" Color="#EFF4FC"/>
+      <SolidColorBrush x:Key="UnoDock.HeaderBrush" Color="#F3F3F3"/>
+      <SolidColorBrush x:Key="UnoDock.InactiveTabBrush" Color="#F3F3F3"/>
+      <SolidColorBrush x:Key="UnoDock.BorderBrush" Color="#D1D1D1"/>
+      <SolidColorBrush x:Key="UnoDock.ForegroundBrush" Color="#1B1B1B"/>
+      <SolidColorBrush x:Key="UnoDock.SecondaryForegroundBrush" Color="#606060"/>
+      <SolidColorBrush x:Key="UnoDock.DisabledForegroundBrush" Color="#9B9B9B"/>
+      <SolidColorBrush x:Key="UnoDock.HoverBrush" Color="#E9E9E9"/>
+      <SolidColorBrush x:Key="UnoDock.PressedBrush" Color="#DDDDDD"/>
+      <SolidColorBrush x:Key="UnoDock.AccentBrush" Color="#0067C0"/>
+      <SolidColorBrush x:Key="UnoDock.ActiveTitleBrush" Color="#FAFAFA"/>
     </ResourceDictionary>
     <ResourceDictionary x:Key="Dark">
-      <SolidColorBrush x:Key="UnoDock.PaneBrush" Color="#202329"/>
-      <SolidColorBrush x:Key="UnoDock.HeaderBrush" Color="#252931"/>
-      <SolidColorBrush x:Key="UnoDock.InactiveTabBrush" Color="#2C313B"/>
-      <SolidColorBrush x:Key="UnoDock.BorderBrush" Color="#464E5D"/>
-      <SolidColorBrush x:Key="UnoDock.ForegroundBrush" Color="#EDF0F5"/>
-      <SolidColorBrush x:Key="UnoDock.HoverBrush" Color="#353D4B"/>
-      <SolidColorBrush x:Key="UnoDock.PressedBrush" Color="#414D60"/>
-      <SolidColorBrush x:Key="UnoDock.AccentBrush" Color="#8AB4FF"/>
-      <SolidColorBrush x:Key="UnoDock.ActiveTitleBrush" Color="#2C374A"/>
+      <SolidColorBrush x:Key="UnoDock.PaneBrush" Color="#272727"/>
+      <SolidColorBrush x:Key="UnoDock.HeaderBrush" Color="#202020"/>
+      <SolidColorBrush x:Key="UnoDock.InactiveTabBrush" Color="#202020"/>
+      <SolidColorBrush x:Key="UnoDock.BorderBrush" Color="#454545"/>
+      <SolidColorBrush x:Key="UnoDock.ForegroundBrush" Color="#F3F3F3"/>
+      <SolidColorBrush x:Key="UnoDock.SecondaryForegroundBrush" Color="#C5C5C5"/>
+      <SolidColorBrush x:Key="UnoDock.DisabledForegroundBrush" Color="#858585"/>
+      <SolidColorBrush x:Key="UnoDock.HoverBrush" Color="#343434"/>
+      <SolidColorBrush x:Key="UnoDock.PressedBrush" Color="#3D3D3D"/>
+      <SolidColorBrush x:Key="UnoDock.AccentBrush" Color="#60CDFF"/>
+      <SolidColorBrush x:Key="UnoDock.ActiveTitleBrush" Color="#2C2C2C"/>
     </ResourceDictionary>
     <ResourceDictionary x:Key="Default">
-      <SolidColorBrush x:Key="UnoDock.PaneBrush" Color="#202329"/>
-      <SolidColorBrush x:Key="UnoDock.HeaderBrush" Color="#252931"/>
-      <SolidColorBrush x:Key="UnoDock.InactiveTabBrush" Color="#2C313B"/>
-      <SolidColorBrush x:Key="UnoDock.BorderBrush" Color="#464E5D"/>
-      <SolidColorBrush x:Key="UnoDock.ForegroundBrush" Color="#EDF0F5"/>
-      <SolidColorBrush x:Key="UnoDock.HoverBrush" Color="#353D4B"/>
-      <SolidColorBrush x:Key="UnoDock.PressedBrush" Color="#414D60"/>
-      <SolidColorBrush x:Key="UnoDock.AccentBrush" Color="#8AB4FF"/>
-      <SolidColorBrush x:Key="UnoDock.ActiveTitleBrush" Color="#2C374A"/>
+      <SolidColorBrush x:Key="UnoDock.PaneBrush" Color="#272727"/>
+      <SolidColorBrush x:Key="UnoDock.HeaderBrush" Color="#202020"/>
+      <SolidColorBrush x:Key="UnoDock.InactiveTabBrush" Color="#202020"/>
+      <SolidColorBrush x:Key="UnoDock.BorderBrush" Color="#454545"/>
+      <SolidColorBrush x:Key="UnoDock.ForegroundBrush" Color="#F3F3F3"/>
+      <SolidColorBrush x:Key="UnoDock.SecondaryForegroundBrush" Color="#C5C5C5"/>
+      <SolidColorBrush x:Key="UnoDock.DisabledForegroundBrush" Color="#858585"/>
+      <SolidColorBrush x:Key="UnoDock.HoverBrush" Color="#343434"/>
+      <SolidColorBrush x:Key="UnoDock.PressedBrush" Color="#3D3D3D"/>
+      <SolidColorBrush x:Key="UnoDock.AccentBrush" Color="#60CDFF"/>
+      <SolidColorBrush x:Key="UnoDock.ActiveTitleBrush" Color="#2C2C2C"/>
+    </ResourceDictionary>
+    <ResourceDictionary x:Key="HighContrast">
+      <SolidColorBrush x:Key="UnoDock.PaneBrush" Color="{ThemeResource SystemColorWindowColor}"/>
+      <SolidColorBrush x:Key="UnoDock.HeaderBrush" Color="{ThemeResource SystemColorWindowColor}"/>
+      <SolidColorBrush x:Key="UnoDock.InactiveTabBrush" Color="{ThemeResource SystemColorWindowColor}"/>
+      <SolidColorBrush x:Key="UnoDock.BorderBrush" Color="{ThemeResource SystemColorWindowTextColor}"/>
+      <SolidColorBrush x:Key="UnoDock.ForegroundBrush" Color="{ThemeResource SystemColorWindowTextColor}"/>
+      <SolidColorBrush x:Key="UnoDock.SecondaryForegroundBrush" Color="{ThemeResource SystemColorWindowTextColor}"/>
+      <SolidColorBrush x:Key="UnoDock.DisabledForegroundBrush" Color="{ThemeResource SystemColorGrayTextColor}"/>
+      <SolidColorBrush x:Key="UnoDock.HoverBrush" Color="{ThemeResource SystemColorHighlightColor}"/>
+      <SolidColorBrush x:Key="UnoDock.PressedBrush" Color="{ThemeResource SystemColorHighlightColor}"/>
+      <SolidColorBrush x:Key="UnoDock.AccentBrush" Color="{ThemeResource SystemColorHighlightColor}"/>
+      <SolidColorBrush x:Key="UnoDock.ActiveTitleBrush" Color="{ThemeResource SystemColorWindowColor}"/>
     </ResourceDictionary>
   </ResourceDictionary.ThemeDictionaries>
+  <x:Double x:Key="UnoDock.TabCornerRadius">4</x:Double>
+  <x:Double x:Key="UnoDock.TabHorizontalPadding">6</x:Double>
+  <x:Double x:Key="UnoDock.PaneCornerRadius">4</x:Double>
   <x:Double x:Key="UnoDock.FontSize">12</x:Double>
   <x:Double x:Key="UnoDock.TitleHeight">26</x:Double>
   <x:Double x:Key="UnoDock.TabHeight">28</x:Double>

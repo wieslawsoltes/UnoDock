@@ -12,8 +12,9 @@ follows the owning manager's actual light/dark theme. Explicit
 `new FluentTheme(ElementTheme.Light)` and `new FluentTheme(ElementTheme.Dark)`
 remain coherent even when the containing window requests the opposite theme.
 The gallery's existing Light and Dark choices use these themes. Its explicit
-Generic choice and default sample selection retain the independently authored
-classic palette. A null Theme retains the previous automatic legacy palette.
+Generic choice retains the independently authored classic palette. The Gallery
+now starts in Fluent Light with comfortable density; its initial docking model
+and the library's null-theme legacy behavior remain unchanged. A null Theme retains the previous automatic legacy palette.
 
 Fluent resolves pane/header/tab surfaces, borders, text, hover/pressed states and
 accent from application semantic resources. Manager/ancestor/application
