@@ -3,7 +3,7 @@ using Path = Microsoft.UI.Xaml.Shapes.Path;
 
 namespace UnoDock.Internal;
 
-internal sealed class DockChromeButton : Button
+internal sealed partial class DockChromeButton : Button
 {
     private DockPalette _palette;
     private bool _over;
@@ -107,12 +107,7 @@ internal sealed class DockChromeButton : Button
     {
         var foreground = !_fluent ? _palette.Foreground : !IsEnabled ? _palette.DisabledForeground ?? _palette.Foreground : _subdued ? _palette.SecondaryForeground ?? _palette.Foreground : _palette.Foreground;
         Foreground = foreground;
-        if (Content is Path path)
-        {
-            path.Stroke = foreground;
-            path.Fill = foreground;
-        }
-
+        PaintIcon();
         if (_fluent)
         {
             // Native CommonStates paint hover/pressed/disabled on template parts,

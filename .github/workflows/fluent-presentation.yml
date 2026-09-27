@@ -36,6 +36,15 @@ jobs:
         if: runner.os != 'Linux'
         shell: bash
         run: python3 tools/run-desktop-tests.py --app samples/UnoDock.Gallery/bin/Release/net10.0-desktop/UnoDock.Gallery.dll --output artifacts/fluent --selector fluent-presentation --suite-timeout 150 --total-timeout 240
+      - name: Execute independent consumer-resource and vector-state cases
+        shell: bash
+        run: |
+          args=(python3 tools/run-desktop-tests.py --app samples/UnoDock.Gallery/bin/Release/net10.0-desktop/UnoDock.Gallery.dll --output artifacts/fluent/states --selector fluent-state-resources --suite-timeout 150 --total-timeout 240)
+          if [ "$RUNNER_OS" = Linux ]; then
+            xvfb-run -a -s '-screen 0 2560x1440x24' "${args[@]}"
+          else
+            "${args[@]}"
+          fi
       - name: Require complete first-attempt runtime evidence
         if: always()
         shell: bash
@@ -50,7 +59,7 @@ jobs:
           cases = root.findall('testcase')
           names = [case.get('name', '') for case in cases]
           assert root.tag == 'testsuite' and root.get('name') == 'fluent-presentation'
-          assert len(cases) == int(root.get('tests', '-1')) and len(cases) >= (41 if os.environ['RUNNER_OS'] == 'Linux' else 38)
+          assert len(cases) == int(root.get('tests', '-1')) and len(cases) >= (43 if os.environ['RUNNER_OS'] == 'Linux' else 40)
           assert all(names) and len(set(names)) == len(names)
           assert not any(int(root.get(k, '0')) for k in ('failures', 'errors', 'skipped'))
           assert not any(case.find(tag) is not None for case in cases for tag in ('failure', 'error', 'skipped'))
@@ -84,7 +93,32 @@ jobs:
           result = record['completed'][0]
           assert result['suite'] == 'fluent-presentation' and result['error'] is None
           assert result['passed'] == result['executed'] == len(cases)
-          print('Verified', len(cases), 'actual-host Fluent presentation cases and five rendered captures.')
+          assert sum(name.startswith('Fluent resources: Gallery frame') for name in names) == 2
+          states = ET.parse(p / 'states' / 'fluent-state-resources.xml').getroot()
+          state_cases = states.findall('testcase')
+          state_names = [case.get('name', '') for case in state_cases]
+          assert states.tag == 'testsuite' and states.get('name') == 'fluent-state-resources'
+          assert len(state_cases) == int(states.get('tests', '-1')) and len(state_cases) >= 30
+          assert all(state_names) and len(set(state_names)) == len(state_names)
+          assert not any(int(states.get(k, '0')) for k in ('failures', 'errors', 'skipped'))
+          assert not any(case.find(tag) is not None for case in state_cases for tag in ('failure', 'error', 'skipped'))
+          for kind in ('button', 'menu'):
+              for mode in ('Light', 'Dark'):
+                  for scope in ('direct', 'theme', 'merged-theme', 'shared-theme', 'default'):
+                      assert f'Fluent resources: {kind}/{mode}/{scope} consumer states remain authoritative' in state_names
+              for contract in ('contrast dictionary and unrelated entries are not replaced',
+                               'changing the resource owner retires only the old forwarding dictionary',
+                               'Generic round trips remove forwarding but retain consumer dictionaries',
+                               'adding and removing a consumer state is reconciled on refresh'):
+                  assert f'Fluent resources: {kind} {contract}' in state_names
+          for mode in ('Light', 'Dark'):
+              assert f'Fluent resources: button/{mode} vector glyph follows native foreground states' in state_names
+          execution = json.loads((p / 'states' / 'isolated-execution.json').read_text())
+          assert execution['planned'] == ['fluent-state-resources'] and len(execution['completed']) == 1
+          actual = execution['completed'][0]
+          assert actual['suite'] == 'fluent-state-resources' and actual['error'] is None
+          assert actual['executed'] == actual['passed'] == len(state_cases)
+          print('Verified', len(cases), 'Fluent presentation cases,', len(state_cases), 'resource ownership cases, and five captures.')
           PY
       - uses: actions/upload-artifact@v4
         if: always()

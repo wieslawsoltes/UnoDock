@@ -5,6 +5,7 @@ namespace UnoDock.Gallery;
 
 public sealed partial class GalleryPage
 {
+    private SampleTheme? _appliedGalleryTheme;
     private readonly GalleryChromeResources _galleryChrome = new();
     private readonly WorkbenchResources _galleryWorkbench = new();
     private readonly Dictionary<MenuBarItem, ControlTemplate?> _legacyMenuTemplates = [];
@@ -31,7 +32,18 @@ public sealed partial class GalleryPage
         {
             if (!_sampleShell.Resources.MergedDictionaries.Contains(_galleryWorkbench))
                 _sampleShell.Resources.MergedDictionaries.Add(_galleryWorkbench);
-            Dock.Style = (Style)_galleryWorkbench["UnoDock.WorkbenchManagerStyle"];
+            var managerStyle = (Style)_galleryWorkbench["UnoDock.WorkbenchManagerStyle"];
+            if (_appliedGalleryTheme != theme)
+            {
+                // Resolve the scoped palette before style ThemeResources
+                // capture their values. Merely reassigning an identical Style on
+                // the pinned host can leave the previous theme's frame brushes.
+                Dock.Refresh();
+                if (ReferenceEquals(Dock.Style, managerStyle))
+                    Dock.ClearValue(StyleProperty);
+            }
+
+            Dock.Style = managerStyle;
             var surfaceStyle = (Style)_galleryChrome["Gallery.Surface"];
             if (!ReferenceEquals(_sampleShell.Style, surfaceStyle))
             {
@@ -57,6 +69,7 @@ public sealed partial class GalleryPage
             _status.Foreground = SampleChrome.Default(false).Foreground;
         }
 
+        _appliedGalleryTheme = theme;
         foreach (var (menu, legacyTemplate) in _legacyMenuTemplates)
         {
             if (fluent)
