@@ -32,6 +32,7 @@ internal static class FluentPresentationTests
         {
             await Wait(() => page.IsLoaded && page.Dock.ActualWidth > 0);
             var tests = new TestRunner();
+            FluentGalleryThemeTests.Add(tests, page);
             var initialRoot = page.Dock.Layout;
             var docs = initialRoot.Descendents().OfType<LayoutDocument>().ToArray();
             var editors = docs.Select(d => d.Content).ToArray();
