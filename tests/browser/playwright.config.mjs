@@ -8,7 +8,9 @@ export default defineConfig({
     expect: { timeout: 30000 },
     workers: 1,
     retries: 0,
-    maxFailures: 1,
+    // Collect independent scenario failures instead of hiding later regressions
+    // behind the first failure. The evidence verifier still rejects any failure.
+    maxFailures: 0,
     fullyParallel: false,
     reporter: [
         ['list'],
@@ -17,8 +19,6 @@ export default defineConfig({
     ],
     outputDir: '../../artifacts/browser-tests/traces',
     use: {
-        // Optional deterministic backend for GPU-less test hosts only.
-        // The published application always retains the browser's GPU choice.
         launchOptions: process.env.UNODOCK_SOFTWARE_GPU === '1'
             ? { args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] }
             : {},

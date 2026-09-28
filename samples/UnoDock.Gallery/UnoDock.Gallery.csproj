@@ -2,11 +2,22 @@
   <PropertyGroup>
     <TargetFrameworks Condition="'$(UnoDockTargetFrameworks)' == ''">net10.0-desktop;net10.0-browserwasm</TargetFrameworks>
     <TargetFrameworks Condition="'$(UnoDockTargetFrameworks)' != ''">$(UnoDockTargetFrameworks)</TargetFrameworks>
-    <OutputType>Exe</OutputType><UnoSingleProject>true</UnoSingleProject><IsPackable>false</IsPackable>
-    <ApplicationTitle>UnoDock Gallery</ApplicationTitle><ApplicationId>org.unodock.gallery</ApplicationId>
-    <ApplicationDisplayVersion>0.1.0</ApplicationDisplayVersion><ApplicationVersion>1</ApplicationVersion>
-    <ApplicationPublisher>UnoDock contributors</ApplicationPublisher><ApplicationDescription>AvalonDock-style docking on Uno Platform</ApplicationDescription>
+    <OutputType>Exe</OutputType>
+    <UnoSingleProject>true</UnoSingleProject>
+    <IsPackable>false</IsPackable>
+    <ApplicationTitle>UnoDock Gallery</ApplicationTitle>
+    <ApplicationId>org.unodock.gallery</ApplicationId>
+    <ApplicationDisplayVersion>0.1.0</ApplicationDisplayVersion>
+    <ApplicationVersion>1</ApplicationVersion>
+    <ApplicationPublisher>UnoDock contributors</ApplicationPublisher>
+    <ApplicationDescription>AvalonDock-style docking on Uno Platform</ApplicationDescription>
     <UnoFeatures>SkiaRenderer;</UnoFeatures>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net10.0-browserwasm' and '$(Configuration)' == 'Release'">
+    <!-- Use the execution mode exercised by the native startup/recovery tests.
+         AOT does not waive the separate multi-window lifecycle acceptance gate. -->
+    <WasmShellMonoRuntimeExecutionMode>InterpreterAndAOT</WasmShellMonoRuntimeExecutionMode>
+    <WasmEmitSymbolMap>true</WasmEmitSymbolMap>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="../../tests/UnoDock.VisualTests/*.cs" Link="Testing/%(Filename)%(Extension)" />
@@ -18,7 +29,6 @@
     <Compile Include="../../tests/UnoDock.Runtime.Tests/ShellTests*.cs" Link="Testing/%(Filename)%(Extension)" />
     <Compile Include="../../tests/UnoDock.Testing/Check.cs" Link="Testing/Check.cs" />
     <Compile Include="../../tests/UnoDock.Testing/TestRunner.cs" Link="Testing/TestRunner.cs" />
-
     <Compile Include="../../tests/UnoDock.Runtime.Tests/WindowLifecycleTests.cs" Link="Testing/WindowLifecycleTests.cs" />
     <Compile Include="../../tests/UnoDock.Runtime.Tests/RuntimeTests.cs" Link="Testing/RuntimeTests.cs" />
     <Compile Include="../../tests/UnoDock.Runtime.Tests/InteropTests.cs" Link="Testing/InteropTests.cs" />

@@ -17,6 +17,8 @@ REQUIRED = {
     'blocked popups retain source ownership and show recovery guidance',
     'reloading a satellite preserves its leased content',
     'journal recovery returns popup content to the reloaded primary',
+    'an unhandled native error retires stale readiness and recovery preserves content with renewed leases',
+    'repeated native window returns retain edited payloads without runtime faults',
 }
 
 
