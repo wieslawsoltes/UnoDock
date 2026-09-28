@@ -13,8 +13,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 44d0cd5046a0a74394857c9e9e9a47707d0b63c3
-          fetch-depth: 2
+          ref: bbb19396509be54c126fc38e8d54d81b1d9c1d51
+          fetch-depth: 3
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -26,14 +26,13 @@ jobs:
           run-id: 36403124991
           github-token: ${{ github.token }}
           path: artifacts/serve/UnoDock
-      - name: Resolve and print exact current browser dependency lock
+      - name: Install the committed browser lock
         working-directory: tests/browser
         run: |
-          npm install --save-exact --ignore-scripts --no-audit --no-fund @playwright/test@1.63.0
-          cat package.json package-lock.json
+          npm ci --ignore-scripts --no-audit --no-fund
           npx playwright --version
           npx playwright install --with-deps chromium > /tmp/browser-install.log 2>&1 || { tail -30 /tmp/browser-install.log; exit 1; }
-      - name: Run unchanged native acceptance with the new pinned browser
+      - name: Execute all native scenarios without application instrumentation
         working-directory: tests/browser
         run: |
           python3 -m http.server 8765 --directory ../../artifacts/serve > ../../artifacts/http.log 2>&1 &
@@ -42,14 +41,17 @@ jobs:
           timeout --signal=TERM --kill-after=15s 900s npx playwright test
       - name: Validate complete named evidence
         if: always()
-        run: |
-          python3 tools/verify-browser-results.py artifacts/browser-tests
+        run: python3 tools/verify-browser-results.py artifacts/browser-tests
+      - name: Show original failure context
+        if: failure()
+        run: find artifacts/browser-tests -name error-context.md -exec cat {} \;
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: current-browser-acceptance
+          name: keyboard-browser-acceptance
           path: |
             artifacts/browser-tests/
             artifacts/http.log
             tests/browser/package.json
             tests/browser/package-lock.json
+          if-no-files-found: error
