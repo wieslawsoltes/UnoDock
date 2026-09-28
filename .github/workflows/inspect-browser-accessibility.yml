@@ -1,0 +1,71 @@
+name: Inspect browser accessibility contract
+on:
+  push:
+    branches: [work/browser-runtime-inspection]
+    paths: [.github/workflows/inspect-browser-accessibility.yml]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: a46e24b7302e794b2bf64c89e336548be49cdfcd
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@v4
+        with:
+          name: browser-documentation-site
+          run-id: 36398194252
+          github-token: ${{ github.token }}
+          path: artifacts/serve/UnoDock
+      - name: Install locked Chromium runtime
+        working-directory: tests/browser
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npx playwright install --with-deps chromium > /tmp/chromium.log 2>&1
+      - name: Read the pinned runtime contract
+        working-directory: tests/browser
+        run: |
+          mkdir -p ../../artifacts/accessibility
+          cat > inspect-contract.mjs <<'JS'
+          import { chromium } from '@playwright/test';
+          import fs from 'node:fs/promises';
+          const browser = await chromium.launch();
+          const page = await browser.newPage();
+          page.on('pageerror', error => console.log('PAGE ERROR', error.message));
+          const cdp = await page.context().newCDPSession(page);
+          await cdp.send('Debugger.enable');
+          await page.goto('http://127.0.0.1:8765/UnoDock/playground/', { waitUntil: 'commit' });
+          await new Promise(resolve => setTimeout(resolve, 12000));
+          let resolvePause;
+          const paused = new Promise(resolve => { resolvePause = resolve; });
+          cdp.once('Debugger.paused', resolvePause);
+          await cdp.send('Debugger.pause');
+          const event = await paused;
+          const expression = `(() => { const p = window.parent; const f = p.document.querySelector('#app'); const d = f.contentDocument; const a = f.contentWindow.Uno?.UI?.Runtime?.Skia?.Accessibility; return JSON.stringify({ parentReady: p.document.readyState, nativeReady: d.readyState, exports: a ? Object.getOwnPropertyNames(a).map(k => [k, typeof a[k]]) : [], nodes: [...d.querySelectorAll('[role],input,textarea')].slice(0,100).map(e => ({tag:e.tagName,role:e.getAttribute('role'),name:e.getAttribute('aria-label'),id:e.id})), status:p.document.querySelector('#status')?.textContent }); })()`;
+          for (const frame of event.callFrames.slice(-3)) {
+              const result = await cdp.send('Debugger.evaluateOnCallFrame', { callFrameId: frame.callFrameId, expression, returnByValue: true, silent: true });
+              console.log('PINNED CONTRACT', JSON.stringify(result));
+              if (result.result?.value) {
+                  await fs.writeFile('../../artifacts/accessibility/contract.json', result.result.value);
+                  break;
+              }
+          }
+          await cdp.send('Debugger.resume');
+          await browser.close();
+          JS
+          node --check inspect-contract.mjs
+          python3 -m http.server 8765 --directory ../../artifacts/serve > ../../artifacts/accessibility/http.log 2>&1 &
+          server=$!
+          trap 'kill "$server" || true' EXIT
+          timeout --kill-after=5s 60s node inspect-contract.mjs | tee ../../artifacts/accessibility/console.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-accessibility-contract
+          path: artifacts/accessibility/
