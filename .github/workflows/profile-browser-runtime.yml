@@ -1,0 +1,98 @@
+name: Profile browser responsiveness
+on:
+  push:
+    branches: [work/browser-runtime-inspection]
+    paths: [.github/workflows/profile-browser-runtime.yml]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  profile:
+    strategy:
+      fail-fast: false
+      matrix:
+        backend: [default, software]
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: a46e24b7302e794b2bf64c89e336548be49cdfcd
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@v4
+        with:
+          name: browser-documentation-site
+          run-id: 36398194252
+          github-token: ${{ github.token }}
+          path: artifacts/serve/UnoDock
+      - name: Install locked browser tools
+        working-directory: tests/browser
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npx playwright install --with-deps chromium > /tmp/chromium.log 2>&1
+      - name: Record V8/WASM stack and profile without modifying application code
+        working-directory: tests/browser
+        env:
+          BACKEND: ${{ matrix.backend }}
+        run: |
+          mkdir -p ../../artifacts/profile
+          cat > profile-runtime.mjs <<'JS'
+          import { chromium } from '@playwright/test';
+          import fs from 'node:fs/promises';
+          const directory = '../../artifacts/profile';
+          const browser = await chromium.launch({ args: process.env.BACKEND === 'software' ? ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] : [] });
+          const page = await browser.newPage();
+          page.on('console', event => console.log('CONSOLE', event.type(), event.text()));
+          page.on('pageerror', error => console.log('PAGE ERROR', error.stack));
+          page.on('crash', () => console.log('RENDERER CRASH'));
+          const cdp = await page.context().newCDPSession(page);
+          await cdp.send('Debugger.enable');
+          await cdp.send('Profiler.enable');
+          await cdp.send('Profiler.start');
+          await page.goto('http://127.0.0.1:8765/UnoDock/playground/', { waitUntil: 'commit' });
+          console.log('COMMITTED', process.env.BACKEND);
+          await new Promise(resolve => setTimeout(resolve, 12000));
+          console.log('REQUESTING PAUSE');
+          let resolvePause;
+          const paused = new Promise(resolve => { resolvePause = resolve; });
+          cdp.once('Debugger.paused', event => { console.log('PAUSED', JSON.stringify(event.callFrames.map(frame => ({ function: frame.functionName, location: frame.location, url: frame.url })))); resolvePause(event); });
+          await cdp.send('Debugger.pause');
+          const stack = await Promise.race([paused, new Promise(resolve => setTimeout(() => resolve(null), 10000))]);
+          if (stack) {
+              await fs.writeFile(directory + '/stack.json', JSON.stringify(stack, null, 2));
+              for (const frame of stack.callFrames.slice(-3)) {
+                  try {
+                      const result = await cdp.send('Debugger.evaluateOnCallFrame', { callFrameId: frame.callFrameId, expression: "JSON.stringify({applied:window.parent.UnoDockBrowser?.applied,status:window.parent.document.getElementById('status')?.textContent})", returnByValue: true, silent: true });
+                      console.log('PAUSED STATE', JSON.stringify(result));
+                      if (result.result?.value) break;
+                  } catch (error) { console.log('FRAME', error.message); }
+              }
+          }
+          const profile = await cdp.send('Profiler.stop');
+          await fs.writeFile(directory + '/profile.json', JSON.stringify(profile));
+          console.log('HOT FUNCTIONS', JSON.stringify(profile.profile.nodes.filter(node => node.hitCount).sort((a,b) => b.hitCount-a.hitCount).slice(0,30).map(node => ({ frame: node.callFrame, hits: node.hitCount }))));
+          if (stack) await cdp.send('Debugger.resume');
+          const probe = await Promise.race([page.evaluate(() => ({ applied: window.UnoDockBrowser?.applied, status: document.getElementById('status')?.textContent })), new Promise(resolve => setTimeout(() => resolve({ timeout: true }), 10000))]);
+          console.log('AFTER RESUME', JSON.stringify(probe));
+          await fs.writeFile(directory + '/state.json', JSON.stringify(probe, null, 2));
+          await browser.close();
+          JS
+          node --check profile-runtime.mjs
+          python3 -m http.server 8765 --directory ../../artifacts/serve > ../../artifacts/profile/http.log 2>&1 &
+          server=$!
+          trap 'kill "$server" || true' EXIT
+          set +e
+          timeout --signal=TERM --kill-after=5s 80s node profile-runtime.mjs > ../../artifacts/profile/console.log 2>&1
+          result=$?
+          set -e
+          cat ../../artifacts/profile/console.log
+          echo "$result" > ../../artifacts/profile/process-exit.txt
+          test "$result" -eq 0
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-profile-${{ matrix.backend }}
+          path: artifacts/profile/
+          if-no-files-found: error
