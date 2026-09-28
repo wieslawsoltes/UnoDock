@@ -1,0 +1,105 @@
+name: Inspect AOT window return
+on:
+  push:
+    branches: [work/browser-native-crash-diagnostic]
+    paths: [.github/workflows/browser-aot-lifecycle.yml]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 61f913734906e8c07f983e5fbb7737f21c51794a
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@v4
+        with:
+          name: browser-aot-site
+          run-id: 36422498961
+          github-token: ${{ github.token }}
+          path: artifacts/serve/UnoDock
+      - name: Install the unchanged test runtime
+        working-directory: tests/browser
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npx playwright install --with-deps chromium > /tmp/chromium.log 2>&1
+      - name: Capture broker and projected ownership through the real commands
+        working-directory: tests/browser
+        run: |
+          mkdir -p ../../artifacts/lifecycle
+          cat > aot-lifecycle.mjs <<'JS'
+          import { chromium } from '@playwright/test';
+          import fs from 'node:fs/promises';
+          const browser = await chromium.launch();
+          const context = await browser.newContext();
+          context.on('page', page => {
+              page.on('pageerror', error => console.log('ERROR',page.url(),error.stack));
+              page.on('console', event => { if (['error','warning'].includes(event.type())) console.log('CONSOLE',page.url(),event.text()); });
+              page.on('crash', () => console.log('CRASH',page.url()));
+          });
+          const page = await context.newPage();
+          const ready = async p => {
+              await p.waitForFunction(() => window.UnoDockBrowser?.applied?.items, null, {timeout:45000});
+          };
+          async function state(p,label) {
+              const result = await p.evaluate(() => {
+                  let broker;
+                  try { broker=window.UnoDockBrowser.snapshot(); } catch(error) { broker={error:error.message}; }
+                  return {url:location.href,broker,applied:window.UnoDockBrowser?.applied,
+                      status:document.querySelector('#status')?.textContent,
+                      native:[...(document.querySelector('#app')?.contentDocument?.querySelectorAll('[role=paragraph],[role=alert],[role=status],canvas')??[])].map(e=>({tag:e.tagName,text:e.textContent, width:e.width,height:e.height}))};
+              });
+              console.log('STATE',label,JSON.stringify(result));
+              await fs.writeFile('../../artifacts/lifecycle/'+label+'.json',JSON.stringify(result,null,2));
+          }
+          async function float(id) {
+              await page.locator(`[data-content="${id}"]`).click();
+              const opening=context.waitForEvent('page');
+              await page.getByRole('button',{name:'Float in browser window',exact:true}).click();
+              const child=await opening; await ready(child);
+              await child.waitForFunction(id=>window.UnoDockBrowser.applied.items.some(x=>x.id===id),id);
+              return child;
+          }
+          try {
+              await page.goto('http://127.0.0.1:8765/UnoDock/playground/');await ready(page);
+              const one=await float('architecture');const two=await float('notes');
+              const destination=await two.evaluate(()=>window.UnoDockBrowser.windowId);
+              await one.locator('#destination').selectOption(destination);
+              await one.locator('#placement').selectOption('left');
+              await one.getByRole('button',{name:'Move',exact:true}).click();
+              await two.waitForFunction(()=>window.UnoDockBrowser.applied.items.length===2);
+              await state(page,'main-before-return');await state(two,'satellite-before-return');
+              await two.getByRole('button',{name:'Dock all & close window',exact:true}).click();
+              await page.waitForTimeout(2000);
+              await state(page,'main-after-return');
+              await page.screenshot({path:'../../artifacts/lifecycle/after-return.png'});
+              await page.waitForTimeout(4000);
+              await state(page,'main-after-settle');
+              // One explicit user theme action distinguishes stopped projection from
+              // delayed background polling without substituting a broker edit.
+              await page.getByRole('button',{name:'Theme',exact:true}).click();
+              await page.waitForTimeout(1000);await state(page,'main-after-theme');
+              await one.close();
+          } finally { await browser.close(); }
+          JS
+          python3 -m http.server 8765 --directory ../../artifacts/serve > ../../artifacts/lifecycle/http.log 2>&1 &
+          server=$!
+          trap 'kill "$server" || true' EXIT
+          set +e
+          timeout --kill-after=10s 180s node aot-lifecycle.mjs > ../../artifacts/lifecycle/console.log 2>&1
+          result=$?
+          set -e
+          cat ../../artifacts/lifecycle/console.log
+          echo "$result" > ../../artifacts/lifecycle/process-exit.txt
+          test "$result" -eq 0
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: aot-window-lifecycle
+          path: artifacts/lifecycle/
+          if-no-files-found: error
