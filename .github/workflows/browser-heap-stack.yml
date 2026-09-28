@@ -1,0 +1,48 @@
+name: Resolve managed browser allocation stack
+on:
+  push:
+    branches: [work/browser-native-crash-diagnostic]
+    paths: [.github/workflows/browser-heap-stack.yml]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  resolve:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: browser-aot-native-symbols
+          run-id: 36433030157
+          github-token: ${{ github.token }}
+          path: symbols
+      - uses: actions/download-artifact@v4
+        with:
+          name: browser-heap-verification
+          run-id: 36436382168
+          github-token: ${{ github.token }}
+          path: heap
+      - name: Resolve recorded native indices without rerunning the application
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          symbol=next(Path('symbols').rglob('*.js.symbols'))
+          names={}
+          for line in symbol.read_text().splitlines():
+              number,sep,name=line.partition(':')
+              if sep and number.isdigit(): names[int(number)]=name
+          text=Path('heap/native.log').read_text()
+          output=[];seen=set()
+          for match in re.finditer(r'wasm-function\[(\d+)\]:([^\s]+)',text):
+              key=match.group(1)
+              if key not in seen:
+                  seen.add(key);output.append(key+' '+match.group(2)+' '+names.get(int(key),'UNMAPPED'))
+          print('\n'.join(output))
+          Path('managed-stack.txt').write_text('\n'.join(output)+'\n')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: browser-managed-fault-stack
+          path: managed-stack.txt
