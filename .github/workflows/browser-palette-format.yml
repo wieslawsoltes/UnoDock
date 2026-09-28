@@ -1,0 +1,32 @@
+name: Inspect palette formatting
+on:
+  push:
+    branches: [work/browser-native-crash-diagnostic]
+    paths: [.github/workflows/browser-palette-format.yml]
+permissions:
+  contents: read
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: befa57ff1cba800770fd53ac080c3a69acf3cf48
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Run the existing token-preserving formatter and retain its exact patch
+        run: |
+          dotnet run --project tools/SourceMaintenance -c Release -- --format .
+          git diff -- src/UnoDock/Internal/DockPalette.cs
+          git diff --exit-code -- . ':!src/UnoDock/Internal/DockPalette.cs'
+          mkdir -p artifacts/palette-format
+          cp src/UnoDock/Internal/DockPalette.cs artifacts/palette-format/
+          git diff > artifacts/palette-format/format.patch
+          dotnet run --project tools/SourceMaintenance -c Release -- --check-format .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: browser-palette-format
+          path: artifacts/palette-format/
+          if-no-files-found: error
