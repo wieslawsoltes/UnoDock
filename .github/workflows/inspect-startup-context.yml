@@ -1,0 +1,82 @@
+name: Inspect startup context
+on:
+  push:
+    branches: [work/browser-runtime-inspection]
+    paths: [.github/workflows/inspect-startup-context.yml]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    strategy:
+      fail-fast: false
+      matrix:
+        tracing: [plain, snapshots]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: c8efdf36f0523d0b2a705558756570c82a199bba
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@v4
+        with:
+          name: browser-documentation-site
+          run-id: 36403124991
+          github-token: ${{ github.token }}
+          path: artifacts/serve/UnoDock
+      - name: Install locked browser
+        working-directory: tests/browser
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npx playwright install --with-deps chromium > /tmp/browser-install.log 2>&1
+      - name: Observe actual native startup and paused stack
+        working-directory: tests/browser
+        env:
+          TRACING: ${{ matrix.tracing }}
+        run: |
+          mkdir -p ../../artifacts/inspection
+          cat > startup-context.mjs <<'JS'
+          import { chromium } from '@playwright/test';
+          import fs from 'node:fs/promises';
+          const browser = await chromium.launch();
+          const context = await browser.newContext({ viewport: { width: 1360, height: 900 } });
+          if (process.env.TRACING === 'snapshots') await context.tracing.start({ screenshots: true, snapshots: true, sources: true });
+          const page = await context.newPage();
+          page.on('console', m => { if (m.type() === 'error') console.log('CONSOLE', m.text()); });
+          page.on('pageerror', e => console.log('PAGEERROR', e.stack));
+          const cdp = await context.newCDPSession(page);
+          await page.goto('http://127.0.0.1:8765/UnoDock/playground/', { waitUntil: 'commit' });
+          await new Promise(r => setTimeout(r, 12000));
+          const expression = `(() => { const p = window.parent, f=p.document.querySelector('#app'), d=f.contentDocument; return JSON.stringify({ready:p.document.readyState,status:p.document.querySelector('#status')?.textContent,applied:p.UnoDockBrowser?.applied,nativeReady:d.readyState,nodes:[...d.querySelectorAll('[role],button,input,textarea')].slice(0,60).map(e=>({tag:e.tagName,role:e.getAttribute('role'),name:e.getAttribute('aria-label'),text:e.textContent?.slice(0,80),style:e.getAttribute('style')}))}); })()`;
+          console.log('LIVE PROBE');
+          const live = await Promise.race([cdp.send('Runtime.evaluate', { expression, returnByValue:true, timeout:3000 }),new Promise(r=>setTimeout(()=>r({timeout:true}),4000))]);
+          console.log('LIVE',JSON.stringify(live));
+          await cdp.send('Debugger.enable');
+          let resolve;
+          const paused = new Promise(r=>resolve=r);
+          cdp.once('Debugger.paused', resolve);
+          await cdp.send('Debugger.pause');
+          const event = await paused;
+          console.log('STACK',JSON.stringify(event.callFrames.map(f=>({name:f.functionName,location:f.location}))));
+          for (const frame of event.callFrames.slice(-4)) {
+              const state = await cdp.send('Debugger.evaluateOnCallFrame',{callFrameId:frame.callFrameId,expression,returnByValue:true,silent:true});
+              console.log('PAUSED STATE',JSON.stringify(state));
+              if (state.result?.value) {await fs.writeFile('../../artifacts/inspection/state.json',state.result.value); break;}
+          }
+          await cdp.send('Debugger.resume');
+          if (process.env.TRACING === 'snapshots') await Promise.race([context.tracing.stop({path:'../../artifacts/inspection/trace.zip'}),new Promise(r=>setTimeout(r,5000))]);
+          await browser.close();
+          JS
+          node --check startup-context.mjs
+          python3 -m http.server 8765 --directory ../../artifacts/serve > ../../artifacts/inspection/http.log 2>&1 &
+          server=$!
+          trap 'kill "$server" || true' EXIT
+          timeout --kill-after=5s 70s node startup-context.mjs | tee ../../artifacts/inspection/console.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: startup-${{ matrix.tracing }}
+          path: artifacts/inspection/
