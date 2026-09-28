@@ -31,10 +31,11 @@ jobs:
           for path,anchors in points.items():
               p=Path(path); text=p.read_text()
               for n,anchor in enumerate(anchors):
-                  assert text.count(anchor)==1,(path,anchor,text.count(anchor))
+                  exact='\n'+anchor+'\n'
+                  assert text.count(exact)==1,(path,anchor,text.count(exact))
                   indent=anchor[:len(anchor)-len(anchor.lstrip())]
                   label=path.split('/')[-1]+':'+str(n)
-                  text=text.replace(anchor,indent+'UnoDock.Internal.BrowserRenderProbe.Mark("'+label+' before");\n'+anchor+'\n'+indent+'UnoDock.Internal.BrowserRenderProbe.Mark("'+label+' after");')
+                  text=text.replace(exact,'\n'+indent+'UnoDock.Internal.BrowserRenderProbe.Mark("'+label+' before");\n'+anchor+'\n'+indent+'UnoDock.Internal.BrowserRenderProbe.Mark("'+label+' after");\n')
               p.write_text(text)
           PY
       - name: Publish instrumented actual Uno host
