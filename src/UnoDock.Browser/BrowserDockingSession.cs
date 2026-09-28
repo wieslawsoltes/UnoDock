@@ -277,7 +277,12 @@ public sealed class BrowserDockingSession : IDisposable
                 Payload = payload
             });
             var accepted = response.RootElement.GetProperty("value").Deserialize(BrowserDockJsonContext.Default.BrowserDockItem) ?? throw new InvalidOperationException("Missing browser edit acknowledgement.");
-            var expected = previous with { Title = title, Payload = payload, Revision = accepted.Revision };
+            var expected = previous with
+            {
+                Title = title,
+                Payload = payload,
+                Revision = accepted.Revision
+            };
             if (accepted != expected || accepted.Revision < previous.Revision || (accepted.Revision == previous.Revision && (title != previous.Title || payload != previous.Payload)))
                 throw new InvalidOperationException("The browser edit acknowledgement does not match the owned content.");
             if (_disposed || !_entries.TryGetValue(id, out var current) || !ReferenceEquals(entry, current))
