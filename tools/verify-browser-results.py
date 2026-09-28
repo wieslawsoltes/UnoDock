@@ -19,6 +19,9 @@ REQUIRED = {
     'journal recovery returns popup content to the reloaded primary',
     'an unhandled native error retires stale readiness and recovery preserves content with renewed leases',
     'repeated native window returns retain edited payloads without runtime faults',
+    'failed destination is excluded and rejects transfer until native recovery',
+    'failed primary blocks dock-all without partial return and resumes after recovery',
+    'reloading destination is unavailable before native readiness and renews its leases',
 }
 
 

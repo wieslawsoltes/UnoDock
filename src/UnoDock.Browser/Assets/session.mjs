@@ -16,7 +16,7 @@ export class WorkspaceState {
         this.sequence = 0;
         this.theme = 'light';
         this.items = new Map();
-        this.windows = new Map([['main', { id: 'main', title: 'Main workspace', ready: false }]]);
+        this.windows = new Map([['main', { id: 'main', title: 'Main workspace', ready: false, accepting: false }]]);
         this.save = () => {};
         this.storageError = '';
         if (restored !== null) {
@@ -41,21 +41,38 @@ export class WorkspaceState {
     register(id, title) {
         text(id, 80, 'window ID');
         if (this.windows.has(id)) throw new Error('Window already registered.');
-        this.windows.set(id, { id, title: text(title, 200, 'window title'), ready: false });
+        this.windows.set(id, { id, title: text(title, 200, 'window title'), ready: false, accepting: false });
         this.commit();
     }
     ready(id) {
         const window = this.windows.get(id);
         if (!window) throw new Error('Window is not registered.');
-        // A reload preserves WindowProxy identity, not the authority of a previous
-        // editor/runtime. Rotate all owned leases before publishing its replacement.
+        // Reload preserves WindowProxy identity, not the previous editor's authority.
+        // Suspending transfers must not erase this host-generation marker.
         if (window.ready) {
             for (const item of this.items.values()) {
                 if (item.owner === id) { item.lease++; item.revision++; }
             }
         }
         window.ready = true;
+        window.accepting = true;
         this.commit();
+    }
+    setAccepting(id, accepting) {
+        const window = this.windows.get(id);
+        if (!window) throw new Error('Window is not registered.');
+        if (typeof accepting !== 'boolean') throw new TypeError('Invalid native window availability.');
+        if (accepting && !window.ready) throw new Error('The native window has not completed its readiness handshake.');
+        if (window.accepting === accepting) return;
+        window.accepting = accepting;
+        // Availability is transient session state, not persistent application data.
+        // Do not turn a renderer failure into a journal write or a lease reset.
+        this.sequence++;
+    }
+    destination(id) {
+        const window = this.windows.get(id);
+        if (!window?.ready || !window.accepting) throw new Error('The destination native renderer is not ready. Restart it before moving content.');
+        return window;
     }
     create(owner, value) {
         if (!this.windows.has(owner) || this.items.size >= 200) throw new Error('Cannot create content in this workspace.');
@@ -86,13 +103,33 @@ export class WorkspaceState {
     }
     transfer(owner, id, lease, destination, placement = 'center') {
         const item = this.owned(owner, id, lease);
-        if (!this.windows.get(destination)?.ready) throw new Error('The destination is not ready.');
+        this.destination(destination);
         placement = zone(placement);
         item.owner = destination;
         item.zone = placement;
         item.lease++;
         item.revision++;
         this.commit();
+    }
+    transferAll(owner, destination) {
+        if (!this.windows.has(owner)) throw new Error('Source window is not registered.');
+        this.destination(destination);
+        if (owner === destination) return 0;
+        const items = [...this.items.values()].filter(item => item.owner === owner && !item.closed);
+        // Complete validation before mutating any record or invoking persistence.
+        for (const item of items) {
+            this.owned(owner, item.id, item.lease);
+            zone(item.zone);
+        }
+        if (items.length === 0) return 0;
+        for (const item of items) {
+            item.owner = destination;
+            item.lease++;
+            item.revision++;
+        }
+        // A persistence callback can now observe only the complete ownership set.
+        this.commit();
+        return items.length;
     }
     close(owner, id, lease) {
         const item = this.owned(owner, id, lease);
@@ -110,6 +147,8 @@ export class WorkspaceState {
     }
     retire(id) {
         if (id === 'main' || !this.windows.has(id)) return;
+        // Browser close is not a voluntary drop: retain data in the primary even
+        // when its renderer is unavailable. Explicit recovery can project it later.
         for (const item of this.items.values()) {
             if (item.owner === id) { item.owner = 'main'; item.lease++; item.revision++; }
         }
@@ -126,7 +165,7 @@ export class WorkspaceState {
         return { schema: 1, session: this.session, sequence: this.sequence, windowId: owner,
             theme: this.theme, storageError: this.storageError,
             items: [...this.items.values()].filter(item => item.owner === owner && !item.closed).map(item => ({ ...item })),
-            windows: [...this.windows.values()].map(value => ({ ...value })),
+            windows: [...this.windows.values()].map(value => ({ ...value, ready: value.ready && value.accepting })),
             closed: [...this.items.values()].filter(item => item.closed).map(({ id, title }) => ({ id, title })) };
     }
 }
