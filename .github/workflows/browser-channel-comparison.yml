@@ -1,0 +1,67 @@
+name: Compare browser host channels
+on:
+  push:
+    branches: [work/browser-native-crash-diagnostic]
+    paths: [.github/workflows/browser-channel-comparison.yml]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  compare:
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 61f913734906e8c07f983e5fbb7737f21c51794a
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@v4
+        with:
+          name: browser-documentation-site
+          run-id: 36419383332
+          github-token: ${{ github.token }}
+          path: artifacts/serve/UnoDock
+      - name: Install repository-pinned full browser
+        working-directory: tests/browser
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npx playwright install --with-deps ${{ matrix.browser }} > /tmp/install.log 2>&1
+      - name: Execute unchanged scenarios with the alternate browser channel
+        working-directory: tests/browser
+        env:
+          BROWSER: ${{ matrix.browser }}
+        run: |
+          cat > comparison.config.mjs <<'JS'
+          import config from './playwright.config.mjs';
+          const browser = process.env.BROWSER;
+          export default {
+            ...config,
+            projects: [{ name: browser, use: browser === 'chromium'
+              ? { browserName: 'chromium', channel: 'chromium' }
+              : { browserName: 'firefox' } }]
+          };
+          JS
+          python3 -m http.server 8765 --directory ../../artifacts/serve > ../../artifacts/http.log 2>&1 &
+          server=$!
+          trap 'kill "$server" || true' EXIT
+          timeout --signal=TERM --kill-after=15s 900s npx playwright test --config comparison.config.mjs
+      - name: Record exact source and failure context
+        if: always()
+        run: |
+          mkdir -p artifacts/browser-tests
+          git rev-parse HEAD > artifacts/browser-tests/source-revision.txt
+          find artifacts/browser-tests -name error-context.md -exec cat {} \; 2>/dev/null || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-channel-${{ matrix.browser }}
+          path: |
+            artifacts/browser-tests/
+            artifacts/http.log
+          if-no-files-found: error
