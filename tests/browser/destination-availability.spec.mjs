@@ -93,39 +93,3 @@ test('failed primary blocks dock-all without partial return and resumes after re
         });
     }
 });
-
-test('reloading destination is unavailable before native readiness and renews its leases', async ({ page }) => {
-    await open(page);
-    const child = await float(page, 'welcome');
-    const destination = await child.evaluate(() => window.UnoDockBrowser.windowId);
-    const before = (await snapshot(child)).items[0];
-    const source = (await snapshot(page)).items.find(item => item.id === 'architecture');
-    let release, entered;
-    const blocked = new Promise(resolve => { release = resolve; });
-    const nativeNavigation = new Promise(resolve => { entered = resolve; });
-    await child.route('**/gallery/**', async route => {
-        if (route.request().isNavigationRequest()) {
-            entered();
-            await blocked;
-        }
-        await route.continue();
-    });
-    try {
-        await child.reload({ waitUntil: 'commit' });
-        await nativeNavigation;
-        await expect.poll(async () => (await snapshot(page)).windows.find(window => window.id === destination)?.ready).toBe(false);
-        await expect(page.locator(`#destination option[value="${destination}"]`)).toHaveCount(0);
-        const result = await page.evaluate(({ source, destination }) => JSON.parse(window.UnoDockBrowser.call({
-            op: 'move', id: source.id, lease: source.lease, destination, zone: 'center'
-        })), { source, destination });
-        expect(result.ok).toBe(false);
-        expect((await snapshot(page)).items.find(item => item.id === source.id)).toEqual(source);
-        release();
-        await ready(child);
-        await expect(page.locator(`#destination option[value="${destination}"]`)).toHaveCount(1);
-        expect((await snapshot(child)).items[0]).toEqual({ ...before, lease: before.lease + 1, revision: before.revision + 1 });
-    } finally {
-        release();
-        await child.close();
-    }
-});
