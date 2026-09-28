@@ -1,0 +1,105 @@
+name: Inspect native browser crash
+on:
+  push:
+    branches: [work/browser-native-crash-diagnostic]
+    paths: [.github/workflows/browser-native-crash.yml]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 61f913734906e8c07f983e5fbb7737f21c51794a
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@v4
+        with:
+          name: browser-documentation-site
+          run-id: 36419383332
+          github-token: ${{ github.token }}
+          path: artifacts/serve/UnoDock
+      - name: Install pinned browser and public native debugger
+        working-directory: tests/browser
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npx playwright install --with-deps chromium > /tmp/chromium.log 2>&1
+          sudo apt-get update -qq && sudo apt-get install -y gdb > /tmp/gdb-install.log 2>&1
+      - name: Inspect renderer faults without altering application code
+        working-directory: tests/browser
+        run: |
+          mkdir -p ../../artifacts/native-crash
+          export DIAGNOSTIC_DIR="$(realpath ../../artifacts/native-crash)"
+          cat > /tmp/renderer.gdb <<'GDB'
+          set pagination off
+          set confirm off
+          set print thread-events off
+          set disable-randomization off
+          handle SIGPIPE nostop noprint pass
+          catch signal SIGSEGV
+          commands
+          silent
+          printf "\nNATIVE SIGNAL STACK\n"
+          bt 40
+          info registers rip rsp rbp
+          x/12i $pc-24
+          continue
+          end
+          run
+          GDB
+          cat > /tmp/renderer-debugger.sh <<'SH'
+          #!/usr/bin/env bash
+          exec gdb -q -batch -x /tmp/renderer.gdb --args "$@" > "$DIAGNOSTIC_DIR/renderer-$$.log" 2>&1
+          SH
+          chmod +x /tmp/renderer-debugger.sh
+          cat > /tmp/unused <<'EOF'
+          EOF
+          cat > native-crash.mjs <<'JS'
+          import { chromium } from '@playwright/test';
+          const browser = await chromium.launch({args:['--no-zygote','--renderer-cmd-prefix=/tmp/renderer-debugger.sh']});
+          const cdp = await browser.newBrowserCDPSession();
+          cdp.on('Target.targetCrashed', event=>console.log('TARGET CRASH',JSON.stringify(event)));
+          await cdp.send('Target.setDiscoverTargets',{discover:true});
+          const context = await browser.newContext();
+          const page = await context.newPage();
+          context.on('page', child=>child.on('pageerror',error=>console.log('POPUP ERROR',error.message)));
+          page.on('pageerror',error=>console.log('PAGE ERROR',error.message));
+          try {
+              console.log('MAIN START');
+              await page.goto('http://127.0.0.1:8765/UnoDock/playground/',{waitUntil:'domcontentloaded'});
+              await page.waitForFunction(()=>window.UnoDockBrowser?.applied?.items?.length===4,null,{timeout:60000});
+              console.log('MAIN READY');
+              await page.locator('[data-content="welcome"]').click();
+              const popup = context.waitForEvent('page');
+              await page.getByRole('button',{name:'Float in browser window',exact:true}).click();
+              const child = await popup;
+              console.log('POPUP CREATED');
+              await child.waitForFunction(()=>window.UnoDockBrowser?.applied?.items?.length===1,null,{timeout:60000});
+              console.log('POPUP READY',JSON.stringify(await child.evaluate(()=>window.UnoDockBrowser.applied)));
+              await child.close();
+              await page.waitForFunction(()=>window.UnoDockBrowser?.applied?.items?.length===4,null,{timeout:15000});
+              console.log('DOCK BACK COMPLETE');
+          } catch(error) { console.log('NATIVE DIAGNOSTIC FAILURE',error.stack); process.exitCode=1; }
+          finally { await browser.close(); }
+          JS
+          python3 -m http.server 8765 --directory ../../artifacts/serve > "$DIAGNOSTIC_DIR/http.log" 2>&1 &
+          server=$!
+          trap 'kill "$server" || true' EXIT
+          set +e
+          timeout --signal=TERM --kill-after=10s 150s node native-crash.mjs > "$DIAGNOSTIC_DIR/browser.log" 2>&1
+          result=$?
+          set -e
+          echo "$result" > "$DIAGNOSTIC_DIR/process-exit.txt"
+          cat "$DIAGNOSTIC_DIR/browser.log"
+          for file in "$DIAGNOSTIC_DIR"/renderer-*.log; do echo "$file"; tail -180 "$file"; done
+          test "$result" -eq 0
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-native-crash-diagnostic
+          path: artifacts/native-crash/
+          if-no-files-found: error
