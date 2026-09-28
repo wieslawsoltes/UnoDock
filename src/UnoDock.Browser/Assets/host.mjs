@@ -1,3 +1,4 @@
+import { activateNativeAccessibility } from './accessibility.mjs';
 import { WorkspaceState } from './session.mjs';
 const MIME = 'application/x-unodock-transfer';
 const JOURNAL = 'unodock.browser.workspace.v1';
@@ -154,6 +155,12 @@ window.UnoDockBrowser = Object.freeze({
     report(json) {
         applied = typeof json === 'string' ? JSON.parse(json) : json;
         document.documentElement.dataset.unoReady = 'true';
+        const frame = $('app');
+        const nativeDocument = frame.contentDocument;
+        if (nativeDocument && !accessibilityDocuments.has(nativeDocument)) {
+            accessibilityDocuments.add(nativeDocument);
+            activateNativeAccessibility(frame, message => { errorText = message; render(); });
+        }
         if (applied.active === requestedActive) requestedActive = '';
         if (!requestedActive && applied.active) active = applied.active;
         render();
@@ -163,6 +170,7 @@ window.UnoDockBrowser = Object.freeze({
     get windowId() { return windowId; }
 });
 
+const accessibilityDocuments = new WeakSet();
 let lastChips = '', lastWindows = '', lastClosed = '', latest = null;
 function render() {
     try { latest = execute({ op: 'read' }); }

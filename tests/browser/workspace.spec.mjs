@@ -1,6 +1,18 @@
 import { test, expect } from '@playwright/test';
 import fs from 'node:fs/promises';
-const ready = page => page.waitForFunction(() => window.UnoDockBrowser?.applied?.items, null, { timeout: 90000 });
+async function ready(page) {
+    let crash, close;
+    const terminated = new Promise((_, reject) => {
+        crash = () => reject(new Error('The browser renderer crashed before native workspace readiness.'));
+        close = () => reject(new Error('The browser window closed before native workspace readiness.'));
+        page.once('crash', crash); page.once('close', close);
+    });
+    try {
+        await Promise.race([terminated, page.waitForFunction(() => window.UnoDockBrowser?.applied?.items, null, { timeout: 90000 })]);
+    } finally {
+        page.off('crash', crash); page.off('close', close);
+    }
+}
 const ids = page => page.evaluate(() => window.UnoDockBrowser.applied.items.map(x => x.id));
 async function open(page) { await page.goto(''); await ready(page); await expect.poll(() => ids(page)).toContain('welcome'); }
 async function popup(page, id) {

@@ -11,7 +11,6 @@ public sealed partial class BrowserWorkspacePage : UserControl
     {
         Interval = TimeSpan.FromMilliseconds(150)
     };
-
     public BrowserWorkspacePage()
     {
         InitializeComponent();
@@ -64,7 +63,6 @@ public sealed partial class BrowserWorkspacePage : UserControl
     }
 
     private void DockSelected(object sender, RoutedEventArgs args) => Dock.Layout.ActiveContent?.Dock();
-
     private void AutoHideSelected(object sender, RoutedEventArgs args)
     {
         if (Dock.Layout.ActiveContent is LayoutAnchorable tool)
