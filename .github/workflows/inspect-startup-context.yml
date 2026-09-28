@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        software: ['0', '1']
+        interpreter: [no-ssa, no-jiterpreter, baseline-interpreter]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -30,35 +30,76 @@ jobs:
           run-id: 36403124991
           github-token: ${{ github.token }}
           path: artifacts/serve/UnoDock
+      - name: Set and record diagnostic interpreter options in bootstrap only
+        env:
+          INTERPRETER: ${{ matrix.interpreter }}
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import os
+          files=list(Path('artifacts/serve/UnoDock/gallery').rglob('uno-config.js'))
+          assert len(files)==1,files
+          path=files[0]
+          source=path.read_text()
+          assert 'config.environmentVariables' in source
+          options=[]
+          mode=os.environ['INTERPRETER']
+          if mode in ('no-ssa','baseline-interpreter'):
+              options.append('config.environmentVariables["MONO_INTERPRETER_OPTIONS"] = "-ssa";')
+          if mode in ('no-jiterpreter','baseline-interpreter'):
+              options.append('config.environmentVariables["MONO_ENV_OPTIONS"] = "--no-jiterpreter-traces-enabled --no-jiterpreter-interp-entry-enabled --no-jiterpreter-jit-call-enabled";')
+          path.write_text(source+'\n'+'\n'.join(options)+'\n')
+          Path('artifacts/diagnostic-options.txt').write_text('\n'.join(options)+'\n')
+          print('Diagnostic only, not deployment acceptance:',*options,sep='\n')
+          PY
       - name: Install the committed browser lock
         working-directory: tests/browser
         run: |
           npm ci --ignore-scripts --no-audit --no-fund
-          npx playwright --version
           npx playwright install --with-deps chromium > /tmp/browser-install.log 2>&1 || { tail -30 /tmp/browser-install.log; exit 1; }
-      - name: Execute all native scenarios and retain browser process diagnostics
+      - name: Execute all native scenarios once with captured process diagnostics
         working-directory: tests/browser
         env:
-          UNODOCK_SOFTWARE_GPU: ${{ matrix.software }}
           DEBUG: pw:browser
         shell: bash
         run: |
           python3 -m http.server 8765 --directory ../../artifacts/serve > ../../artifacts/http.log 2>&1 &
           server=$!
           trap 'kill "$server" || true' EXIT
-          timeout --signal=TERM --kill-after=15s 900s npx playwright test --max-failures=0 2>&1 | tee ../../artifacts/chromium.log
-      - name: Validate complete named evidence
+          set +e
+          timeout --signal=TERM --kill-after=15s 900s npx playwright test --max-failures=0 > ../../artifacts/chromium.log 2>&1
+          result=$?
+          set -e
+          tail -100 ../../artifacts/chromium.log
+          exit "$result"
+      - name: Preserve exact scenario results, including all failures
         if: always()
-        run: python3 tools/verify-browser-results.py artifacts/browser-tests
-      - name: Show original failure context
-        if: failure()
-        run: find artifacts/browser-tests -name error-context.md -exec cat {} \;
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('artifacts/browser-tests/results.json')
+          if not p.exists(): raise SystemExit('Browser results are missing.')
+          r=json.loads(p.read_text())
+          print('STATS',r['stats'])
+          def visit(suites):
+              for s in suites:
+                  for spec in s.get('specs',[]):
+                      print('CASE',spec['title'])
+                      for t in spec['tests']:
+                          for result in t['results']:
+                              print(result['status'],result.get('duration'),str(result.get('error',''))[:2400])
+                  visit(s.get('suites',[]))
+          visit(r['suites'])
+          PY
+          python3 tools/verify-browser-results.py artifacts/browser-tests
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: keyboard-browser-${{ matrix.software }}
+          name: interpreter-${{ matrix.interpreter }}
           path: |
             artifacts/browser-tests/
             artifacts/http.log
             artifacts/chromium.log
+            artifacts/diagnostic-options.txt
           if-no-files-found: error
