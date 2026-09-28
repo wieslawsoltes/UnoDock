@@ -1,5 +1,4 @@
 namespace UnoDock.Internal;
-
 // Keep brush references in a separately traced immutable object, not in a large
 // reference-bearing value embedded in retained controls. The browser fault
 // capture found cleared nursery objects through the embedded palette's slots.
