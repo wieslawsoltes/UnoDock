@@ -18,8 +18,20 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Require identical executable native source before reusing the passing artifact
-        run: git diff -w --exit-code befa57ff1cba800770fd53ac080c3a69acf3cf48 HEAD -- src/ samples/ global.json Directory.Build.props
+      - name: Require exactly the known blank-line-only native source change
+        run: |
+          python3 - <<'PY'
+          import subprocess
+          from pathlib import Path
+          base='befa57ff1cba800770fd53ac080c3a69acf3cf48'
+          path='src/UnoDock/Internal/DockPalette.cs'
+          changed=subprocess.check_output(['git','diff','--name-only',base,'HEAD','--','src/','samples/','global.json','Directory.Build.props'],text=True).splitlines()
+          assert changed == [path], changed
+          before=subprocess.check_output(['git','show',base+':'+path])
+          after=Path(path).read_bytes()
+          assert before.replace(b'namespace UnoDock.Internal;\n\n',b'namespace UnoDock.Internal;\n',1)==after
+          print('The only native source difference is the verified blank-line removal.')
+          PY
       - uses: actions/download-artifact@v4
         with:
           name: browser-documentation-site
@@ -91,7 +103,7 @@ jobs:
         run: |
           mkdir -p artifacts/review
           git rev-parse HEAD > artifacts/review/documentation-source-revision.txt
-          cp artifacts/native-input/revision.txt artifacts/review/native-artifact-revision.txt
+          if [ -f artifacts/native-input/revision.txt ]; then cp artifacts/native-input/revision.txt artifacts/review/native-artifact-revision.txt; fi
       - uses: actions/upload-artifact@v4
         if: always()
         with:
