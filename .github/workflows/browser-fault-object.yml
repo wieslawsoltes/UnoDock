@@ -1,0 +1,78 @@
+name: Identify browser fault object
+on:
+  push:
+    branches: [work/browser-native-crash-diagnostic]
+    paths: [.github/workflows/browser-fault-object.yml]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: acd1bd7ca8dc2de3414e5b50e06685616b6a218c
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@v4
+        with:
+          name: browser-aot-site
+          run-id: 36422498961
+          github-token: ${{ github.token }}
+          path: artifacts/serve/UnoDock
+      - name: Prepare read-only memory inspection at the original exception
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import textwrap
+          text=Path('.github/workflows/browser-gc-locals.yml').read_text()
+          script=textwrap.dedent(text.split("cat > gc-locals.mjs <<'JS'\n",1)[1].split('\n          JS',1)[0])
+          anchor="await fs.writeFile('../../artifacts/gc-locals/fault.json',JSON.stringify(result,null,2));"
+          assert script.count(anchor)==1
+          addition='''
+          const extract = frame => Object.fromEntries(frame.scopes.filter(s => s.type === 'local').flatMap(s => s.values).map(p => [p.name, p.details?.result?.find(x => x.name === 'value')?.value?.value]));
+          const first = result.locals.slice(0,4).map(f => ({function:f.function, values:extract(f)}));
+          const pointers = [...new Set(first.flatMap(f => Object.values(f.values)).filter(x => Number.isInteger(x) && x > 65536))];
+          const expression = `JSON.stringify((() => {
+              const h=globalThis.Module.HEAPU32, bytes=globalThis.Module.HEAPU8;
+              const valid=p=>Number.isInteger(p)&&p>65536&&p+1024<bytes.length;
+              const words=(p,count=48)=>valid(p)?Array.from(h.slice(p>>>2,(p>>>2)+count)):[];
+              function text(p) { if(!valid(p))return ''; let end=p; while(end<p+160&&bytes[end]>=32&&bytes[end]<127)end++; return end-p>2&&bytes[end]===0?new TextDecoder().decode(bytes.slice(p,end)):''; }
+              function record(p) { const w=words(p); const vt=(w[0]??0)&~7; const v=words(vt); const klass=v[0]; const k=words(klass,96); return {p,words:w,vt,vtable:v,klass,classWords:k,strings:k.map((q,i)=>({offset:i*4,p:q,text:text(q)})).filter(x=>x.text),vstrings:v.map((q,i)=>({offset:i*4,p:q,text:text(q)})).filter(x=>x.text)}; }
+              return {length:bytes.length,objects:${JSON.stringify(pointers)}.map(record)};
+          })())`;
+          const memory=await cdp.send('Debugger.evaluateOnCallFrame',{callFrameId:event.callFrames.at(-1).callFrameId,expression,returnByValue:true,silent:true});
+          result.memory=memory;result.first=first;
+          console.log('FAULT OBJECTS',JSON.stringify({first,memory}));
+          '''
+          script=script.replace(anchor,addition+'\n'+anchor).replace("console.log('NATIVE LOCALS',JSON.stringify(result.locals));",'')
+          Path('tests/browser/fault-object.mjs').write_text(script)
+          PY
+      - name: Install pinned browser
+        working-directory: tests/browser
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npx playwright install --with-deps chromium > /tmp/chromium.log 2>&1
+      - name: Capture source and referring object headers without mutating the heap
+        working-directory: tests/browser
+        run: |
+          mkdir -p ../../artifacts/gc-locals
+          python3 -m http.server 8765 --directory ../../artifacts/serve > ../../artifacts/gc-locals/http.log 2>&1 &
+          server=$!
+          trap 'kill "$server" || true' EXIT
+          set +e
+          timeout --kill-after=10s 180s node fault-object.mjs > ../../artifacts/gc-locals/console.log 2>&1
+          result=$?
+          set -e
+          grep -E 'FAULT OBJECTS|CAPTURE ERROR|expected original fault' ../../artifacts/gc-locals/console.log || true
+          echo "$result" > ../../artifacts/gc-locals/process-exit.txt
+          test "$result" -eq 0
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-fault-object
+          path: artifacts/gc-locals/
+          if-no-files-found: error
