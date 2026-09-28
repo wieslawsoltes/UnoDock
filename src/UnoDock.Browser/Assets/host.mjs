@@ -65,6 +65,10 @@ class WindowHub {
         this.sweep();
         switch (request.op) {
             case 'read': return this.state.snapshot(id);
+            case 'nativeState':
+                if (!['starting', 'ready', 'failed'].includes(request.state)) throw Error('Invalid native renderer state.');
+                this.state.setAccepting(id, request.state === 'ready');
+                break;
             case 'ready': {
                 this.state.ready(id);
                 const pending = handle.pending; handle.pending = null;
@@ -98,7 +102,7 @@ class WindowHub {
                 return childId;
             }
             case 'dockAll':
-                for (const item of [...this.state.items.values()]) if (item.owner === id && !item.closed) this.state.transfer(id, item.id, item.lease, 'main', item.zone);
+                this.state.transferAll(id, 'main');
                 break;
             case 'drag': {
                 const item = this.state.owned(id, request.id, request.lease);
@@ -129,6 +133,9 @@ try {
     }
     window.UnoDockBrowserHub = rootHub;
     connection = rootHub.connect(window, windowId, capability);
+    // A top-level reload retains the same WindowProxy but is not yet a usable
+    // transfer destination. Preserve the old readiness marker for lease rotation.
+    connection.call({ op: 'nativeState', state: 'starting' });
 } catch (error) { errorText = error.message; }
 
 function execute(request) {
@@ -146,6 +153,10 @@ const nativeRuntime = observeNativeRuntime($('app'), ({ state }) => {
         applied = null;
         document.documentElement.dataset.unoReady = 'false';
     }
+    // Availability must be visible to every source window, not only the failed
+    // window's own toolbar. A renderer error leaves broker-owned data intact.
+    try { execute({ op: 'nativeState', state }); }
+    catch { /* An ended session already exposes recovery through render(). */ }
     render();
 });
 window.UnoDockBrowser = Object.freeze({
@@ -198,6 +209,8 @@ function render() {
     $('float').disabled = !item || !applied || failed;
     $('move').disabled = !item || !applied || failed;
     $('return').hidden = windowId === 'main';
+    $('return').disabled = !latest.windows.some(value => value.id === 'main' && value.ready);
+    $('return').title = $('return').disabled ? 'Restart the main renderer before docking all content.' : 'Return all content to the main workspace and close this window';
     $('window-title').textContent = windowId === 'main' ? 'Main workspace' : (item?.title || 'Floating workspace');
     document.title = `${$('window-title').textContent} — UnoDock`;
     const signature = JSON.stringify(latest.items.map(x => [x.id, x.title, x.lease, x.id === active]));
