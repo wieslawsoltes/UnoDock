@@ -1,0 +1,69 @@
+name: Verify native renderer recovery
+on:
+  push:
+    branches: [work/browser-runtime-recovery]
+    paths: [.github/workflows/browser-runtime-recovery.yml]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 5210d799683bd3281673d9bd8d8cb4be54e5d169
+          fetch-depth: 2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify that native inputs exactly match the compiled artifact
+        run: git diff --exit-code 61f913734906e8c07f983e5fbb7737f21c51794a HEAD -- ':(glob)src/**/*.cs' samples/ global.json Directory.Build.props
+      - uses: actions/download-artifact@v4
+        with:
+          name: browser-aot-site
+          run-id: 36422498961
+          github-token: ${{ github.token }}
+          path: artifacts/serve/UnoDock
+      - name: Assemble the reviewed shell around the unchanged native application
+        run: |
+          cp src/UnoDock.Browser/Assets/*.mjs artifacts/serve/UnoDock/playground/
+          cp site/playground/* artifacts/serve/UnoDock/playground/
+          node --test tests/browser/*.test.mjs
+      - name: Install pinned browser
+        working-directory: tests/browser
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npx playwright install --with-deps chromium > /tmp/chromium.log 2>&1
+      - name: Verify native error reporting and explicit renderer-only recovery
+        working-directory: tests/browser
+        run: |
+          python3 -m http.server 8765 --directory ../../artifacts/serve > ../../artifacts/http.log 2>&1 &
+          server=$!
+          trap 'kill "$server" || true' EXIT
+          timeout --kill-after=10s 180s npx playwright test native-failure.spec.mjs
+      - name: Require the focused real-browser case without retries or skips
+        run: |
+          python3 - <<'PY'
+          import json,xml.etree.ElementTree as ET
+          from pathlib import Path
+          root=Path('artifacts/browser-tests')
+          report=json.loads((root/'results.json').read_text())
+          cases=list(ET.parse(root/'results.xml').getroot().iter('testcase'))
+          assert len(cases)==report['stats']['expected']==1
+          assert report['stats']['unexpected']==report['stats']['skipped']==report['stats']['flaky']==0
+          assert not any(c.find(t) is not None for c in cases for t in ('failure','error','skipped'))
+          print('Verified native startup, visible failure, preserved broker and real restarted editor.')
+          PY
+      - name: Preserve original result context
+        if: always()
+        run: find artifacts/browser-tests -name error-context.md -exec cat {} \; 2>/dev/null || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-native-recovery-results
+          path: |
+            artifacts/browser-tests/
+            artifacts/http.log
+          if-no-files-found: error
