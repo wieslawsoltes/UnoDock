@@ -1,0 +1,57 @@
+name: Resolve browser AOT fault
+on:
+  push:
+    branches: [work/browser-native-crash-diagnostic]
+    paths: [.github/workflows/browser-aot-symbols.yml]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: browser-aot-site
+          run-id: 36422498961
+          github-token: ${{ github.token }}
+          path: site
+      - name: Decode only faulting function identities from retained artifact
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json,re
+          targets={189966,189965,166020,166018,166015,165776,165734,165732,165731,165698}
+          root=Path('site')
+          for p in root.rglob('*'):
+              if p.is_file() and any(s in p.name for s in ('symbols','map','config')):
+                  print('SYMBOL CANDIDATE',p,p.stat().st_size)
+                  if 'symbols' in p.name:
+                      for line in p.read_text(errors='replace').splitlines():
+                          if any(line.startswith(str(n)+':') for n in targets):print('MAPPED',line)
+          def leb(data,pos):
+              result=shift=0
+              while True:
+                  b=data[pos];pos+=1;result|=(b&127)<<shift
+                  if b<128:return result,pos
+                  shift+=7
+          def string(data,pos):
+              size,pos=leb(data,pos)
+              return data[pos:pos+size].decode(errors='replace'),pos+size
+          for p in root.rglob('dotnet.native*.wasm'):
+              data=p.read_bytes();pos=8
+              print('MODULE',p,len(data))
+              while pos<len(data):
+                  kind=data[pos];size,start=leb(data,pos+1);end=start+size;pos=end
+                  if kind!=0:continue
+                  name,cursor=string(data,start);print('CUSTOM SECTION',name,size)
+                  if name!='name':continue
+                  while cursor<end:
+                      subkind=data[cursor];subsize,substart=leb(data,cursor+1);cursor=substart+subsize
+                      if subkind!=1:continue
+                      count,q=leb(data,substart);print('NAMED FUNCTIONS',count)
+                      for i in range(count):
+                          index,q=leb(data,q);fname,q=string(data,q)
+                          if index in targets:print('FUNCTION',index,fname)
+          PY
