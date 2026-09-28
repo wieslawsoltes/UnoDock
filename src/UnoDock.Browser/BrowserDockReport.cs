@@ -7,6 +7,12 @@ internal sealed record BrowserDockReport
         get;
         init;
     } = "";
+    public long ProjectionCount
+    {
+        get;
+        init;
+    }
+
     public string Active
     {
         get;

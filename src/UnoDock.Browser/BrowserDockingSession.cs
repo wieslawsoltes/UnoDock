@@ -14,6 +14,8 @@ public sealed class BrowserDockingSession : IDisposable
     private readonly HashSet<string> _requestedFloats = new(StringComparer.Ordinal);
     private bool _applying;
     private bool _disposed;
+    private bool _projectionDirty = true;
+    private long _projectionCount;
     private string _windowId = "";
     private string _theme = "";
     public string? LastError
@@ -106,9 +108,34 @@ public sealed class BrowserDockingSession : IDisposable
         return response;
     }
 
+    private bool MatchesProjection(BrowserDockSnapshot snapshot)
+    {
+        if (_projectionDirty || _theme != snapshot.Theme || snapshot.Items.Length != _entries.Count)
+            return false;
+        if (snapshot.Active.Length > 0 && _manager.Layout.ActiveContent?.ContentId != snapshot.Active)
+            return false;
+        foreach (var item in snapshot.Items)
+        {
+            if (item.Owner != snapshot.WindowId || !_entries.TryGetValue(item.Id, out var entry) || entry.Item != item)
+                return false;
+        }
+
+        return true;
+    }
+
     private void Apply(BrowserDockSnapshot snapshot)
     {
+        // Polling discovers remote edits and revoked leases; it is not a render
+        // clock. Refreshing every retained control on an unchanged 150-ms read
+        // continually invalidates layout, resource states and accessibility.
+        if (MatchesProjection(snapshot))
+        {
+            Report();
+            return;
+        }
+
         var incoming = snapshot.Items.ToDictionary(item => item.Id, StringComparer.Ordinal);
+        _projectionDirty = true;
         _applying = true;
         try
         {
@@ -136,7 +163,7 @@ public sealed class BrowserDockingSession : IDisposable
                         model.Closed += ContentClosed;
                         Insert(model, item.Zone);
                     }
-                    else if (entry.Item.Revision != item.Revision)
+                    else if (entry.Item != item)
                     {
                         entry.Item = item;
                         entry.Model.Title = item.Title;
@@ -155,19 +182,27 @@ public sealed class BrowserDockingSession : IDisposable
             }
 
             _manager.Refresh();
-            var report = new BrowserDockReport
-            {
-                WindowId = snapshot.WindowId,
-                Active = _manager.Layout.ActiveContent?.ContentId ?? "",
-                Items = _entries.Values.Select(entry => entry.Item with { Title = entry.Model.Title ?? "", Payload = entry.View.Payload }).ToArray()
-            };
-            var json = JsonSerializer.Serialize(report, BrowserDockJsonContext.Default.BrowserDockReport);
-            _invoke("window.parent.UnoDockBrowser.report(" + json + "); 'ok'");
+            _projectionCount++;
+            _projectionDirty = false;
+            Report();
         }
         finally
         {
             _applying = false;
         }
+    }
+
+    private void Report()
+    {
+        var report = new BrowserDockReport
+        {
+            WindowId = _windowId,
+            ProjectionCount = _projectionCount,
+            Active = _manager.Layout.ActiveContent?.ContentId ?? "",
+            Items = _entries.Values.Select(entry => entry.Item with { Title = entry.Model.Title ?? "", Payload = entry.View.Payload }).ToArray()
+        };
+        var json = JsonSerializer.Serialize(report, BrowserDockJsonContext.Default.BrowserDockReport);
+        _invoke("window.parent.UnoDockBrowser.report(" + json + "); 'ok'");
     }
 
     private void Insert(LayoutContent model, string zone)
@@ -236,7 +271,7 @@ public sealed class BrowserDockingSession : IDisposable
 
     private void ContentClosed(object? sender, EventArgs args)
     {
-        if (!_applying && !_disposed && sender is LayoutContent model && model.ContentId is { } id && _entries.TryGetValue(id, out var entry))
+        if (!_applying && !_disposed && sender is LayoutContent model && model.ContentId is { } id && _entries.TryGetValue(id, out var entry) && ReferenceEquals(model, entry.Model))
         {
             try
             {

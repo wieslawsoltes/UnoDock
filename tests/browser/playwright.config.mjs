@@ -2,11 +2,13 @@ import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
     testDir: '.',
-    testMatch: 'workspace.spec.mjs',
+    testMatch: '*.spec.mjs',
     timeout: 120000,
+    globalTimeout: 720000,
     expect: { timeout: 30000 },
     workers: 1,
     retries: 0,
+    maxFailures: 1,
     fullyParallel: false,
     reporter: [
         ['list'],
