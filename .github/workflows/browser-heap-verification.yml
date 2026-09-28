@@ -1,0 +1,96 @@
+name: Verify browser heap boundaries
+on:
+  push:
+    branches: [work/browser-native-crash-diagnostic]
+    paths: [.github/workflows/browser-heap-verification.yml]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 61f913734906e8c07f983e5fbb7737f21c51794a
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@v4
+        with:
+          name: browser-aot-site
+          run-id: 36422498961
+          github-token: ${{ github.token }}
+          path: artifacts/serve/UnoDock
+      - name: Enable diagnostic-only native heap verification
+        run: |
+          mkdir -p artifacts/heap
+          python3 - <<'PY'
+          from pathlib import Path
+          configs=list(Path('artifacts/serve/UnoDock/gallery').rglob('uno-config.js'))
+          assert len(configs)==1
+          p=configs[0];text=p.read_text()
+          assert 'config.environmentVariables' in text
+          text+='\nconfig.environmentVariables["MONO_GC_DEBUG"]="verify-before-collections,verify-nursery-at-minor-gc,dump-nursery-at-minor-gc,check-remset-consistency";\n'
+          p.write_text(text)
+          Path('artifacts/heap/diagnostic-config.js').write_text(text)
+          print('Diagnostic native environment configured; no C# or WASM binaries modified.')
+          PY
+      - name: Install pinned browser
+        working-directory: tests/browser
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npx playwright install --with-deps chromium > /tmp/chromium.log 2>&1
+      - name: Exercise the original multi-popup lifecycle with native heap checks
+        working-directory: tests/browser
+        run: |
+          cat > heap-lifecycle.mjs <<'JS'
+          import { chromium } from '@playwright/test';
+          const browser=await chromium.launch();const context=await browser.newContext();
+          await context.addInitScript(()=>{Error.stackTraceLimit=100;});
+          context.on('page',p=>{
+              p.on('console',e=>console.log('NATIVE',e.type(),e.text()));
+              p.on('pageerror',e=>console.log('PAGE ERROR',e.stack));
+              p.on('crash',()=>console.log('RENDERER CRASH',p.url()));
+          });
+          const page=await context.newPage();
+          const ready=p=>p.waitForFunction(()=>window.UnoDockBrowser?.applied?.items,null,{timeout:45000});
+          async function float(id){
+              await page.locator(`[data-content="${id}"]`).click();
+              const opening=context.waitForEvent('page');
+              await page.getByRole('button',{name:'Float in browser window',exact:true}).click();
+              const child=await opening;await ready(child);
+              await child.waitForFunction(id=>window.UnoDockBrowser.applied.items.some(x=>x.id===id),id);
+              return child;
+          }
+          try{
+              await page.goto('http://127.0.0.1:8765/UnoDock/playground/');await ready(page);console.log('MAIN READY');
+              const one=await float('architecture'),two=await float('notes');console.log('TWO POPUPS READY');
+              await one.locator('#destination').selectOption(await two.evaluate(()=>window.UnoDockBrowser.windowId));
+              await one.locator('#placement').selectOption('left');
+              await one.getByRole('button',{name:'Move',exact:true}).click();
+              await two.waitForFunction(()=>window.UnoDockBrowser.applied.items.length===2);console.log('MOVED TO LEFT');
+              await two.getByRole('button',{name:'Dock all & close window',exact:true}).click();
+              await page.waitForFunction(()=>window.UnoDockBrowser.applied.items.length===4,null,{timeout:15000});
+              console.log('ALL CONTENT RETURNED');await page.waitForTimeout(2000);
+          }catch(error){console.log('SCENARIO FAILURE',error.stack);process.exitCode=1;}
+          finally{await browser.close();}
+          JS
+          python3 -m http.server 8765 --directory ../../artifacts/serve > ../../artifacts/heap/http.log 2>&1 &
+          server=$!
+          trap 'kill "$server" || true' EXIT
+          set +e
+          timeout --kill-after=10s 180s node heap-lifecycle.mjs > ../../artifacts/heap/native.log 2>&1
+          result=$?
+          set -e
+          echo "$result" > ../../artifacts/heap/process-exit.txt
+          head -50 ../../artifacts/heap/native.log
+          tail -220 ../../artifacts/heap/native.log
+          test "$result" -eq 0
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-heap-verification
+          path: artifacts/heap/
+          if-no-files-found: error
