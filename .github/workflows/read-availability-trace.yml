@@ -1,0 +1,47 @@
+name: Inspect reload interception evidence
+on:
+  push:
+    branches: [work/browser-availability-validation]
+    paths: [.github/workflows/read-availability-trace.yml]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: browser-availability-before-after
+          run-id: 36467151718
+          github-token: ${{ github.token }}
+          path: evidence
+      - name: Read original navigation and request records
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json,zipfile
+          p=next(Path('evidence/before/traces').glob('*reloading*'),None)
+          candidates=[p for p in Path('evidence/before/traces').glob('*/trace.zip') if '23e1d' in str(p)]
+          assert len(candidates)==1,candidates
+          report=json.loads(Path('evidence/before/results.json').read_text())
+          print('ORIGINAL STATS',report['stats'])
+          with zipfile.ZipFile(candidates[0]) as archive:
+              for name in archive.namelist():
+                  if name.endswith('.trace'):
+                      print('TRACE',name)
+                      records=[json.loads(line) for line in archive.read(name).decode().splitlines()]
+                      for row in records:
+                          if row.get('type') in ('before','after','error'):
+                              result={k:row[k] for k in ('type','callId','class','method','apiName','params','error','title') if k in row}
+                              print(json.dumps(result)[:2500])
+                  if name.endswith('.network'):
+                      for line in archive.read(name).decode().splitlines():
+                          row=json.loads(line)
+                          s=row.get('snapshot',{})
+                          req=s.get('request',{})
+                          url=req.get('url','')
+                          if '/gallery/' in url and (url.endswith('/') or 'browser-workspace' in url) or 'service-worker' in url:
+                              print('NETWORK',json.dumps(row)[:5000])
+          PY
