@@ -23,18 +23,19 @@ jobs:
           run-id: 36422498961
           github-token: ${{ github.token }}
           path: artifacts/serve/UnoDock
-      - name: Prepare read-only memory inspection at the original exception
+      - name: Prepare read-only memory inspection at either recorded GC exception
         run: |
           python3 - <<'PY'
           from pathlib import Path
           import textwrap
           text=Path('.github/workflows/browser-gc-locals.yml').read_text()
           script=textwrap.dedent(text.split("cat > gc-locals.mjs <<'JS'\n",1)[1].split('\n          JS',1)[0])
+          script=script.replace("!reason.includes('memory access out of bounds')", "!event.callFrames.some(f => ['$func166018','$func166020'].includes(f.functionName))")
           anchor="await fs.writeFile('../../artifacts/gc-locals/fault.json',JSON.stringify(result,null,2));"
           assert script.count(anchor)==1
           addition='''
           const extract = frame => Object.fromEntries(frame.scopes.filter(s => s.type === 'local').flatMap(s => s.values).map(p => [p.name, p.details?.result?.find(x => x.name === 'value')?.value?.value]));
-          const first = result.locals.slice(0,4).map(f => ({function:f.function, values:extract(f)}));
+          const first = result.locals.filter(f => ['$func166018','$func166020','$func189966'].includes(f.function)).map(f => ({function:f.function, values:extract(f)}));
           const pointers = [...new Set(first.flatMap(f => Object.values(f.values)).filter(x => Number.isInteger(x) && x > 65536))];
           const expression = `JSON.stringify((() => {
               const h=globalThis.Module.HEAPU32, bytes=globalThis.Module.HEAPU8;
@@ -49,8 +50,15 @@ jobs:
           console.log('FAULT OBJECTS',JSON.stringify({first,memory}));
           '''
           script=script.replace(anchor,addition+'\n'+anchor).replace("console.log('NATIVE LOCALS',JSON.stringify(result.locals));",'')
+          script=script.replace("const one=await float('architecture'),two=await float('notes');", "for(let cycle=0;cycle<5&&!captured;cycle++){ console.log('CYCLE',cycle); const one=await float('architecture'),two=await float('notes');")
+          marker="const recorded=await Promise.race([fault,new Promise(resolve=>setTimeout(()=>resolve(false),15000))]);"
+          script=script.replace(marker,"await Promise.race([fault,page.waitForFunction(()=>window.UnoDockBrowser.applied.items.length===4,null,{timeout:15000})]); if(captured)break; await one.close(); }\n"+marker)
           Path('tests/browser/fault-object.mjs').write_text(script)
+          for p in Path('artifacts/serve/UnoDock/gallery').rglob('uno-config.js'):
+              for line in p.read_text().splitlines():
+                  if any(k in line.lower() for k in ('runtimeoptions','jiterpreter','gc_','executionmode')): print('RUNTIME CONFIG',line)
           PY
+          node --check tests/browser/fault-object.mjs
       - name: Install pinned browser
         working-directory: tests/browser
         run: |
@@ -67,7 +75,7 @@ jobs:
           timeout --kill-after=10s 180s node fault-object.mjs > ../../artifacts/gc-locals/console.log 2>&1
           result=$?
           set -e
-          grep -E 'FAULT OBJECTS|CAPTURE ERROR|expected original fault' ../../artifacts/gc-locals/console.log || true
+          cat ../../artifacts/gc-locals/console.log
           echo "$result" > ../../artifacts/gc-locals/process-exit.txt
           test "$result" -eq 0
       - uses: actions/upload-artifact@v4
