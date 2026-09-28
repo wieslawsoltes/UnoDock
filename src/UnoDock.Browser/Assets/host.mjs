@@ -1,5 +1,6 @@
 import { activateNativeAccessibility } from './accessibility.mjs';
 import { acknowledgeEdit } from './edit-acknowledgement.mjs';
+import { observeNativeRuntime } from './native-runtime.mjs';
 import { WorkspaceState } from './session.mjs';
 const MIME = 'application/x-unodock-transfer';
 const JOURNAL = 'unodock.browser.workspace.v1';
@@ -33,8 +34,7 @@ class WindowHub {
         }
     }
     check(id, cap, ref) {
-        // A child can retain a function from a document which has navigated away.
-        // WindowProxy identity alone must not authorize that retired broker.
+        // WindowProxy identity alone does not authorize a broker retained after navigation.
         if (window.closed || window.UnoDockBrowserHub !== this) throw Error('The primary workspace session has ended. Recover the journal in a main workspace.');
         const handle = this.handles.get(id);
         if (!handle || handle.cap !== cap || handle.ref !== ref || ref.closed) throw Error('This window does not own a registered workspace host.');
@@ -90,8 +90,7 @@ class WindowHub {
                 if (this.handles.size >= MAX_WINDOWS) throw Error('Eight workspace windows are already open. Reuse a window with Move.');
                 const childId = uid(), childCap = uid();
                 const url = new URL(here); url.hash = new URLSearchParams({ window: childId, cap: childCap, session: this.session }).toString();
-                // The caller is the user-activated window. No blank-window pool,
-                // popup-blocker bypass or unsolicited reopening is used.
+                // No blank-window pool, popup-blocker bypass or unsolicited reopening.
                 const child = ref.open(url.href, `unodock-${childId}`, 'popup,width=960,height=700,resizable=yes,scrollbars=yes');
                 if (!child) throw Error('Popup blocked. Allow popups for this site, then click Float again. The content has not moved.');
                 this.state.register(childId, item.title);
@@ -128,7 +127,6 @@ try {
         rootHub = window.opener.UnoDockBrowserHub;
         if (!rootHub || rootHub.session !== fragment.get('session')) throw Error('The workspace session has ended. Recover the journal in a new main workspace.');
     }
-    // Children opened from children retain the same authority, not a chain of brokers.
     window.UnoDockBrowserHub = rootHub;
     connection = rootHub.connect(window, windowId, capability);
 } catch (error) { errorText = error.message; }
@@ -143,9 +141,18 @@ function safe(request) {
     catch { render(); return null; }
 }
 function selected(snapshot) { return snapshot.items.find(item => item.id === active) || snapshot.items[0]; }
+const nativeRuntime = observeNativeRuntime($('app'), ({ state }) => {
+    if (state !== 'ready') {
+        applied = null;
+        document.documentElement.dataset.unoReady = 'false';
+    }
+    render();
+});
 window.UnoDockBrowser = Object.freeze({
     call(json) {
         try {
+            nativeRuntime.bind();
+            if (nativeRuntime.state === 'failed') throw Error(nativeRuntime.message);
             const request = typeof json === 'string' ? JSON.parse(json) : json;
             if (request.op === 'activate') { active = request.id; return JSON.stringify({ ok: true }); }
             const value = execute(request);
@@ -154,6 +161,7 @@ window.UnoDockBrowser = Object.freeze({
         } catch (error) { return JSON.stringify({ ok: false, error: error.message }); }
     },
     report(json) {
+        if (!nativeRuntime.report()) return;
         applied = typeof json === 'string' ? JSON.parse(json) : json;
         document.documentElement.dataset.unoReady = 'true';
         const frame = $('app');
@@ -167,6 +175,7 @@ window.UnoDockBrowser = Object.freeze({
         render();
     },
     get applied() { return applied; },
+    get nativeState() { return nativeRuntime.state; },
     snapshot() { return execute({ op: 'read' }); },
     get windowId() { return windowId; }
 });
@@ -176,14 +185,18 @@ let lastChips = '', lastWindows = '', lastClosed = '', latest = null;
 function render() {
     try { latest = execute({ op: 'read' }); }
     catch { latest = null; }
-    $('status').textContent = errorText || latest?.storageError || (applied ? 'Changes saved locally · Drag a chip between windows to dock' : 'Starting the Uno WebAssembly renderer…');
-    $('status').dataset.error = String(Boolean(errorText || latest?.storageError));
+    const failed = nativeRuntime.state === 'failed';
+    $('status').textContent = (failed ? 'Native renderer stopped: ' + nativeRuntime.message : '') || errorText || latest?.storageError || (applied ? 'Changes saved locally · Drag a chip between windows to dock' : 'Starting the Uno WebAssembly renderer…');
+    $('status').dataset.error = String(Boolean(failed || errorText || latest?.storageError));
     $('recovery').hidden = Boolean(latest);
-    if (!latest) { $('app').style.pointerEvents = 'none'; return; }
+    $('runtime-error').hidden = !latest || !failed;
+    $('runtime-error-detail').textContent = failed ? nativeRuntime.message : '';
+    $('app').style.pointerEvents = !latest || failed ? 'none' : '';
+    if (!latest) return;
     document.documentElement.dataset.theme = latest.theme;
     const item = selected(latest);
-    $('float').disabled = !item || !applied;
-    $('move').disabled = !item || !applied;
+    $('float').disabled = !item || !applied || failed;
+    $('move').disabled = !item || !applied || failed;
     $('return').hidden = windowId === 'main';
     $('window-title').textContent = windowId === 'main' ? 'Main workspace' : (item?.title || 'Floating workspace');
     document.title = `${$('window-title').textContent} — UnoDock`;
@@ -199,6 +212,7 @@ function render() {
             chip.onclick = () => { active = requestedActive = value.id; safe({ op: 'read' }); };
             let ticket;
             chip.ondragstart = event => {
+                if (!applied || nativeRuntime.state === 'failed') { event.preventDefault(); return; }
                 ticket = safe({ op: 'drag', id: value.id, lease: value.lease });
                 if (!ticket) { event.preventDefault(); return; }
                 dragging = true; event.dataTransfer.effectAllowed = 'move';
@@ -236,22 +250,30 @@ $('export').onclick = () => {
     const link = document.createElement('a'); link.href = url; link.download = 'unodock-workspace.json'; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
 };
 $('recover').onclick = () => { const url = new URL(location.href); url.hash = ''; location.replace(url); };
+$('restart-native').onclick = () => {
+    // Explicit recovery replaces only this Uno runtime, not the live broker,
+    // journal or other windows. Do not repeatedly restart a failed runtime.
+    const url = new URL($('app').src);
+    url.searchParams.set('rendererGeneration', uid());
+    $('app').src = url.href;
+};
 for (const target of document.querySelectorAll('[data-zone]')) {
-    target.ondragover = event => { if (event.dataTransfer.types.includes(MIME)) { event.preventDefault(); event.dataTransfer.dropEffect = 'move'; target.classList.add('over'); } };
+    target.ondragover = event => { if (applied && nativeRuntime.state !== 'failed' && event.dataTransfer.types.includes(MIME)) { event.preventDefault(); event.dataTransfer.dropEffect = 'move'; target.classList.add('over'); } };
     target.ondragleave = () => target.classList.remove('over');
-    target.ondrop = event => { event.preventDefault(); target.classList.remove('over'); $('zones').hidden = true; safe({ op: 'drop', ticket: event.dataTransfer.getData(MIME), zone: target.dataset.zone }); };
+    target.ondrop = event => {
+        event.preventDefault(); target.classList.remove('over'); $('zones').hidden = true;
+        if (applied && nativeRuntime.state !== 'failed') safe({ op: 'drop', ticket: event.dataTransfer.getData(MIME), zone: target.dataset.zone });
+    };
 }
-document.addEventListener('dragenter', event => { if (event.dataTransfer?.types.includes(MIME)) $('zones').hidden = false; });
+document.addEventListener('dragenter', event => { if (applied && nativeRuntime.state !== 'failed' && event.dataTransfer?.types.includes(MIME)) $('zones').hidden = false; });
 document.addEventListener('dragover', event => { if (event.dataTransfer?.types.includes(MIME)) event.preventDefault(); });
 document.addEventListener('keydown', event => { if (event.key === 'Escape') $('zones').hidden = true; });
 document.addEventListener('dragleave', event => { if (!event.relatedTarget && (event.clientX <= 0 || event.clientY <= 0)) $('zones').hidden = true; });
 $('app').addEventListener('load', () => {
     try {
         const document = $('app').contentDocument;
-        // Cross-document drags enter the actual Uno frame rather than the outer
-        // shell. Reveal browser-owned targets before accepting the drop.
         for (const eventName of ['dragenter', 'dragover']) document?.addEventListener(eventName, event => {
-            if (event.dataTransfer?.types.includes(MIME)) {
+            if (applied && nativeRuntime.state !== 'failed' && event.dataTransfer?.types.includes(MIME)) {
                 event.preventDefault(); $('zones').hidden = false;
             }
         });
