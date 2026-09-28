@@ -31,12 +31,10 @@ jobs:
         run: |
           npm ci --ignore-scripts --no-audit --no-fund
           npx playwright install --with-deps chromium > /tmp/chromium.log 2>&1
-      - name: Inspect native canvas, semantic tree, errors and live exports
+      - name: Inspect native canvas, semantics and real keyboard routing
         working-directory: tests/browser
         run: |
           mkdir -p ../../artifacts/inspection
-          cat > /tmp/unused <<'EOF'
-          EOF
           cat > inspect-runtime.mjs <<'JS'
           import { chromium } from '@playwright/test';
           import fs from 'node:fs/promises';
@@ -51,20 +49,35 @@ jobs:
           await new Promise(resolve => setTimeout(resolve, 20000));
           console.log('READING NATIVE STATE');
           const state = await page.evaluate(() => {
-              const frame = document.querySelector('#app');
+              const frame = window.document.querySelector('#app');
               const native = frame?.contentWindow;
-              const document = frame?.contentDocument;
+              const nativeDocument = frame?.contentDocument;
               return { applied: window.UnoDockBrowser?.applied, status: window.document.querySelector('#status')?.textContent,
-                  inner: document?.body?.innerText, canvas: [...(document?.querySelectorAll('canvas') ?? [])].map(e => ({ width: e.width, height: e.height })),
+                  inner: nativeDocument?.body?.innerText,
+                  canvas: [...(nativeDocument?.querySelectorAll('canvas') ?? [])].map(e => ({ width: e.width, height: e.height })),
                   exports: Object.keys(native?.Uno?.UI?.Runtime?.Skia?.Accessibility ?? {}),
-                  semantics: document?.querySelector('#uno-semantics-root')?.outerHTML };
+                  semantics: [...(nativeDocument?.querySelectorAll('[role],input,textarea') ?? [])].map(e => ({ tag: e.tagName, role: e.getAttribute('role'), name: e.getAttribute('aria-label'), editable: e.isContentEditable, value: e.value, id: e.id, pointerEvents: native.getComputedStyle(e).pointerEvents })) };
           });
           console.log('NATIVE STATE', JSON.stringify(state));
           await fs.writeFile('../../artifacts/inspection/state.json', JSON.stringify(state, null, 2));
           await page.screenshot({ path: '../../artifacts/inspection/workspace.png' });
           console.log('CAPTURE COMPLETE');
+          if (state.applied?.items?.length) {
+              await page.locator('[data-content="welcome"]').click({ timeout: 5000 });
+              const editor = page.frameLocator('#app').getByRole('textbox', { name: 'Editor welcome', exact: true });
+              try { await editor.fill('Diagnostic native fill', { timeout: 5000 }); console.log('NATIVE FILL SUCCEEDED'); }
+              catch (error) { console.log('NATIVE FILL RESULT', error.message); }
+              try {
+                  await editor.focus({ timeout: 5000 });
+                  await page.keyboard.press('ControlOrMeta+A');
+                  await page.keyboard.type('Diagnostic physical keyboard');
+                  await new Promise(resolve => setTimeout(resolve, 1000));
+                  console.log('KEYBOARD RESULT', await page.evaluate(() => window.UnoDockBrowser.snapshot().items.find(x => x.id === 'welcome')));
+              } catch (error) { console.log('KEYBOARD ROUTING RESULT', error.message); }
+          }
           await browser.close();
           JS
+          node --check inspect-runtime.mjs
           python3 -m http.server 8765 --directory ../../artifacts/serve > ../../artifacts/inspection/http.log 2>&1 &
           server=$!
           trap 'kill "$server" || true' EXIT
