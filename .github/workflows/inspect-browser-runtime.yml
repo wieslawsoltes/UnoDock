@@ -1,0 +1,83 @@
+name: Inspect actual browser runtime
+on:
+  push:
+    branches: [work/browser-runtime-inspection]
+    paths: [.github/workflows/inspect-browser-runtime.yml]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: a46e24b7302e794b2bf64c89e336548be49cdfcd
+          fetch-depth: 2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify compiled source matches the existing artifact
+        run: git diff --exit-code a3f9c1b23ca68cc9a8c0f46eceb71deacdfebb0d HEAD -- src/ samples/ site/ tools/build-browser-site.py
+      - uses: actions/download-artifact@v4
+        with:
+          name: browser-documentation-site
+          run-id: 36398194252
+          github-token: ${{ github.token }}
+          path: artifacts/serve/UnoDock
+      - name: Install locked runtime tools
+        working-directory: tests/browser
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npx playwright install --with-deps chromium > /tmp/chromium.log 2>&1
+      - name: Inspect native canvas, semantic tree, errors and live exports
+        working-directory: tests/browser
+        run: |
+          mkdir -p ../../artifacts/inspection
+          cat > /tmp/unused <<'EOF'
+          EOF
+          cat > inspect-runtime.mjs <<'JS'
+          import { chromium } from '@playwright/test';
+          import fs from 'node:fs/promises';
+          const browser = await chromium.launch();
+          const page = await browser.newPage();
+          page.on('console', event => console.log('CONSOLE', event.type(), event.text()));
+          page.on('pageerror', error => console.log('PAGE ERROR', error.stack));
+          page.on('crash', () => console.log('RENDERER CRASH'));
+          page.on('requestfailed', request => console.log('REQUEST FAILED', request.url(), request.failure()));
+          await page.goto('http://127.0.0.1:8765/UnoDock/playground/', { waitUntil: 'commit', timeout: 15000 });
+          console.log('NAVIGATION COMMITTED');
+          await new Promise(resolve => setTimeout(resolve, 20000));
+          console.log('READING NATIVE STATE');
+          const state = await page.evaluate(() => {
+              const frame = document.querySelector('#app');
+              const native = frame?.contentWindow;
+              const document = frame?.contentDocument;
+              return { applied: window.UnoDockBrowser?.applied, status: window.document.querySelector('#status')?.textContent,
+                  inner: document?.body?.innerText, canvas: [...(document?.querySelectorAll('canvas') ?? [])].map(e => ({ width: e.width, height: e.height })),
+                  exports: Object.keys(native?.Uno?.UI?.Runtime?.Skia?.Accessibility ?? {}),
+                  semantics: document?.querySelector('#uno-semantics-root')?.outerHTML };
+          });
+          console.log('NATIVE STATE', JSON.stringify(state));
+          await fs.writeFile('../../artifacts/inspection/state.json', JSON.stringify(state, null, 2));
+          await page.screenshot({ path: '../../artifacts/inspection/workspace.png' });
+          console.log('CAPTURE COMPLETE');
+          await browser.close();
+          JS
+          python3 -m http.server 8765 --directory ../../artifacts/serve > ../../artifacts/inspection/http.log 2>&1 &
+          server=$!
+          trap 'kill "$server" || true' EXIT
+          set +e
+          timeout --signal=TERM --kill-after=5s 75s node inspect-runtime.mjs > ../../artifacts/inspection/console.log 2>&1
+          result=$?
+          set -e
+          cat ../../artifacts/inspection/console.log
+          echo "$result" > ../../artifacts/inspection/process-exit.txt
+          test "$result" -eq 0
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-browser-inspection
+          path: artifacts/inspection/
+          if-no-files-found: error
