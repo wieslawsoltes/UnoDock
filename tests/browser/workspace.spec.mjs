@@ -25,6 +25,17 @@ async function popup(page, id) {
     return child;
 }
 
+async function replaceNativeText(page, id, text) {
+    const editor = page.frameLocator('#app').getByRole('textbox', { name: 'Editor ' + id, exact: true });
+    await expect(editor).toBeVisible();
+    // Uno's Skia TextBox owns selection and keyboard editing. DOM fill/select()
+    // changes the semantic proxy's selection, not the managed text selection.
+    // Send actual keyboard events; never invoke broker writes or managed callbacks.
+    await editor.press('ControlOrMeta+A');
+    await editor.pressSequentially(text);
+    await expect.poll(() => page.evaluate(id => window.UnoDockBrowser.snapshot().items.find(x => x.id === id)?.payload, id)).toBe(text);
+}
+
 test('real Uno runtime boots and renders the four model-backed editors', async ({ page }) => {
     await open(page);
     await expect.poll(() => ids(page)).toHaveLength(4);
@@ -37,14 +48,15 @@ test('real Uno runtime boots and renders the four model-backed editors', async (
 test('native Uno text edits survive popup transfer and popup close', async ({ page }) => {
     await open(page);
     await page.locator('[data-content="welcome"]').click();
-    const editor = page.frameLocator('#app').getByRole('textbox', { name: 'Editor welcome', exact: true });
-    await editor.fill('Edited in the real Uno browser TextBox.');
-    await expect.poll(() => page.evaluate(() => window.UnoDockBrowser.snapshot().items.find(x => x.id === 'welcome')?.payload)).toBe('Edited in the real Uno browser TextBox.');
+    const text = 'Edited in the real Uno browser TextBox.';
+    await replaceNativeText(page, 'welcome', text);
     const child = await popup(page, 'welcome');
-    await expect.poll(() => child.evaluate(() => window.UnoDockBrowser.applied.items[0]?.payload)).toBe('Edited in the real Uno browser TextBox.');
+    await expect.poll(() => child.evaluate(() => window.UnoDockBrowser.applied.items[0]?.payload)).toBe(text);
+    const satelliteText = 'Replaced from the native satellite TextBox.';
+    await replaceNativeText(child, 'welcome', satelliteText);
     await child.close();
     await expect.poll(() => ids(page)).toContain('welcome');
-    await expect.poll(() => page.evaluate(() => window.UnoDockBrowser.applied.items.find(x => x.id === 'welcome')?.payload)).toBe('Edited in the real Uno browser TextBox.');
+    await expect.poll(() => page.evaluate(() => window.UnoDockBrowser.applied.items.find(x => x.id === 'welcome')?.payload)).toBe(satelliteText);
 });
 
 test('two native browser windows exchange tools and documents without duplicate ownership', async ({ page }) => {
