@@ -1,0 +1,33 @@
+name: Browser test runtime
+on:
+  push:
+    branches: [work/browser-local-test-runtime]
+    paths: [.github/workflows/browser-test-runtime.yml]
+permissions:
+  contents: read
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install the repository-pinned public browser test dependencies
+        working-directory: tests/browser
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npx playwright install --only-shell chromium
+      - name: Archive public test runtime files only
+        run: |
+          mkdir -p artifacts
+          tar -czf artifacts/playwright-runtime.tar.gz -C tests/browser node_modules
+          tar -czf artifacts/chromium-runtime.tar.gz -C "$HOME/.cache/ms-playwright" .
+          sha256sum artifacts/*.gz > artifacts/SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: browser-public-test-runtime
+          path: artifacts/
+          compression-level: 0
+          retention-days: 3
