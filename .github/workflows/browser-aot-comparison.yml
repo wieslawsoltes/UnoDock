@@ -1,0 +1,64 @@
+name: Compare browser AOT runtime
+on:
+  push:
+    branches: [work/browser-native-crash-diagnostic]
+    paths: [.github/workflows/browser-aot-comparison.yml]
+permissions:
+  contents: read
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 61f913734906e8c07f983e5fbb7737f21c51794a
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build supported ahead-of-time variant with unchanged source
+        run: |
+          dotnet workload install wasm-tools > /tmp/workloads.log 2>&1
+          dotnet publish samples/UnoDock.Gallery -c Release -f net10.0-browserwasm -p:UnoDockTargetFrameworks=net10.0-browserwasm -p:UnoDockLibraryFrameworks=net10.0 -p:WasmShellWebAppBasePath=/UnoDock/gallery/ -p:WasmShellMonoRuntimeExecutionMode=InterpreterAndAOT -o artifacts/publish > /tmp/aot-build.log 2>&1 || { tail -100 /tmp/aot-build.log; exit 1; }
+          git diff --exit-code
+          python3 -m pip install Markdown==3.8.2
+          python3 tools/build-browser-site.py --publish artifacts/publish --output artifacts/serve/UnoDock
+          python3 tools/check-browser-site.py artifacts/serve/UnoDock
+      - name: Install exact repository browser dependency versions
+        working-directory: tests/browser
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npx playwright install --with-deps chromium > /tmp/chromium.log 2>&1
+      - name: Run unchanged full native browser suite
+        working-directory: tests/browser
+        run: |
+          python3 -m http.server 8765 --directory ../../artifacts/serve > ../../artifacts/http.log 2>&1 &
+          server=$!
+          trap 'kill "$server" || true' EXIT
+          timeout --signal=TERM --kill-after=15s 900s npx playwright test
+      - name: Preserve build and native execution evidence
+        if: always()
+        run: |
+          mkdir -p artifacts/evidence
+          cp /tmp/aot-build.log artifacts/evidence/ 2>/dev/null || true
+          git rev-parse HEAD > artifacts/evidence/source-revision.txt
+          find artifacts/serve -name uno-config.js -exec grep -E 'MONO_RUNTIME_MODE|jiterpreter|enable_pwa' {} \; > artifacts/evidence/runtime-mode.txt || true
+          find artifacts/browser-tests -name error-context.md -exec cat {} \; 2>/dev/null || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-aot-comparison
+          path: |
+            artifacts/evidence/
+            artifacts/browser-tests/
+            artifacts/http.log
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-aot-site
+          path: artifacts/serve/UnoDock/
+          if-no-files-found: warn
