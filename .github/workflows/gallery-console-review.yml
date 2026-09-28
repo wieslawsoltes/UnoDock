@@ -1,0 +1,72 @@
+name: Inspect standalone gallery startup
+on:
+  push:
+    branches: [work/browser-site-final-review]
+    paths: [.github/workflows/gallery-console-review.yml]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 66ab58fc82775e95dc8e661e4ffbe3ce695d13af
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@v4
+        with:
+          name: browser-documentation-site
+          run-id: 36454508615
+          github-token: ${{ github.token }}
+          path: artifacts/serve/UnoDock
+      - name: Install locked browser tools
+        working-directory: tests/browser
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npx playwright install --with-deps chromium > /tmp/install.log 2>&1
+      - name: Capture the native launcher result without synthetic application controls
+        working-directory: tests/browser
+        run: |
+          mkdir -p ../../artifacts/gallery
+          cat > gallery-console.mjs <<'JS'
+          import { chromium, expect } from '@playwright/test';
+          const browser = await chromium.launch();
+          const page = await browser.newPage({ viewport: { width: 1440, height: 960 } });
+          page.on('console', value => console.log('CONSOLE', value.type(), value.text()));
+          page.on('pageerror', error => console.log('PAGE ERROR', error.stack));
+          page.on('requestfailed', request => console.log('REQUEST FAILED', request.url(), request.failure()));
+          try {
+              await page.goto('http://127.0.0.1:8765/UnoDock/gallery/', { waitUntil: 'domcontentloaded' });
+              await page.waitForTimeout(8000);
+              console.log('NATIVE DOM', await page.locator('body').innerText());
+              await page.screenshot({ path: '../../artifacts/gallery/startup.png' });
+              const enabled = await page.evaluate(() => {
+                  const host = window.Uno?.UI?.Runtime?.Skia?.Accessibility;
+                  if (typeof host?.managedEnableAccessibility !== 'function') return false;
+                  host.managedEnableAccessibility();
+                  return true;
+              });
+              console.log('NATIVE ACCESSIBILITY', enabled);
+              await expect(page.getByRole('button', { name: 'New document', exact: true }).first()).toBeVisible({ timeout: 10000 });
+          } finally { await browser.close(); }
+          JS
+          python3 -m http.server 8765 --directory ../../artifacts/serve > ../../artifacts/gallery/http.log 2>&1 &
+          server=$!
+          trap 'kill "$server" || true' EXIT
+          set +e
+          timeout --kill-after=5s 60s node gallery-console.mjs > ../../artifacts/gallery/console.log 2>&1
+          result=$?
+          set -e
+          cat ../../artifacts/gallery/console.log
+          echo "$result" > ../../artifacts/gallery/process-exit.txt
+          test "$result" -eq 0
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: standalone-gallery-startup
+          path: artifacts/gallery/
+          if-no-files-found: error
