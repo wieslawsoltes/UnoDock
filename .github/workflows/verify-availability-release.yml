@@ -1,0 +1,142 @@
+name: Verify browser availability release evidence
+on:
+  push:
+    branches: [work/browser-availability-validation]
+    paths: [.github/workflows/verify-availability-release.yml]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 2bc9af7e9f4f0d8386c0a511f31cf8883527868b
+          fetch-depth: 0
+      - name: Verify immutable source, final CI and original browser reports
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import hashlib, importlib.util, io, json, os, subprocess, time, urllib.error, urllib.request, zipfile
+          import xml.etree.ElementTree as ET
+          from pathlib import Path
+          head='e669d552a035d4bc18be7c0357dbd7998ca27f07'
+          tested='2bc9af7e9f4f0d8386c0a511f31cf8883527868b'
+          base='b893d5774ebc1389589960acfc3a955e905bd288'
+          tree='e67a1b128bacb4540d85e9f5c52e37e43580eb55'
+          expected={
+            'src/UnoDock.Browser/Assets/session.mjs',
+            'src/UnoDock.Browser/Assets/host.mjs',
+            'tests/browser/destination-availability.test.mjs',
+            'tests/browser/destination-availability.spec.mjs',
+            'tests/browser/destination-reload.spec.mjs',
+            'tools/verify-browser-results.py',
+            'docs/browser-destination-availability.md',
+          }
+          def git(*args): return subprocess.check_output(['git',*args],text=True).strip()
+          assert git('rev-parse','HEAD')==tested
+          assert git('rev-parse','HEAD^{tree}')==git('rev-parse',head+'^{tree}')==tree
+          assert set(git('diff','--name-only',base,'HEAD').splitlines())==expected
+          out=Path('artifacts/verified-availability');out.mkdir(parents=True)
+          headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json','User-Agent':'UnoDock-evidence-verifier'}
+          def request(path): return urllib.request.Request('https://api.github.com/repos/wieslawsoltes/UnoDock/'+path,headers=headers)
+          def get(path):
+              with urllib.request.urlopen(request(path),timeout=60) as response:return json.load(response)
+          runs={
+            'ordinary':(36468503166,6), 'native':(36468503176,3),
+            'chrome':(36468503182,3), 'inspector':(36468503231,3),
+            'workbench':(36468503229,3), 'workspaces':(36468503177,3),
+            'sizing':(36468503142,3), 'fluent':(36468503168,3),
+            'navigator':(36468503194,3), 'source':(36468503153,1),
+            'browser':(36468503119,1),
+          }
+          deadline=time.monotonic()+900
+          while True:
+              states={name:get(f'actions/runs/{run}') for name,(run,_) in runs.items()}
+              for name,state in states.items():
+                  assert state['head_sha']==head and state['run_attempt']==1,(name,state['head_sha'])
+                  if state['status']=='completed' and state['conclusion']!='success':
+                      raise RuntimeError(f'{name} did not pass: {state["conclusion"]}')
+              print('FINAL STATES', {name:(s['status'],s['conclusion']) for name,s in states.items()},flush=True)
+              if all(s['status']=='completed' for s in states.values()):break
+              if time.monotonic()>=deadline:raise TimeoutError('Final acceptance did not finish within the verification deadline.')
+              time.sleep(30)
+          jobs={}
+          for name,(run,count) in runs.items():
+              values=get(f'actions/runs/{run}/jobs?per_page=100')['jobs']
+              allowed_skips={'deploy','verify-live'} if name=='browser' else set()
+              assert all(j['conclusion']=='success' or j['conclusion']=='skipped' and j['name'] in allowed_skips for j in values),name
+              completed=[j for j in values if j['conclusion']=='success']
+              assert len(completed)==count,(name,len(completed))
+              jobs[name]=[{'id':j['id'],'name':j['name'],'conclusion':j['conclusion']} for j in completed]
+          assert sum(map(len,jobs.values()))==32
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self,*args):return None
+          def download(artifact):
+              assert not artifact['expired']
+              try:response=urllib.request.build_opener(NoRedirect).open(request(f'actions/artifacts/{artifact["id"]}/zip'),timeout=60)
+              except urllib.error.HTTPError as error:
+                  if error.code not in (301,302,303,307,308):raise
+                  location=error.headers['Location'];assert location.startswith('https://')
+                  # Repository credentials must not follow the signed storage URL.
+                  response=urllib.request.urlopen(location,timeout=120)
+              with response:data=response.read(128*1024*1024+1)
+              assert len(data)<=128*1024*1024
+              assert 'sha256:'+hashlib.sha256(data).hexdigest()==artifact['digest']
+              return zipfile.ZipFile(io.BytesIO(data))
+          def one(archive,suffix):
+              selected=[n for n in archive.namelist() if n.endswith(suffix)]
+              assert len(selected)==1,(suffix,selected)
+              return archive.read(selected[0])
+          spec=importlib.util.spec_from_file_location('browser_gate','tools/verify-browser-results.py')
+          gate=importlib.util.module_from_spec(spec);spec.loader.exec_module(gate)
+          artifacts={};results={}
+          browser=get('actions/runs/36468503119/artifacts?per_page=100')['artifacts']
+          item=next(a for a in browser if a['name']=='browser-runtime-evidence')
+          assert item['workflow_run']['head_sha']==head
+          artifacts['final-browser']={'id':item['id'],'sha256':item['digest']}
+          directory=out/'browser';directory.mkdir()
+          with download(item) as archive:
+              for name in ('results.json','results.xml','source-revision.txt'):
+                  (directory/name).write_bytes(one(archive,name))
+              assert (directory/'source-revision.txt').read_text().strip()==tested
+              screenshots=[n for n in archive.namelist() if n.endswith('/workbench.png') or n=='workbench.png']
+              if len(screenshots)==1:
+                  data=archive.read(screenshots[0]);assert data[:8]==b'\x89PNG\r\n\x1a\n'
+                  (out/'browser-workbench.png').write_bytes(data)
+          results['final-browser']=gate.verify(directory)
+          assert results['final-browser']['passed']==16
+          reproduction=get('actions/artifacts/10991251834')
+          artifacts['comparison']={'id':reproduction['id'],'sha256':reproduction['digest'],'run':36468632792}
+          assert reproduction['digest']=='sha256:1273a8632460bbc720a0085f2becf5270f93a3702030a61f1150dbd8d57db83c'
+          with download(reproduction) as archive:
+              assert one(archive,'source-revision.txt').decode().strip()==head
+              before=ET.fromstring(one(archive,'before/results.xml'))
+              cases=list(before.iter('testcase'));assert len(cases)==3
+              assert all(c.find('failure') is not None for c in cases)
+              for case in cases:assert 'Test timeout' not in ''.join(case.find('failure').itertext())
+              directory=out/'comparison';directory.mkdir()
+              for name in ('results.json','results.xml'):
+                  (directory/name).write_bytes(one(archive,'latest/'+name))
+              (directory/'before-results.xml').write_bytes(one(archive,'before/results.xml'))
+          results['corrected-comparison']=gate.verify(directory)
+          assert results['corrected-comparison']['passed']==16
+          for name in expected:
+              destination=out/'source'/name;destination.parent.mkdir(parents=True,exist_ok=True)
+              destination.write_bytes(Path(name).read_bytes())
+          (out/'implementation.patch').write_bytes(subprocess.check_output(['git','diff','--no-ext-diff',base,'HEAD']))
+          summary={'head':head,'tested':tested,'tree':tree,'base':base,'changedFiles':sorted(expected),
+                   'nativeInputsUnchanged':True,'jobs':jobs,'successfulJobs':32,'artifacts':artifacts,
+                   'browserResults':results,'baselineExpectedFailures':3,'retriedCases':0}
+          (out/'verification.json').write_text(json.dumps(summary,indent=2)+'\n')
+          print('VERIFIED',json.dumps(summary,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: UnoDock-PR22-verification
+          path: artifacts/verified-availability/
+          if-no-files-found: error
