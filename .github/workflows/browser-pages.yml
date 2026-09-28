@@ -1,0 +1,150 @@
+name: Browser workspace and GitHub Pages
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: browser-pages-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: tests/browser/package-lock.json
+      - name: Check browser ownership, source and evidence contracts
+        run: |
+          node --test tests/browser/*.test.mjs
+          python3 tests/metadata/test_browser_site.py
+          python3 tests/metadata/test_browser_results.py
+      - name: Install WebAssembly build tools
+        run: dotnet workload install wasm-tools
+      - name: Publish the actual Uno application without source instrumentation
+        run: |
+          dotnet publish samples/UnoDock.Gallery -c Release -f net10.0-browserwasm -p:UnoDockTargetFrameworks=net10.0-browserwasm -p:UnoDockLibraryFrameworks=net10.0 -p:WasmShellWebAppBasePath=/UnoDock/gallery/ -o artifacts/publish
+          git diff --exit-code
+      - name: Assemble and check documentation and application routes
+        run: |
+          python3 -m pip install Markdown==3.8.2
+          python3 tools/build-browser-site.py --publish artifacts/publish --output artifacts/site
+          python3 tools/check-browser-site.py artifacts/site
+          mkdir -p artifacts/serve
+          ln -s ../site artifacts/serve/UnoDock
+      - name: Install the locked browser test runner
+        working-directory: tests/browser
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: Exercise real editing, popup windows, docking and recovery
+        working-directory: tests/browser
+        run: |
+          python3 -m http.server 8765 --directory ../../artifacts/serve > ../../artifacts/http.log 2>&1 &
+          server=$!
+          trap 'kill "$server" || true' EXIT
+          timeout --signal=TERM --kill-after=15s 900s npx playwright test
+      - name: Require complete first-attempt browser evidence
+        if: always()
+        run: |
+          mkdir -p artifacts/browser-tests
+          git rev-parse HEAD > artifacts/browser-tests/source-revision.txt
+          python3 tools/verify-browser-results.py artifacts/browser-tests
+      - name: Preserve failure context without a second browser attempt
+        if: always()
+        run: find artifacts/browser-tests -name error-context.md -exec cat {} \; 2>/dev/null || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-runtime-evidence
+          path: |
+            artifacts/browser-tests/
+            artifacts/http.log
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-documentation-site
+          path: artifacts/site/
+          if-no-files-found: error
+      - uses: actions/upload-pages-artifact@v3
+        if: success() && github.ref == 'refs/heads/main'
+        with:
+          path: artifacts/site
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    outputs:
+      page_url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/configure-pages@v5
+      - name: Deploy the tested artifact
+        id: deployment
+        uses: actions/deploy-pages@v4
+  verify-live:
+    needs: deploy
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: tests/browser/package-lock.json
+      - name: Require the deployed source revision
+        env:
+          SITE_URL: ${{ needs.deploy.outputs.page_url }}
+          EXPECTED_REVISION: ${{ github.sha }}
+        run: |
+          python3 - <<'PY'
+          import os,time,urllib.request
+          url=os.environ['SITE_URL'].rstrip('/')+'/revision.txt?revision='+os.environ['EXPECTED_REVISION']
+          for attempt in range(12):
+              try:
+                  with urllib.request.urlopen(url,timeout=20) as response: revision=response.read().decode().strip()
+                  if revision==os.environ['EXPECTED_REVISION']:
+                      print('Verified deployed revision:',revision)
+                      break
+              except OSError as error: print('CDN propagation:',error)
+              time.sleep(5)
+          else: raise SystemExit('GitHub Pages did not serve the deployed source revision.')
+          PY
+      - name: Install browser acceptance dependencies
+        working-directory: tests/browser
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: Verify public multi-window application, not only HTTP availability
+        working-directory: tests/browser
+        env:
+          UNODOCK_BASE_URL: ${{ needs.deploy.outputs.page_url }}playground/
+        run: timeout --signal=TERM --kill-after=15s 900s npx playwright test
+      - name: Require complete public native browser results
+        if: always()
+        run: python3 tools/verify-browser-results.py artifacts/browser-tests
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: public-browser-runtime-evidence
+          path: artifacts/browser-tests/
+          if-no-files-found: error

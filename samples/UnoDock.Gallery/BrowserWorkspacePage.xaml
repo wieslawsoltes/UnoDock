@@ -1,0 +1,21 @@
+<UserControl x:Class="UnoDock.Gallery.BrowserWorkspacePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:dock="using:UnoDock" xmlns:layout="using:UnoDock.Layout" xmlns:themes="using:UnoDock.Themes">
+    <UserControl.Resources>
+        <ResourceDictionary><ResourceDictionary.MergedDictionaries><themes:WorkbenchResources /></ResourceDictionary.MergedDictionaries></ResourceDictionary>
+    </UserControl.Resources>
+    <Grid Padding="8" RowSpacing="6">
+        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+        <StackPanel Orientation="Horizontal" Spacing="8">
+            <Button Content="Float selected" Click="FloatSelected" AutomationProperties.AutomationId="BrowserFloat"/>
+            <Button Content="Dock in this window" Click="DockSelected"/>
+            <Button Content="Auto-hide tool" Click="AutoHideSelected"/>
+        </StackPanel>
+        <dock:DockingManager x:Name="Dock" Grid.Row="1" Style="{StaticResource UnoDock.WorkbenchManagerStyle}" ChromeDensity="Comfortable" FloatingWindowMode="InSurface">
+            <dock:DockingManager.Theme><themes:FluentTheme/></dock:DockingManager.Theme>
+            <layout:LayoutRoot><layout:LayoutPanel><layout:LayoutDocumentPane/></layout:LayoutPanel></layout:LayoutRoot>
+        </dock:DockingManager>
+        <TextBlock x:Name="Status" Grid.Row="2" FontSize="11" TextWrapping="Wrap" Text="Native Uno controls · Drag tabs to split locally; use the browser strip to move between windows."/>
+    </Grid>
+</UserControl>

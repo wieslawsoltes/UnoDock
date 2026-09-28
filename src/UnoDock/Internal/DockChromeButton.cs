@@ -5,7 +5,7 @@ namespace UnoDock.Internal;
 
 internal sealed partial class DockChromeButton : Button
 {
-    private DockPalette _palette;
+    private DockPalette _palette = DockChrome.Default(false);
     private bool _over;
     private bool _fluent;
     private bool _subdued;
@@ -34,7 +34,9 @@ internal sealed partial class DockChromeButton : Button
         VerticalContentAlignment = VerticalAlignment.Center;
         Template = DockChrome.ButtonTemplate;
         UseSystemFocusVisuals = true;
-        Configure(DockChrome.Default(false));
+        Configure(_palette);
+        if (OperatingSystem.IsBrowser())
+            Loaded += (_, _) => Paint();
         PointerEntered += (_, _) =>
         {
             _over = true;
@@ -60,6 +62,7 @@ internal sealed partial class DockChromeButton : Button
 
     internal void Configure(DockPalette palette)
     {
+        ArgumentNullException.ThrowIfNull(palette);
         _palette = palette;
         if (_fluent != palette.UsesFluentControls)
         {
@@ -106,7 +109,11 @@ internal sealed partial class DockChromeButton : Button
     private void Paint()
     {
         var foreground = !_fluent ? _palette.Foreground : !IsEnabled ? _palette.DisabledForeground ?? _palette.Foreground : _subdued ? _palette.SecondaryForeground ?? _palette.Foreground : _palette.Foreground;
-        Foreground = foreground;
+        // The pinned browser renderer can stall in inherited brush propagation
+        // before attachment. Retain the latest palette and publish the same brush
+        // at Loaded; desktop/offscreen presentation keeps its existing contract.
+        if (!OperatingSystem.IsBrowser() || IsLoaded)
+            Foreground = foreground;
         PaintIcon();
         if (_fluent)
         {
