@@ -1,0 +1,64 @@
+name: Compare Uno browser renderer boundaries
+on:
+  push:
+    branches: [work/browser-native-crash-diagnostic]
+    paths: [.github/workflows/browser-native-renderer-comparison.yml]
+permissions:
+  contents: read
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 61f913734906e8c07f983e5fbb7737f21c51794a
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Select the supported Uno 6.7 native browser host for this comparison only
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('samples/UnoDock.Gallery/UnoDock.Gallery.csproj');t=p.read_text()
+          assert t.count('<UnoFeatures>SkiaRenderer;</UnoFeatures>')==1
+          p.write_text(t.replace('<UnoFeatures>SkiaRenderer;</UnoFeatures>','<UnoFeatures></UnoFeatures>'))
+          p=Path('samples/UnoDock.Gallery/Platforms/WebAssembly/Program.cs')
+          p.write_text('namespace UnoDock.Gallery; public static class Program { private static App? _application; public static int Main(string[] args) { Microsoft.UI.Xaml.Application.Start(_ => _application = new App()); return 0; } }')
+          PY
+          dotnet workload install wasm-tools > /tmp/wasm-tools.log 2>&1
+          dotnet publish samples/UnoDock.Gallery -c Release -f net10.0-browserwasm -p:UnoDockTargetFrameworks=net10.0-browserwasm -p:UnoDockLibraryFrameworks=net10.0 -p:WasmShellWebAppBasePath=/UnoDock/gallery/ -o artifacts/publish > /tmp/native-browser-build.log 2>&1 || { tail -100 /tmp/native-browser-build.log; exit 1; }
+          python3 -m pip install Markdown==3.8.2
+          python3 tools/build-browser-site.py --publish artifacts/publish --output artifacts/serve/UnoDock
+      - name: Install pinned Chromium
+        working-directory: tests/browser
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npx playwright install --with-deps chromium > /tmp/browser.log 2>&1
+      - name: Exercise actual native editing and the same multi-popup docking lifecycle
+        working-directory: tests/browser
+        run: |
+          python3 -m http.server 8765 --directory ../../artifacts/serve > ../../artifacts/http.log 2>&1 &
+          server=$!
+          trap 'kill "$server" || true' EXIT
+          timeout --kill-after=15s 600s npx playwright test native-editing.spec.mjs projection.spec.mjs workspace.spec.mjs
+      - name: Preserve original result and host configuration
+        if: always()
+        run: |
+          mkdir -p artifacts/native-browser
+          cp /tmp/native-browser-build.log artifacts/native-browser/ 2>/dev/null || true
+          git diff > artifacts/native-browser/renderer-comparison.patch
+          git rev-parse HEAD > artifacts/native-browser/source-revision.txt
+          find artifacts/browser-tests -name error-context.md -exec cat {} \; 2>/dev/null || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-browser-renderer-comparison
+          path: |
+            artifacts/native-browser/
+            artifacts/browser-tests/
+            artifacts/http.log
+          if-no-files-found: error
