@@ -9,86 +9,47 @@ permissions:
 jobs:
   inspect:
     runs-on: ubuntu-latest
-    timeout-minutes: 6
-    strategy:
-      fail-fast: false
-      matrix:
-        waiting: [function, assertion]
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: c8efdf36f0523d0b2a705558756570c82a199bba
+          ref: 44d0cd5046a0a74394857c9e9e9a47707d0b63c3
+          fetch-depth: 2
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Verify artifact application source identity
+        run: git diff --exit-code c8efdf36f0523d0b2a705558756570c82a199bba HEAD -- src/UnoDock.Browser/BrowserDockingSession.cs src/UnoDock.Browser/Assets samples/
       - uses: actions/download-artifact@v4
         with:
           name: browser-documentation-site
           run-id: 36403124991
           github-token: ${{ github.token }}
           path: artifacts/serve/UnoDock
-      - name: Install locked browser
+      - name: Resolve and print exact current browser dependency lock
         working-directory: tests/browser
         run: |
-          npm ci --ignore-scripts --no-audit --no-fund
-          npx playwright install --with-deps chromium > /tmp/browser-install.log 2>&1
-      - name: Observe native startup, visibility and editing
+          npm install --save-exact --ignore-scripts --no-audit --no-fund @playwright/test@1.63.0
+          cat package.json package-lock.json
+          npx playwright --version
+          npx playwright install --with-deps chromium > /tmp/browser-install.log 2>&1 || { tail -30 /tmp/browser-install.log; exit 1; }
+      - name: Run unchanged native acceptance with the new pinned browser
         working-directory: tests/browser
-        env:
-          WAITING: ${{ matrix.waiting }}
         run: |
-          mkdir -p ../../artifacts/inspection
-          cat > startup-context.mjs <<'JS'
-          import { chromium, expect } from '@playwright/test';
-          const browser = await chromium.launch();
-          const context = await browser.newContext({ viewport: { width: 1360, height: 900 } });
-          await context.tracing.start({ screenshots: true, snapshots: true, sources: true });
-          const page = await context.newPage();
-          page.on('pageerror', e => console.log('PAGEERROR', e.stack));
-          const cdp = await context.newCDPSession(page);
-          await page.goto('http://127.0.0.1:8765/UnoDock/playground/', { waitUntil: 'domcontentloaded' });
-          console.log('START WAIT',process.env.WAITING);
-          const wait = process.env.WAITING === 'function'
-              ? page.waitForFunction(() => window.UnoDockBrowser?.applied?.items?.length === 4,null,{timeout:18000,polling:100})
-              : expect.poll(()=>page.evaluate(()=>window.UnoDockBrowser?.applied?.items?.length),{timeout:18000,intervals:[200]}).toBe(4);
-          wait.catch(e=>console.log('WAIT ERROR',e.message));
-          await Promise.race([wait.catch(()=>{}),new Promise(r=>setTimeout(r,20000))]);
-          console.log('READ STATE');
-          const expression = `JSON.stringify({url:location.href,ready:document.readyState,applied:window.UnoDockBrowser?.applied,status:document.querySelector('#status')?.textContent})`;
-          const live = await Promise.race([cdp.send('Runtime.evaluate', { expression,returnByValue:true,timeout:2000 }).catch(e=>({error:e.message})),new Promise(r=>setTimeout(()=>r({timeout:true}),3000))]);
-          console.log('LIVE',JSON.stringify(live));
-          if (!live.timeout && live.result?.value && JSON.parse(live.result.value).applied?.items?.length===4) {
-              try {
-                  await expect(page.frameLocator('#app').getByRole('button',{name:'Float selected',exact:true})).toBeVisible({timeout:5000});
-                  console.log('NATIVE BUTTON VISIBLE');
-                  await page.locator('[data-content="welcome"]').click({timeout:5000});
-                  await page.frameLocator('#app').getByRole('textbox',{name:'Editor welcome',exact:true}).fill('Native editing diagnostic',{timeout:5000});
-                  await expect.poll(()=>page.evaluate(()=>window.UnoDockBrowser.snapshot().items.find(x=>x.id==='welcome')?.payload),{timeout:5000}).toBe('Native editing diagnostic');
-                  console.log('NATIVE EDIT VERIFIED');
-              } catch (e) { console.log('NATIVE OPERATION ERROR',e.message); }
-          }
-          await cdp.send('Debugger.enable');
-          let resolve;
-          const paused = new Promise(r=>resolve=r);
-          cdp.once('Debugger.paused', resolve);
-          await cdp.send('Debugger.pause');
-          const event = await paused;
-          console.log('STACK',JSON.stringify(event.callFrames.map(f=>({name:f.functionName,location:f.location}))));
-          for(const f of event.callFrames.slice(-3)) {
-              const state=await cdp.send('Debugger.evaluateOnCallFrame',{callFrameId:f.callFrameId,expression:'JSON.stringify({applied:window.parent.UnoDockBrowser?.applied,status:window.parent.document.querySelector("#status")?.textContent})',returnByValue:true,silent:true});
-              console.log('PAUSED',JSON.stringify(state)); if(state.result?.value) break;
-          }
-          await cdp.send('Debugger.resume');
-          await Promise.race([context.tracing.stop({path:'../../artifacts/inspection/trace.zip'}),new Promise(r=>setTimeout(r,3000))]);
-          await browser.close();
-          JS
-          node --check startup-context.mjs
-          python3 -m http.server 8765 --directory ../../artifacts/serve > ../../artifacts/inspection/http.log 2>&1 &
+          python3 -m http.server 8765 --directory ../../artifacts/serve > ../../artifacts/http.log 2>&1 &
           server=$!
           trap 'kill "$server" || true' EXIT
-          timeout --kill-after=5s 70s node startup-context.mjs | tee ../../artifacts/inspection/console.log
+          timeout --signal=TERM --kill-after=15s 900s npx playwright test
+      - name: Validate complete named evidence
+        if: always()
+        run: |
+          python3 tools/verify-browser-results.py artifacts/browser-tests
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: startup-${{ matrix.waiting }}
-          path: artifacts/inspection/
+          name: current-browser-acceptance
+          path: |
+            artifacts/browser-tests/
+            artifacts/http.log
+            tests/browser/package.json
+            tests/browser/package-lock.json
