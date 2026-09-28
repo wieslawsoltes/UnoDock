@@ -4,6 +4,11 @@ export default defineConfig({
     workers: 1, retries: 0, fullyParallel: false,
     reporter: [['list'], ['junit', { outputFile: '../../artifacts/browser-tests/results.xml' }], ['json', { outputFile: '../../artifacts/browser-tests/results.json' }]],
     outputDir: '../../artifacts/browser-tests/traces',
-    use: { baseURL: process.env.UNODOCK_BASE_URL || 'http://127.0.0.1:8765/UnoDock/playground/', viewport: { width: 1360, height: 900 }, trace: 'retain-on-failure', screenshot: 'only-on-failure' },
+    use: {
+        // CI has no physical GPU. This selects a deterministic graphics backend
+        // for trusted test assets; production browsers keep their own GPU choice.
+        launchOptions: process.env.UNODOCK_SOFTWARE_GPU === '1' ? { args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] } : {},
+        baseURL: process.env.UNODOCK_BASE_URL || 'http://127.0.0.1:8765/UnoDock/playground/',
+        viewport: { width: 1360, height: 900 }, trace: 'retain-on-failure', screenshot: 'only-on-failure'
+    },
     projects: [{ name: 'chromium', use: { browserName: 'chromium' } }]
-});

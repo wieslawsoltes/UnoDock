@@ -6,10 +6,12 @@ namespace UnoDock.Gallery;
 public sealed partial class BrowserWorkspacePage : UserControl
 {
     private BrowserDockingSession? _session;
+    private long _loadGeneration;
     private readonly DispatcherTimer _timer = new()
     {
         Interval = TimeSpan.FromMilliseconds(150)
     };
+
     public BrowserWorkspacePage()
     {
         InitializeComponent();
@@ -24,7 +26,16 @@ public sealed partial class BrowserWorkspacePage : UserControl
 
     private void OnLoaded(object sender, RoutedEventArgs args)
     {
-        if (_session != null)
+        var generation = ++_loadGeneration;
+        // Loaded is raised while the browser Window is still attaching its root.
+        // Do not synchronously render/reparent dock contents inside that operation.
+        if (!DispatcherQueue.TryEnqueue(() => StartSession(generation)))
+            Status.Text = "The browser UI dispatcher could not start the workspace.";
+    }
+
+    private void StartSession(long generation)
+    {
+        if (!IsLoaded || generation != _loadGeneration || _session != null)
             return;
         try
         {
@@ -39,9 +50,11 @@ public sealed partial class BrowserWorkspacePage : UserControl
 
     private void OnUnloaded(object sender, RoutedEventArgs args)
     {
+        _loadGeneration++;
         _timer.Stop();
-        _session?.Dispose();
+        var session = _session;
         _session = null;
+        session?.Dispose();
     }
 
     private void FloatSelected(object sender, RoutedEventArgs args)
@@ -51,6 +64,7 @@ public sealed partial class BrowserWorkspacePage : UserControl
     }
 
     private void DockSelected(object sender, RoutedEventArgs args) => Dock.Layout.ActiveContent?.Dock();
+
     private void AutoHideSelected(object sender, RoutedEventArgs args)
     {
         if (Dock.Layout.ActiveContent is LayoutAnchorable tool)

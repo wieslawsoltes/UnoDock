@@ -20,8 +20,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Verify ownership, documentation and source contracts
+      - name: Integrate native readiness and verify source contracts
         run: |
+          python3 tools/apply-browser-ready.py
           node --test tests/browser/session.test.mjs tests/browser/session-lifetime.test.mjs
           python3 tests/metadata/test_browser_site.py
           dotnet run --project tools/SourceMaintenance -c Release -- --format .
@@ -29,19 +30,17 @@ jobs:
           dotnet run --project tools/SourceMaintenance -c Release -- --check-format .
       - name: Compile desktop API compatibility
         run: dotnet build samples/UnoDock.Gallery -c Release -f net10.0-desktop -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0 -warnaserror
-      - name: Preserve canonical source formatting
+      - name: Preserve canonical source integration
         run: |
           set -euo pipefail
-          git add src/ samples/
+          git add src/ samples/ tests/
           git diff --cached --check
           git config user.name 'Wiesław Šoltés'
           git config user.email 'wieslawsoltes@users.noreply.github.com'
-          if ! git diff --cached --quiet; then
-            git commit -m 'style: apply canonical browser source formatting'
-            git fetch origin work/browser-workspace-pages
-            test "$(git rev-parse FETCH_HEAD)" = '${{ github.sha }}'
-            git push origin HEAD:work/browser-workspace-pages
-          fi
+          git commit -m 'fix: defer native workspace attachment and recover native semantic activation'
+          git fetch origin work/browser-workspace-pages
+          test "$(git rev-parse FETCH_HEAD)" = '${{ github.sha }}'
+          git push origin HEAD:work/browser-workspace-pages
       - name: Publish actual Uno WebAssembly and validate routes
         run: |
           dotnet workload install wasm-tools > /tmp/wasm-tools.log 2>&1
@@ -54,8 +53,10 @@ jobs:
         run: |
           npm ci --ignore-scripts --no-audit --no-fund
           npx playwright install --with-deps chromium > /tmp/browser-install.log 2>&1
-      - name: Run every original multi-window browser scenario
+      - name: Run every original browser scenario on a deterministic GPU backend
         working-directory: tests/browser
+        env:
+          UNODOCK_SOFTWARE_GPU: '1'
         run: |
           python3 -m http.server 8765 --directory ../../artifacts/serve > ../../artifacts/http.log 2>&1 &
           server=$!
@@ -78,6 +79,7 @@ jobs:
             artifacts/review/
             artifacts/browser-tests/
             artifacts/http.log
+          if-no-files-found: error
       - uses: actions/upload-artifact@v4
         if: always()
         with:
