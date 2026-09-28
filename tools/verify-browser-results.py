@@ -7,6 +7,7 @@ from pathlib import Path
 import xml.etree.ElementTree as ET
 
 REQUIRED = {
+    'acknowledged native typing preserves caret order without docking refreshes',
     'idle remote polling does not force repeated native layout projections',
     'real Uno runtime boots and renders the four model-backed editors',
     'native Uno text edits survive popup transfer and popup close',

@@ -1,4 +1,3 @@
-using System.ComponentModel;
 using System.Text.Json;
 using Microsoft.UI.Xaml;
 using UnoDock.Layout;
@@ -46,7 +45,8 @@ public sealed class BrowserDockingSession : IDisposable
         {
             Apply(Read("read"));
             LastError = null;
-            _manager.IsEnabled = true;
+            if (!_manager.IsEnabled)
+                _manager.IsEnabled = true;
         }
         catch (Exception error)
         {
@@ -98,14 +98,17 @@ public sealed class BrowserDockingSession : IDisposable
             throw new ObjectDisposedException(nameof(BrowserDockingSession));
         var json = JsonSerializer.Serialize(request, BrowserDockJsonContext.Default.BrowserDockRequest);
         var response = JsonDocument.Parse(_invoke("window.parent.UnoDockBrowser.call(" + json + ")"));
-        if (!response.RootElement.GetProperty("ok").GetBoolean())
+        try
         {
-            var error = response.RootElement.GetProperty("error").GetString();
-            response.Dispose();
-            throw new InvalidOperationException(error);
+            if (!response.RootElement.GetProperty("ok").GetBoolean())
+                throw new InvalidOperationException(response.RootElement.GetProperty("error").GetString());
+            return response;
         }
-
-        return response;
+        catch
+        {
+            response.Dispose();
+            throw;
+        }
     }
 
     private bool MatchesProjection(BrowserDockSnapshot snapshot)
@@ -125,9 +128,7 @@ public sealed class BrowserDockingSession : IDisposable
 
     private void Apply(BrowserDockSnapshot snapshot)
     {
-        // Polling discovers remote edits and revoked leases; it is not a render
-        // clock. Refreshing every retained control on an unchanged 150-ms read
-        // continually invalidates layout, resource states and accessibility.
+        // Polling discovers remote edits and revoked leases; it is not a render clock.
         if (MatchesProjection(snapshot))
         {
             Report();
@@ -135,6 +136,9 @@ public sealed class BrowserDockingSession : IDisposable
         }
 
         var incoming = snapshot.Items.ToDictionary(item => item.Id, StringComparer.Ordinal);
+        if (snapshot.Items.Any(item => item.Owner != snapshot.WindowId))
+            throw new InvalidOperationException("A foreign owner was present in the snapshot.");
+        var refresh = _projectionDirty || _theme != snapshot.Theme;
         _projectionDirty = true;
         _applying = true;
         try
@@ -143,14 +147,15 @@ public sealed class BrowserDockingSession : IDisposable
             {
                 foreach (var entry in _entries.Values.ToArray())
                 {
-                    if (!incoming.TryGetValue(entry.Item.Id, out var next) || next.Lease != entry.Item.Lease)
+                    if (!incoming.TryGetValue(entry.Item.Id, out var next) || next.Lease != entry.Item.Lease || next.Kind != entry.Item.Kind || next.Type != entry.Item.Type)
+                    {
                         Remove(entry);
+                        refresh = true;
+                    }
                 }
 
                 foreach (var item in snapshot.Items)
                 {
-                    if (item.Owner != snapshot.WindowId)
-                        throw new InvalidOperationException("A foreign owner was present in the snapshot.");
                     if (!_entries.TryGetValue(item.Id, out var entry))
                     {
                         var view = _factory.Create(item, (title, payload) => Publish(item.Id, item.Lease, title, payload));
@@ -162,17 +167,24 @@ public sealed class BrowserDockingSession : IDisposable
                         _entries.Add(item.Id, entry);
                         model.Closed += ContentClosed;
                         Insert(model, item.Zone);
+                        refresh = true;
                     }
                     else if (entry.Item != item)
                     {
-                        entry.Item = item;
-                        entry.Model.Title = item.Title;
+                        // Payload changes are not docking topology changes. Updating a
+                        // retained native editor must not tear down focus or selection.
+                        if (entry.Model.Title != item.Title)
+                            entry.Model.Title = item.Title;
                         entry.View.Update(item);
+                        entry.Item = item;
                     }
                 }
 
-                if (snapshot.Active.Length > 0 && _entries.TryGetValue(snapshot.Active, out var active))
+                if (snapshot.Active.Length > 0 && _entries.TryGetValue(snapshot.Active, out var active) && !active.Model.IsActive)
+                {
                     active.Model.IsActive = true;
+                    refresh = true;
+                }
             }
 
             if (_theme != snapshot.Theme)
@@ -181,8 +193,12 @@ public sealed class BrowserDockingSession : IDisposable
                 _manager.RequestedTheme = _theme == "dark" ? ElementTheme.Dark : ElementTheme.Light;
             }
 
-            _manager.Refresh();
-            _projectionCount++;
+            if (refresh)
+            {
+                _manager.Refresh();
+                _projectionCount++;
+            }
+
             _projectionDirty = false;
             Report();
         }
@@ -251,15 +267,26 @@ public sealed class BrowserDockingSession : IDisposable
             return;
         try
         {
+            var previous = entry.Item;
             using var response = Request(new()
             {
                 Op = "update",
                 Id = id,
-                Lease = entry.Item.Lease,
+                Lease = lease,
                 Title = title,
                 Payload = payload
             });
-            entry.Model.Title = title;
+            var accepted = response.RootElement.GetProperty("value").Deserialize(BrowserDockJsonContext.Default.BrowserDockItem) ?? throw new InvalidOperationException("Missing browser edit acknowledgement.");
+            var expected = previous with { Title = title, Payload = payload, Revision = accepted.Revision };
+            if (accepted != expected || accepted.Revision < previous.Revision || (accepted.Revision == previous.Revision && (title != previous.Title || payload != previous.Payload)))
+                throw new InvalidOperationException("The browser edit acknowledgement does not match the owned content.");
+            if (_disposed || !_entries.TryGetValue(id, out var current) || !ReferenceEquals(entry, current))
+                return;
+            // The caller already owns this exact native text. Record the committed
+            // revision before the next poll; do not echo the text into its editor.
+            entry.Item = accepted;
+            if (entry.Model.Title != title)
+                entry.Model.Title = title;
             LastError = null;
         }
         catch (Exception error)

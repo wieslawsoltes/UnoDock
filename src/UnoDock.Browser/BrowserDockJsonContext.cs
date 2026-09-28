@@ -6,6 +6,7 @@ namespace UnoDock.Browser;
 [JsonSerializable(typeof(BrowserDockSnapshot))]
 [JsonSerializable(typeof(BrowserDockRequest))]
 [JsonSerializable(typeof(BrowserDockReport))]
+[JsonSerializable(typeof(BrowserDockItem))]
 internal partial class BrowserDockJsonContext : JsonSerializerContext
 {
 }

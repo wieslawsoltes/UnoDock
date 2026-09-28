@@ -1,4 +1,5 @@
 import { activateNativeAccessibility } from './accessibility.mjs';
+import { acknowledgeEdit } from './edit-acknowledgement.mjs';
 import { WorkspaceState } from './session.mjs';
 const MIME = 'application/x-unodock-transfer';
 const JOURNAL = 'unodock.browser.workspace.v1';
@@ -73,7 +74,7 @@ class WindowHub {
                 }
                 return this.state.snapshot(id);
             }
-            case 'update': this.state.update(id, request.id, request.lease, request); break;
+            case 'update': return acknowledgeEdit(this.state, id, request);
             case 'close': this.state.close(id, request.id, request.lease); break;
             case 'reopen': this.state.reopen(id, request.id); break;
             case 'create': return this.state.create(id, { id: uid(), kind: request.kind, type: request.type || 'text', title: request.title, payload: request.payload || '', zone: request.zone });
