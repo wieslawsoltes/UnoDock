@@ -1,0 +1,61 @@
+name: Symbolicate browser AOT lifecycle fault
+on:
+  push:
+    branches: [work/browser-native-crash-diagnostic]
+    paths: [.github/workflows/browser-aot-symbol-map.yml]
+permissions:
+  contents: read
+jobs:
+  symbols:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 61f913734906e8c07f983e5fbb7737f21c51794a
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Rebuild identical AOT input with a native symbol map
+        run: |
+          dotnet workload install wasm-tools > /tmp/workloads.log 2>&1
+          dotnet publish samples/UnoDock.Gallery -c Release -f net10.0-browserwasm -p:UnoDockTargetFrameworks=net10.0-browserwasm -p:UnoDockLibraryFrameworks=net10.0 -p:WasmShellWebAppBasePath=/UnoDock/gallery/ -p:WasmShellMonoRuntimeExecutionMode=InterpreterAndAOT -p:WasmEmitSymbolMap=true -o artifacts/publish > /tmp/symbol-build.log 2>&1 || { tail -120 /tmp/symbol-build.log; exit 1; }
+          git diff --exit-code
+      - name: Retain symbols and map the original fault indices
+        if: always()
+        run: |
+          mkdir -p artifacts/symbols
+          cp /tmp/symbol-build.log artifacts/symbols/ 2>/dev/null || true
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib, shutil, json
+          root=Path('.')
+          out=Path('artifacts/symbols')
+          targets={189966,189965,166020,166018,166015,165776,165734,165732,165731,165698}
+          manifest=[]
+          for base in ('samples/UnoDock.Gallery/obj','samples/UnoDock.Gallery/bin','artifacts/publish'):
+              for p in Path(base).rglob('*'):
+                  if not p.is_file():continue
+                  if 'symbol' in p.name.lower() or p.name.endswith('.wasm.map'):
+                      print('SYMBOL FILE',p,p.stat().st_size)
+                      content=p.read_bytes()
+                      digest=hashlib.sha256(content).hexdigest()
+                      destination=out/(digest[:12]+'-'+p.name)
+                      destination.write_bytes(content)
+                      manifest.append({'path':str(p),'sha256':digest,'size':len(content)})
+                      if p.stat().st_size<100*1024*1024:
+                          for line in content.decode(errors='replace').splitlines():
+                              if any(line.startswith(str(n)+':') for n in targets):print('ORIGINAL FAULT',line)
+          for p in Path('artifacts/publish').rglob('dotnet.native*.wasm'):
+              digest=hashlib.sha256(p.read_bytes()).hexdigest()
+              print('NATIVE MODULE',p,p.stat().st_size,digest)
+              manifest.append({'path':str(p),'size':p.stat().st_size,'sha256':digest})
+          (out/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
+          assert any('symbol' in entry['path'].lower() for entry in manifest), 'No symbol map was emitted.'
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-aot-native-symbols
+          path: artifacts/symbols/
+          if-no-files-found: error
