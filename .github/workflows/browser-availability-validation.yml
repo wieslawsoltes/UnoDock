@@ -1,0 +1,111 @@
+name: Validate browser destination availability
+on:
+  push:
+    branches: [work/browser-availability-validation]
+    paths: [.github/workflows/browser-availability-validation.yml]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 9d69c7738983a246af9e09d696226fd6676dc0cc
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify the unchanged compiled application input
+        run: |
+          python3 - <<'PY'
+          import subprocess
+          base='b893d5774ebc1389589960acfc3a955e905bd288'
+          expected={
+            'src/UnoDock.Browser/Assets/session.mjs',
+            'src/UnoDock.Browser/Assets/host.mjs',
+            'tests/browser/destination-availability.test.mjs',
+            'tests/browser/destination-availability.spec.mjs',
+            'tools/verify-browser-results.py',
+            'docs/browser-destination-availability.md',
+          }
+          changed=set(subprocess.check_output(['git','diff','--name-only',base,'HEAD'],text=True).splitlines())
+          assert changed==expected,changed
+          print('All native C#/XAML, project, renderer, runtime and original scenario inputs match the published artifact.')
+          PY
+          node --test tests/browser/*.test.mjs
+          python3 tests/metadata/test_browser_results.py
+      - uses: actions/download-artifact@v4
+        with:
+          name: browser-documentation-site
+          run-id: 36461794092
+          github-token: ${{ github.token }}
+          path: artifacts/serve/UnoDock
+      - name: Verify the published baseline identity
+        run: test "$(cat artifacts/serve/UnoDock/revision.txt)" = b893d5774ebc1389589960acfc3a955e905bd288
+      - name: Install the repository-locked real browser
+        working-directory: tests/browser
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npx playwright install --with-deps chromium > /tmp/chromium-install.log 2>&1
+      - name: Require all three new scenarios to fail on the original host
+        working-directory: tests/browser
+        run: |
+          python3 -m http.server 8765 --directory ../../artifacts/serve > ../../artifacts/baseline-http.log 2>&1 &
+          server=$!
+          trap 'kill "$server" || true' EXIT
+          set +e
+          timeout --kill-after=10s 360s npx playwright test destination-availability.spec.mjs
+          result=$?
+          set -e
+          mkdir -p ../../artifacts/availability
+          cp -R ../../artifacts/browser-tests ../../artifacts/availability/before
+          test "$result" -ne 0
+          python3 - <<'PY'
+          import json,xml.etree.ElementTree as ET
+          from pathlib import Path
+          p=Path('../../artifacts/availability/before')
+          report=json.loads((p/'results.json').read_text())
+          cases=list(ET.parse(p/'results.xml').getroot().iter('testcase'))
+          assert len(cases)==3 and report['stats']['unexpected']==3
+          assert report['stats']['expected']==report['stats']['skipped']==report['stats']['flaky']==0
+          assert all(c.find('failure') is not None for c in cases)
+          print('Reproduced all three original destination-availability failures with the new unchanged assertions.')
+          PY
+      - name: Apply only reviewed JavaScript to the identical native application
+        run: |
+          cp src/UnoDock.Browser/Assets/*.mjs artifacts/serve/UnoDock/playground/
+          git rev-parse HEAD > artifacts/availability/source-revision.txt
+          git diff b893d5774ebc1389589960acfc3a955e905bd288 HEAD > artifacts/availability/implementation.patch
+      - name: Execute the complete native browser suite without retries
+        working-directory: tests/browser
+        run: |
+          python3 -m http.server 8765 --directory ../../artifacts/serve > ../../artifacts/fixed-http.log 2>&1 &
+          server=$!
+          trap 'kill "$server" || true' EXIT
+          timeout --kill-after=15s 600s npx playwright test
+      - name: Require complete corrected native browser evidence
+        run: |
+          python3 tools/verify-browser-results.py artifacts/browser-tests
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path('artifacts/browser-tests/results.json').read_text())
+          assert r['stats']['expected']==16
+          print('All 16 real Chromium scenarios passed, including the three reproduced cases.')
+          PY
+      - name: Preserve both original and corrected first-attempt evidence
+        if: always()
+        run: |
+          mkdir -p artifacts/availability
+          if [ -d artifacts/browser-tests ]; then cp -R artifacts/browser-tests artifacts/availability/latest; fi
+          cp artifacts/*http.log artifacts/availability/ 2>/dev/null || true
+          find artifacts/availability -name error-context.md -exec cat {} \; 2>/dev/null || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-availability-before-after
+          path: artifacts/availability/
+          if-no-files-found: error
