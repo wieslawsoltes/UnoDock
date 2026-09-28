@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 9d69c7738983a246af9e09d696226fd6676dc0cc
+          ref: e669d552a035d4bc18be7c0357dbd7998ca27f07
           fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
@@ -28,6 +28,7 @@ jobs:
             'src/UnoDock.Browser/Assets/host.mjs',
             'tests/browser/destination-availability.test.mjs',
             'tests/browser/destination-availability.spec.mjs',
+            'tests/browser/destination-reload.spec.mjs',
             'tools/verify-browser-results.py',
             'docs/browser-destination-availability.md',
           }
@@ -57,7 +58,7 @@ jobs:
           server=$!
           trap 'kill "$server" || true' EXIT
           set +e
-          timeout --kill-after=10s 360s npx playwright test destination-availability.spec.mjs
+          timeout --kill-after=10s 360s npx playwright test destination-availability.spec.mjs destination-reload.spec.mjs
           result=$?
           set -e
           mkdir -p ../../artifacts/availability
@@ -72,13 +73,18 @@ jobs:
           assert len(cases)==3 and report['stats']['unexpected']==3
           assert report['stats']['expected']==report['stats']['skipped']==report['stats']['flaky']==0
           assert all(c.find('failure') is not None for c in cases)
-          print('Reproduced all three original destination-availability failures with the new unchanged assertions.')
+          assert not report.get('errors'),report.get('errors')
+          for case in cases:
+              failure=case.find('failure')
+              assert 'Test timeout' not in ''.join(failure.itertext()),case.get('name')
+          print('Reproduced all three original destination-availability assertions, not setup/process timeouts.')
           PY
       - name: Apply only reviewed JavaScript to the identical native application
         run: |
           cp src/UnoDock.Browser/Assets/*.mjs artifacts/serve/UnoDock/playground/
           git rev-parse HEAD > artifacts/availability/source-revision.txt
           git diff b893d5774ebc1389589960acfc3a955e905bd288 HEAD > artifacts/availability/implementation.patch
+          rm -rf artifacts/browser-tests
       - name: Execute the complete native browser suite without retries
         working-directory: tests/browser
         run: |
