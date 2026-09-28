@@ -1,0 +1,112 @@
+name: Capture browser GC fault locals
+on:
+  push:
+    branches: [work/browser-native-crash-diagnostic]
+    paths: [.github/workflows/browser-gc-locals.yml]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 61f913734906e8c07f983e5fbb7737f21c51794a
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@v4
+        with:
+          name: browser-aot-site
+          run-id: 36422498961
+          github-token: ${{ github.token }}
+          path: artifacts/serve/UnoDock
+      - name: Install unchanged browser dependencies
+        working-directory: tests/browser
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npx playwright install --with-deps chromium > /tmp/chromium.log 2>&1
+      - name: Pause at the actual bounds fault and retain native locals
+        working-directory: tests/browser
+        run: |
+          mkdir -p ../../artifacts/gc-locals
+          cat > gc-locals.mjs <<'JS'
+          import { chromium } from '@playwright/test';
+          import fs from 'node:fs/promises';
+          const browser=await chromium.launch(),context=await browser.newContext(),page=await context.newPage();
+          await context.addInitScript(()=>{Error.stackTraceLimit=100;});
+          const cdp=await context.newCDPSession(page);
+          await cdp.send('Debugger.enable');await cdp.send('Debugger.setPauseOnExceptions',{state:'all'});
+          let captured=false,resolveFault;const fault=new Promise(resolve=>resolveFault=resolve);
+          cdp.on('Debugger.paused',async event=>{
+              const reason=JSON.stringify(event.data??{});
+              if(captured||!reason.includes('memory access out of bounds')){await cdp.send('Debugger.resume');return;}
+              captured=true;console.log('BOUNDS EXCEPTION',reason);
+              try{
+                  const result={event,locals:[]};
+                  for(const frame of event.callFrames.slice(0,20)){
+                      const scopes=[];
+                      for(const scope of frame.scopeChain){
+                          if(!['local','wasm-expression-stack'].includes(scope.type))continue;
+                          const properties=await cdp.send('Runtime.getProperties',{objectId:scope.object.objectId,ownProperties:true});
+                          const values=[];
+                          for(const p of properties.result??[]){
+                              let details=null;
+                              if(p.value?.objectId){
+                                  try{details=await cdp.send('Runtime.getProperties',{objectId:p.value.objectId,ownProperties:true});}catch{}
+                              }
+                              values.push({name:p.name,value:p.value,details});
+                          }
+                          scopes.push({type:scope.type,values});
+                      }
+                      result.locals.push({function:frame.functionName,location:frame.location,scopes});
+                  }
+                  for(const frame of event.callFrames.slice(-4)){
+                      const memory=await cdp.send('Debugger.evaluateOnCallFrame',{callFrameId:frame.callFrameId,expression:"JSON.stringify({keys:Object.keys(globalThis.Module??{}).filter(k=>k.includes('HEAP')),length:globalThis.Module?.HEAPU8?.length})",returnByValue:true,silent:true});
+                      console.log('MEMORY EXPORTS',JSON.stringify(memory));
+                  }
+                  await fs.writeFile('../../artifacts/gc-locals/fault.json',JSON.stringify(result,null,2));
+                  console.log('NATIVE LOCALS',JSON.stringify(result.locals));
+                  resolveFault(true);
+              }catch(error){console.log('CAPTURE ERROR',error.stack);resolveFault(false);}
+              finally{await cdp.send('Debugger.resume');}
+          });
+          context.on('page',p=>p.on('pageerror',e=>console.log('PAGE ERROR',e.message)));
+          const ready=p=>p.waitForFunction(()=>window.UnoDockBrowser?.applied?.items,null,{timeout:45000});
+          async function float(id){
+              await page.locator(`[data-content="${id}"]`).click();
+              const opening=context.waitForEvent('page');
+              await page.getByRole('button',{name:'Float in browser window',exact:true}).click();
+              const child=await opening;await ready(child);
+              await child.waitForFunction(id=>window.UnoDockBrowser.applied.items.some(x=>x.id===id),id);
+              return child;
+          }
+          try{
+              await page.goto('http://127.0.0.1:8765/UnoDock/playground/');await ready(page);
+              const one=await float('architecture'),two=await float('notes');
+              await one.locator('#destination').selectOption(await two.evaluate(()=>window.UnoDockBrowser.windowId));
+              await one.locator('#placement').selectOption('left');await one.getByRole('button',{name:'Move',exact:true}).click();
+              await two.waitForFunction(()=>window.UnoDockBrowser.applied.items.length===2);
+              await two.getByRole('button',{name:'Dock all & close window',exact:true}).click();
+              const recorded=await Promise.race([fault,new Promise(resolve=>setTimeout(()=>resolve(false),15000))]);
+              if(!recorded)throw Error('The expected original fault was not captured.');
+          }finally{await browser.close();}
+          JS
+          python3 -m http.server 8765 --directory ../../artifacts/serve > ../../artifacts/gc-locals/http.log 2>&1 &
+          server=$!
+          trap 'kill "$server" || true' EXIT
+          set +e
+          timeout --kill-after=10s 180s node gc-locals.mjs > ../../artifacts/gc-locals/console.log 2>&1
+          result=$?
+          set -e
+          cat ../../artifacts/gc-locals/console.log
+          echo "$result" > ../../artifacts/gc-locals/process-exit.txt
+          test "$result" -eq 0
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-gc-fault-locals
+          path: artifacts/gc-locals/
+          if-no-files-found: error
