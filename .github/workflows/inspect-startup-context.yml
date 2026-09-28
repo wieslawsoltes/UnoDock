@@ -10,6 +10,10 @@ jobs:
   inspect:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        software: ['0', '1']
     steps:
       - uses: actions/checkout@v4
         with:
@@ -32,13 +36,17 @@ jobs:
           npm ci --ignore-scripts --no-audit --no-fund
           npx playwright --version
           npx playwright install --with-deps chromium > /tmp/browser-install.log 2>&1 || { tail -30 /tmp/browser-install.log; exit 1; }
-      - name: Execute all native scenarios without application instrumentation
+      - name: Execute all native scenarios and retain browser process diagnostics
         working-directory: tests/browser
+        env:
+          UNODOCK_SOFTWARE_GPU: ${{ matrix.software }}
+          DEBUG: pw:browser
+        shell: bash
         run: |
           python3 -m http.server 8765 --directory ../../artifacts/serve > ../../artifacts/http.log 2>&1 &
           server=$!
           trap 'kill "$server" || true' EXIT
-          timeout --signal=TERM --kill-after=15s 900s npx playwright test
+          timeout --signal=TERM --kill-after=15s 900s npx playwright test --max-failures=0 2>&1 | tee ../../artifacts/chromium.log
       - name: Validate complete named evidence
         if: always()
         run: python3 tools/verify-browser-results.py artifacts/browser-tests
@@ -48,10 +56,9 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: keyboard-browser-acceptance
+          name: keyboard-browser-${{ matrix.software }}
           path: |
             artifacts/browser-tests/
             artifacts/http.log
-            tests/browser/package.json
-            tests/browser/package-lock.json
+            artifacts/chromium.log
           if-no-files-found: error
