@@ -12,7 +12,6 @@ internal sealed record BrowserDockReport
         get;
         init;
     }
-
     public string Active
     {
         get;

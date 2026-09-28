@@ -1,8 +1,7 @@
 name: Browser workspace and GitHub Pages
 on:
   push:
-    branches: [main, work/browser-workspace-pages]
-    paths-ignore: ['.github/workflows/diagnose-*.yml', '.github/workflows/prepare-*.yml', '.github/workflows/validate-browser-workspace.yml']
+    branches: [main]
   pull_request:
   workflow_dispatch:
 permissions:
@@ -24,10 +23,11 @@ jobs:
           node-version: '22'
           cache: npm
           cache-dependency-path: tests/browser/package-lock.json
-      - name: Check browser ownership and site-validation contracts
+      - name: Check browser ownership, source and evidence contracts
         run: |
           node --test tests/browser/*.test.mjs
           python3 tests/metadata/test_browser_site.py
+          python3 tests/metadata/test_browser_results.py
       - name: Install WebAssembly build tools
         run: dotnet workload install wasm-tools
       - name: Publish the actual Uno application without source instrumentation
@@ -53,24 +53,12 @@ jobs:
           server=$!
           trap 'kill "$server" || true' EXIT
           timeout --signal=TERM --kill-after=15s 900s npx playwright test
-      - name: Require complete browser execution evidence
+      - name: Require complete first-attempt browser evidence
         if: always()
-        shell: bash
         run: |
           mkdir -p artifacts/browser-tests
           git rev-parse HEAD > artifacts/browser-tests/source-revision.txt
-          python3 - <<'PY'
-          import json, xml.etree.ElementTree as ET
-          from pathlib import Path
-          p=Path('artifacts/browser-tests')
-          report=json.loads((p/'results.json').read_text())
-          stats=report['stats']
-          cases=list(ET.parse(p/'results.xml').getroot().iter('testcase'))
-          assert stats['expected'] == len(cases) >= 8 and stats['unexpected'] == stats['skipped'] == stats['flaky'] == 0, stats
-          assert not report.get('errors'), report.get('errors')
-          assert not any(c.find(t) is not None for c in cases for t in ('failure','error','skipped'))
-          print('Complete first-attempt browser evidence:',stats)
-          PY
+          python3 tools/verify-browser-results.py artifacts/browser-tests
       - name: Preserve failure context without a second browser attempt
         if: always()
         run: find artifacts/browser-tests -name error-context.md -exec cat {} \; 2>/dev/null || true
@@ -151,6 +139,9 @@ jobs:
         env:
           UNODOCK_BASE_URL: ${{ needs.deploy.outputs.page_url }}playground/
         run: timeout --signal=TERM --kill-after=15s 900s npx playwright test
+      - name: Require complete public native browser results
+        if: always()
+        run: python3 tools/verify-browser-results.py artifacts/browser-tests
       - uses: actions/upload-artifact@v4
         if: always()
         with:
