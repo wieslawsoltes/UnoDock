@@ -1,0 +1,100 @@
+name: Review documentation and standalone gallery
+on:
+  push:
+    branches: [work/browser-site-final-review]
+    paths: [.github/workflows/browser-site-final-review.yml]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 66ab58fc82775e95dc8e661e4ffbe3ce695d13af
+          fetch-depth: 2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Require identical executable native source before reusing the passing artifact
+        run: git diff -w --exit-code befa57ff1cba800770fd53ac080c3a69acf3cf48 HEAD -- src/ samples/ global.json Directory.Build.props
+      - uses: actions/download-artifact@v4
+        with:
+          name: browser-documentation-site
+          run-id: 36454508615
+          github-token: ${{ github.token }}
+          path: artifacts/native-input
+      - name: Assemble current documentation around the verified native application
+        run: |
+          python3 -m pip install Markdown==3.8.2
+          python3 tools/build-browser-site.py --publish artifacts/native-input/gallery --output artifacts/serve/UnoDock
+          python3 tools/check-browser-site.py artifacts/serve/UnoDock
+      - name: Install the locked browser dependencies
+        working-directory: tests/browser
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npx playwright install --with-deps chromium > /tmp/browser-install.log 2>&1
+      - name: Inspect actual landing pages and standalone Uno controls
+        working-directory: tests/browser
+        run: |
+          mkdir -p ../../artifacts/review
+          cat > site-review.mjs <<'JS'
+          import { chromium, expect } from '@playwright/test';
+          import fs from 'node:fs/promises';
+          const browser = await chromium.launch();
+          const page = await browser.newPage({ viewport: { width: 1440, height: 960 } });
+          const errors = [];
+          page.on('pageerror', error => errors.push(error.message));
+          page.on('crash', () => errors.push('The native browser renderer crashed.'));
+          const base = 'http://127.0.0.1:8765/UnoDock/';
+          try {
+              for (const route of ['', 'docs/index.html', 'docs/getting-started.html', 'docs/browser-workspaces.html', 'docs/browser-palette-lifetime.html']) {
+                  const response = await page.goto(base + route);
+                  expect(response.ok()).toBe(true);
+                  await expect(page.locator('h1').first()).toBeVisible();
+                  console.log('DOCUMENT', route || 'landing', await page.title());
+              }
+              await page.goto(base);
+              await page.screenshot({ path: '../../artifacts/review/landing-desktop.png', fullPage: true });
+              await page.setViewportSize({ width: 390, height: 844 });
+              await page.screenshot({ path: '../../artifacts/review/landing-mobile.png', fullPage: true });
+              expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
+              await page.setViewportSize({ width: 1440, height: 960 });
+              await page.goto(base + 'gallery/', { waitUntil: 'domcontentloaded' });
+              await page.waitForFunction(() => typeof window.Uno?.UI?.Runtime?.Skia?.Accessibility?.managedEnableAccessibility === 'function', null, { timeout: 90000 });
+              await page.evaluate(() => window.Uno.UI.Runtime.Skia.Accessibility.managedEnableAccessibility());
+              const action = page.getByRole('button', { name: 'New document', exact: true }).first();
+              await expect(action).toBeVisible({ timeout: 30000 });
+              await action.click();
+              await expect(action).toBeVisible();
+              await page.screenshot({ path: '../../artifacts/review/standalone-gallery.png' });
+              console.log('STANDALONE GALLERY', JSON.stringify(await page.locator('[role=button]').allTextContents()));
+              expect(errors).toEqual([]);
+              await fs.writeFile('../../artifacts/review/result.json', JSON.stringify({ documents: 5, mobileOverflow: false, nativeGallery: 'loaded and new-document invoked', errors }, null, 2));
+          } finally { await browser.close(); }
+          JS
+          node --check site-review.mjs
+          python3 -m http.server 8765 --directory ../../artifacts/serve > ../../artifacts/review/http.log 2>&1 &
+          server=$!
+          trap 'kill "$server" || true' EXIT
+          set +e
+          timeout --signal=TERM --kill-after=10s 180s node site-review.mjs > ../../artifacts/review/browser.log 2>&1
+          result=$?
+          set -e
+          cat ../../artifacts/review/browser.log
+          echo "$result" > ../../artifacts/review/process-exit.txt
+          test "$result" -eq 0
+      - name: Record native artifact and current documentation revisions separately
+        if: always()
+        run: |
+          mkdir -p artifacts/review
+          git rev-parse HEAD > artifacts/review/documentation-source-revision.txt
+          cp artifacts/native-input/revision.txt artifacts/review/native-artifact-revision.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-site-final-review
+          path: artifacts/review/
+          if-no-files-found: error
