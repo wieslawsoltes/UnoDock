@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        tracing: [plain, snapshots]
+        waiting: [function, assertion]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -32,28 +32,41 @@ jobs:
         run: |
           npm ci --ignore-scripts --no-audit --no-fund
           npx playwright install --with-deps chromium > /tmp/browser-install.log 2>&1
-      - name: Observe actual native startup and paused stack
+      - name: Observe native startup, visibility and editing
         working-directory: tests/browser
         env:
-          TRACING: ${{ matrix.tracing }}
+          WAITING: ${{ matrix.waiting }}
         run: |
           mkdir -p ../../artifacts/inspection
           cat > startup-context.mjs <<'JS'
-          import { chromium } from '@playwright/test';
-          import fs from 'node:fs/promises';
+          import { chromium, expect } from '@playwright/test';
           const browser = await chromium.launch();
           const context = await browser.newContext({ viewport: { width: 1360, height: 900 } });
-          if (process.env.TRACING === 'snapshots') await context.tracing.start({ screenshots: true, snapshots: true, sources: true });
+          await context.tracing.start({ screenshots: true, snapshots: true, sources: true });
           const page = await context.newPage();
-          page.on('console', m => { if (m.type() === 'error') console.log('CONSOLE', m.text()); });
           page.on('pageerror', e => console.log('PAGEERROR', e.stack));
           const cdp = await context.newCDPSession(page);
-          await page.goto('http://127.0.0.1:8765/UnoDock/playground/', { waitUntil: 'commit' });
-          await new Promise(r => setTimeout(r, 12000));
-          const expression = `(() => { const p = window.parent, f=p.document.querySelector('#app'), d=f.contentDocument; return JSON.stringify({ready:p.document.readyState,status:p.document.querySelector('#status')?.textContent,applied:p.UnoDockBrowser?.applied,nativeReady:d.readyState,nodes:[...d.querySelectorAll('[role],button,input,textarea')].slice(0,60).map(e=>({tag:e.tagName,role:e.getAttribute('role'),name:e.getAttribute('aria-label'),text:e.textContent?.slice(0,80),style:e.getAttribute('style')}))}); })()`;
-          console.log('LIVE PROBE');
-          const live = await Promise.race([cdp.send('Runtime.evaluate', { expression, returnByValue:true, timeout:3000 }),new Promise(r=>setTimeout(()=>r({timeout:true}),4000))]);
+          await page.goto('http://127.0.0.1:8765/UnoDock/playground/', { waitUntil: 'domcontentloaded' });
+          console.log('START WAIT',process.env.WAITING);
+          const wait = process.env.WAITING === 'function'
+              ? page.waitForFunction(() => window.UnoDockBrowser?.applied?.items?.length === 4,null,{timeout:18000,polling:100})
+              : expect.poll(()=>page.evaluate(()=>window.UnoDockBrowser?.applied?.items?.length),{timeout:18000,intervals:[200]}).toBe(4);
+          wait.catch(e=>console.log('WAIT ERROR',e.message));
+          await Promise.race([wait.catch(()=>{}),new Promise(r=>setTimeout(r,20000))]);
+          console.log('READ STATE');
+          const expression = `JSON.stringify({url:location.href,ready:document.readyState,applied:window.UnoDockBrowser?.applied,status:document.querySelector('#status')?.textContent})`;
+          const live = await Promise.race([cdp.send('Runtime.evaluate', { expression,returnByValue:true,timeout:2000 }).catch(e=>({error:e.message})),new Promise(r=>setTimeout(()=>r({timeout:true}),3000))]);
           console.log('LIVE',JSON.stringify(live));
+          if (!live.timeout && live.result?.value && JSON.parse(live.result.value).applied?.items?.length===4) {
+              try {
+                  await expect(page.frameLocator('#app').getByRole('button',{name:'Float selected',exact:true})).toBeVisible({timeout:5000});
+                  console.log('NATIVE BUTTON VISIBLE');
+                  await page.locator('[data-content="welcome"]').click({timeout:5000});
+                  await page.frameLocator('#app').getByRole('textbox',{name:'Editor welcome',exact:true}).fill('Native editing diagnostic',{timeout:5000});
+                  await expect.poll(()=>page.evaluate(()=>window.UnoDockBrowser.snapshot().items.find(x=>x.id==='welcome')?.payload),{timeout:5000}).toBe('Native editing diagnostic');
+                  console.log('NATIVE EDIT VERIFIED');
+              } catch (e) { console.log('NATIVE OPERATION ERROR',e.message); }
+          }
           await cdp.send('Debugger.enable');
           let resolve;
           const paused = new Promise(r=>resolve=r);
@@ -61,13 +74,12 @@ jobs:
           await cdp.send('Debugger.pause');
           const event = await paused;
           console.log('STACK',JSON.stringify(event.callFrames.map(f=>({name:f.functionName,location:f.location}))));
-          for (const frame of event.callFrames.slice(-4)) {
-              const state = await cdp.send('Debugger.evaluateOnCallFrame',{callFrameId:frame.callFrameId,expression,returnByValue:true,silent:true});
-              console.log('PAUSED STATE',JSON.stringify(state));
-              if (state.result?.value) {await fs.writeFile('../../artifacts/inspection/state.json',state.result.value); break;}
+          for(const f of event.callFrames.slice(-3)) {
+              const state=await cdp.send('Debugger.evaluateOnCallFrame',{callFrameId:f.callFrameId,expression:'JSON.stringify({applied:window.parent.UnoDockBrowser?.applied,status:window.parent.document.querySelector("#status")?.textContent})',returnByValue:true,silent:true});
+              console.log('PAUSED',JSON.stringify(state)); if(state.result?.value) break;
           }
           await cdp.send('Debugger.resume');
-          if (process.env.TRACING === 'snapshots') await Promise.race([context.tracing.stop({path:'../../artifacts/inspection/trace.zip'}),new Promise(r=>setTimeout(r,5000))]);
+          await Promise.race([context.tracing.stop({path:'../../artifacts/inspection/trace.zip'}),new Promise(r=>setTimeout(r,3000))]);
           await browser.close();
           JS
           node --check startup-context.mjs
@@ -78,5 +90,5 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: startup-${{ matrix.tracing }}
+          name: startup-${{ matrix.waiting }}
           path: artifacts/inspection/
