@@ -1,29 +1,30 @@
-// The pinned Uno Skia WASM host can exhaust its early accessibility retries
-// before Window.RootElement is registered. Resume its own exported activation
-// after the application reports readiness; never synthesize semantic nodes.
-export function activateNativeAccessibility(frame, onFailure = () => {}) {
-    const owner = frame.contentDocument;
-    let attempts = 0;
-    const activate = () => {
-        if (!owner || frame.contentDocument !== owner || !frame.isConnected) return;
-        const root = owner.getElementById('uno-semantics-root');
-        if (root?.childElementCount) {
-            owner.documentElement.dataset.unoAccessibility = 'ready';
-            return;
-        }
-        const accessibility = frame.contentWindow?.Uno?.UI?.Runtime?.Skia?.Accessibility;
-        try {
-            // Respect the application's explicit native opt-in. This adapter is
-            // version-scoped, and absence of native support is not a false pass.
-            if (accessibility?.managedIsAutoEnableAccessibility?.() === true) {
-                accessibility.managedEnableAccessibility();
+// Activate Uno's native semantic tree; never synthesize a substitute DOM editor.
+// The initial asynchronous boundary lets the managed report call unwind before
+// entering managed accessibility. Background popups need not receive animation frames.
+export async function activateNativeAccessibility(frame, failed = () => {}, options = {}) {
+    const delay = options.delay ?? (milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds)));
+    const attempts = options.attempts ?? 40;
+    try {
+        const scope = frame.contentWindow;
+        const document = frame.contentDocument;
+        if (!scope || !document) return false;
+        await delay(0);
+        for (let attempt = 0; attempt < attempts; attempt++) {
+            if (frame.contentWindow !== scope || frame.contentDocument !== document) return false;
+            const host = scope.Uno?.UI?.Runtime?.Skia?.Accessibility;
+            // This is the export name in the pinned, published Uno runtime.
+            // Unknown host shapes fail visibly instead of silently faking readiness.
+            if (typeof host?.managedEnableAccessibility === 'function' &&
+                typeof host?.managedIsAutoEnableAccessibility === 'function' &&
+                host.managedIsAutoEnableAccessibility()) {
+                host.managedEnableAccessibility();
+                return true;
             }
-        } catch (error) {
-            onFailure(`Native accessibility activation failed: ${error.message}`);
-            return;
+            await delay(100);
         }
-        if (++attempts < 40) frame.contentWindow.setTimeout(activate, 100);
-        else onFailure('Native browser accessibility did not become ready. Reload the workspace to retry.');
-    };
-    frame.contentWindow?.requestAnimationFrame(activate);
+        failed('Native Uno accessibility initialization did not complete.');
+    } catch (error) {
+        failed('Native Uno accessibility failed: ' + error.message);
+    }
+    return false;
 }
