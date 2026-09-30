@@ -22,7 +22,7 @@ public partial class LayoutCachePaneControl
         _lastHeaderSelection = selected;
         _lastHeaderIndex = index;
         var generation = ++_headerGeneration;
-        if (selected == null || Pane is not LayoutDocumentPane)
+        if (selected == null || Pane is not LayoutDocumentPane || UsesTabView)
             return;
         DispatcherQueue.TryEnqueue(() =>
         {

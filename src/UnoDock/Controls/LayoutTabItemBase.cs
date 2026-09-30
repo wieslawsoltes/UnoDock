@@ -245,6 +245,8 @@ public abstract partial class LayoutTabItemBase : DockInputControl
         ToolTipService.SetToolTip(_label, Model.ToolTip ?? Model.Title);
         MenuContext.SetTarget(this, Model);
         ContextFlyout = DockVisuals.Menu(manager, Model);
+        if (_embedded)
+            ApplyEmbedded();
     }
 
     /// <summary>Theme-defined tab outline. The slanted outline is drawn behind
@@ -310,6 +312,37 @@ public abstract partial class LayoutTabItemBase : DockInputControl
         var geometry = new PathGeometry();
         geometry.Figures.Add(figure);
         _shape.Data = geometry;
+    }
+
+    private bool _embedded;
+    /// <summary>True while a platform TabViewItem hosts this tab; the TabViewItem
+        /// then supplies the background, selection, hover and close button.</summary>
+        internal bool IsEmbeddedInTabView
+    {
+        get => _embedded;
+        set
+        {
+            if (_embedded == value)
+                return;
+            _embedded = value;
+            if (_manager != null)
+                Update(_manager);
+        }
+    }
+
+    private void ApplyEmbedded()
+    {
+        _chrome.Background = DockChrome.Transparent;
+        _chrome.BorderThickness = new(0);
+        _chrome.Padding = new(0);
+        _close.Visibility = Visibility.Collapsed;
+        _selectionIndicator.Visibility = Visibility.Collapsed;
+        _shapeHost?.SetValue(VisibilityProperty, Visibility.Collapsed);
+        _label.BackgroundOverride = null;
+        _label.HoverOverride = DockChrome.Transparent;
+        Margin = new(0);
+        Height = double.NaN;
+        MinHeight = 0;
     }
 
     internal void FocusLabel() => _label.Focus(FocusState.Keyboard);

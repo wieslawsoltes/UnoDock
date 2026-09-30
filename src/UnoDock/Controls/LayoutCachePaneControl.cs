@@ -112,9 +112,25 @@ public partial class LayoutCachePaneControl : DockSelectionControl
             }
         }
 
-        VisualParenting.ReconcilePanel(_headers, tabViews);
+        if (WantsTabView(pane, surface.Manager))
+        {
+            VisualParenting.ReconcilePanel(_headers, []);
+            ReconcileTabView(tabViews.Cast<LayoutTabItemBase>().ToArray(), selected, surface.Manager);
+        }
+        else
+        {
+            ReleaseTabView();
+            VisualParenting.ReconcilePanel(_headers, tabViews);
+        }
+
         VisualParenting.ReconcilePanel(_content, contentViews);
         UpdatePaneChrome(pane, models, surface.Manager);
+        if (UsesTabView)
+        {
+            _scroll.Visibility = Visibility.Collapsed;
+            _layout.RowDefinitions[0].Height = GridLength.Auto;
+        }
+
         UpdateTitle(pane is LayoutAnchorablePane && !IsCaptionOwned(pane), selected as LayoutAnchorable, surface.Manager);
         DockVisuals.SetName(this, pane is LayoutDocumentPane ? "Document tab group" : "Tool tab group");
         MenuContext.SetTarget(this, selected);
@@ -166,7 +182,7 @@ public partial class LayoutCachePaneControl : DockSelectionControl
         }
     }
 
-    internal bool IsOverHeader(Point point, DockSurface surface) => IsOverHeaderElement(_scroll, point, surface) || IsOverHeaderElement(_titlePresenter, point, surface) || IsOverWindowCaption(point, surface);
+    internal bool IsOverHeader(Point point, DockSurface surface) => IsOverHeaderElement(_scroll, point, surface) || _tabView is { } tabView && IsOverHeaderElement(tabView, point, surface) || IsOverHeaderElement(_titlePresenter, point, surface) || IsOverWindowCaption(point, surface);
     private bool IsOverWindowCaption(Point point, DockSurface surface) => Pane is { } pane && IsCaptionOwned(pane) && this.FindVisualAncestor<LayoutFloatingWindowControl>() is { } window && IsOverHeaderElement(window.CaptionElement, point, surface);
     private static bool IsOverHeaderElement(FrameworkElement header, Point point, DockSurface surface)
     {
@@ -188,11 +204,12 @@ public partial class LayoutCachePaneControl : DockSelectionControl
 
     internal bool ScrollHeaderAt(Point point, DockSurface surface, double seconds)
     {
-        if (!IsOverHeaderElement(_scroll, point, surface) || _scroll.ScrollableWidth <= 0)
+        var scroll = HeaderScroll;
+        if (!IsOverHeaderElement(scroll, point, surface) || scroll.ScrollableWidth <= 0)
             return false;
-        var local = DockCoordinates.Translate(surface, point, _scroll, surface.Manager.CrossWindowCoordinates);
-        var delta = DockInteractionGeometry.AutoScrollDelta(local.X, _scroll.ActualWidth, _scroll.HorizontalOffset, _scroll.ScrollableWidth, seconds, FlowDirection == FlowDirection.RightToLeft);
-        return delta != 0 && _scroll.ChangeView(Math.Clamp(_scroll.HorizontalOffset + delta, 0, _scroll.ScrollableWidth), null, null, true);
+        var local = DockCoordinates.Translate(surface, point, scroll, surface.Manager.CrossWindowCoordinates);
+        var delta = DockInteractionGeometry.AutoScrollDelta(local.X, scroll.ActualWidth, scroll.HorizontalOffset, scroll.ScrollableWidth, seconds, FlowDirection == FlowDirection.RightToLeft);
+        return delta != 0 && scroll.ChangeView(Math.Clamp(scroll.HorizontalOffset + delta, 0, scroll.ScrollableWidth), null, null, true);
     }
 
     internal LayoutTabItemBase? TabFor(LayoutContent model) => _tabs.GetValueOrDefault(model);
@@ -216,6 +233,7 @@ public partial class LayoutCachePaneControl : DockSelectionControl
         foreach (var tab in _tabs.Values)
             tab.DetachModel();
         _tabs.Clear();
+        ReleaseTabView();
         _headers.Children.Clear();
         _content.Children.Clear();
         _titleModel = null;
