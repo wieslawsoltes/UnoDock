@@ -1,19 +1,43 @@
-# Platform and compatibility scope
+# Platform support
 
-Implementation support, successful compilation, and exercised runtime behavior are different claims. Workflow artifacts record the source revision and cases actually executed.
+Implementation support, successful compilation and exercised runtime behavior
+are different claims. CI artifacts record the source revision and the cases
+actually executed.
 
-| Target | Hosting | Verification model |
+| Platform | Hosting | Validation |
 |---|---|---|
-| Windows, Uno Skia Win32 | Native main/floating windows and custom chrome | Hosted runtime and selected physical-input suites. |
-| Linux, X11 | Native main/floating windows; Openbox chrome tests | Hosted runtime, XTEST input, and window-manager acceptance. |
-| macOS, AppKit | Native main/floating windows | Hosted runtime/geometry/presentation; physical pointer automation is separate. |
-| Native WinUI | Native package target | Compilation/package validation; not equivalent to the Skia Win32 runtime suite. |
-| WebAssembly | Real Uno browser gallery and optional popup workspace host | Browser workflow with real startup, editing, ownership, and recovery cases. |
+| Windows 10/11 (Uno Skia, Win32) | Native main and floating windows, custom caption, Snap-aware drop targeting | Hosted desktop suites; physical-input suites (`windows-floating-input`, `tear-off`) at 100% and 200% DPI |
+| Windows (native WinUI 3) | Native package target | Compilation and package validation |
+| macOS (Uno Skia, AppKit) | Native child floating windows, Retina-aware sizing, top-left persisted bounds | Hosted desktop suites on Retina displays |
+| Linux (Uno Skia, X11/XWayland) | Native floating windows with Motif, EWMH and ICCCM hints | Hosted desktop suites; XTEST physical input under Xvfb and Openbox |
+| WebAssembly | Real Uno browser gallery; optional multi-window browser workspace | Playwright: startup, editing, ownership transfer and recovery |
 
-The browser workbench runs each window in its own runtime and transfers registered payloads. It cannot move arbitrary live .NET objects between windows or suppress browser-owned chrome. Pure Wayland, mixed-DPI hardware, OS high-contrast transitions, mobile-specific workspace design, and arbitrary third-party native content are not implied by the hosted matrix.
+## Floating windows
 
-## Reference-library conventions
+Native floating windows are used on desktop hosts; the browser and mobile heads
+use in-surface floating windows. Continuous tear-off requires native floating
+windows. Floating bounds are persisted in top-left, device-independent pixels
+and fitted to a visible monitor when shown. See
+[Floating windows](floating-windows.md).
 
-The project follows the public layout models of the reference WPF docking library and interaction conventions through an independent implementation. Frozen public reference inventories and normalized API comparisons remain review artifacts. Remaining signature/attribute/behavior differences are reported rather than hidden.
+## Known boundaries
 
-This is not WPF binary compatibility, a WPF parser, arbitrary WPF resource/trigger support, or a reproduction of separately licensed commercial themes. Native Uno/WinUI XAML is the supported markup model. The implementation is MIT and is not affiliated with Xceed or Uno Platform.
+* **Wayland** sessions are supported through XWayland; a native Wayland
+  adapter is not provided.
+* **Mixed-DPI** multi-monitor setups use the owning window's scale for new
+  floating windows.
+* The **browser workspace** runs each window in its own runtime and transfers
+  registered payloads; it cannot move live .NET objects between windows or
+  hide browser-owned chrome.
+* A few native **stacking assertions** in the desktop suites assume the test
+  windows are frontmost; on an interactive desktop, other applications'
+  windows can cover them.
+
+## Reference conventions
+
+UnoDock follows the public layout model, API and interaction conventions of a
+well-known WPF docking library through an independent implementation (see
+[Parity status](parity.md) and the [clean-room process](clean-room.md)). It is
+not WPF binary compatibility, a WPF XAML parser or a reproduction of any
+commercial theme; native Uno/WinUI XAML is the supported markup model. UnoDock
+is MIT-licensed and not affiliated with Xceed or Uno Platform.
