@@ -22,7 +22,8 @@ async function float(page, id) {
 }
 
 test('repeated native window returns retain edited payloads without runtime faults', async ({ page, context }) => {
-    test.setTimeout(240000);
+    // Six cycles each boot two browser windows; the AOT runtime start dominates.
+    test.setTimeout(360000);
     const errors = [];
     const observe = window => {
         window.on('pageerror', error => errors.push(error.message));
