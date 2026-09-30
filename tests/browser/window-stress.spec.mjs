@@ -37,6 +37,9 @@ test('repeated native window returns retain edited payloads without runtime faul
         const one = await float(page, 'architecture');
         const two = await float(page, 'notes');
         const text = 'Native satellite edit, cycle ' + cycle;
+        // Keyboard input needs the editor's content projected as active; focus sent
+        // to a collapsed TextBox's semantic proxy is refused and not retried.
+        await expect.poll(() => one.evaluate(() => window.UnoDockBrowser.applied.active)).toBe('architecture');
         const editor = one.frameLocator('#app').getByRole('textbox', { name: 'Editor architecture', exact: true });
         await expect(editor).toBeVisible();
         await editor.press('ControlOrMeta+A');
@@ -49,7 +52,10 @@ test('repeated native window returns retain edited payloads without runtime faul
         await expect.poll(async () => (await read(two)).ids).toEqual(['architecture', 'notes']);
         await expect.poll(async () => (await read(one)).ids).toEqual([]);
         const closing = two.waitForEvent('close');
-        await two.getByRole('button', { name: 'Dock all & close window', exact: true }).click();
+        // This click closes its own window. Playwright's post-click hit-target round
+        // trip into the closing page races the close (TargetClosedError); the close
+        // event and the returned content are the evidence that the click landed.
+        await two.getByRole('button', { name: 'Dock all & close window', exact: true }).click({ noWaitAfter: true });
         await closing;
         await expect.poll(() => read(page)).toEqual({ state: 'ready', ids: expectedIds });
         await page.locator('[data-content="architecture"]').click();
