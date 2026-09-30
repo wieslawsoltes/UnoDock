@@ -58,7 +58,7 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
 
     /// <summary>A floating model is kept while hidden content can still return to it;
         /// its host is shown only while it has content to present.</summary>
-        internal static bool CanPresent(LayoutFloatingWindow model) => model.IsValid && model.Descendents().OfType<LayoutContent>().Any();
+        internal static bool CanPresent(LayoutFloatingWindow model) => model.IsValid && model is not LayoutAnchorableFloatingWindow { IsVisible: false } && model.Descendents().OfType<LayoutContent>().Any();
     public event EventHandler<Exception>? MessageFilterFailed;
     /// <summary>The caption row; for a single-pane tool window it is also that
         /// pane's title, so it accepts tab insertion like a pane title does.</summary>
@@ -324,8 +324,6 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
             // Show) but its host closes; showing a tool creates a new host.
             if (Model is LayoutFloatingWindow { IsValid: false } or LayoutAnchorableFloatingWindow { IsVisible: false } || Model.Root == null)
                 CloseHost();
-            else if (Model is LayoutFloatingWindow model && !CanPresent(model))
-                HideHost();
         }
         finally
         {

@@ -176,6 +176,7 @@ internal static class WindowPlacementTests
                     f.Dispose();
                 }
             });
+            tests.Test("floating: closing a tool window leaves no host and Show re-floats it at the same bounds", () => CloseAndShow(FloatingWindowMode.Native));
             tests.Test("floating: keyboard moves follow the native origin convention", async () =>
             {
                 using var f = new Fixture(FloatingWindowMode.Native);
@@ -198,6 +199,7 @@ internal static class WindowPlacementTests
             await Wait(() => control.Visibility == Visibility.Visible && control.IsLoaded, "Show() did not present the in-surface window again.");
             Check.Same(control, f.Manager.FloatingWindows.Single());
         });
+        tests.Test("floating: closing an in-surface tool window and Show re-floats it at the same bounds", () => CloseAndShow(FloatingWindowMode.InSurface));
         tests.Test("floating: an in-surface caption menu does not offer minimize", async () =>
         {
             using var f = new Fixture(FloatingWindowMode.InSurface);
@@ -273,6 +275,31 @@ internal static class WindowPlacementTests
             popup.IsOpen = false;
         });
         return await tests.Run(output, "window-placement");
+    }
+
+    /// <summary>The close button hides the tools of a tool window. The floating model
+        /// stays in the layout (the tools' PreviousContainer keeps its panes) and Show()
+        /// re-inserts a tool there, presented by a live host at the remembered bounds.</summary>
+        private static async Task CloseAndShow(FloatingWindowMode mode)
+    {
+        using var f = new Fixture(mode);
+        await f.Show();
+        var control = await f.FloatTool(170, 130);
+        var model = f.Tool.FindParent<LayoutFloatingWindow>()!;
+        var before = Bounds(f.Tool);
+        control.Close();
+        Check.False(f.Tool.IsVisible);
+        await Wait(() => !f.Manager.FloatingWindows.Any(w => ReferenceEquals(w.Model, model) && (NativeVisible(w) || w.NativeWindow == null && w.Visibility == Visibility.Visible && w.IsLoaded)), "A closed tool window left a visible host.");
+        if (!f.Manager.Layout.FloatingWindows.Contains(model))
+            return; // A layout model that discards the emptied floating window re-docks on Show().
+        f.Tool.Show();
+        Check.True(f.Tool.IsFloating, "Show() did not return the tool to its floating window.");
+        Check.Same(model, f.Tool.FindParent<LayoutFloatingWindow>());
+        LayoutFloatingWindowControl? host = null;
+        await Wait(() => (host = f.Manager.FloatingWindows.SingleOrDefault(w => ReferenceEquals(w.Model, model))) is { IsLoaded: true } && (mode == FloatingWindowMode.Native ? NativeVisible(host) : host.Visibility == Visibility.Visible), "Show() did not present the floating window again.");
+        CheckBounds(before, Bounds(f.Tool), 2);
+        if (mode == FloatingWindowMode.Native)
+            await Wait(() => Near(f.Coordinates.ToDesktopPoint(host!, default), new(f.Tool.FloatingLeft, f.Tool.FloatingTop), 40), "The floating window reappeared elsewhere.");
     }
 
     private static bool Near(Point a, Point b, double tolerance) => Math.Abs(a.X - b.X) <= tolerance && Math.Abs(a.Y - b.Y) <= tolerance;
