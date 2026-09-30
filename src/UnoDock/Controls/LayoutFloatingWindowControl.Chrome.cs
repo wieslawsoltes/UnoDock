@@ -65,7 +65,7 @@ public abstract partial class LayoutFloatingWindowControl
         if (_hostDisposed || CaptionContent is not { } content || Model.Root?.Manager is not { } manager)
             return;
         CancelCaptionDrag();
-        DockVisuals.Menu(manager, content).ShowAt(_menuCaptionButton);
+        DockVisuals.ShowBelow(DockVisuals.Menu(manager, content), _menuCaptionButton);
     }
 
     private void InitializeResizeChrome()

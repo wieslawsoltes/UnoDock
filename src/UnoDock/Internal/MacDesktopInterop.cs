@@ -90,6 +90,28 @@ internal static class MacDesktopInterop
         return first == 0 ? 0 : Rect(first, "frame").Size.Height;
     }
 
+    /// <summary>Visible frames (excluding the menu bar and Dock) of all screens in
+        /// top-left, Y-down points.</summary>
+        internal static IReadOnlyList<DockRect> VisibleFrames()
+    {
+        var screens = Send(Class("NSScreen"), Sel("screens"));
+        if (screens == 0)
+            return [];
+        var primary = PrimaryScreenHeight();
+        var count = SendLong(screens, Sel("count"));
+        var result = new List<DockRect>((int)Math.Max(0, count));
+        for (long i = 0; i < count; i++)
+        {
+            var screen = SendIndex(screens, Sel("objectAtIndex:"), (nuint)i);
+            if (screen == 0)
+                continue;
+            var frame = Rect(screen, "visibleFrame");
+            result.Add(new(frame.Origin.X, primary - frame.Origin.Y - frame.Size.Height, frame.Size.Width, frame.Size.Height));
+        }
+
+        return result;
+    }
+
     /// <summary>Window frame in top-left, Y-down screen points.</summary>
     internal static DockRect TopLeftFrame(Window window)
     {
@@ -217,6 +239,8 @@ internal static class MacDesktopInterop
     private static extern nint Send(nint receiver, nint selector);
     [DllImport(ObjC, EntryPoint = "objc_msgSend")]
     private static extern long SendLong(nint receiver, nint selector);
+    [DllImport(ObjC, EntryPoint = "objc_msgSend")]
+    private static extern nint SendIndex(nint receiver, nint selector, nuint index);
     [DllImport(ObjC, EntryPoint = "objc_msgSend")]
     private static extern NativePoint SendPointResult(nint receiver, nint selector);
     [DllImport(ObjC, EntryPoint = "objc_msgSend")]

@@ -86,6 +86,7 @@ internal sealed partial class DockSurface : Grid, IDisposable
         }), true);
     }
 
+    internal FrameworkElement? ExistingView(ILayoutElement model) => _views.GetValueOrDefault(model);
     internal FrameworkElement GetView(ILayoutElement model)
     {
         if (_views.TryGetValue(model, out var existing))
@@ -515,8 +516,23 @@ internal sealed partial class DockSurface : Grid, IDisposable
             plan.Execute();
         else if (!overDockingClient && !new DockRect(0, 0, ActualWidth, ActualHeight).Contains(new(point.X, point.Y)) && content.CanFloat)
         {
-            content.FloatingLeft = point.X;
-            content.FloatingTop = point.Y;
+            // Size from the pane (or remembered bounds), placed under the pointer
+            // in the coordinate space of the floating host.
+            Manager.PrepareFloatingBounds(content);
+            var at = new Point(point.X, point.Y);
+            if (Manager.UsesNativeFloatingWindows && Manager.CrossWindowCoordinates is DesktopWindowCoordinates coordinates)
+            {
+                try
+                {
+                    at = coordinates.ToDesktopPoint(this, at);
+                }
+                catch (Exception error) when (DockCoordinates.IsUnavailable(error))
+                {
+                }
+            }
+
+            content.FloatingLeft = at.X - 40;
+            content.FloatingTop = at.Y - 10;
             content.Float();
         }
 

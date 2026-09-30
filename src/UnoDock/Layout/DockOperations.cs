@@ -13,6 +13,7 @@ public static class DockOperations
         if (manager != null && transition == null)
             return;
         using var batch = root.BeginUpdate();
+        manager?.PrepareFloatingBounds(content);
         content.RememberDockPosition();
         LayoutFloatingWindow floating;
         if (content is LayoutDocument doc)

@@ -41,8 +41,21 @@ public partial class App : Application
                         index++;
                     }
             });
-        if (Environment.GetEnvironmentVariable("UNODOCK_GALLERY_SIZE") is { } size && size.Split('x') is [var w, var h] && int.TryParse(w, out var width) && int.TryParse(h, out var height))
-            _window.AppWindow.Resize(new Windows.Graphics.SizeInt32 { Width = width, Height = height });
+        // Size the window in device-independent pixels (AppWindow sizes are
+        // physical), fit it to the monitor's work area and center it.
+        var desired = Environment.GetEnvironmentVariable("UNODOCK_GALLERY_SIZE") is { } size && size.Split('x') is [var w, var h] && double.TryParse(w, out var width) && double.TryParse(h, out var height) ? new Windows.Foundation.Size(width, height) : new Windows.Foundation.Size(1440, 900);
+        var placed = false;
+        gallery.Loaded += (_, _) =>
+        {
+            // Self-tests keep the historical physical host size their geometry expects.
+            if (placed || gallery.XamlRoot is not { } root || Environment.GetEnvironmentVariable("UNODOCK_SELFTEST") == "1" || !OperatingSystem.IsWindows() && !OperatingSystem.IsMacOS() && !OperatingSystem.IsLinux())
+                return;
+            placed = true;
+            var areas = DesktopWindowCoordinates.GetWorkAreas(gallery);
+            var area = areas.Count > 0 ? areas[0] : new Windows.Foundation.Rect(0, 0, desired.Width, desired.Height);
+            var bounds = UnoDock.Core.FloatingPlacement.Fit(new(area.X + (area.Width - desired.Width) / 2, area.Y + (area.Height - desired.Height) / 2, desired.Width, desired.Height), areas.Select(a => new UnoDock.Core.DockRect(a.X, a.Y, a.Width, a.Height)).ToArray());
+            DesktopWindowCoordinates.SetWindowBounds(_window, new(bounds.X, bounds.Y, bounds.Width, bounds.Height), root.RasterizationScale);
+        };
         if (Environment.GetEnvironmentVariable("UNODOCK_SELFTEST") == "1")
             gallery.Loaded += async (_, _) =>
             {
@@ -106,6 +119,7 @@ public partial class App : Application
                         ("uno-theme", true, () => Testing.UnoThemeTests.Run(output)),
                         ("classic-themes", true, () => Testing.ClassicThemeTests.Run(output)),
                         ("localization", true, () => Testing.LocalizationTests.Run(output)),
+                        ("window-placement", true, () => Testing.WindowPlacementTests.Run(output)),
                         ("windows-floating-input", true, () => Testing.WindowsFloatingInputTests.Run(output)),
                         ("tear-off", true, () => Testing.TearOffInputTests.Run(output))
                     };

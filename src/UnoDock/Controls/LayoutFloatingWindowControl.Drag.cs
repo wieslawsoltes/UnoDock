@@ -14,6 +14,7 @@ public abstract partial class LayoutFloatingWindowControl
     };
     private readonly DesktopWindowCoordinates _dragCoordinates = new();
     private CaptionDrag? _captionDrag;
+    private static readonly bool s_inputTrace = Environment.GetEnvironmentVariable("UNODOCK_INPUT_TRACE") == "1";
     private NativeDragClock? _dragClock;
     private IDisposable? _nativeOwnerLease;
     private Window? _nativeOwnerConfiguredWindow;
@@ -379,6 +380,8 @@ public abstract partial class LayoutFloatingWindowControl
     private nint FilterNativeDragMessage(nint hwnd, int msg, nint wParam, nint lParam, ref bool handled)
     {
         var result = FilterMessage(hwnd, msg, wParam, lParam, ref handled);
+        if (s_inputTrace && msg is 0x231 or 0x216 or 0x232 or 0x1f)
+            Console.Error.WriteLine($"NATIVEMOVE msg=0x{msg:x} handled={handled} drag={_captionDrag != null} loop={_nativeMoveLoop} pointer={(_window != null && _dragCoordinates.TryGetPointer(_window, out var p) ? p.ToString() : "n/a")}");
         if (handled || _hostDisposed || _window == null)
             return result;
         if (msg == 0x231)

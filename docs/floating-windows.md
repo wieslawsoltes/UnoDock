@@ -53,6 +53,25 @@ and `FloatingHeight` are persisted in top-left, Y-down device-independent
 pixels on every platform, so saved layouts reopen in the same place on
 Windows, macOS and Linux.
 
+## Size and placement
+
+* Content that has never floated opens **over the pane it came from**, sized
+  like that pane (at most 80% of the monitor's work area), so it does not jump.
+  Remembered floating bounds are reused on later floats.
+* New native windows are fitted onto the monitor work area they overlap most,
+  or the nearest one when a restored layout points off-screen; oversized
+  bounds shrink to the work area. In-surface windows stay inside the
+  workspace.
+* Releasing a tab outside the workspace opens the window under the pointer.
+* Chrome menus (▾ buttons and the documents list) open below their button.
+
+Applications can use the same desktop coordinate space for their own windows:
+`DesktopWindowCoordinates.GetWorkAreas(element)`,
+`DesktopWindowCoordinates.SetWindowBounds(window, bounds, scale)` and
+`coordinates.ToDesktopPoint(element, point)` all use top-left DIPs.
+
+![Floating tool and document windows under Openbox on Linux](images/floating/linux-openbox-vs2010.png)
+
 ## Platform notes
 
 * **Windows**: the custom caption replaces the OS title bar; eight-edge resize,
@@ -62,8 +81,9 @@ Windows, macOS and Linux.
   converted between AppKit's bottom-left space and persisted top-left bounds.
   High-density displays are handled by sizing new windows with the owner's
   scale before the new window has its own.
-* **Linux (X11)**: decorations are removed through Motif hints and tool windows
-  are marked as utility windows owned by the workspace. The `tear-off` suite
+* **Linux (X11)**: decorations are removed through Motif hints, tool windows
+  are marked as utility windows owned by the workspace, and ICCCM position
+  hints keep the window manager from re-placing new windows. The `tear-off` suite
   runs with XTEST on a dedicated display. Pure Wayland sessions need XWayland.
 
 Virtual machines without a working GPU driver can run the Gallery with

@@ -219,7 +219,8 @@ public partial class LayoutAutoHideWindowControl : ContentControl, ILayoutContro
         var version = _openVersion;
         UpdateChrome();
         if (IsCurrent(model, manager, version))
-            _contextMenu?.ShowAt(_menuButton);
+            if (_contextMenu != null)
+                DockVisuals.ShowBelow(_contextMenu, _menuButton);
     }
 
     private void Pin()
