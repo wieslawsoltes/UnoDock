@@ -19,8 +19,10 @@ when that named dictionary is absent. HighContrast does not fall through into
 unrelated Light/Dark/Default entries. Contrast/color observers exist only while a
 manager is loaded. Dictionary tests do not emulate OS high-contrast mode.
 
-Seven stock chrome/menu/navigator templates are compiled in
-Themes/DockChromeResources.xaml, retaining current interactions and geometry.
+The stock chrome, menu, open-documents row and navigator templates are compiled
+in Themes/DockChromeResources.xaml, retaining current interactions and geometry.
+The manager's header, title, open-documents and icon templates are described in
+templates.md.
 No product stock template uses XamlReader.Load. Runtime consumer XAML is trusted
 markup, not an untrusted document sandbox.
 
