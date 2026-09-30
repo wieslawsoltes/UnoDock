@@ -129,12 +129,12 @@ public partial class LayoutCachePaneControl : DockSelectionControl
     private DockingManager? _titleManager;
     internal int InsertionIndex(Point surfacePoint, DockSurface surface)
     {
-        if (IsOverHeaderElement(_titlePresenter, surfacePoint, surface))
+        if (IsOverHeaderElement(_titlePresenter, surfacePoint, surface) || IsOverWindowCaption(surfacePoint, surface))
             return Pane?.ChildrenCount ?? 0;
         var index = 0;
         foreach (var model in Items)
         {
-            if (!_tabs.TryGetValue(model, out var tab))
+            if (!_tabs.TryGetValue(model, out var tab) || tab.XamlRoot == null || tab.ActualWidth <= 0)
             {
                 index++;
                 continue;
@@ -166,7 +166,8 @@ public partial class LayoutCachePaneControl : DockSelectionControl
         }
     }
 
-    internal bool IsOverHeader(Point point, DockSurface surface) => IsOverHeaderElement(_scroll, point, surface) || IsOverHeaderElement(_titlePresenter, point, surface) || Pane is { } pane && IsCaptionOwned(pane) && this.FindVisualAncestor<LayoutFloatingWindowControl>() is { } window && IsOverHeaderElement(window.CaptionElement, point, surface);
+    internal bool IsOverHeader(Point point, DockSurface surface) => IsOverHeaderElement(_scroll, point, surface) || IsOverHeaderElement(_titlePresenter, point, surface) || IsOverWindowCaption(point, surface);
+    private bool IsOverWindowCaption(Point point, DockSurface surface) => Pane is { } pane && IsCaptionOwned(pane) && this.FindVisualAncestor<LayoutFloatingWindowControl>() is { } window && IsOverHeaderElement(window.CaptionElement, point, surface);
     private static bool IsOverHeaderElement(FrameworkElement header, Point point, DockSurface surface)
     {
         if (header.ActualWidth <= 0 || header.ActualHeight <= 0)
