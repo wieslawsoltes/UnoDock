@@ -857,7 +857,23 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
             {
                 var origin = _dragCoordinates.GetNativeOrigin(window);
                 var scale = OperatingSystem.IsMacOS() ? 1 : DesktopWindowCoordinates.Scale(this);
-                DesktopWindowCoordinates.MoveNative(window, new(origin.X + x * scale, origin.Y + (OperatingSystem.IsMacOS() ? -y : y) * scale));
+                var moved = Bounds with
+                {
+                    X = Bounds.X + x,
+                    Y = Bounds.Y + y
+                };
+                // Persist like a completed caption drag: hosts that report moves
+                // asynchronously (X11 ConfigureNotify) must not lose the model bounds.
+                _movingFromCaption = true;
+                try
+                {
+                    DesktopWindowCoordinates.MoveNative(window, new(origin.X + x * scale, origin.Y + (OperatingSystem.IsMacOS() ? -y : y) * scale));
+                    SetBounds(moved);
+                }
+                finally
+                {
+                    _movingFromCaption = false;
+                }
             }
             catch (Exception error) when (DockCoordinates.IsUnavailable(error))
             {
