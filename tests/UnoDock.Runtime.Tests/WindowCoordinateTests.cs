@@ -292,7 +292,19 @@ public static partial class WindowCoordinateTests
                     });
                 }
 
-                return await tests.Run(output, "window-coordinates");
+                // Cross-window tab drags without tear-off; see the tear-off suite.
+                var tearOff = host?.ContinuousTearOff ?? true;
+                if (host != null)
+                    host.ContinuousTearOff = false;
+                try
+                {
+                    return await tests.Run(output, "window-coordinates");
+                }
+                finally
+                {
+                    if (host != null)
+                        host.ContinuousTearOff = tearOff;
+                }
             }
             finally
             {

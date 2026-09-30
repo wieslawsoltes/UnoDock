@@ -572,7 +572,17 @@ public static class DockGuideTests
                 });
             }
 
-            return await tests.Run(output, "docking-guides");
+            // Cross-window tab drags without tear-off; see the tear-off suite.
+            var tearOff = dock.ContinuousTearOff;
+            dock.ContinuousTearOff = false;
+            try
+            {
+                return await tests.Run(output, "docking-guides");
+            }
+            finally
+            {
+                dock.ContinuousTearOff = tearOff;
+            }
         }
         finally
         {

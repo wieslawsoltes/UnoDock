@@ -474,12 +474,17 @@ public static class InteractionTests
             });
         }
 
+        // These cases exercise in-workspace and cross-window tab drags; the
+        // continuous tear-off default is covered by the tear-off suite.
+        var tearOff = host.ContinuousTearOff;
+        host.ContinuousTearOff = false;
         try
         {
             return await tests.Run(output, "interaction");
         }
         finally
         {
+            host.ContinuousTearOff = tearOff;
             host.CrossWindowCoordinates = originalCoordinates;
             host.FloatingWindowMode = originalMode;
             host.Layout = original;
