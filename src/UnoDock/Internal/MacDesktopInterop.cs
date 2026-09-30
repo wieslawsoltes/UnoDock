@@ -81,6 +81,32 @@ internal static class MacDesktopInterop
         return new(frame.Origin.X, frame.Origin.Y);
     }
 
+    /// <summary>Height of the primary display, the reference for converting
+        /// AppKit's bottom-left screen space to top-left persisted coordinates.</summary>
+        internal static double PrimaryScreenHeight()
+    {
+        var screens = Send(Class("NSScreen"), Sel("screens"));
+        var first = screens == 0 ? 0 : Send(screens, Sel("firstObject"));
+        return first == 0 ? 0 : Rect(first, "frame").Size.Height;
+    }
+
+    /// <summary>Window frame in top-left, Y-down screen points.</summary>
+    internal static DockRect TopLeftFrame(Window window)
+    {
+        var frame = Rect(Handle(window), "frame");
+        return new(frame.Origin.X, PrimaryScreenHeight() - frame.Origin.Y - frame.Size.Height, frame.Size.Width, frame.Size.Height);
+    }
+
+    /// <summary>Place the window's top-left corner at a Y-down screen point.</summary>
+    internal static void MoveTopLeft(Window window, Point topLeft)
+    {
+        var handle = Handle(window);
+        var frame = Rect(handle, "frame");
+        SendVoidPoint(handle, Sel("setFrameOrigin:"), new(topLeft.X, PrimaryScreenHeight() - topLeft.Y - frame.Size.Height));
+    }
+
+    /// <summary>Convert an AppKit (bottom-left) screen point to top-left points.</summary>
+    internal static Point ToTopLeft(Point screen) => new(screen.X, PrimaryScreenHeight() - screen.Y);
     internal static void Move(Window window, Point origin) => SendVoidPoint(Handle(window), Sel("setFrameOrigin:"), new(origin.X, origin.Y));
     internal static bool IsCaption(Window window, Point point)
     {

@@ -288,6 +288,7 @@ internal sealed partial class DockSurface : Grid, IDisposable
         _dragInput = source as DockInputControl;
         source = _dragInput?.DockCaptureElement ?? source;
         _dragContent = content;
+        _dragWholePane = source is ContentPresenter { Name: "PART_ToolCaption" } && content.Parent is LayoutAnchorablePane;
         _dragSource = source;
         if (!TryGetPoint(args, out var point))
         {
@@ -469,6 +470,12 @@ internal sealed partial class DockSurface : Grid, IDisposable
 
         if (!_drag.Move(args.Pointer.PointerId, new(point.X, point.Y), []))
             return;
+        if (TryTearOff(_dragContent, point))
+        {
+            args.Handled = true;
+            return;
+        }
+
         _lastDragPoint = point;
         UpdateDragAdorners(point);
         if (!_dragScrollTimer.IsEnabled)
@@ -617,6 +624,7 @@ internal sealed partial class DockSurface : Grid, IDisposable
         _floatingDrag = null;
         _floatingDragGeneration++;
         _dragSource = null;
+        _dragWholePane = false;
         _dragInput = null;
         _dragContent = null;
         // Unsubscribe before guide/caption callbacks can transfer capture. Old

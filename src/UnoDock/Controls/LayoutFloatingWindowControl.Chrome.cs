@@ -22,7 +22,7 @@ public abstract partial class LayoutFloatingWindowControl
     };
     private readonly Dictionary<ChromeHit, ResizeGrip> _resizeGrips = [];
     private Thumb? _legacyResizeGrip;
-    private Button _dockCaptionButton = null!, _minimizeCaptionButton = null!, _maximizeCaptionButton = null!, _closeCaptionButton = null!;
+    private DockChromeButton _menuCaptionButton = null!, _minimizeCaptionButton = null!, _maximizeCaptionButton = null!, _closeCaptionButton = null!;
     /// <summary>True only after a custom decoration adapter has attached to this native host.</summary>
     public bool IsCustomTitleBar => _nativeChrome != null;
     public bool IsResizing => _frameResize != null;
@@ -33,21 +33,39 @@ public abstract partial class LayoutFloatingWindowControl
         {
             Orientation = Orientation.Horizontal
         };
-        _dockCaptionButton = Add("↙", DockAll, "Dock floating content", "FloatingWindowDock");
-        _minimizeCaptionButton = Add("—", () => PerformSystemAction(WindowAction.Minimize), "Minimize floating window", "FloatingWindowMinimize");
-        _maximizeCaptionButton = Add("□", () => PerformSystemAction(IsMaximized ? WindowAction.Restore : WindowAction.Maximize), "Maximize or restore floating window", "FloatingWindowMaximize");
-        _closeCaptionButton = Add("×", Close, "Close floating window", "FloatingWindowClose");
+        _menuCaptionButton = Add(DockGlyph.Menu, ShowCaptionMenu, "Window position", "FloatingWindowMenu");
+        _minimizeCaptionButton = Add(DockGlyph.Minimize, () => PerformSystemAction(WindowAction.Minimize), "Minimize floating window", "FloatingWindowMinimize");
+        _maximizeCaptionButton = Add(DockGlyph.Maximize, () => PerformSystemAction(IsMaximized ? WindowAction.Restore : WindowAction.Maximize), "Maximize or restore floating window", "FloatingWindowMaximize");
+        _closeCaptionButton = Add(DockGlyph.Close, Close, "Close floating window", "FloatingWindowClose");
         _minimizeCaptionButton.Visibility = Visibility.Collapsed;
         WindowChrome.SetIsHitTestVisibleInChrome(actions, true);
         return actions;
-        Button Add(string glyph, Action command, string help, string id)
+        DockChromeButton Add(DockGlyph glyph, Action command, string help, string id)
         {
-            var button = DockVisuals.Button(glyph, command, help);
+            var button = DockChrome.Icon(glyph, command, help);
+            button.Margin = new(1, 0, 1, 0);
             AutomationProperties.SetAutomationId(button, id);
             AutomationProperties.SetName(button, help);
             actions.Children.Add(button);
             return button;
         }
+    }
+
+    /// <summary>The content represented by the caption: the selected tool of a
+        /// single-pane tool window, the floating document, or the active content.</summary>
+        internal LayoutContent? CaptionContent => Model switch
+    {
+        LayoutDocumentFloatingWindow { RootDocument: { } document } => document,
+        LayoutAnchorableFloatingWindow { IsSinglePane: true, SinglePane: ILayoutContentSelector { SelectedContent: { } selected } } => selected,
+        _ => Contents.FirstOrDefault(c => c.IsActive) ?? Contents.FirstOrDefault(c => c.IsSelected) ?? Contents.FirstOrDefault()
+    };
+
+    private void ShowCaptionMenu()
+    {
+        if (_hostDisposed || CaptionContent is not { } content || Model.Root?.Manager is not { } manager)
+            return;
+        CancelCaptionDrag();
+        DockVisuals.Menu(manager, content).ShowAt(_menuCaptionButton);
     }
 
     private void InitializeResizeChrome()
@@ -106,6 +124,34 @@ public abstract partial class LayoutFloatingWindowControl
         };
         SizeChanged += (_, _) => UpdateChromeControls();
         RegisterPropertyChangedCallback(ResizeBorderThicknessProperty, (_, _) => UpdateChromeControls());
+    }
+
+    private bool _maximizedGlyph;
+    /// <summary>Caption and frame brushes follow window activation: an active
+        /// native host with active content uses the active title/frame states.</summary>
+        private void PaintCaption(DockPalette palette)
+    {
+        var active = (_window == null || _nativeCaptionActive) && Contents.Any(c => c.IsActive);
+        var states = palette.States;
+        _title.Background = active ? states.ActiveToolTitle : states.ToolTitle;
+        var foreground = (active ? states.ActiveToolTitleForeground : states.ToolTitleForeground) ?? palette.Foreground;
+        _caption.Foreground = foreground;
+        foreach (var button in new[]
+        {
+            _menuCaptionButton,
+            _minimizeCaptionButton,
+            _maximizeCaptionButton,
+            _closeCaptionButton
+        }
+
+        )
+        {
+            button.Configure(palette);
+            button.ForegroundOverride = foreground;
+        }
+
+        BorderBrush = active ? states.ActiveFloatingBorder : states.FloatingBorder;
+        BorderThickness = new(states.FloatingBorderThickness);
     }
 
     internal void RefreshNativeChrome()
@@ -202,7 +248,7 @@ public abstract partial class LayoutFloatingWindowControl
 
     private void UpdateChromeControls()
     {
-        if (_dockCaptionButton == null)
+        if (_closeCaptionButton == null)
             return; // No derived/model calls during construction.
         var custom = IsCustomTitleBar;
         var presenter = _window?.AppWindow.Presenter as OverlappedPresenter;
@@ -214,17 +260,16 @@ public abstract partial class LayoutFloatingWindowControl
         _minimizeCaptionButton.IsEnabled = CanPerformSystemAction(WindowAction.Minimize);
         _maximizeCaptionButton.IsEnabled = CanPerformSystemAction(IsMaximized ? WindowAction.Restore : WindowAction.Maximize);
         _closeCaptionButton.IsEnabled = CanPerformSystemAction(WindowAction.Close);
-        _dockCaptionButton.IsEnabled = !_hostDisposed && !IsContentImmutable && Contents.Any() && Contents.All(DockOperations.CanMove);
-        // The stock factory uses a string; leave application-supplied content intact.
-        if (_maximizeCaptionButton.Content is string and ("□" or "❐"))
-            _maximizeCaptionButton.Content = IsMaximized ? "❐" : "□";
-        AutomationProperties.SetName(_maximizeCaptionButton, IsMaximized ? "Restore floating window" : "Maximize floating window");
-        if (_window != null && Model.Root?.Manager is { } manager)
+        _menuCaptionButton.IsEnabled = !_hostDisposed && CaptionContent is { IsEnabled: true };
+        if (_maximizedGlyph != IsMaximized)
         {
-            var palette = DockChrome.Palette(manager);
-            _title.Background = _nativeCaptionActive && Contents.Any(c => c.IsActive) ? palette.States.ActiveToolTitle : palette.States.ToolTitle;
+            _maximizedGlyph = IsMaximized;
+            _maximizeCaptionButton.Content = DockChrome.Glyph(IsMaximized ? DockGlyph.Restore : DockGlyph.Maximize);
         }
 
+        AutomationProperties.SetName(_maximizeCaptionButton, IsMaximized ? "Restore floating window" : "Maximize floating window");
+        if (Model.Root?.Manager is { } manager)
+            PaintCaption(DockChrome.Palette(manager));
         var b = ResizeBorderThickness;
         double Extent(double value) => double.IsFinite(value) ? Math.Clamp(value, 0, 32) : 5;
         var left = Extent(b.Left);

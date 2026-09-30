@@ -9,5 +9,8 @@ internal enum DockGlyph
     Close,
     Pin,
     Menu,
-    Documents
+    Documents,
+    Minimize,
+    Maximize,
+    Restore
 }

@@ -115,7 +115,7 @@ public partial class LayoutCachePaneControl : DockSelectionControl
         VisualParenting.ReconcilePanel(_headers, tabViews);
         VisualParenting.ReconcilePanel(_content, contentViews);
         UpdatePaneChrome(pane, models, surface.Manager);
-        UpdateTitle(pane is LayoutAnchorablePane, selected as LayoutAnchorable, surface.Manager);
+        UpdateTitle(pane is LayoutAnchorablePane && !IsCaptionOwned(pane), selected as LayoutAnchorable, surface.Manager);
         DockVisuals.SetName(this, pane is LayoutDocumentPane ? "Document tab group" : "Tool tab group");
         MenuContext.SetTarget(this, selected);
         ContextFlyout = selected == null ? null : DockVisuals.Menu(surface.Manager, selected);
@@ -147,6 +147,23 @@ public partial class LayoutCachePaneControl : DockSelectionControl
         }
 
         return index;
+    }
+
+    /// <summary>True while a tab drag stays within the tab strip band (inflated
+        /// by <paramref name = "margin"/>); leaving it tears the tab off.</summary>
+        internal bool IsNearTabStrip(Point point, DockSurface surface, double margin)
+    {
+        if (_tabBar.Visibility != Visibility.Visible || _tabBar.ActualWidth <= 0 || _tabBar.ActualHeight <= 0)
+            return false;
+        try
+        {
+            var local = DockCoordinates.Translate(surface, point, _tabBar, surface.Manager.CrossWindowCoordinates);
+            return local.X >= -margin && local.Y >= -margin && local.X <= _tabBar.ActualWidth + margin && local.Y <= _tabBar.ActualHeight + margin;
+        }
+        catch (Exception e) when (DockCoordinates.IsUnavailable(e))
+        {
+            return true;
+        }
     }
 
     internal bool IsOverHeader(Point point, DockSurface surface) => IsOverHeaderElement(_scroll, point, surface) || IsOverHeaderElement(_titlePresenter, point, surface);

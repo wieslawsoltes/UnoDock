@@ -487,7 +487,7 @@ public partial class DockingManager : Control, IDisposable, UnoDock.Compatibilit
         {
             var control = EnsureFloatingWindow(model);
             control.UpdateView();
-            var native = FloatingWindowMode != FloatingWindowMode.InSurface && !OperatingSystem.IsBrowser() && !OperatingSystem.IsAndroid() && !OperatingSystem.IsIOS();
+            var native = UsesNativeFloatingWindows;
             if (_loaded)
             {
                 if (native)

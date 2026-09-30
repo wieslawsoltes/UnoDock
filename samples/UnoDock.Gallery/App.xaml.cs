@@ -25,6 +25,22 @@ public partial class App : Application
         // Presentation options for documentation screenshots and manual review.
         if (Enum.TryParse<SampleTheme>(Environment.GetEnvironmentVariable("UNODOCK_GALLERY_THEME"), true, out var startTheme))
             gallery.Loaded += (_, _) => gallery.SetSampleTheme(startTheme);
+        if (Environment.GetEnvironmentVariable("UNODOCK_GALLERY_FLOAT") is { Length: > 0 } floating)
+            gallery.Loaded += (_, _) => gallery.DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () =>
+            {
+                // Comma-separated content titles to float, for screenshots of floating chrome.
+                var index = 0;
+                foreach (var title in floating.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                    if (gallery.Dock.Layout.Descendents().OfType<UnoDock.Layout.LayoutContent>().FirstOrDefault(c => c.Title == title) is { } content)
+                    {
+                        content.FloatingLeft = 260 + index * 380;
+                        content.FloatingTop = 240 + index * 60;
+                        content.FloatingWidth = 360;
+                        content.FloatingHeight = 260;
+                        content.Float();
+                        index++;
+                    }
+            });
         if (Environment.GetEnvironmentVariable("UNODOCK_GALLERY_SIZE") is { } size && size.Split('x') is [var w, var h] && int.TryParse(w, out var width) && int.TryParse(h, out var height))
             _window.AppWindow.Resize(new Windows.Graphics.SizeInt32 { Width = width, Height = height });
         if (Environment.GetEnvironmentVariable("UNODOCK_SELFTEST") == "1")
@@ -89,14 +105,15 @@ public partial class App : Application
                         ("floating-resize-policy-tools", true, () => Testing.FloatingChromeTests.RunResizePolicy(output, true)),
                         ("uno-theme", true, () => Testing.UnoThemeTests.Run(output)),
                         ("classic-themes", true, () => Testing.ClassicThemeTests.Run(output)),
-                        ("windows-floating-input", true, () => Testing.WindowsFloatingInputTests.Run(output))
+                        ("windows-floating-input", true, () => Testing.WindowsFloatingInputTests.Run(output)),
+                        ("tear-off", true, () => Testing.TearOffInputTests.Run(output))
                     };
                     var selected = suites.Where(s => string.IsNullOrEmpty(requested) || requested == "all" || (requested == "windows-acceptance" ? s.Windows : requested == "desktop-acceptance" ? s.Name is "mac-native" or "desktop-floating" or "floating-drag-cleanup" or "uno-theme" or "windows-floating-input" : requested == "floating-resize-policy" ? s.Name.StartsWith("floating-resize-policy-", StringComparison.Ordinal) : requested == "floating-chrome" ? s.Name is "floating-chrome-documents" or "floating-chrome-tools" or "floating-resize-policy-documents" or "floating-resize-policy-tools" : s.Name == requested)).ToArray();
                     if (selected.Length == 0)
                         throw new ArgumentException("Unknown UNODOCK_TEST_SUITE: " + requested);
                     // Registry-owned platform selection also drives isolated CI.
                     // A platform no-op is not an executed (or passed) test suite.
-                    selected = selected.Where(s => (s.Name != "mac-native" || OperatingSystem.IsMacOS()) && (s.Name != "windows-floating-input" || OperatingSystem.IsWindows() && Environment.GetEnvironmentVariable("UNODOCK_NATIVE_INPUT_TESTS") == "1")).ToArray();
+                    selected = selected.Where(s => (s.Name != "mac-native" || OperatingSystem.IsMacOS()) && (s.Name != "windows-floating-input" || OperatingSystem.IsWindows() && Environment.GetEnvironmentVariable("UNODOCK_NATIVE_INPUT_TESTS") == "1") && (s.Name != "tear-off" || (OperatingSystem.IsWindows() || OperatingSystem.IsLinux()) && Environment.GetEnvironmentVariable("UNODOCK_NATIVE_INPUT_TESTS") == "1")).ToArray();
                     exitCode = 0;
                     if (Environment.GetEnvironmentVariable("UNODOCK_LIST_TESTS") == "1")
                     {

@@ -36,9 +36,9 @@ The retained client caption is a whole-window drag handle. Both a floating
 document and a tool window containing several split/tabbed panes can be moved,
 preview docking guides over the target, and dock on release. Native title-bar
 movement uses the same docking intent. Pane tabs retain their separate
-single-item interaction. Initial tab tear-off still creates a new native host
-on release; this increment does not claim a continuous tab-to-new-HWND transfer
-while the original pointer remains held.
+single-item interaction. Dragging a tab out of its strip now floats it into a new
+native window mid-gesture and continues as a window move; see
+[Floating windows](floating-windows.md).
 
 The target is recomputed on release; a stale hover cannot commit after the pointer
 leaves the client. Control suppresses docking. Escape or canceled capture cancels

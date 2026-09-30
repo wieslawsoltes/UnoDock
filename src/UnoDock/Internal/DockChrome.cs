@@ -125,6 +125,19 @@ internal static class DockChrome
             geometry.Figures.Add(figure);
         }
 
+        void Outline(params Point[] points)
+        {
+            var figure = new PathFigure
+            {
+                StartPoint = points[0],
+                IsFilled = false,
+                IsClosed = false
+            };
+            foreach (var point in points.Skip(1))
+                figure.Segments.Add(new LineSegment { Point = point });
+            geometry.Figures.Add(figure);
+        }
+
         switch (glyph)
         {
             case DockGlyph.Close:
@@ -140,6 +153,20 @@ internal static class DockChrome
                 goto case DockGlyph.Menu;
             case DockGlyph.Menu:
                 Line(new(2, 4), new(5, 7), new(8, 4), new(2, 4));
+                break;
+            case DockGlyph.Minimize:
+                Line(new(2, 7.5), new(8, 7.5));
+                break;
+            case DockGlyph.Maximize:
+                Line(new(1.5, 1.5), new(8.5, 1.5));
+                Line(new(1.5, 2.5), new(8.5, 2.5));
+                Outline(new(1.5, 1.5), new(1.5, 8.5), new(8.5, 8.5), new(8.5, 1.5));
+                break;
+            case DockGlyph.Restore:
+                Outline(new(3.5, 1.5), new(8.5, 1.5), new(8.5, 6.5), new(6.5, 6.5));
+                Line(new(1.5, 3.5), new(6.5, 3.5));
+                Line(new(1.5, 4.5), new(6.5, 4.5));
+                Outline(new(1.5, 3.5), new(1.5, 8.5), new(6.5, 8.5), new(6.5, 3.5));
                 break;
         }
 

@@ -127,7 +127,7 @@ public partial class LayoutCachePaneControl
         Grid.SetRow(_tabBar, tool ? 2 : 0);
         Grid.SetRow(_content, 1);
         Grid.SetRow(_titleRow, 0);
-        _layout.RowDefinitions[0].Height = new(tool ? p.TitleHeight : p.TabHeight);
+        _layout.RowDefinitions[0].Height = new(tool ? IsCaptionOwned(pane) ? 0 : p.TitleHeight : p.TabHeight);
         _layout.RowDefinitions[1].Height = new(1, GridUnitType.Star);
         _layout.RowDefinitions[2].Height = tool && models.Length > 1 ? new(p.ToolTabHeight) : new(0);
         var showHeader = tool ? models.Length > 1 : pane is not LayoutDocumentPane { ShowHeader: false } && models.Length != 0;
@@ -144,6 +144,9 @@ public partial class LayoutCachePaneControl
         _titleRow.Background = Selector?.SelectedContent?.IsActive == true ? states.ActiveToolTitle : states.ToolTitle;
     }
 
+    /// <summary>The sole pane of a floating tool window shows its title, menu and
+        /// close commands in the window caption instead of a second title row.</summary>
+        private static bool IsCaptionOwned(ILayoutGroup pane) => pane is LayoutAnchorablePane && pane.FindParent<LayoutAnchorableFloatingWindow>() is { IsSinglePane: true } window && ReferenceEquals(window.SinglePane, pane);
     private void UpdateTitle(bool visible, LayoutAnchorable? selected, DockingManager manager)
     {
         _titleRow.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
