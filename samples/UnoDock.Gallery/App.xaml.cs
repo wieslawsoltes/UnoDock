@@ -25,6 +25,8 @@ public partial class App : Application
         // Presentation options for documentation screenshots and manual review.
         if (Enum.TryParse<SampleTheme>(Environment.GetEnvironmentVariable("UNODOCK_GALLERY_THEME"), true, out var startTheme))
             gallery.Loaded += (_, _) => gallery.SetSampleTheme(startTheme);
+        if (Environment.GetEnvironmentVariable("UNODOCK_GALLERY_TABVIEW") == "1")
+            gallery.Loaded += (_, _) => gallery.Dock.DocumentTabStripMode = DocumentTabStripMode.TabView;
         if (Environment.GetEnvironmentVariable("UNODOCK_GALLERY_FLOAT") is { Length: > 0 } floating)
             gallery.Loaded += (_, _) => gallery.DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () =>
             {
@@ -120,6 +122,7 @@ public partial class App : Application
                         ("classic-themes", true, () => Testing.ClassicThemeTests.Run(output)),
                         ("localization", true, () => Testing.LocalizationTests.Run(output)),
                         ("window-placement", true, () => Testing.WindowPlacementTests.Run(output)),
+                        ("tabview-strip", true, () => Testing.TabViewStripTests.Run(output)),
                         ("windows-floating-input", true, () => Testing.WindowsFloatingInputTests.Run(output)),
                         ("tear-off", true, () => Testing.TearOffInputTests.Run(output))
                     };

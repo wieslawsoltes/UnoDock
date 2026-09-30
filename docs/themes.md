@@ -31,6 +31,29 @@ switches between all of them at runtime.
 | **VS2010** | **Fluent Light** | **Fluent Dark** |
 | ![VS2010](images/themes/vs2010.png) | ![Fluent Light](images/themes/light.png) | ![Fluent Dark](images/themes/dark.png) |
 
+## Native TabView document tabs
+
+`DockingManager.DocumentTabStripMode = DocumentTabStripMode.TabView` hosts
+document tabs in the platform WinUI `TabView`, giving document panes the native
+Fluent tab shape, hover, selection, close buttons and overflow scrolling. It
+pairs naturally with `FluentTheme`:
+
+```xml
+<dock:DockingManager DocumentTabStripMode="TabView">
+    <dock:DockingManager.Theme>
+        <themes:FluentTheme />
+    </dock:DockingManager.Theme>
+</dock:DockingManager>
+```
+
+Each `TabViewItem` hosts the same docking tab item as its header, so tab
+dragging and tear-off, context menus, header/icon templates, keyboard
+navigation and automation keep working; tool panes keep the docking strip.
+The default, `DocumentTabStripMode.Docking`, draws the theme-painted strip used
+by the classic themes. The Gallery's **View** menu switches between them.
+
+![Fluent theme with native TabView document tabs](images/themes/fluent-tabview.png)
+
 ## Resource keys
 
 Every theme is a resource dictionary of `UnoDock.*` keys. The same keys can be
