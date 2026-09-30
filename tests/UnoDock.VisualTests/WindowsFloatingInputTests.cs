@@ -283,6 +283,29 @@ internal static class WindowsFloatingInputTests
                 throw new Win32Exception(Marshal.GetLastPInvokeError());
         }
 
+        /// <summary>Hardware-equivalent absolute motion through SendInput. Unlike
+                /// SetCursorPos, this is delivered as pointer movement to captured elements.</summary>
+                internal void Glide(Point point)
+        {
+            var left = GetSystemMetrics(76);
+            var top = GetSystemMetrics(77);
+            var width = Math.Max(1, GetSystemMetrics(78) - 1);
+            var height = Math.Max(1, GetSystemMetrics(79) - 1);
+            Send(new()
+            {
+                Type = 0,
+                Data = new()
+                {
+                    Mouse = new()
+                    {
+                        X = checked((int)Math.Round((point.X - left) * 65535 / width)),
+                        Y = checked((int)Math.Round((point.Y - top) * 65535 / height)),
+                        Flags = 0x0001 | 0x4000 | 0x8000
+                    }
+                }
+            });
+        }
+
         internal void Press()
         {
             Send(new()
@@ -433,6 +456,8 @@ internal static class WindowsFloatingInputTests
         private static extern bool SetForegroundWindow(nint window);
         [DllImport("user32.dll")]
         private static extern nint GetForegroundWindow();
+        [DllImport("user32.dll")]
+        private static extern int GetSystemMetrics(int index);
         [DllImport("user32.dll", SetLastError = true)]
         private static extern uint SendInput(uint count, [In] INPUT[] inputs, int size);
     }

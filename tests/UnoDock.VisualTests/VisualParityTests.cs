@@ -345,7 +345,9 @@ public static class VisualParityTests
                 dock.FlowDirection = FlowDirection.RightToLeft;
                 await Settle();
                 var rtl = coordinates.ToScreen(dock, default);
-                var scale = dock.XamlRoot!.RasterizationScale;
+                // Screen units per the public contract: physical pixels on
+                // Windows/X11, AppKit points on macOS.
+                var scale = OperatingSystem.IsMacOS() ? 1 : dock.XamlRoot!.RasterizationScale;
                 Check.Near(dock.ActualWidth * scale, rtl.X - ltr.X, 1);
                 Check.Near(ltr.Y, rtl.Y, 1);
                 var point = new Point(123.25, 67.75);
@@ -385,8 +387,11 @@ public static class VisualParityTests
                     var right = coordinates.ToScreen(grid, default);
                     var translated = coordinates.Translate(dock, new(27, 41), grid);
                     var physical = coordinates.ToScreen(dock, new(27, 41));
-                    Check.Near((right.X - physical.X) / grid.XamlRoot!.RasterizationScale, translated.X, 1);
-                    Check.Near((physical.Y - right.Y) / grid.XamlRoot!.RasterizationScale, translated.Y, 1);
+                    // AppKit screen points are unscaled and their Y axis points up.
+                    var screenScale = OperatingSystem.IsMacOS() ? 1 : grid.XamlRoot!.RasterizationScale;
+                    var down = OperatingSystem.IsMacOS() ? -1 : 1;
+                    Check.Near((right.X - physical.X) / screenScale, translated.X, 1);
+                    Check.Near(down * (physical.Y - right.Y) / screenScale, translated.Y, 1);
                     Check.True(Math.Abs(origin.X - right.X) > 50);
                 }
                 finally

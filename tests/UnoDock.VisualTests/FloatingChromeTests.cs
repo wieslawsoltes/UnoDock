@@ -54,7 +54,7 @@ internal static partial class FloatingChromeTests
                 FloatingChromeProbe.AssertCustom(f.Native, f.Owner);
                 foreach (var id in new[]
                 {
-                    "Dock",
+                    "Menu",
                     "Minimize",
                     "Maximize",
                     "Close"

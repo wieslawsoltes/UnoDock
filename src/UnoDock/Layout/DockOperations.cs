@@ -32,6 +32,64 @@ public static class DockOperations
         root.CollectGarbage();
     }
 
+    /// <summary>Float a docked tool pane with all of its tools, as a pane-title
+        /// drag does. Every tool must be movable/floatable and each raises its own
+        /// cancellable preview; a veto leaves the layout unchanged.</summary>
+        internal static LayoutAnchorableFloatingWindow? FloatPane(LayoutAnchorablePane pane, DockRect bounds)
+    {
+        ArgumentNullException.ThrowIfNull(pane);
+        if (pane.Root is not LayoutRoot root || pane.FindParent<LayoutFloatingWindow>() != null || pane.Parent == null)
+            return null;
+        var tools = pane.Children.OfType<LayoutAnchorable>().ToArray();
+        if (tools.Length == 0 || tools.Length != pane.ChildrenCount || tools.Any(t => !t.CanFloat || !CanMove(t)))
+            return null;
+        var manager = root.Manager;
+        var selected = pane.SelectedContent as LayoutAnchorable ?? tools[0];
+        var transitions = new List<IDisposable>();
+        try
+        {
+            if (manager != null)
+                foreach (var tool in tools)
+                {
+                    if (manager.BeginTransition(tool, true) is not { } transition)
+                        return null;
+                    transitions.Add(transition);
+                }
+
+            if (!ReferenceEquals(pane.Root, root) || pane.Children.Count != tools.Length || tools.Any(t => !ReferenceEquals(t.Parent, pane)))
+                return null;
+            using var batch = root.BeginUpdate();
+            var floatingPane = new LayoutAnchorablePane
+            {
+                DockWidth = pane.DockWidth,
+                DockHeight = pane.DockHeight
+            };
+            foreach (var tool in tools)
+            {
+                tool.RememberDockPosition();
+                tool.FloatingLeft = bounds.X;
+                tool.FloatingTop = bounds.Y;
+                tool.FloatingWidth = bounds.Width;
+                tool.FloatingHeight = bounds.Height;
+                floatingPane.Children.Add(tool);
+            }
+
+            var floating = new LayoutAnchorableFloatingWindow
+            {
+                RootPanel = new(floatingPane)
+            };
+            root.FloatingWindows.Add(floating);
+            selected.IsActive = true;
+            root.CollectGarbage();
+            return floating;
+        }
+        finally
+        {
+            for (var i = transitions.Count - 1; i >= 0; i--)
+                transitions[i].Dispose();
+        }
+    }
+
     public static void Restore(LayoutContent content)
     {
         ArgumentNullException.ThrowIfNull(content);

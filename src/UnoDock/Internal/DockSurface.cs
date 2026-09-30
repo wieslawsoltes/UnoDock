@@ -288,6 +288,7 @@ internal sealed partial class DockSurface : Grid, IDisposable
         _dragInput = source as DockInputControl;
         source = _dragInput?.DockCaptureElement ?? source;
         _dragContent = content;
+        _dragWholePane = source is ContentPresenter { Name: "PART_ToolCaption" } && content.Parent is LayoutAnchorablePane;
         _dragSource = source;
         if (!TryGetPoint(args, out var point))
         {
@@ -393,7 +394,11 @@ internal sealed partial class DockSurface : Grid, IDisposable
             return null;
         }
 
-        var area = GetDropAreas().OfType<IModelDropArea>().Where(a => ReferenceEquals(a.Model?.FindParent<LayoutFloatingWindow>(), floating?.Model)).Where(a => a.DetectionRect.Width > 0 && a.DetectionRect.Height > 0 && a.DetectionRect.Contains(point)).OrderBy(a => a.Type == DropAreaType.DockingManager ? 1 : 0).ThenBy(a => a.DetectionRect.Width * a.DetectionRect.Height).FirstOrDefault();
+        var areas = GetDropAreas().OfType<IModelDropArea>().Where(a => ReferenceEquals(a.Model?.FindParent<LayoutFloatingWindow>(), floating?.Model)).ToArray();
+        var area = areas.Where(a => a.DetectionRect.Width > 0 && a.DetectionRect.Height > 0 && a.DetectionRect.Contains(point)).OrderBy(a => a.Type == DropAreaType.DockingManager ? 1 : 0).ThenBy(a => a.DetectionRect.Width * a.DetectionRect.Height).FirstOrDefault();
+        // The caption of a single-pane floating tool window is that pane's title.
+        if (area == null && floating != null)
+            area = areas.FirstOrDefault(a => a.Model is LayoutAnchorablePane pane && GetView(pane) is LayoutCachePaneControl view && view.IsOverHeader(point, this));
         return area;
     }
 
@@ -469,6 +474,12 @@ internal sealed partial class DockSurface : Grid, IDisposable
 
         if (!_drag.Move(args.Pointer.PointerId, new(point.X, point.Y), []))
             return;
+        if (TryTearOff(_dragContent, point))
+        {
+            args.Handled = true;
+            return;
+        }
+
         _lastDragPoint = point;
         UpdateDragAdorners(point);
         if (!_dragScrollTimer.IsEnabled)
@@ -617,6 +628,7 @@ internal sealed partial class DockSurface : Grid, IDisposable
         _floatingDrag = null;
         _floatingDragGeneration++;
         _dragSource = null;
+        _dragWholePane = false;
         _dragInput = null;
         _dragContent = null;
         // Unsubscribe before guide/caption callbacks can transfer capture. Old

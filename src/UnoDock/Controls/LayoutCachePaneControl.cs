@@ -115,7 +115,7 @@ public partial class LayoutCachePaneControl : DockSelectionControl
         VisualParenting.ReconcilePanel(_headers, tabViews);
         VisualParenting.ReconcilePanel(_content, contentViews);
         UpdatePaneChrome(pane, models, surface.Manager);
-        UpdateTitle(pane is LayoutAnchorablePane, selected as LayoutAnchorable, surface.Manager);
+        UpdateTitle(pane is LayoutAnchorablePane && !IsCaptionOwned(pane), selected as LayoutAnchorable, surface.Manager);
         DockVisuals.SetName(this, pane is LayoutDocumentPane ? "Document tab group" : "Tool tab group");
         MenuContext.SetTarget(this, selected);
         ContextFlyout = selected == null ? null : DockVisuals.Menu(surface.Manager, selected);
@@ -129,12 +129,12 @@ public partial class LayoutCachePaneControl : DockSelectionControl
     private DockingManager? _titleManager;
     internal int InsertionIndex(Point surfacePoint, DockSurface surface)
     {
-        if (IsOverHeaderElement(_titlePresenter, surfacePoint, surface))
+        if (IsOverHeaderElement(_titlePresenter, surfacePoint, surface) || IsOverWindowCaption(surfacePoint, surface))
             return Pane?.ChildrenCount ?? 0;
         var index = 0;
         foreach (var model in Items)
         {
-            if (!_tabs.TryGetValue(model, out var tab))
+            if (!_tabs.TryGetValue(model, out var tab) || tab.XamlRoot == null || tab.ActualWidth <= 0)
             {
                 index++;
                 continue;
@@ -149,7 +149,25 @@ public partial class LayoutCachePaneControl : DockSelectionControl
         return index;
     }
 
-    internal bool IsOverHeader(Point point, DockSurface surface) => IsOverHeaderElement(_scroll, point, surface) || IsOverHeaderElement(_titlePresenter, point, surface);
+    /// <summary>True while a tab drag stays within the tab strip band (inflated
+        /// by <paramref name = "margin"/>); leaving it tears the tab off.</summary>
+        internal bool IsNearTabStrip(Point point, DockSurface surface, double margin)
+    {
+        if (_tabBar.Visibility != Visibility.Visible || _tabBar.ActualWidth <= 0 || _tabBar.ActualHeight <= 0)
+            return false;
+        try
+        {
+            var local = DockCoordinates.Translate(surface, point, _tabBar, surface.Manager.CrossWindowCoordinates);
+            return local.X >= -margin && local.Y >= -margin && local.X <= _tabBar.ActualWidth + margin && local.Y <= _tabBar.ActualHeight + margin;
+        }
+        catch (Exception e) when (DockCoordinates.IsUnavailable(e))
+        {
+            return true;
+        }
+    }
+
+    internal bool IsOverHeader(Point point, DockSurface surface) => IsOverHeaderElement(_scroll, point, surface) || IsOverHeaderElement(_titlePresenter, point, surface) || IsOverWindowCaption(point, surface);
+    private bool IsOverWindowCaption(Point point, DockSurface surface) => Pane is { } pane && IsCaptionOwned(pane) && this.FindVisualAncestor<LayoutFloatingWindowControl>() is { } window && IsOverHeaderElement(window.CaptionElement, point, surface);
     private static bool IsOverHeaderElement(FrameworkElement header, Point point, DockSurface surface)
     {
         if (header.ActualWidth <= 0 || header.ActualHeight <= 0)

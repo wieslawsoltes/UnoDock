@@ -46,6 +46,9 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
     internal bool IsMinimized => _minimized;
 
     public event EventHandler<Exception>? MessageFilterFailed;
+    /// <summary>The caption row; for a single-pane tool window it is also that
+        /// pane's title, so it accepts tab insertion like a pane title does.</summary>
+        internal FrameworkElement CaptionElement => _title;
     internal double ChromeCaptionHeight
     {
         get => _title.MinHeight;
@@ -351,14 +354,6 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
             SetBounds(bounds);
     }
 
-    private void DockAll()
-    {
-        var root = Model.Root as LayoutRoot;
-        using (root?.BeginUpdate())
-            foreach (var content in Contents.ToArray())
-                content.Dock();
-    }
-
     internal virtual void UpdateView()
     {
         EnsureInitialized();
@@ -375,27 +370,11 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
         _caption.Margin = new Thickness(8, 3, 8, 3);
         // Keep WindowChrome's explicitly owned caption MinHeight independent.
         _caption.MinHeight = Math.Max(0, palette.TitleHeight - 6);
-        foreach (var button in _title.FindVisualChildren<Button>())
-        {
-            button.Foreground = palette.Foreground;
-            button.FontSize = palette.FontSize;
-            button.MinHeight = palette.ChromeButtonSize;
-            button.MinWidth = palette.ChromeButtonSize;
-            button.CornerRadius = new CornerRadius(palette.ButtonCornerRadius);
-            button.Padding = new Thickness(7, 2, 7, 2);
-        }
-
-        _caption.Text = Contents.FirstOrDefault(c => c.IsActive)?.Title ?? Contents.FirstOrDefault()?.Title ?? "Floating tools";
+        _caption.Text = CaptionContent?.Title ?? (Model is LayoutDocumentFloatingWindow ? "Document" : "Tools");
         if (_window != null)
             _window.Title = _caption.Text;
         _frame.Background = palette.Surface;
-        var active = Contents.Any(c => c.IsActive);
-        _title.Background = active ? palette.States.ActiveToolTitle : palette.States.ToolTitle;
-        var captionForeground = (active ? palette.States.ActiveToolTitleForeground : palette.States.ToolTitleForeground) ?? palette.Foreground;
-        _caption.Foreground = captionForeground;
-        foreach (var button in _title.FindVisualChildren<Button>())
-            button.Foreground = captionForeground;
-        BorderBrush = active ? palette.States.ActiveFloatingBorder : palette.States.FloatingBorder;
+        PaintCaption(palette);
         UIElement? body = Model switch
         {
             LayoutDocumentFloatingWindow { RootDocument: { } d } => manager.GetLayoutItemFromModel(d).View,
@@ -481,12 +460,19 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
             }
 
             var bounds = RestoredBounds;
-            var scale = DesktopWindowCoordinates.Scale(this);
+            var scale = HostScale();
             _syncBounds = true;
             try
             {
-                _window.AppWindow.Move(new Windows.Graphics.PointInt32 { X = (int)(bounds.X * scale), Y = (int)(bounds.Y * scale) });
                 _window.AppWindow.Resize(new Windows.Graphics.SizeInt32 { Width = (int)(bounds.Width * scale), Height = (int)(bounds.Height * scale) });
+#if !WINDOWS
+                // Persisted floating bounds are top-left screen coordinates on
+                // every platform; AppKit frame origins are bottom-left.
+                if (OperatingSystem.IsMacOS())
+                    MacDesktopInterop.MoveTopLeft(_window, new(bounds.X, bounds.Y));
+                else
+#endif
+                _window.AppWindow.Move(new Windows.Graphics.PointInt32 { X = (int)(bounds.X * scale), Y = (int)(bounds.Y * scale) });
             }
             finally
             {
@@ -599,14 +585,12 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
                 _pendingNativeSync = null;
             if (_hostDisposed || _closingHost || !ReferenceEquals(_window, window))
                 return;
-            var scale = DesktopWindowCoordinates.Scale(this);
+            var scale = HostScale();
             var native = window.AppWindow;
             var state = (native.Presenter as OverlappedPresenter)?.State ?? OverlappedPresenterState.Restored;
             try
             {
-                var origin = _dragCoordinates.GetNativeOrigin(window);
-                var positionScale = OperatingSystem.IsMacOS() ? 1 : scale;
-                SynchronizeNativeState(new(origin.X / positionScale, origin.Y / positionScale, native.Size.Width / scale, native.Size.Height / scale), state);
+                SynchronizeNativeState(PersistedNativeBounds(window, scale), state);
                 UpdateChromeControls();
             }
             catch (Exception error) when (DockCoordinates.IsUnavailable(error))
@@ -615,6 +599,32 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
             }
         }))
             _pendingNativeSync = null;
+    }
+
+    /// <summary>Rasterization scale of this host, falling back to the owning
+        /// manager before the new window has a XamlRoot. A 1.0 guess would halve
+        /// the first native size on high-density displays.</summary>
+        internal double HostScale()
+    {
+        if (XamlRoot?.RasterizationScale is { } own && double.IsFinite(own) && own > 0)
+            return own;
+        return Model.Root?.Manager is { } manager ? DesktopWindowCoordinates.Scale(manager) : 1;
+    }
+
+    /// <summary>Native frame as persisted model bounds: top-left DIPs on every platform.</summary>
+    private DockRect PersistedNativeBounds(Window window, double scale)
+    {
+        var native = window.AppWindow;
+#if !WINDOWS
+        if (OperatingSystem.IsMacOS())
+        {
+            var frame = MacDesktopInterop.TopLeftFrame(window);
+            return new(frame.X, frame.Y, native.Size.Width / scale, native.Size.Height / scale);
+        }
+
+#endif
+        var origin = _dragCoordinates.GetNativeOrigin(window);
+        return new(origin.X / scale, origin.Y / scale, native.Size.Width / scale, native.Size.Height / scale);
     }
 
     internal void SynchronizeNativeState(DockRect bounds, OverlappedPresenterState state)

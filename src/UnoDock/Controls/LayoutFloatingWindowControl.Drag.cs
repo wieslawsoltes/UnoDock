@@ -78,6 +78,32 @@ public abstract partial class LayoutFloatingWindowControl
         return drag;
     }
 
+    /// <summary>Continue an in-progress pointer gesture as a move of this native
+        /// window: the drag clock polls the global pointer, moves the window from
+        /// <paramref name = "originNative"/> and shows docking guides until release.</summary>
+        internal bool BeginPointerDrag(Point pointerNative, Point originNative)
+    {
+        if (_window == null || _captionDrag != null)
+            return false;
+        _lastNativeOrigin = originNative;
+        var drag = BeginCaptionDrag(pointerNative, null, false);
+        if (drag == null)
+            return false;
+        _captionDrag = new CaptionDrag(drag.Surface, drag.Generation, drag.Root, drag.Window, pointerNative, originNative, drag.Bounds, null, false)
+        {
+            Started = true
+        };
+        SetIsDragging(true);
+        if (!Current(_captionDrag))
+        {
+            CancelCaptionDrag();
+            return false;
+        }
+
+        StartDragClock();
+        return true;
+    }
+
     private void CaptionPressed(object sender, PointerRoutedEventArgs e)
     {
         if (!e.GetCurrentPoint(_dragHandle).Properties.IsLeftButtonPressed)

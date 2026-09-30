@@ -115,7 +115,8 @@ of native request provenance or arbitrary window-manager ordering support.
 
 The existing caption-drag docking path remains responsible for preview guides,
 whole-tool-group preflight, tab insertion, Control suppression and Escape.
-Single-tab continuous tear-off is not introduced by this chrome change.
+Continuous tab and pane tear-off hands a still-pressed gesture to this same
+path; see [Floating windows](floating-windows.md).
 
 ## Acceptance
 

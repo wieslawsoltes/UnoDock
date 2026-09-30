@@ -474,12 +474,17 @@ public static class InteractionTests
             });
         }
 
+        // These cases exercise in-workspace and cross-window tab drags; the
+        // continuous tear-off default is covered by the tear-off suite.
+        var tearOff = host.ContinuousTearOff;
+        host.ContinuousTearOff = false;
         try
         {
             return await tests.Run(output, "interaction");
         }
         finally
         {
+            host.ContinuousTearOff = tearOff;
             host.CrossWindowCoordinates = originalCoordinates;
             host.FloatingWindowMode = originalMode;
             host.Layout = original;
@@ -631,7 +636,8 @@ public static class InteractionTests
     }
 
     private static LayoutDocumentPaneControl Pane(DockingManager host) => host.FindVisualChildren<LayoutDocumentPaneControl>().Single();
-    private static FrameworkElement ToolHeader(LayoutCachePaneControl pane) => pane.FindVisualChildren<ContentPresenter>().Single(p => p.Name == "PART_ToolCaption");
+    // A single-pane floating tool window shows its pane title in the window caption.
+    private static FrameworkElement ToolHeader(LayoutCachePaneControl pane) => pane.FindVisualChildren<ContentPresenter>().Single(p => p.Name == "PART_ToolCaption") is { ActualWidth: > 0 } caption ? caption : pane.FindVisualAncestor<LayoutFloatingWindowControl>()!.FindVisualChildren<Border>().Single(b => b.Name == "PART_FloatingDragHandle");
     private static ScrollViewer Header(LayoutCachePaneControl pane) => (ScrollViewer)typeof(LayoutCachePaneControl).GetField("_scroll", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(pane)!;
     private static FrameworkElement Surface(DockingManager host) => (FrameworkElement)typeof(DockingManager).GetField("_surface", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(host)!;
     private static Point At(FrameworkElement from, FrameworkElement to, double x, double y) => from.TransformToVisual(to).TransformPoint(new(from.ActualWidth * x, from.ActualHeight * y));

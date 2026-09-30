@@ -47,6 +47,13 @@ internal sealed class X11TestInput : IDisposable
         Sync(_display, false);
     }
 
+    internal void Move(Point screen)
+    {
+        ObjectDisposedException.ThrowIf(_display == 0, this);
+        Check.True(FakeMotion(_display, -1, checked((int)Math.Round(screen.X)), checked((int)Math.Round(screen.Y)), 0) != 0);
+        Sync(_display, false);
+    }
+
     internal async Task Click(FrameworkElement target)
     {
         // A newly opened popup can have a nonzero ActualHeight before its

@@ -487,6 +487,18 @@ internal static class XamlWorkbenchTests
         try
         {
             await Wait(() => view.IsLoaded && view.ActualWidth > 0);
+            // AppWindow sizes are physical pixels; keep the 1200x800 DIP scene
+            // on high-density displays.
+            if (view.XamlRoot?.RasterizationScale is > 1 and var scale)
+            {
+                window.AppWindow.Resize(new()
+                {
+                    Width = (int)Math.Round(1200 * scale),
+                    Height = (int)Math.Round(800 * scale)
+                });
+                await Wait(() => view.ActualWidth > 1100);
+            }
+
             view.UpdateLayout();
             await Task.Delay(80);
             await body();

@@ -55,8 +55,9 @@ public static partial class WindowCoordinateTests
                 await Task.Delay(80);
                 var sourceHost = host.FloatingWindows.Single(w => ReferenceEquals(w.Model, content.FindParent<LayoutFloatingWindow>()));
                 var targetHost = host.FloatingWindows.Single(w => ReferenceEquals(w.Model, target.FindParent<LayoutFloatingWindow>()));
-                // A single-tool pane has no tab strip. Drag its real caption instead.
-                var button = Visuals(sourceHost).OfType<ContentPresenter>().Single(p => p.Name == "PART_ToolCaption");
+                // A single-tool floating window shows the tool title in its window
+                // caption and has no tab strip. Drag that real caption.
+                var button = Visuals(sourceHost).OfType<Border>().Single(p => p.Name == "PART_FloatingDragHandle");
                 sourceHost.NativeWindow!.Activate();
                 await Task.Delay(60);
                 var area = host.GetDropAreas().OfType<DropArea<FrameworkElement>>().Single(a => a.AreaElement is ILayoutControl c && ReferenceEquals(c.Model, target.Parent));
