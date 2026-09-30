@@ -55,7 +55,7 @@ public partial class LayoutCachePaneControl
             Width = GridLength.Auto
         });
         _tabBar.Children.Add(_scroll);
-        _documentsButton = DockChrome.Icon(DockGlyph.Documents, ShowDocuments, "Open documents");
+        _documentsButton = DockChrome.Icon(DockGlyph.Documents, ShowDocuments, Properties.Resources.Pane_OpenDocuments);
         Grid.SetColumn(_documentsButton, 1);
         _tabBar.Children.Add(_documentsButton);
         _layout.Children.Add(_tabBar);
@@ -84,13 +84,13 @@ public partial class LayoutCachePaneControl
         {
             if (_titleModel != null && _titleManager != null)
                 DockVisuals.Menu(_titleManager, _titleModel).ShowAt(_menuButton);
-        }, "Tool window options");
-        _pinButton = DockChrome.Icon(DockGlyph.Pin, () => _titleModel?.ToggleAutoHide(), "Auto-hide tool");
+        }, Properties.Resources.Anchorable_CxMenu_Hint);
+        _pinButton = DockChrome.Icon(DockGlyph.Pin, () => _titleModel?.ToggleAutoHide(), Properties.Resources.Anchorable_BtnAutoHide_Hint);
         _hideButton = DockChrome.Icon(DockGlyph.Close, () =>
         {
             if (_titleModel != null)
                 DockVisuals.CloseOrHide(_titleModel);
-        }, "Hide or close tool");
+        }, Properties.Resources.Anchorable_BtnClose_Hint);
         actions.Children.Add(_menuButton);
         actions.Children.Add(_pinButton);
         actions.Children.Add(_hideButton);

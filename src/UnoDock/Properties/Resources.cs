@@ -2,8 +2,10 @@ using System.Globalization;
 using System.Resources;
 
 namespace UnoDock.Properties;
-/// <summary>Independent English fallback strings. Applications can replace values in Translations by culture name.</summary>
-public class Resources
+/// <summary>Docking chrome strings: English plus bundled translations for
+/// cs, de, es, fr, hu, it, ja, nl, pt, ro, ru, sv and zh-Hans. Applications can
+/// add or replace values in <see cref = "Translations"/> by culture name.</summary>
+public partial class Resources
 {
     public static CultureInfo? Culture
     {
@@ -16,9 +18,9 @@ public class Resources
     private static readonly Dictionary<string, string> English = new()
     {
         ["Anchorable_AutoHide"] = "Auto Hide",
-        ["Anchorable_BtnAutoHide_Hint"] = "Pin or auto-hide this tool",
-        ["Anchorable_BtnClose_Hint"] = "Close tool",
-        ["Anchorable_CxMenu_Hint"] = "Tool actions",
+        ["Anchorable_BtnAutoHide_Hint"] = "Auto-hide tool",
+        ["Anchorable_BtnClose_Hint"] = "Hide or close tool",
+        ["Anchorable_CxMenu_Hint"] = "Tool window options",
         ["Anchorable_Dock"] = "Dock",
         ["Anchorable_DockAsDocument"] = "Dock as Tabbed Document",
         ["Anchorable_Float"] = "Float",
@@ -36,6 +38,11 @@ public class Resources
         ["Document_NewVerticalTabGroup"] = "New Vertical Tab Group",
         ["Window_Maximize"] = "Maximize",
         ["Window_Restore"] = "Restore",
+        ["Window_Minimize"] = "Minimize",
+        ["Window_Close"] = "Close",
+        ["Pane_OpenDocuments"] = "Open documents",
+        ["Tab_Close"] = "Close tab",
+        ["Window_Position"] = "Window position"
     };
     public static string Anchorable_AutoHide => ResourceManager.GetString(nameof(Anchorable_AutoHide), Culture)!;
     public static string Anchorable_BtnAutoHide_Hint => ResourceManager.GetString(nameof(Anchorable_BtnAutoHide_Hint), Culture)!;
@@ -58,6 +65,11 @@ public class Resources
     public static string Document_NewVerticalTabGroup => ResourceManager.GetString(nameof(Document_NewVerticalTabGroup), Culture)!;
     public static string Window_Maximize => ResourceManager.GetString(nameof(Window_Maximize), Culture)!;
     public static string Window_Restore => ResourceManager.GetString(nameof(Window_Restore), Culture)!;
+    public static string Window_Minimize => ResourceManager.GetString(nameof(Window_Minimize), Culture)!;
+    public static string Window_Close => ResourceManager.GetString(nameof(Window_Close), Culture)!;
+    public static string Pane_OpenDocuments => ResourceManager.GetString(nameof(Pane_OpenDocuments), Culture)!;
+    public static string Tab_Close => ResourceManager.GetString(nameof(Tab_Close), Culture)!;
+    public static string Window_Position => ResourceManager.GetString(nameof(Window_Position), Culture)!;
 
     private sealed class StringResources : ResourceManager
     {
@@ -68,6 +80,8 @@ public class Resources
             {
                 if (Translations.TryGetValue(current.Name, out var strings) && strings.TryGetValue(name, out var text))
                     return text;
+                if (BuiltIn.TryGetValue(current.Name, out var bundled) && bundled.TryGetValue(name, out var translated))
+                    return translated;
                 current = current.Parent;
             }
 

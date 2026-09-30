@@ -105,6 +105,7 @@ public partial class App : Application
                         ("floating-resize-policy-tools", true, () => Testing.FloatingChromeTests.RunResizePolicy(output, true)),
                         ("uno-theme", true, () => Testing.UnoThemeTests.Run(output)),
                         ("classic-themes", true, () => Testing.ClassicThemeTests.Run(output)),
+                        ("localization", true, () => Testing.LocalizationTests.Run(output)),
                         ("windows-floating-input", true, () => Testing.WindowsFloatingInputTests.Run(output)),
                         ("tear-off", true, () => Testing.TearOffInputTests.Run(output))
                     };
