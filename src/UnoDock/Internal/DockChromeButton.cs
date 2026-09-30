@@ -62,6 +62,74 @@ internal sealed partial class DockChromeButton : Button
         }
     }
 
+    private Brush? _pressedOverride, _hoverForegroundOverride, _pressedForegroundOverride, _hoverBorderOverride;
+    /// <summary>Pressed fill supplied by a theme; null uses the palette's pressed brush.</summary>
+    internal Brush? PressedOverride
+    {
+        get => _pressedOverride;
+        set
+        {
+            if (ReferenceEquals(_pressedOverride, value))
+                return;
+            _pressedOverride = value;
+            Paint();
+        }
+    }
+
+    /// <summary>Glyph/text brush while hovered; null keeps the resting foreground.</summary>
+    internal Brush? HoverForegroundOverride
+    {
+        get => _hoverForegroundOverride;
+        set
+        {
+            if (ReferenceEquals(_hoverForegroundOverride, value))
+                return;
+            _hoverForegroundOverride = value;
+            Paint();
+        }
+    }
+
+    /// <summary>Glyph/text brush while pressed; null uses the hover foreground.</summary>
+    internal Brush? PressedForegroundOverride
+    {
+        get => _pressedForegroundOverride;
+        set
+        {
+            if (ReferenceEquals(_pressedForegroundOverride, value))
+                return;
+            _pressedForegroundOverride = value;
+            Paint();
+        }
+    }
+
+    /// <summary>Outline drawn while hovered or pressed; null draws none.</summary>
+    internal Brush? HoverBorderOverride
+    {
+        get => _hoverBorderOverride;
+        set
+        {
+            if (ReferenceEquals(_hoverBorderOverride, value))
+                return;
+            _hoverBorderOverride = value;
+            Paint();
+        }
+    }
+
+    /// <summary>Configure a caption or title-bar button: the resting glyph brush
+        /// plus the theme's caption hover/pressed states. Fluent keeps the native
+        /// Button states; only the classic template consumes the state brushes.</summary>
+        internal void ConfigureCaption(DockPalette palette, Brush? foreground)
+    {
+        Configure(palette);
+        var states = palette.States;
+        ForegroundOverride = foreground;
+        HoverOverride = states.ChromeButtonHover;
+        PressedOverride = states.ChromeButtonPressed;
+        HoverForegroundOverride = states.ChromeButtonHoverForeground;
+        PressedForegroundOverride = states.ChromeButtonPressedForeground;
+        HoverBorderOverride = states.ChromeButtonHoverBorder;
+    }
+
     internal DockChromeButton()
     {
         DefaultStyleKey = typeof(Button);
@@ -148,7 +216,18 @@ internal sealed partial class DockChromeButton : Button
 
     private void Paint()
     {
-        var foreground = _foregroundOverride != null && IsEnabled ? _foregroundOverride : !_fluent ? _palette.Foreground : !IsEnabled ? _palette.DisabledForeground ?? _palette.Foreground : _subdued ? _palette.SecondaryForeground ?? _palette.Foreground : _palette.Foreground;
+        // Classic chrome paints a disabled glyph with the theme's disabled brush.
+        // A palette without a distinct disabled brush keeps the dimmed resting
+        // foreground, as before.
+        var distinctDisabled = !_fluent && _palette.DisabledForeground is { } disabled && !ReferenceEquals(disabled, _palette.Foreground);
+        var hot = IsEnabled && (IsPressed || _over);
+        Brush foreground;
+        if (_fluent)
+            foreground = _foregroundOverride != null && IsEnabled ? _foregroundOverride : !IsEnabled ? _palette.DisabledForeground ?? _palette.Foreground : _subdued ? _palette.SecondaryForeground ?? _palette.Foreground : _palette.Foreground;
+        else if (!IsEnabled)
+            foreground = distinctDisabled ? _palette.DisabledForeground! : _palette.Foreground;
+        else
+            foreground = (IsPressed ? _pressedForegroundOverride ?? _hoverForegroundOverride : _over ? _hoverForegroundOverride : null) ?? _foregroundOverride ?? _palette.Foreground;
         // The pinned browser renderer can stall in inherited brush propagation
         // before attachment. Retain the latest palette and publish the same brush
         // at Loaded; desktop/offscreen presentation keeps its existing contract.
@@ -166,8 +245,8 @@ internal sealed partial class DockChromeButton : Button
             return;
         }
 
-        Background = IsEnabled && (IsPressed || _over) ? IsPressed ? _palette.Pressed : _hoverOverride ?? _palette.Hover : _backgroundOverride ?? DockChrome.Transparent;
-        BorderBrush = FocusState == FocusState.Keyboard ? _palette.Accent : null;
-        Opacity = IsEnabled ? 1 : .45;
+        Background = hot ? IsPressed ? _pressedOverride ?? _palette.Pressed : _hoverOverride ?? _palette.Hover : _backgroundOverride ?? DockChrome.Transparent;
+        BorderBrush = FocusState == FocusState.Keyboard ? _palette.Accent : hot ? _hoverBorderOverride : null;
+        Opacity = IsEnabled || distinctDisabled ? 1 : .45;
     }
 }

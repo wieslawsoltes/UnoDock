@@ -10,6 +10,11 @@ public partial class LayoutCachePaneControl : DockSelectionControl
 {
     private readonly Grid _layout = new();
     private readonly Grid _content = new();
+    // Carries a theme frame drawn around the content only (below the tabs).
+    private readonly Border _contentFrame = new()
+    {
+        Name = "PART_ContentFrame"
+    };
     private Panel _headers = new DocumentPaneTabPanel();
     private readonly ScrollViewer _scroll;
     private readonly Grid _titleRow = new();
@@ -56,10 +61,11 @@ public partial class LayoutCachePaneControl : DockSelectionControl
             MaxHeight = 54
         };
         Grid.SetRow(_scroll, 1);
-        Grid.SetRow(_content, 2);
+        _contentFrame.Child = _content;
+        Grid.SetRow(_contentFrame, 2);
         _layout.Children.Add(_titleRow);
         _layout.Children.Add(_scroll);
-        _layout.Children.Add(_content);
+        _layout.Children.Add(_contentFrame);
         Content = _layout;
         IsTabStop = false;
         InitializeChrome();

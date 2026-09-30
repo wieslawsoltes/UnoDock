@@ -74,13 +74,13 @@ internal static class DockChrome
             "AccentBrush" => "AccentFillColorDefaultBrush",
             "ActiveTitleBrush" => "ControlFillColorInputActiveBrush",
             _ => key
-        }, fallback);
+        }, DockGenericThemeResources.Find(manager, key) as Brush ?? fallback);
         double N(string key, double fallback, double min, double max) => Find(key) is double number && double.IsFinite(number) ? Math.Clamp(number, min, max) : fallback;
         object? Find(string key)
         {
             if (DockThemeResources.UsesFluent(manager))
                 return DockThemeResources.FindMetric(manager, key);
-            return manager.Resources.TryGetValue("UnoDock." + key, out var value) ? value : null;
+            return manager.Resources.TryGetValue("UnoDock." + key, out var value) ? value : DockGenericThemeResources.Find(manager, key);
         }
     }
 
