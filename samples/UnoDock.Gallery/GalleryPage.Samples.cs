@@ -67,7 +67,7 @@ public sealed partial class GalleryPage : IDisposable
         };
         toolbar.Children.Add(_samplePicker);
         toolbar.Children.Add(Label("Theme:"));
-        _themePicker = Picker("ThemeSelector", new[] { "Generic", "Light", "Dark" }, 100);
+        _themePicker = Picker("ThemeSelector", new[] { "Generic", "Light", "Dark", "Aero", "Metro", "VS2010" }, 100);
         _themePicker.SelectionChanged += (_, _) =>
         {
             if (!_selectingTheme && _themePicker.SelectedIndex >= 0)
@@ -182,7 +182,14 @@ public sealed partial class GalleryPage : IDisposable
         CurrentSampleTheme = theme;
         var dark = theme == SampleTheme.Dark;
         RequestedTheme = dark ? ElementTheme.Dark : ElementTheme.Light;
-        Dock.Theme = theme == SampleTheme.Generic ? new GenericTheme() : new FluentTheme(RequestedTheme);
+        Dock.Theme = theme switch
+        {
+            SampleTheme.Generic => new GenericTheme(),
+            SampleTheme.Aero => new AeroTheme(),
+            SampleTheme.Metro => new MetroTheme(),
+            SampleTheme.VS2010 => new VS2010Theme(),
+            _ => new FluentTheme(RequestedTheme)
+        };
         ApplyGalleryPresentation(theme);
         if (_sampleShell != null)
         {

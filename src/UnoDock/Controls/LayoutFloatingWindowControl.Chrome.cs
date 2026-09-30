@@ -222,7 +222,7 @@ public abstract partial class LayoutFloatingWindowControl
         if (_window != null && Model.Root?.Manager is { } manager)
         {
             var palette = DockChrome.Palette(manager);
-            _title.Background = _nativeCaptionActive && Contents.Any(c => c.IsActive) ? palette.ActiveTitle : palette.Header;
+            _title.Background = _nativeCaptionActive && Contents.Any(c => c.IsActive) ? palette.States.ActiveToolTitle : palette.States.ToolTitle;
         }
 
         var b = ResizeBorderThickness;

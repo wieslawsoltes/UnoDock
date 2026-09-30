@@ -1,0 +1,12 @@
+<Project Sdk="Uno.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks Condition="'$(UnoDockLibraryFrameworks)' == ''">net10.0;net10.0-windows10.0.26100.0</TargetFrameworks>
+    <TargetFrameworks Condition="'$(UnoDockLibraryFrameworks)' != ''">$(UnoDockLibraryFrameworks)</TargetFrameworks>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting><IsPackable>true</IsPackable>
+    <PackageId>UnoDock.Themes.Metro</PackageId><RootNamespace>UnoDock.Themes.Metro</RootNamespace><AssemblyName>UnoDock.Themes.Metro</AssemblyName>
+    <Description>Metro-style docking theme for UnoDock.</Description>
+    <PackageTags>uno;winui;docking;dock;theme;Metro</PackageTags>
+    <GenerateLibraryLayout>true</GenerateLibraryLayout>
+  </PropertyGroup>
+  <ItemGroup><ProjectReference Include="../UnoDock/UnoDock.csproj" /></ItemGroup>
+</Project>

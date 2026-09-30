@@ -27,7 +27,7 @@ public sealed partial class GalleryPage
     {
         if (_sampleShell == null)
             return;
-        var fluent = theme != SampleTheme.Generic;
+        var fluent = theme is SampleTheme.Light or SampleTheme.Dark;
         if (fluent)
         {
             if (!_sampleShell.Resources.MergedDictionaries.Contains(_galleryWorkbench))

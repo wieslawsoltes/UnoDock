@@ -31,6 +31,9 @@ public abstract partial class LayoutTabItemBase : DockInputControl
         VerticalAlignment = VerticalAlignment.Center
     };
     private readonly DockChromeButton _close;
+    private Microsoft.UI.Xaml.Shapes.Path? _shape;
+    private Canvas? _shapeHost;
+    private const double SlantWidth = 12;
     private DockingManager? _manager;
     public LayoutContent? Model
     {
@@ -196,27 +199,117 @@ public abstract partial class LayoutTabItemBase : DockInputControl
         var tool = Model is LayoutAnchorable && Model.Parent is not LayoutDocumentPane;
         _label.Configure(palette);
         _close.Configure(palette);
-        _label.FontWeight = palette.UsesFluentControls && Model.IsSelected ? Microsoft.UI.Text.FontWeights.SemiBold : Microsoft.UI.Text.FontWeights.Normal;
+        var states = palette.States;
+        var bold = Model.IsSelected && (states.BoldSelectedTab || palette.UsesFluentControls);
+        _label.FontWeight = !bold ? Microsoft.UI.Text.FontWeights.Normal : states.BoldSelectedTab ? Microsoft.UI.Text.FontWeights.Bold : Microsoft.UI.Text.FontWeights.SemiBold;
         _label.HorizontalContentAlignment = HorizontalAlignment.Left;
         _label.IsSubdued = !Model.IsSelected;
+        var foreground = tool ? Model.IsSelected ? states.SelectedToolTabForeground : states.ToolTabForeground : !Model.IsSelected ? states.DocumentTabForeground : Model.IsActive ? states.ActiveDocumentTabForeground ?? states.SelectedDocumentTabForeground : states.SelectedDocumentTabForeground;
+        _label.ForegroundOverride = foreground;
+        _close.ForegroundOverride = foreground;
+        _label.HoverOverride = states.TabHover;
         _chrome.CornerRadius = tool ? new(0, 0, palette.TabCornerRadius, palette.TabCornerRadius) : new(palette.TabCornerRadius, palette.TabCornerRadius, 0, 0);
         _selectionIndicator.CornerRadius = new(palette.UsesFluentControls ? 1 : 0);
         _close.Visibility = !tool && Model.CanClose && Model.IsSelected ? Visibility.Visible : Visibility.Collapsed;
-        _chrome.Background = Model.IsSelected ? palette.Surface : palette.Tab;
+        var background = tool ? Model.IsSelected ? states.SelectedToolTab : states.ToolTab : !Model.IsSelected ? states.DocumentTab : Model.IsActive ? states.ActiveDocumentTab : states.SelectedDocumentTab;
         _selectionIndicator.Height = palette.ActiveTabIndicatorThickness;
-        _selectionIndicator.Background = Model.IsActive ? palette.Accent : palette.Border;
+        _selectionIndicator.Background = Model.IsActive ? states.ActiveTabIndicator : states.SelectedTabIndicator;
         _selectionIndicator.Margin = new Thickness(3, 0, 3, 0);
+        _selectionIndicator.VerticalAlignment = states.IndicatorPlacement == DockTabIndicatorPlacement.Bottom ? VerticalAlignment.Bottom : VerticalAlignment.Top;
         _selectionIndicator.Visibility = Model.IsSelected && palette.ActiveTabIndicatorThickness > 0 ? Visibility.Visible : Visibility.Collapsed;
-        _chrome.BorderBrush = palette.Border;
-        _chrome.BorderThickness = tool ? new(0, 0, 1, 0) : new(0, 0, 1, 0);
-        var horizontalPadding = palette.UsesFluentControls ? palette.TabHorizontalPadding : tool ? 3 : 0;
-        _chrome.Padding = new(horizontalPadding, 0, horizontalPadding, 0);
+        var slanted = !tool && states.DocumentTabShape == DockTabShape.Slanted;
+        var horizontalPadding = palette.UsesFluentControls || palette.TabHorizontalPadding > 0 ? palette.TabHorizontalPadding : tool ? 3 : 0;
+        PaintShape(slanted, background, states.TabBorder, tool ? palette.ToolTabHeight - 2 : palette.TabHeight - 1);
+        if (slanted)
+        {
+            _chrome.Background = DockChrome.Transparent;
+            _chrome.BorderThickness = new(0);
+            _chrome.Padding = new(horizontalPadding + SlantWidth, 0, horizontalPadding + 2, 0);
+            _shapeHost!.Margin = new(-_chrome.Padding.Left, 0, -_chrome.Padding.Right, 0);
+            Margin = new(Model.Parent is ILayoutGroup group && group.IndexOfChild(Model) > 0 ? -SlantWidth / 2 : 0, 0, 0, 0);
+            Canvas.SetZIndex(this, Model.IsSelected ? 1 : 0);
+        }
+        else
+        {
+            _chrome.Background = background;
+            _chrome.BorderBrush = states.TabBorder;
+            _chrome.BorderThickness = new(0, 0, 1, 0);
+            _chrome.Padding = new(horizontalPadding, 0, horizontalPadding, 0);
+            Margin = new(0, 0, tool ? 0 : states.DocumentTabSpacing, 0);
+            Canvas.SetZIndex(this, 0);
+        }
+
         MinHeight = 0;
         Height = tool ? palette.ToolTabHeight - 2 : palette.TabHeight - 1;
         DockVisuals.SetName(_label, Model.Title ?? "Document");
         ToolTipService.SetToolTip(_label, Model.ToolTip ?? Model.Title);
         MenuContext.SetTarget(this, Model);
         ContextFlyout = DockVisuals.Menu(manager, Model);
+    }
+
+    /// <summary>Theme-defined tab outline. The slanted outline is drawn behind
+        /// the unchanged label/close layout, so hit testing and automation keep the
+        /// rectangular contract of the default shape.</summary>
+        private void PaintShape(bool slanted, Brush background, Brush border, double height)
+    {
+        if (!slanted)
+        {
+            if (_shapeHost != null)
+                _shapeHost.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        if (_shape == null)
+        {
+            _shape = new()
+            {
+                Name = "PART_TabShape",
+                IsHitTestVisible = false,
+                Stretch = Stretch.None,
+                StrokeThickness = 1
+            };
+            // A Canvas reports no desired size, so the outline follows the
+            // arranged tab instead of feeding its own width back into measure.
+            _shapeHost = new Canvas
+            {
+                IsHitTestVisible = false
+            };
+            _shapeHost.Children.Add(_shape);
+            Grid.SetColumnSpan(_shapeHost, 2);
+            _chrome.Children.Insert(0, _shapeHost);
+            _shapeHost.SizeChanged += (_, _) => UpdateShapeGeometry();
+        }
+
+        _shapeHost!.Visibility = Visibility.Visible;
+        _shape.Visibility = Visibility.Visible;
+        _shape.Fill = background;
+        _shape.Stroke = border;
+        _shapeHeight = height;
+        UpdateShapeGeometry();
+    }
+
+    private double _shapeHeight;
+    private void UpdateShapeGeometry()
+    {
+        if (_shape == null || _shapeHost is not { Visibility: Visibility.Visible } host)
+            return;
+        var width = Math.Max(SlantWidth + 6, host.ActualWidth > 0 ? host.ActualWidth : SlantWidth + 6);
+        var height = Math.Max(4, host.ActualHeight > 0 ? host.ActualHeight : _shapeHeight);
+        var bottom = height + .5;
+        var figure = new PathFigure
+        {
+            StartPoint = new(.5, bottom),
+            IsClosed = true,
+            IsFilled = true
+        };
+        figure.Segments.Add(new LineSegment { Point = new(SlantWidth - 1.5, 2.5) });
+        figure.Segments.Add(new BezierSegment { Point1 = new(SlantWidth - .5, .5), Point2 = new(SlantWidth + .5, .5), Point3 = new(SlantWidth + 2.5, .5) });
+        figure.Segments.Add(new LineSegment { Point = new(width - 3, .5) });
+        figure.Segments.Add(new BezierSegment { Point1 = new(width - 1, .5), Point2 = new(width - .5, 1), Point3 = new(width - .5, 3) });
+        figure.Segments.Add(new LineSegment { Point = new(width - .5, bottom) });
+        var geometry = new PathGeometry();
+        geometry.Figures.Add(figure);
+        _shape.Data = geometry;
     }
 
     internal void FocusLabel() => _label.Focus(FocusState.Keyboard);

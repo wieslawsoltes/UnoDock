@@ -389,8 +389,13 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
         if (_window != null)
             _window.Title = _caption.Text;
         _frame.Background = palette.Surface;
-        _title.Background = Contents.Any(c => c.IsActive) ? palette.ActiveTitle : palette.Header;
-        BorderBrush = palette.Border;
+        var active = Contents.Any(c => c.IsActive);
+        _title.Background = active ? palette.States.ActiveToolTitle : palette.States.ToolTitle;
+        var captionForeground = (active ? palette.States.ActiveToolTitleForeground : palette.States.ToolTitleForeground) ?? palette.Foreground;
+        _caption.Foreground = captionForeground;
+        foreach (var button in _title.FindVisualChildren<Button>())
+            button.Foreground = captionForeground;
+        BorderBrush = active ? palette.States.ActiveFloatingBorder : palette.States.FloatingBorder;
         UIElement? body = Model switch
         {
             LayoutDocumentFloatingWindow { RootDocument: { } d } => manager.GetLayoutItemFromModel(d).View,

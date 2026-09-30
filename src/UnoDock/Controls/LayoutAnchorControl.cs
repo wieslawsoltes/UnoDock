@@ -65,6 +65,8 @@ public class LayoutAnchorControl : DockInputControl, ILayoutControl
         _button.IsEnabled = _model.IsEnabled;
         var palette = DockChrome.Palette(manager);
         _button.Configure(palette);
+        _button.ForegroundOverride = palette.States.AnchorTabForeground;
+        _button.BackgroundOverride = palette.States.AnchorTab;
         _button.BorderBrush = palette.Border;
         _button.Height = palette.RailThickness - 4;
         _rotator.Vertical = Side is AnchorSide.Left or AnchorSide.Right;

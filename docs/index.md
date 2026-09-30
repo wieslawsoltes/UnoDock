@@ -13,7 +13,7 @@ Build an application workspace from explicit layout models and native Uno/WinUI 
 
 ## Application integration
 
-[XAML and MVVM](xaml-workbench.md) explains native dependency properties, source-backed items, binding definitions, and layout templates. [Consumer workspaces](xaml-support.md) covers the compiled examples and replaceable resource dictionaries. [Fluent controls](fluent-controls.md) describes platform-template ownership and semantic resource customization; [Fluent navigator](fluent-navigator.md) covers the Ctrl+Tab presentation and command path.
+[XAML and MVVM](xaml-workbench.md) explains native dependency properties, source-backed items, binding definitions, and layout templates. [Consumer workspaces](xaml-support.md) covers the compiled examples and replaceable resource dictionaries. [Themes](themes.md) lists the Generic, Fluent, Aero, Metro and VS2010 themes and every customizable resource key. [Fluent controls](fluent-controls.md) describes platform-template ownership and semantic resource customization; [Fluent navigator](fluent-navigator.md) covers the Ctrl+Tab presentation and command path.
 
 [Docking and sizing](docking-sizing.md) documents multi-pane allocation and stale-resize protection. [Model invariants](model-invariants.md) explains mutation, reentrancy, exception, and activation semantics. [Native property inspector](native-property-inspector.md) records the built-in-control migration and retained editing rules.
 

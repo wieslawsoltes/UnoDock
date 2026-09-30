@@ -12,7 +12,7 @@ internal readonly record struct DockMenuPalette(Brush Surface, Brush Gutter, Bru
     internal static DockMenuPalette Resolve(DockingManager manager)
     {
         var p = DockChrome.Palette(manager);
-        var palette = manager.Theme is Themes.DictionaryTheme || manager.ActualTheme == ElementTheme.Dark && manager.Theme is not Themes.GenericTheme;
+        var palette = manager.Theme is Themes.DictionaryTheme || DockThemeResources.EffectiveTheme(manager) == ElementTheme.Dark;
         var background = Get("MenuBrush", palette ? p.Surface : _light ??= DockChrome.Color(0xf5f5f5));
         return new(background, Get("MenuGutterBrush", palette ? p.Header : _gutter ??= DockChrome.Color(0xf0f0f0)), Get("MenuBorderBrush", p.Border), Get("MenuForegroundBrush", p.Foreground), Get("MenuDisabledBrush", palette ? p.DisabledForeground ?? p.Border : _disabled ??= DockChrome.Color(0x707070)), Get("MenuHoverBrush", p.Hover), Get("MenuHoverBorderBrush", p.Accent), p.FontSize, Math.Max(Number("MenuRowHeight", p.UsesFluentControls ? Math.Max(28, p.TabHeight) : 22, 20, 72), Math.Ceiling(p.FontSize * 1.4) + 4), Number("MenuMinWidth", 235, 0, 600), manager.FlowDirection, p.UsesFluentControls, DockThemeResources.EffectiveTheme(manager), Get("MenuPressedBrush", p.Pressed));
         Brush Get(string key, Brush fallback) => Find(key) is Brush brush ? brush : fallback;

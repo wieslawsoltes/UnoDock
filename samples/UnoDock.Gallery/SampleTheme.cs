@@ -12,5 +12,8 @@ internal enum SampleTheme
 {
     Generic,
     Light,
-    Dark
+    Dark,
+    Aero,
+    Metro,
+    VS2010
 }

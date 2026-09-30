@@ -55,7 +55,11 @@ internal static class DockChrome
         var tabHeight = Fit("TabHeight", p.TabHeight, legacy.TabHeight, 20, 64);
         var toolTabHeight = Fit("ToolTabHeight", p.ToolTabHeight, legacy.ToolTabHeight, 20, 64);
         var buttonSize = Math.Min(N("ChromeButtonSize", p.ChromeButtonSize, 12, 40), Math.Min(titleHeight - 2, Math.Min(tabHeight - 2, toolTabHeight - 2)));
-        return new(B("PaneBrush", p.Surface), B("HeaderBrush", p.Header), B("InactiveTabBrush", p.Tab), B("BorderBrush", p.Border), B("ForegroundBrush", p.Foreground), B("HoverBrush", p.Hover), B("PressedBrush", p.Pressed), B("AccentBrush", p.Accent), B("ActiveTitleBrush", p.ActiveTitle), fontSize, titleHeight, tabHeight, toolTabHeight, Fit("RailThickness", p.RailThickness, legacy.RailThickness, 24, 72), N("ButtonCornerRadius", 0, 0, 12), buttonSize, N("ActiveTabIndicatorThickness", 0, 0, 6), DockThemeResources.UsesFluent(manager), B("SecondaryForegroundBrush", p.Foreground), B("DisabledForegroundBrush", p.Foreground), N("TabCornerRadius", DockThemeResources.UsesFluent(manager) ? 4 : 0, 0, 12), N("TabHorizontalPadding", DockThemeResources.UsesFluent(manager) ? 6 : 0, 0, 24), N("PaneCornerRadius", DockThemeResources.UsesFluent(manager) ? 4 : 0, 0, 12));
+        DockPalette resolved = new(B("PaneBrush", p.Surface), B("HeaderBrush", p.Header), B("InactiveTabBrush", p.Tab), B("BorderBrush", p.Border), B("ForegroundBrush", p.Foreground), B("HoverBrush", p.Hover), B("PressedBrush", p.Pressed), B("AccentBrush", p.Accent), B("ActiveTitleBrush", p.ActiveTitle), fontSize, titleHeight, tabHeight, toolTabHeight, Fit("RailThickness", p.RailThickness, legacy.RailThickness, 24, 72), N("ButtonCornerRadius", 0, 0, 12), buttonSize, N("ActiveTabIndicatorThickness", 0, 0, 6), DockThemeResources.UsesFluent(manager), B("SecondaryForegroundBrush", p.Foreground), B("DisabledForegroundBrush", p.Foreground), N("TabCornerRadius", DockThemeResources.UsesFluent(manager) ? 4 : 0, 0, 12), N("TabHorizontalPadding", DockThemeResources.UsesFluent(manager) ? 6 : 0, 0, 24), N("PaneCornerRadius", DockThemeResources.UsesFluent(manager) ? 4 : 0, 0, 12));
+        return resolved with
+        {
+            States = DockStatePalette.Resolve(resolved, Find)
+        };
         Brush B(string key, Brush fallback) => DockThemeResources.Brush(manager, key, key switch
         {
             "PaneBrush" => "LayerFillColorDefaultBrush",
@@ -71,14 +75,12 @@ internal static class DockChrome
             "ActiveTitleBrush" => "ControlFillColorInputActiveBrush",
             _ => key
         }, fallback);
-        double N(string key, double fallback, double min, double max)
+        double N(string key, double fallback, double min, double max) => Find(key) is double number && double.IsFinite(number) ? Math.Clamp(number, min, max) : fallback;
+        object? Find(string key)
         {
-            object? value;
             if (DockThemeResources.UsesFluent(manager))
-                value = DockThemeResources.FindMetric(manager, key);
-            else
-                manager.Resources.TryGetValue("UnoDock." + key, out value);
-            return value is double number && double.IsFinite(number) ? Math.Clamp(number, min, max) : fallback;
+                return DockThemeResources.FindMetric(manager, key);
+            return manager.Resources.TryGetValue("UnoDock." + key, out var value) ? value : null;
         }
     }
 

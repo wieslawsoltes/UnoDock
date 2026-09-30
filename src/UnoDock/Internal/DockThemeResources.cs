@@ -7,12 +7,7 @@ internal static class DockThemeResources
     // Null keeps the historical automatic light/dark palette. FluentTheme() is
     // the explicit Uno semantic theme and follows the owning RequestedTheme.
     internal static bool UsesFluent(DockingManager manager) => manager.Theme is FluentTheme or ResourceDictionaryTheme;
-    internal static ElementTheme EffectiveTheme(DockingManager manager) => manager.Theme switch
-    {
-        GenericTheme => ElementTheme.Light,
-        FluentTheme { RequestedTheme: not ElementTheme.Default } fluent => fluent.RequestedTheme,
-        _ => manager.ActualTheme
-    };
+    internal static ElementTheme EffectiveTheme(DockingManager manager) => manager.Theme?.ChromeTheme is { } fixedTheme and not ElementTheme.Default ? fixedTheme : manager.ActualTheme;
     internal static (string Dock, string System, Brush Fallback)[] Slots(DockPalette p) => [("PaneBrush", "LayerFillColorDefaultBrush", p.Surface), ("HeaderBrush", "SolidBackgroundFillColorBaseBrush", p.Header), ("InactiveTabBrush", "ControlFillColorSecondaryBrush", p.Tab), ("BorderBrush", "ControlStrokeColorDefaultBrush", p.Border), ("ForegroundBrush", "TextFillColorPrimaryBrush", p.Foreground), ("SecondaryForegroundBrush", "TextFillColorSecondaryBrush", p.SecondaryForeground ?? p.Foreground), ("DisabledForegroundBrush", "TextFillColorDisabledBrush", p.DisabledForeground ?? p.Foreground), ("HoverBrush", "SubtleFillColorSecondaryBrush", p.Hover), ("PressedBrush", "SubtleFillColorTertiaryBrush", p.Pressed), ("AccentBrush", "AccentFillColorDefaultBrush", p.Accent), ("ActiveTitleBrush", "ControlFillColorInputActiveBrush", p.ActiveTitle)];
     internal static Brush Brush(DockingManager manager, string dockKey, string systemKey, Brush fallback)
     {
