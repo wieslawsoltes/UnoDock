@@ -40,11 +40,11 @@ public static class SystemCommands
     {
         Validate(window);
         var menu = new MenuFlyout();
-        Add("Restore", RestoreWindowCommand);
-        Add("Minimize", MinimizeWindowCommand);
-        Add("Maximize", MaximizeWindowCommand);
+        Add(UnoDock.Properties.Resources.Window_Restore, RestoreWindowCommand);
+        Add(UnoDock.Properties.Resources.Window_Minimize, MinimizeWindowCommand);
+        Add(UnoDock.Properties.Resources.Window_Maximize, MaximizeWindowCommand);
         menu.Items.Add(new MenuFlyoutSeparator());
-        Add("Close", CloseWindowCommand);
+        Add(UnoDock.Properties.Resources.Window_Close, CloseWindowCommand);
         return menu;
         void Add(string text, RoutedCommand command) => menu.Items.Add(new MenuFlyoutItem { Text = text, Command = command, CommandParameter = window });
     }

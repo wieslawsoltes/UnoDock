@@ -89,7 +89,7 @@ public abstract partial class LayoutTabItemBase : DockInputControl
         {
             if (Model != null)
                 DockVisuals.CloseOrHide(Model);
-        }, "Close tab");
+        }, Properties.Resources.Tab_Close);
         Grid.SetColumn(_close, 1);
         _chrome.Children.Add(_label);
         _chrome.Children.Add(_close);

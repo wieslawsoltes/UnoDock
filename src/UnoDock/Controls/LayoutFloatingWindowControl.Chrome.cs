@@ -33,10 +33,10 @@ public abstract partial class LayoutFloatingWindowControl
         {
             Orientation = Orientation.Horizontal
         };
-        _menuCaptionButton = Add(DockGlyph.Menu, ShowCaptionMenu, "Window position", "FloatingWindowMenu");
-        _minimizeCaptionButton = Add(DockGlyph.Minimize, () => PerformSystemAction(WindowAction.Minimize), "Minimize floating window", "FloatingWindowMinimize");
-        _maximizeCaptionButton = Add(DockGlyph.Maximize, () => PerformSystemAction(IsMaximized ? WindowAction.Restore : WindowAction.Maximize), "Maximize or restore floating window", "FloatingWindowMaximize");
-        _closeCaptionButton = Add(DockGlyph.Close, Close, "Close floating window", "FloatingWindowClose");
+        _menuCaptionButton = Add(DockGlyph.Menu, ShowCaptionMenu, Properties.Resources.Window_Position, "FloatingWindowMenu");
+        _minimizeCaptionButton = Add(DockGlyph.Minimize, () => PerformSystemAction(WindowAction.Minimize), Properties.Resources.Window_Minimize, "FloatingWindowMinimize");
+        _maximizeCaptionButton = Add(DockGlyph.Maximize, () => PerformSystemAction(IsMaximized ? WindowAction.Restore : WindowAction.Maximize), Properties.Resources.Window_Maximize, "FloatingWindowMaximize");
+        _closeCaptionButton = Add(DockGlyph.Close, Close, Properties.Resources.Window_Close, "FloatingWindowClose");
         _minimizeCaptionButton.Visibility = Visibility.Collapsed;
         WindowChrome.SetIsHitTestVisibleInChrome(actions, true);
         return actions;
@@ -267,7 +267,8 @@ public abstract partial class LayoutFloatingWindowControl
             _maximizeCaptionButton.Content = DockChrome.Glyph(IsMaximized ? DockGlyph.Restore : DockGlyph.Maximize);
         }
 
-        AutomationProperties.SetName(_maximizeCaptionButton, IsMaximized ? "Restore floating window" : "Maximize floating window");
+        AutomationProperties.SetName(_maximizeCaptionButton, IsMaximized ? Properties.Resources.Window_Restore : Properties.Resources.Window_Maximize);
+        ToolTipService.SetToolTip(_maximizeCaptionButton, AutomationProperties.GetName(_maximizeCaptionButton));
         if (Model.Root?.Manager is { } manager)
             PaintCaption(DockChrome.Palette(manager));
         var b = ResizeBorderThickness;
