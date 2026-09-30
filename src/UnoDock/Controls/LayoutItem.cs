@@ -229,6 +229,12 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
     {
     }
 
+    /// <summary>Model visibility flows back to the item (two-way), so bindings
+        /// to the item's Visibility observe Hide/Show from the chrome.</summary>
+        private protected virtual void SyncVisibilityFromModel()
+    {
+    }
+
     protected void OnAdapterPropertyChanged(string name, DependencyPropertyChangedEventArgs args)
     {
         if (LayoutElement == null || _attaching || _disposed)
@@ -290,6 +296,8 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
         }
 
         var cleanup = new DockCleanup();
+        if (args.PropertyName is "IsVisible" or "IsHidden" or null or "")
+            cleanup.Attempt(SyncVisibilityFromModel);
         cleanup.Attempt(() => SynchronizeXamlModelValue(args.PropertyName));
         foreach (var command in _commands.Values.OfType<DelegateCommand>().ToArray())
             cleanup.Attempt(command.RaiseCanExecuteChanged);

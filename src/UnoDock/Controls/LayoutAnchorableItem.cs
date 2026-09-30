@@ -28,9 +28,28 @@ public partial class LayoutAnchorableItem : LayoutItem
     }
 
     protected override void ClearDefaultCommands() => base.ClearDefaultCommands();
+    private bool _syncingVisibility;
     protected override void OnVisibilityChanged()
     {
-        if (LayoutElement is LayoutAnchorable a)
+        if (!_syncingVisibility && LayoutElement is LayoutAnchorable a)
             a.IsVisible = Visibility == Visibility.Visible;
+    }
+
+    private protected override void SyncVisibilityFromModel()
+    {
+        if (LayoutElement is not LayoutAnchorable a)
+            return;
+        var visibility = a.IsVisible ? Visibility.Visible : Visibility.Collapsed;
+        if (Visibility == visibility)
+            return;
+        _syncingVisibility = true;
+        try
+        {
+            Visibility = visibility;
+        }
+        finally
+        {
+            _syncingVisibility = false;
+        }
     }
 }

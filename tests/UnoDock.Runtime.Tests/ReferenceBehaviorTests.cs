@@ -247,6 +247,20 @@ public static class ReferenceBehaviorTests
             first.CloseAllCommand!.Execute(null);
             Check.Equal("d1,d2,d3", string.Join(",", calls));
         });
+        tests.Test("tool item visibility follows Hide and Show in both directions", () =>
+        {
+            using var f = new Fixture(Standard);
+            var output = f.Tool("output");
+            var item = f.Manager.GetLayoutItemFromModel(output);
+            output.Hide();
+            Check.Equal(Visibility.Collapsed, item.Visibility);
+            output.Show();
+            Check.Equal(Visibility.Visible, item.Visibility);
+            item.Visibility = Visibility.Collapsed;
+            Check.True(output.IsHidden);
+            item.Visibility = Visibility.Visible;
+            Check.True(output.IsVisible);
+        });
         return await tests.Run(output, "reference-behavior");
     }
 
