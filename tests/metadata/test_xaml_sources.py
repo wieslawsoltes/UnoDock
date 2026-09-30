@@ -43,9 +43,10 @@ class XamlSources(unittest.TestCase):
             'UnoDock.NavigatorItemTemplate': ('DataTemplate', None),
             'UnoDock.NavigatorItemsPanel': ('ItemsPanelTemplate', None),
             'UnoDock.MenuRowTemplate': ('ControlTemplate', 'MenuFlyoutItem'),
+            'UnoDock.DocumentMenuRowTemplate': ('ControlTemplate', 'MenuFlyoutItem'),
             'UnoDock.MenuPresenterTemplate': ('ControlTemplate', 'MenuFlyoutPresenter'),
         })
-        self.assertEqual(len(keys), 11)
+        self.assertEqual(len(keys), 12)
 
     def test_fluent_navigator_composes_a_native_button_without_copying_its_template(self):
         root = ET.parse(ROOT / 'src/UnoDock/Themes/DockChromeResources.xaml').getroot()

@@ -49,9 +49,9 @@ internal static class TabViewStripTests
             f.Manager.DocumentTabStripMode = DocumentTabStripMode.TabView;
             await f.Show();
             var tabView = f.TabView();
-            var point = tabView.TransformToVisual(f.Manager).TransformPoint(new(tabView.ActualWidth - 20, 12));
+            var point = tabView.TransformToVisual(f.Manager).TransformPoint(new(tabView.ActualWidth - 20, tabView.ActualHeight / 2));
             var plan = f.Manager.GetDropPlan(f.Other, point);
-            Check.True(plan != null, "No drop plan over the TabView strip.");
+            Check.True(plan != null, $"No drop plan over the TabView strip at {point} (strip {tabView.ActualWidth}x{tabView.ActualHeight}).");
             Check.Equal(DropTargetType.DocumentPaneDockInside, plan!.Type);
             Check.True(plan.Execute());
             await f.Settle();
@@ -125,6 +125,9 @@ internal static class TabViewStripTests
             {
                 RootPanel = panel
             };
+            // In-surface only: resolve drops without native window stacking, which
+            // other desktop applications can influence on an interactive session.
+            Manager.CrossWindowCoordinates = null;
             First.IsActive = true;
             _window = new Window
             {

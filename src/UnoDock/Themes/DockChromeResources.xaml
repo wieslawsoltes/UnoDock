@@ -16,7 +16,7 @@
     <Style x:Key="UnoDock.FluentMenuPresenterStyle" TargetType="MenuFlyoutPresenter" BasedOn="{StaticResource DefaultMenuFlyoutPresenterStyle}" />
     <ControlTemplate x:Key="UnoDock.ChromeButtonTemplate" TargetType="ContentControl">
         <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}">
-            <ContentPresenter Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}" Foreground="{TemplateBinding Foreground}" Padding="{TemplateBinding Padding}" HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"/>
+            <ContentPresenter x:Name="ContentPresenter" Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}" Foreground="{TemplateBinding Foreground}" Padding="{TemplateBinding Padding}" HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"/>
         </Border>
     </ControlTemplate>
     <ControlTemplate x:Key="UnoDock.ChromeThumbTemplate" TargetType="Thumb">
@@ -63,6 +63,21 @@
             <Border x:Name="PART_MenuGutter" BorderThickness="0,0,1,0" BorderBrush="White" IsHitTestVisible="False"/>
             <TextBlock Grid.Column="1" Text="{TemplateBinding Text}" Foreground="{TemplateBinding Foreground}" FontSize="{TemplateBinding FontSize}" Margin="6,0,10,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" IsHitTestVisible="False"/>
             <Border Grid.ColumnSpan="2" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" IsHitTestVisible="False"/>
+        </Grid>
+    </ControlTemplate>
+    <!-- Open-documents row: the row control fills PART_MenuHeader with the
+         document's icon and title or with DocumentPaneMenuItemHeaderTemplate. -->
+    <ControlTemplate x:Key="UnoDock.DocumentMenuRowTemplate" TargetType="MenuFlyoutItem">
+        <Grid Background="{TemplateBinding Background}" CornerRadius="{TemplateBinding CornerRadius}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="29"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Border x:Name="PART_MenuGutter" BorderThickness="0,0,1,0" IsHitTestVisible="False">
+                <ContentPresenter x:Name="PART_MenuCheck" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+            <ContentPresenter x:Name="PART_MenuHeader" Grid.Column="1" Foreground="{TemplateBinding Foreground}" FontSize="{TemplateBinding FontSize}" Margin="6,0,10,0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" VerticalAlignment="Center" IsHitTestVisible="False"/>
+            <Border Grid.ColumnSpan="2" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}" IsHitTestVisible="False"/>
         </Grid>
     </ControlTemplate>
     <ControlTemplate x:Key="UnoDock.MenuPresenterTemplate" TargetType="MenuFlyoutPresenter">

@@ -11,10 +11,20 @@ public class LayoutAnchorControl : DockInputControl, ILayoutControl
     private readonly LayoutAnchorable _model;
     private readonly DockChromeButton _button;
     private readonly DockRotatedLabel _rotator;
+    private readonly RotateTransform _upright = new()
+    {
+        Angle = -90
+    };
+    private readonly DockHeaderPresenter _header = new()
+    {
+        VerticalAlignment = VerticalAlignment.Center,
+        IconSpacing = 3
+    };
     public LayoutAnchorControl(LayoutAnchorable model)
     {
         _model = model;
         _button = DockChrome.Button(model.Title ?? "Tool", ActivateFromKeyboard);
+        _button.Content = _header;
         _button.Padding = new(2, 1, 2, 1);
         _rotator = new(_button);
         Content = _rotator;
@@ -61,7 +71,9 @@ public class LayoutAnchorControl : DockInputControl, ILayoutControl
     internal void Update(DockingManager manager)
     {
         SetSide(_model.GetSide());
-        _button.Content = _model.Title;
+        // Rail tabs present the tool like its tab: AnchorableHeaderTemplate, or
+        // the icon (IconContentTemplate when set) followed by the title.
+        _header.Update(manager, _model, manager.HeaderTemplate(_model, this));
         _button.IsEnabled = _model.IsEnabled;
         var palette = DockChrome.Palette(manager);
         _button.Configure(palette);
@@ -70,6 +82,9 @@ public class LayoutAnchorControl : DockInputControl, ILayoutControl
         _button.BorderBrush = palette.Border;
         _button.Height = palette.RailThickness - 4;
         _rotator.Vertical = Side is AnchorSide.Left or AnchorSide.Right;
+        // The title reads along a vertical rail; the square default icon stays upright.
+        _header.Icon.RenderTransformOrigin = new(.5, .5);
+        _header.Icon.RenderTransform = _rotator.Vertical ? _upright : null;
         ToolTipService.SetToolTip(_button, _model.ToolTip ?? _model.Title);
         MenuContext.SetTarget(this, _model);
         ContextFlyout = DockVisuals.Menu(manager, _model);

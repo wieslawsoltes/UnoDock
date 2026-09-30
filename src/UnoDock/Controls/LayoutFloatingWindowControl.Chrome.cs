@@ -136,6 +136,8 @@ public abstract partial class LayoutFloatingWindowControl
         _title.Background = active ? states.ActiveToolTitle : states.ToolTitle;
         var foreground = (active ? states.ActiveToolTitleForeground : states.ToolTitleForeground) ?? palette.Foreground;
         _caption.Foreground = foreground;
+        _captionHeader.Icon.Foreground = foreground;
+        _captionHeader.Templated.Foreground = foreground;
         foreach (var button in new[]
         {
             _menuCaptionButton,

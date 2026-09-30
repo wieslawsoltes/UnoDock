@@ -375,6 +375,10 @@ public partial class DockingManager : Control, IDisposable, UnoDock.Compatibilit
         return title ? DocumentTitleTemplateSelector?.SelectTemplate(model, container) ?? DocumentTitleTemplate : DocumentHeaderTemplateSelector?.SelectTemplate(model, container) ?? DocumentHeaderTemplate;
     }
 
+    /// <summary>The row template of the document pane's open-documents list; the data context is the listed content.</summary>
+    internal DataTemplate? MenuItemHeaderTemplate(LayoutContent model, DependencyObject container) => DocumentPaneMenuItemHeaderTemplateSelector?.SelectTemplate(model, container) ?? DocumentPaneMenuItemHeaderTemplate;
+    /// <summary>The template presenting a content icon; the data context is the icon value itself.</summary>
+    internal DataTemplate? IconTemplate(object icon, DependencyObject container) => IconContentTemplateSelector?.SelectTemplate(icon, container) ?? IconContentTemplate;
     internal bool RaiseDocumentClosing(LayoutDocument document)
     {
         var args = new DocumentClosingEventArgs(document);
