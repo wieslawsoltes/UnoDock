@@ -36,6 +36,10 @@ public partial class NavigatorWindow : DockWindowControl
         Attach(_documentsList);
         Attach(_anchorablesList);
         Unloaded += (_, _) => EndSession();
+        // The selected row takes the active selection look while the navigator
+        // holds keyboard focus, and the inactive one otherwise.
+        GotFocus += (_, _) => TrackFocus();
+        LostFocus += (_, _) => DispatcherQueue.TryEnqueue(TrackFocus);
     }
 
     public LayoutDocumentItem[] Documents => (LayoutDocumentItem[]?)GetValue(DocumentsProperty) ?? [];

@@ -133,7 +133,7 @@ show the window-position ▾ button; default `True`).
 |---|---|
 | `MenuBrush`, `MenuGutterBrush`, `MenuBorderBrush`, `MenuForegroundBrush`, `MenuDisabledBrush`, `MenuHoverBrush`, `MenuHoverBorderBrush`, `MenuPressedBrush`, `MenuRowHeight`, `MenuMinWidth` | Context menus, caption menus and the open-documents list |
 | `GuideBrush`, `GuideBorderBrush`, `GuideAccentBrush`, `GuideFillBrush`, `GuideWindowBrush`, `GuideTitleBrush`, `GuideSelectionBrush`, `GuideSize` | Docking guide compass and edge targets |
-| `NavigatorBrush`, `NavigatorBorderBrush`, `NavigatorSelectionBrush`, `NavigatorSelectionBorderBrush`, `NavigatorCornerRadius` (Fluent) | Ctrl+Tab navigator |
+| `NavigatorBrush`, `NavigatorBorderBrush`, `NavigatorSelectionBrush`, `NavigatorSelectionBorderBrush`, `NavigatorActiveSelectionBrush`, `NavigatorActiveSelectionBorderBrush` (selection while the navigator has keyboard focus), `NavigatorCornerRadius` (Fluent) | Ctrl+Tab navigator |
 | `AutoHideTitleBrush`, `AutoHideTitleHeight` | Inactive auto-hide flyout caption fill (overrides `ToolTitleBrush`) and caption height |
 
 #### Built-in Generic values
