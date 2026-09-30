@@ -5,10 +5,12 @@ parser = argparse.ArgumentParser()
 parser.add_argument('implementation', type=pathlib.Path)
 parser.add_argument('--strict', action='store_true')
 args = parser.parse_args()
-reference = json.loads((root / 'contracts/avalondock.json').read_text())
+reference = json.loads((root / 'contracts/reference-declarations.json').read_text())
+# Recorded declarations use the neutral root namespace from contracts/reference.json.
+neutral = json.loads((root / 'contracts/reference.json').read_text())['neutralNamespace']
 implementation = json.loads(args.implementation.read_text())
 def canonical(value):
-    value = re.sub(r'\bXceed\.Wpf\.AvalonDock(?=\.|\s|$)', 'UnoDock', value)
+    value = re.sub(r'(?<![\w.])' + re.escape(neutral) + r'(?=\.|\s|$)', 'UnoDock', value)
     value = value.replace('System.Windows.Controls.', 'Microsoft.UI.Xaml.Controls.').replace('System.Windows.Media.', 'Microsoft.UI.Xaml.Media.').replace('System.Windows.', 'Microsoft.UI.Xaml.')
     value = re.sub(r'\bContextMenu\b', 'MenuFlyout', value)
     value = re.sub(r'\bMenuItem\b', 'MenuFlyoutItem', value)

@@ -89,7 +89,7 @@ public static class InteropTests
                 var typeName = record.Attribute("Name")!.Value;
                 tests.Test("observed public defaults: " + typeName, () =>
                 {
-                    var type = typeof(DockingManager).Assembly.GetType(typeName.Replace("Xceed.Wpf.AvalonDock", "UnoDock", StringComparison.Ordinal), throwOnError: true)!;
+                    var type = typeof(DockingManager).Assembly.GetType("UnoDock" + typeName["Reference".Length..], throwOnError: true)!;
                     var instance = Activator.CreateInstance(type)!;
                     try
                     {

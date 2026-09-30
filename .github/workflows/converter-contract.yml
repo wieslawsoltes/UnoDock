@@ -2,7 +2,7 @@ name: Reference converter behavior
 on:
   workflow_dispatch:
   push:
-    paths: ['tools/ReferenceProbe/*ConverterProbe.cs', '.github/workflows/converter-contract.yml']
+    paths: ['tools/ReferenceProbe/*ConverterProbe.cs', 'tools/ReferenceIdentity/**', '.github/workflows/converter-contract.yml']
 permissions:
   contents: write
 concurrency:
@@ -21,7 +21,8 @@ jobs:
       - name: Build pinned original in isolated temporary directory
         shell: pwsh
         run: |
-          $revision = (Get-Content contracts/reference.json | ConvertFrom-Json).revision
+          $pin = Get-Content contracts/reference.json -Raw | ConvertFrom-Json
+          $revision = $pin.revision
           $stage = Join-Path $env:RUNNER_TEMP 'converter-reference'
           New-Item -ItemType Directory -Force $stage | Out-Null
           Invoke-WebRequest "https://codeload.github.com/xceedsoftware/wpftoolkit/tar.gz/$revision" -OutFile "$stage/reference.tar.gz"
@@ -29,15 +30,16 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           Invoke-WebRequest 'https://api.nuget.org/v3-flatcontainer/microsoft.netframework.referenceassemblies.net40/1.0.3/microsoft.netframework.referenceassemblies.net40.1.0.3.nupkg' -OutFile "$stage/framework.zip"
           Expand-Archive "$stage/framework.zip" "$stage/framework"
-          $project = "$stage/ExtendedWPFToolkitSolution/Src/Xceed.Wpf.AvalonDock/Xceed.Wpf.AvalonDock.csproj"
+          $project = "$stage/$($pin.path)/$(Split-Path $pin.path -Leaf).csproj"
           $copyTargets = Join-Path $env:GITHUB_WORKSPACE 'tools/ReferenceProbe/LegacyCopy.targets'
           msbuild $project /nologo /v:minimal /p:Configuration=Release /p:TargetFrameworkRootPath="$stage/framework/build/" /p:OutputPath="$stage/bin/" /p:GenerateSerializationAssemblies=Off /p:CustomAfterMicrosoftCommonTargets=$copyTargets
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Exercise public converter contracts twice
         shell: pwsh
         run: |
+          $pin = Get-Content contracts/reference.json -Raw | ConvertFrom-Json
           $stage = Join-Path $env:RUNNER_TEMP 'converter-reference'
-          dotnet build tools/ReferenceProbe -t:Rebuild -c Release -p:StartupObject=ConverterProbe -p:ReferenceAssembly="$stage/bin/Xceed.Wpf.AvalonDock.dll"
+          dotnet build tools/ReferenceProbe -t:Rebuild -c Release -p:StartupObject=ConverterProbe -p:ReferenceAssembly="$stage/bin/$($pin.referenceNamespace).dll"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           Copy-Item "$stage/bin/Xceed.Wpf.Toolkit.dll" 'tools/ReferenceProbe/bin/Release/net48/'
           & tools/ReferenceProbe/bin/Release/net48/ReferenceProbe.exe contracts/converter-fixtures
@@ -48,8 +50,9 @@ jobs:
       - name: Observe URI and multi-value edge cases twice
         shell: pwsh
         run: |
+          $pin = Get-Content contracts/reference.json -Raw | ConvertFrom-Json
           $stage = Join-Path $env:RUNNER_TEMP 'converter-reference'
-          dotnet build tools/ReferenceProbe -t:Rebuild -c Release -p:StartupObject=ExtendedConverterProbe -p:ReferenceAssembly="$stage/bin/Xceed.Wpf.AvalonDock.dll"
+          dotnet build tools/ReferenceProbe -t:Rebuild -c Release -p:StartupObject=ExtendedConverterProbe -p:ReferenceAssembly="$stage/bin/$($pin.referenceNamespace).dll"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           Copy-Item "$stage/bin/Xceed.Wpf.Toolkit.dll" 'tools/ReferenceProbe/bin/Release/net48/'
           & tools/ReferenceProbe/bin/Release/net48/ReferenceProbe.exe contracts/converter-fixtures

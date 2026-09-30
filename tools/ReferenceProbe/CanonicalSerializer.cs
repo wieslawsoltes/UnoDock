@@ -9,9 +9,8 @@ namespace UnoDock.ReferenceProbe
     using System.Globalization;
     using System.Linq;
     using System.Xml.Linq;
-    using Xceed.Wpf.AvalonDock;
 
-    internal sealed class CanonicalLayoutSerializer : Xceed.Wpf.AvalonDock.Layout.Serialization.XmlLayoutSerializer
+    internal sealed class CanonicalLayoutSerializer : ReferenceApi::Layout.Serialization.XmlLayoutSerializer
     {
         public CanonicalLayoutSerializer(DockingManager manager) : base(manager) { }
 

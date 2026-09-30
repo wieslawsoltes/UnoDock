@@ -4,7 +4,7 @@ namespace UnoDock.VisualValidation;
 public static class SceneContent
 {
     public const int Width = 1000, Height = 640;
-    public const string Code = "using Xceed.Wpf.AvalonDock;\nusing Xceed.Wpf.AvalonDock.Layout;\n\nvar manager = new DockingManager();\nvar document = new LayoutDocument\n{\n    Title = \"Workspace.cs\",\n    ContentId = \"editor\"\n};\n\n// Dock, float, pin and restore the same content.\nmanager.Layout.RootPanel.Children.Add(\n    new LayoutDocumentPane(document));";
+    public const string Code = "using UnoDock;\nusing UnoDock.Layout;\n\nvar manager = new DockingManager();\nvar document = new LayoutDocument\n{\n    Title = \"Workspace.cs\",\n    ContentId = \"editor\"\n};\n\n// Dock, float, pin and restore the same content.\nmanager.Layout.RootPanel.Children.Add(\n    new LayoutDocumentPane(document));";
     public const string Readme = "UnoDock workspace\n\nDocuments keep their content when moved between panes.\nDrag a tab to split or combine groups.\n\nCtrl+Tab  Switch content\nCtrl+F4   Close document\nEscape    Cancel docking";
     public const string Notes = "Notes\n\nA second editor with independently retained state.";
     public const string Output = "Build started...\n1> UnoDock.Core -> net10.0\n2> UnoDock -> net10.0\n3> UnoDock.Gallery -> net10.0-desktop\n========== Build: 3 succeeded, 0 failed ==========";

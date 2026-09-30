@@ -217,7 +217,7 @@ public static partial class ConverterTests
                     type = typeof(Visibility).FullName!;
                 if (type == "System.Windows.Controls.Orientation")
                     type = typeof(Orientation).FullName!;
-                Check.Equal(type.Replace("Xceed.Wpf.AvalonDock", "UnoDock", StringComparison.Ordinal), result?.GetType().FullName);
+                Check.Equal(type.StartsWith("Reference.", StringComparison.Ordinal) ? "UnoDock" + type["Reference".Length..] : type, result?.GetType().FullName);
                 Check.Equal(expected.Value, Convert.ToString(result, Invariant));
                 break;
             case "Object" when (string?)expected.Attribute("Type") == "System.Windows.Controls.Image":

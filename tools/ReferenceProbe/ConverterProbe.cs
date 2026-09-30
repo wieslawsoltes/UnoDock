@@ -6,8 +6,6 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Data;
 using System.Xml.Linq;
-using Xceed.Wpf.AvalonDock;
-using Xceed.Wpf.AvalonDock.Layout;
 
 internal static class ConverterProbe
 {
@@ -26,7 +24,7 @@ internal static class ConverterProbe
         manager.Layout.RootPanel.Children.Add(new LayoutAnchorablePane(tool));
         foreach (var name in names)
         {
-            var type = typeof(DockingManager).Assembly.GetType("Xceed.Wpf.AvalonDock.Converters." + name, true);
+            var type = ReferenceIdentity.Resolve("Converters." + name);
             var converter = (IValueConverter)Activator.CreateInstance(type);
             foreach (var key in inputs)
                 foreach (var reverse in new[] { false, true })
@@ -40,11 +38,11 @@ internal static class ConverterProbe
                             var result = reverse ? converter.ConvertBack(value, targetType, null, CultureInfo.InvariantCulture) : converter.Convert(value, targetType, null, CultureInfo.InvariantCulture);
                             record.Add(Result(result, value, manager, document, tool));
                         }
-                        catch (Exception error) { record.Add(new XElement("Exception", new XAttribute("Type", error.GetType().FullName))); }
+                        catch (Exception error) { record.Add(new XElement("Exception", new XAttribute("Type", ReferenceIdentity.Normalize(error.GetType().FullName)))); }
                         cases.Add(record);
                     }
         }
-        var multiType = typeof(DockingManager).Assembly.GetType("Xceed.Wpf.AvalonDock.Converters.AnchorableContextMenuHideVisibilityConverter", true);
+        var multiType = ReferenceIdentity.Resolve("Converters.AnchorableContextMenuHideVisibilityConverter");
         var multi = (IMultiValueConverter)Activator.CreateInstance(multiType);
         foreach (var flags in new[] { "empty", "true", "false", "true,true", "true,false", "false,true", "false,false", "null", "true,null", "true,true,true" })
             foreach (var reverse in new[] { false, true })
@@ -56,7 +54,7 @@ internal static class ConverterProbe
                     var result = reverse ? (object)multi.ConvertBack(Visibility.Visible, new[] { typeof(bool), typeof(bool) }, null, CultureInfo.InvariantCulture) : multi.Convert(values, typeof(Visibility), null, CultureInfo.InvariantCulture);
                     record.Add(Result(result, values, manager, document, tool));
                 }
-                catch (Exception error) { record.Add(new XElement("Exception", new XAttribute("Type", error.GetType().FullName))); }
+                catch (Exception error) { record.Add(new XElement("Exception", new XAttribute("Type", ReferenceIdentity.Normalize(error.GetType().FullName)))); }
                 cases.Add(record);
             }
         new XDocument(cases).Save(Path.Combine(args[0], "converters.xml"));
@@ -89,7 +87,7 @@ internal static class ConverterProbe
         if (result is System.Windows.Input.ICommand) return new XElement("Command");
         if (result is object[] values) return new XElement("Array", values.Select(v => Result(v, null, manager, document, tool)));
         var type = result.GetType();
-        if (type.IsEnum || result is string || type.IsPrimitive) return new XElement("Scalar", new XAttribute("Type", type.FullName), Convert.ToString(result, CultureInfo.InvariantCulture));
-        return new XElement("Object", new XAttribute("Type", type.FullName));
+        if (type.IsEnum || result is string || type.IsPrimitive) return new XElement("Scalar", new XAttribute("Type", ReferenceIdentity.Normalize(type.FullName)), Convert.ToString(result, CultureInfo.InvariantCulture));
+        return new XElement("Object", new XAttribute("Type", ReferenceIdentity.Normalize(type.FullName)));
     }
 }

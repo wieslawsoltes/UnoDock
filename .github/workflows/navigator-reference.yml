@@ -2,7 +2,7 @@ name: Public navigator selection observations
 on:
   workflow_dispatch:
   push:
-    paths: ['tools/NavigatorSelectionProbe/**', '.github/workflows/navigator-reference.yml']
+    paths: ['tools/NavigatorSelectionProbe/**', 'tools/ReferenceIdentity/**', '.github/workflows/navigator-reference.yml']
 permissions:
   contents: read
 concurrency:
@@ -21,7 +21,8 @@ jobs:
       - name: Build isolated pinned original and independent public API probe
         shell: pwsh
         run: |
-          $revision = (Get-Content contracts/reference.json | ConvertFrom-Json).revision
+          $pin = Get-Content contracts/reference.json -Raw | ConvertFrom-Json
+          $revision = $pin.revision
           $stage = Join-Path $env:RUNNER_TEMP 'navigator-reference'
           New-Item -ItemType Directory -Force $stage | Out-Null
           Invoke-WebRequest "https://codeload.github.com/xceedsoftware/wpftoolkit/tar.gz/$revision" -OutFile "$stage/reference.tar.gz"
@@ -29,10 +30,10 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           Invoke-WebRequest 'https://api.nuget.org/v3-flatcontainer/microsoft.netframework.referenceassemblies.net40/1.0.3/microsoft.netframework.referenceassemblies.net40.1.0.3.nupkg' -OutFile "$stage/framework.zip"
           Expand-Archive "$stage/framework.zip" "$stage/framework"
-          $project = "$stage/ExtendedWPFToolkitSolution/Src/Xceed.Wpf.AvalonDock/Xceed.Wpf.AvalonDock.csproj"
+          $project = "$stage/$($pin.path)/$(Split-Path $pin.path -Leaf).csproj"
           msbuild $project /nologo /v:minimal /p:Configuration=Release /p:TargetFrameworkRootPath="$stage/framework/build/" /p:OutputPath="$stage/bin/" /p:GenerateSerializationAssemblies=Off /p:CustomAfterMicrosoftCommonTargets="${{ github.workspace }}/tools/ReferenceProbe/LegacyCopy.targets"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          dotnet build tools/NavigatorSelectionProbe -c Release -p:ReferenceAssembly="$stage/bin/Xceed.Wpf.AvalonDock.dll"
+          dotnet build tools/NavigatorSelectionProbe -c Release -p:ReferenceAssembly="$stage/bin/$($pin.referenceNamespace).dll"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           Copy-Item "$stage/bin/Xceed.Wpf.Toolkit.dll" tools/NavigatorSelectionProbe/bin/Release/net48/
       - name: Observe setter and callback behavior twice

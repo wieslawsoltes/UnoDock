@@ -6,9 +6,8 @@
     <StartupObject Condition="'$(StartupObject)' == ''">Program</StartupObject>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Xceed.Wpf.AvalonDock"><HintPath>$(ReferenceAssembly)</HintPath><Private>true</Private></Reference>
+    <ReferenceUsing Include="Layout" />
+    <ReferenceUsing Include="Layout.Serialization" />
   </ItemGroup>
-  <Target Name="RequireReference" BeforeTargets="ResolveReferences" Condition="!Exists('$(ReferenceAssembly)')">
-    <Error Text="Pass ReferenceAssembly pointing to the isolated pinned AvalonDock build." />
-  </Target>
+  <Import Project="../ReferenceIdentity/ReferenceIdentity.targets" />
 </Project>

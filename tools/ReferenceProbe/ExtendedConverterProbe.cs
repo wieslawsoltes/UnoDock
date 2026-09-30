@@ -10,7 +10,6 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Xml.Linq;
-using Xceed.Wpf.AvalonDock;
 
 internal static class ExtendedConverterProbe
 {
@@ -28,7 +27,7 @@ internal static class ExtendedConverterProbe
             encoder.Frames.Add(BitmapFrame.Create(BitmapSource.Create(1, 1, 96, 96, PixelFormats.Bgra32, null, new byte[] { 0, 0, 0, 255 }, 4)));
             using (var stream = File.Create(file)) encoder.Save(stream);
             var output = new XElement("ExtendedConverterObservations");
-            var converter = (IValueConverter)Activator.CreateInstance(typeof(DockingManager).Assembly.GetType("Xceed.Wpf.AvalonDock.Converters.UriSourceToBitmapImageConverter", true));
+            var converter = (IValueConverter)Activator.CreateInstance(ReferenceIdentity.Resolve("Converters.UriSourceToBitmapImageConverter"));
             foreach (var key in new[] { "null", "image", "relative-uri", "absolute-uri", "string", "empty-string", "integer", "boolean" })
                 foreach (var target in new[] { "object", "image-source", "bitmap-image", "uri", "string" })
                     foreach (var reverse in new[] { false, true })
@@ -41,17 +40,17 @@ internal static class ExtendedConverterProbe
                             target == "uri" ? typeof(Uri) : target == "string" ? typeof(string) : typeof(object);
                         var record = new XElement("UriCase", new XAttribute("Input", key), new XAttribute("Target", target), new XAttribute("Reverse", reverse));
                         try { record.Add(Result(reverse ? converter.ConvertBack(input, targetType, null, CultureInfo.InvariantCulture) : converter.Convert(input, targetType, null, CultureInfo.InvariantCulture), input)); }
-                        catch (Exception e) { record.Add(new XElement("Exception", new XAttribute("Type", e.GetType().FullName))); }
+                        catch (Exception e) { record.Add(new XElement("Exception", new XAttribute("Type", ReferenceIdentity.Normalize(e.GetType().FullName)))); }
                         output.Add(record);
                     }
-            var multi = (IMultiValueConverter)Activator.CreateInstance(typeof(DockingManager).Assembly.GetType("Xceed.Wpf.AvalonDock.Converters.AnchorableContextMenuHideVisibilityConverter", true));
+            var multi = (IMultiValueConverter)Activator.CreateInstance(ReferenceIdentity.Resolve("Converters.AnchorableContextMenuHideVisibilityConverter"));
             foreach (var key in new[] { "null-array", "empty", "visible", "collapsed", "visible,true", "visible,false", "collapsed,true", "collapsed,false", "visible,null", "visible,one", "visible,string", "visible,true,true", "unset,false", "nothing,false" })
                 foreach (var reverse in new[] { false, true })
                 {
                     object[] values = key == "null-array" ? null : key == "empty" ? new object[0] : key.Split(',').Select(Input).ToArray();
                     var record = new XElement("MultiCase", new XAttribute("Input", key), new XAttribute("Reverse", reverse));
                     try { record.Add(Result(reverse ? (object)multi.ConvertBack(Visibility.Visible, new[] { typeof(bool), typeof(bool) }, null, CultureInfo.InvariantCulture) : multi.Convert(values, typeof(Visibility), null, CultureInfo.InvariantCulture), values)); }
-                    catch (Exception e) { record.Add(new XElement("Exception", new XAttribute("Type", e.GetType().FullName))); }
+                    catch (Exception e) { record.Add(new XElement("Exception", new XAttribute("Type", ReferenceIdentity.Normalize(e.GetType().FullName)))); }
                     output.Add(record);
                 }
             new XDocument(output).Save(Path.Combine(args[0], "converter-details.xml"));
@@ -82,11 +81,11 @@ internal static class ExtendedConverterProbe
         if (ReferenceEquals(result, Binding.DoNothing)) return new XElement("DoNothing");
         if (ReferenceEquals(result, DependencyProperty.UnsetValue)) return new XElement("UnsetValue");
         if (ReferenceEquals(result, input)) return new XElement("InputIdentity");
-        if (result is Image control) return new XElement("Image", new XAttribute("SourceType", control.Source.GetType().FullName),
+        if (result is Image control) return new XElement("Image", new XAttribute("SourceType", ReferenceIdentity.Normalize(control.Source.GetType().FullName)),
             new XAttribute("SameUri", control.Source is BitmapImage source && Equals(source.UriSource, input)), new XAttribute("Stretch", control.Stretch));
         if (result is BitmapImage image) return new XElement("BitmapImage", new XAttribute("SameUri", Equals(image.UriSource, input)));
         var type = result.GetType();
-        if (type.IsEnum || type.IsPrimitive || result is string) return new XElement("Scalar", new XAttribute("Type", type.FullName), Convert.ToString(result, CultureInfo.InvariantCulture));
-        return new XElement("Object", new XAttribute("Type", type.FullName));
+        if (type.IsEnum || type.IsPrimitive || result is string) return new XElement("Scalar", new XAttribute("Type", ReferenceIdentity.Normalize(type.FullName)), Convert.ToString(result, CultureInfo.InvariantCulture));
+        return new XElement("Object", new XAttribute("Type", ReferenceIdentity.Normalize(type.FullName)));
     }
 }

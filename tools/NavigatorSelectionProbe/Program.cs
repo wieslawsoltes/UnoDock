@@ -9,9 +9,6 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
 using System.Xml.Linq;
-using Xceed.Wpf.AvalonDock;
-using Xceed.Wpf.AvalonDock.Controls;
-using Xceed.Wpf.AvalonDock.Layout;
 
 internal static class Program
 {
@@ -247,7 +244,7 @@ internal static class Program
         }
         catch (Exception error)
         {
-            failure = error.GetType().FullName;
+            failure = ReferenceIdentity.Normalize(error.GetType().FullName);
         }
 
         var step = new XElement("Step", new XAttribute("name", name), new XAttribute("exception", failure ?? "none"));

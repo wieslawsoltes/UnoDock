@@ -2,7 +2,7 @@ name: Reference metadata contract
 on:
   workflow_dispatch:
   push:
-    paths: ['tools/ApiMetadata/**', 'tools/ReferenceProbe/**', 'contracts/reference.json', '.github/workflows/reference-metadata.yml']
+    paths: ['tools/ApiMetadata/**', 'tools/ReferenceProbe/**', 'tools/ReferenceIdentity/**', 'contracts/reference.json', '.github/workflows/reference-metadata.yml']
 permissions:
   contents: read
 concurrency:
@@ -22,8 +22,9 @@ jobs:
       - name: Prepare isolated pinned reference and framework metadata
         shell: pwsh
         run: |
-          $revision = (Get-Content contracts/reference.json | ConvertFrom-Json).revision
-          $stage = Join-Path $env:RUNNER_TEMP 'avalondock-reference'
+          $pin = Get-Content contracts/reference.json -Raw | ConvertFrom-Json
+          $revision = $pin.revision
+          $stage = Join-Path $env:RUNNER_TEMP 'metadata-reference'
           New-Item -ItemType Directory -Force $stage | Out-Null
           Invoke-WebRequest "https://codeload.github.com/xceedsoftware/wpftoolkit/tar.gz/$revision" -OutFile "$stage/reference.tar.gz"
           tar -xzf "$stage/reference.tar.gz" --strip-components=1 -C $stage
@@ -33,10 +34,11 @@ jobs:
       - name: Build original projects in isolation and inspect exported metadata only
         shell: pwsh
         run: |
-          $stage = Join-Path $env:RUNNER_TEMP 'avalondock-reference'
+          $pin = Get-Content contracts/reference.json -Raw | ConvertFrom-Json
+          $stage = Join-Path $env:RUNNER_TEMP 'metadata-reference'
           $root = "$stage/framework/build/"
           $refs = "$root/.NETFramework/v4.0"
-          $project = "$stage/ExtendedWPFToolkitSolution/Src/Xceed.Wpf.AvalonDock/Xceed.Wpf.AvalonDock.csproj"
+          $project = "$stage/$($pin.path)/$(Split-Path $pin.path -Leaf).csproj"
           $copyTargets = Join-Path $env:GITHUB_WORKSPACE 'tools/ReferenceProbe/LegacyCopy.targets'
           dotnet build tools/ApiMetadata -c Release
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -46,18 +48,19 @@ jobs:
             msbuild $project /nologo /v:minimal /p:Configuration=$configuration /p:TargetFrameworkRootPath=$root /p:OutputPath=$output /p:Deterministic=true /p:GenerateSerializationAssemblies=Off /p:CustomAfterMicrosoftCommonTargets=$copyTargets
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
             $profile = "net40-client-$($configuration.ToLowerInvariant())"
-            $prefix = "artifacts/reference-public-metadata/avalondock-metadata-$($configuration.ToLowerInvariant())"
-            dotnet run --no-build --project tools/ApiMetadata -c Release -- "$output/Xceed.Wpf.AvalonDock.dll" $prefix --ref-dir $refs --profile $profile
+            $prefix = "artifacts/reference-public-metadata/reference-metadata-$($configuration.ToLowerInvariant())"
+            dotnet run --no-build --project tools/ApiMetadata -c Release -- "$output/$($pin.referenceNamespace).dll" $prefix --ref-dir $refs --profile $profile --namespace-alias "$($pin.referenceNamespace)=$($pin.neutralNamespace)"
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-            dotnet run --no-build --project tools/ApiMetadata -c Release -- "$output/Xceed.Wpf.AvalonDock.dll" "$stage/repeat" --ref-dir $refs --profile $profile
+            dotnet run --no-build --project tools/ApiMetadata -c Release -- "$output/$($pin.referenceNamespace).dll" "$stage/repeat" --ref-dir $refs --profile $profile --namespace-alias "$($pin.referenceNamespace)=$($pin.neutralNamespace)"
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
             if ((Get-FileHash "$prefix.json").Hash -ne (Get-FileHash "$stage/repeat.json").Hash) { throw 'Non-deterministic metadata inventory' }
           }
       - name: Capture deterministic public-API behavior and serialized fixtures
         shell: pwsh
         run: |
-          $stage = Join-Path $env:RUNNER_TEMP 'avalondock-reference'
-          dotnet build tools/ReferenceProbe -c Release -p:ReferenceAssembly="$stage/bin/Release/Xceed.Wpf.AvalonDock.dll"
+          $pin = Get-Content contracts/reference.json -Raw | ConvertFrom-Json
+          $stage = Join-Path $env:RUNNER_TEMP 'metadata-reference'
+          dotnet build tools/ReferenceProbe -c Release -p:ReferenceAssembly="$stage/bin/Release/$($pin.referenceNamespace).dll"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           Copy-Item "$stage/bin/Release/Xceed.Wpf.Toolkit.dll" 'tools/ReferenceProbe/bin/Release/net48/'
           & tools/ReferenceProbe/bin/Release/net48/ReferenceProbe.exe artifacts/reference-public-metadata/reference-fixtures
@@ -70,12 +73,20 @@ jobs:
       - name: Remove isolated reference implementation
         if: always()
         shell: pwsh
-        run: Remove-Item -Recurse -Force -ErrorAction SilentlyContinue (Join-Path $env:RUNNER_TEMP 'avalondock-reference')
+        run: Remove-Item -Recurse -Force -ErrorAction SilentlyContinue (Join-Path $env:RUNNER_TEMP 'metadata-reference')
       - name: Verify pinned contracts were not modified
         shell: bash
         run: |
           python3 tests/metadata/test_namespace_migration.py
           git diff --exit-code -- contracts/ tools/ReferenceProbe/
+          # The neutral-namespace inventories must regenerate exactly (line endings aside).
+          for name in reference-metadata-release reference-metadata-debug; do
+            for ext in json txt; do
+              python3 -c "import sys; a, b = (open(p, 'rb').read().replace(b'\r\n', b'\n') for p in sys.argv[1:]); sys.exit(a != b)" \
+                "artifacts/reference-public-metadata/$name.$ext" "contracts/$name.$ext" \
+                || { echo "::error::Regenerated $name.$ext differs from contracts/$name.$ext"; exit 1; }
+            done
+          done
       - uses: actions/upload-artifact@v4
         if: always()
         with:

@@ -9,9 +9,6 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
 using System.Xml.Linq;
-using Xceed.Wpf.AvalonDock;
-using Xceed.Wpf.AvalonDock.Controls;
-using Xceed.Wpf.AvalonDock.Layout;
 
 internal static class AutoHideWindowObservations
 {

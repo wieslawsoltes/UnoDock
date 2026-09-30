@@ -9,8 +9,6 @@ using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Xml.Linq;
-using Xceed.Wpf.AvalonDock;
-using Xceed.Wpf.AvalonDock.Controls;
 
 internal static class OverlayMessageObservation
 {
