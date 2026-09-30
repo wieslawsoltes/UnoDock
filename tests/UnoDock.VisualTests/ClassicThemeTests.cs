@@ -33,7 +33,7 @@ internal static class ClassicThemeTests
                 Check.Equal(pane, Rgb(Property<Brush>(Palette(f.Manager), "Surface")));
                 await VisualCapture.Save(f.Manager, Path.Combine(output, "classic-themes", name + ".png"));
             });
-        tests.Test("VS2010: active document owns the gold tab and pane frame; tool activation releases both", async () =>
+        tests.Test("VS2010: active document owns the gold tab and content band; tool activation releases both", async () =>
         {
             using var f = new Fixture();
             await f.Show();
@@ -42,13 +42,54 @@ internal static class ClassicThemeTests
             await f.Settle();
             var tab = f.Tab(f.Document);
             Check.True(Stops(Chrome(tab).Background).Contains(0xFFE8A6u), "The active document tab must use the active gradient.");
-            var frame = f.DocumentFrame();
-            Check.Equal(0xFFE8A6u, Rgb(frame.BorderBrush));
-            Check.Equal(2.0, frame.BorderThickness.Top);
+            Check.Equal(3.0, Chrome(tab).CornerRadius.TopLeft);
+            // The band spans the content below the tabs only: top and bottom, no sides.
+            Check.Equal(new Thickness(0), f.DocumentFrame().BorderThickness);
+            var band = f.ContentFrame();
+            Check.Equal(0xFFE8A6u, Rgb(band.BorderBrush));
+            Check.Equal(new Thickness(0, 3, 0, 4), band.BorderThickness);
+            Check.Equal(3.0, band.CornerRadius.TopLeft);
             f.Tool.IsActive = true;
             await f.Settle();
             Check.True(!Stops(Chrome(f.Tab(f.Document)).Background).Contains(0xFFE8A6u), "An inactive selected document must not keep the active gradient.");
-            Check.Equal(0x8E9BBCu, Rgb(f.DocumentFrame().BorderBrush));
+            Check.Equal(0xCED4DFu, Rgb(f.ContentFrame().BorderBrush));
+        });
+        tests.Test("VS2010: caption buttons use the caption hover states and the disabled brush", async () =>
+        {
+            using var f = new Fixture();
+            await f.Show();
+            f.Manager.Theme = new VS2010Theme();
+            f.Document.IsActive = true;
+            await f.Settle();
+            var pane = f.Manager.FindVisualChildren<LayoutAnchorablePaneControl>().Single();
+            var close = pane.FindVisualChildren<Button>().First(b => ToolTipService.GetToolTip(b) as string == UnoDock.Properties.Resources.Anchorable_BtnClose_Hint);
+            Check.Equal(0xFFFFFFu, Rgb(close.Foreground));
+            Check.Equal(0xFFFFFFu, Rgb(Hover(close, "_hoverOverride")));
+            Check.Equal(0x000000u, Rgb(Hover(close, "_hoverForegroundOverride")));
+            f.Tool.IsEnabled = false;
+            await f.Settle();
+            Check.Equal(0x8C95A6u, Rgb(close.Foreground));
+            Check.Equal(1d, close.Opacity);
+        });
+        tests.Test("VS2010: the auto-hide flyout caption uses the tool title states", async () =>
+        {
+            using var f = new Fixture();
+            await f.Show();
+            f.Manager.Theme = new VS2010Theme();
+            f.Tool.ToggleAutoHide();
+            f.Document.IsActive = true;
+            await f.Settle();
+            var open = typeof(DockingManager).GetMethod("OpenAutoHide", BindingFlags.Instance | BindingFlags.NonPublic)!;
+            open.Invoke(f.Manager, [f.Tool, false]);
+            await f.Settle();
+            var flyout = f.Manager.AutoHideWindow!;
+            TextBlock Title() => flyout.FindVisualChildren<TextBlock>().First(t => t.Text == f.Tool.Title);
+            Check.False(f.Tool.IsActive);
+            Check.Equal(0xFFFFFFu, Rgb(Title().Foreground));
+            f.Tool.IsActive = true;
+            await f.Settle();
+            Check.Equal(0x000000u, Rgb(Title().Foreground));
+            typeof(DockingManager).GetMethod("CloseAutoHide", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(f.Manager, []);
         });
         tests.Test("Metro: selected tabs carry a top indicator that takes the accent only while active", async () =>
         {
@@ -64,7 +105,7 @@ internal static class ClassicThemeTests
             Check.Equal(0x41B1E1u, Rgb(indicator.Background));
             f.Tool.IsActive = true;
             await f.Settle();
-            Check.Equal(0x444444u, Rgb(Named<Border>(f.Tab(f.Document), "PART_SelectedTabIndicator").Background));
+            Check.Equal(0x333333u, Rgb(Named<Border>(f.Tab(f.Document), "PART_SelectedTabIndicator").Background));
             Check.Equal(Visibility.Collapsed, Named<Border>(f.Tab(f.Second), "PART_SelectedTabIndicator").Visibility);
         });
         tests.Test("Aero: document tabs use a slanted outline and a bold selected title", async () =>
@@ -136,6 +177,7 @@ internal static class ClassicThemeTests
     private static ElementTheme EffectiveTheme(DockingManager manager) => (ElementTheme)typeof(DockingManager).Assembly.GetType("UnoDock.Internal.DockThemeResources", true)!.GetMethod("EffectiveTheme", BindingFlags.Static | BindingFlags.NonPublic)!.Invoke(null, [manager])!;
     private static T Property<T>(object value, string name) => (T)value.GetType().GetProperty(name)!.GetValue(value)!;
     private static Grid Chrome(LayoutTabItemBase tab) => (Grid)tab.Content;
+    private static Brush? Hover(Button button, string field) => (Brush?)button.GetType().GetField(field, BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(button);
     private static T Named<T>(DependencyObject root, string name)
         where T : FrameworkElement => root.FindVisualChildren<T>().First(e => e.Name == name);
     private static uint Rgb(Brush? brush) => brush is SolidColorBrush { Color: var c } ? Pack(c) : throw new InvalidOperationException("Expected a solid brush, found " + (brush?.GetType().Name ?? "null") + ".");
@@ -223,6 +265,7 @@ internal static class ClassicThemeTests
 
         internal LayoutTabItemBase Tab(LayoutContent content) => Manager.FindVisualChildren<LayoutTabItemBase>().First(t => ReferenceEquals(t.Model, content));
         internal Grid DocumentFrame() => (Grid)Manager.FindVisualChildren<LayoutDocumentPaneControl>().Single().Content;
+        internal Border ContentFrame() => Named<Border>(Manager.FindVisualChildren<LayoutDocumentPaneControl>().Single(), "PART_ContentFrame");
         public void Dispose() => _window.Close();
     }
 }

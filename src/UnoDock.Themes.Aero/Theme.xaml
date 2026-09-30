@@ -25,30 +25,50 @@
         <GradientStop Offset="1" Color="#A8C0DA" />
     </LinearGradientBrush>
     <LinearGradientBrush x:Key="UnoDock.SelectedDocumentTabBrush" StartPoint="0,0" EndPoint="0,1">
-        <GradientStop Offset="0" Color="#FDFEFF" />
-        <GradientStop Offset="1" Color="#D5E7FA" />
+        <GradientStop Offset="0" Color="#FCFDFE" />
+        <GradientStop Offset="1" Color="#D2E6FA" />
     </LinearGradientBrush>
+    <LinearGradientBrush x:Key="UnoDock.ActiveDocumentTabBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Offset="0" Color="#FCFDFE" />
+        <GradientStop Offset="1" Color="#D2E6FA" />
+    </LinearGradientBrush>
+    <SolidColorBrush x:Key="UnoDock.DocumentTabForegroundBrush" Color="#000000" />
+    <SolidColorBrush x:Key="UnoDock.SelectedDocumentTabForegroundBrush" Color="#000000" />
     <SolidColorBrush x:Key="UnoDock.TabHoverBrush" Color="#E4EFFB" />
     <x:String x:Key="UnoDock.DocumentTabShape">Slanted</x:String>
     <x:Boolean x:Key="UnoDock.BoldSelectedTab">True</x:Boolean>
     <x:Double x:Key="UnoDock.TabHorizontalPadding">4</x:Double>
+    <x:Double x:Key="UnoDock.DocumentTabStripInset">15</x:Double>
 
     <LinearGradientBrush x:Key="UnoDock.ToolTitleBrush" StartPoint="0,0" EndPoint="0,1">
         <GradientStop Offset="0" Color="#B8CAE0" />
         <GradientStop Offset="1" Color="#E0EAF9" />
     </LinearGradientBrush>
+    <LinearGradientBrush x:Key="UnoDock.ActiveToolTitleBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Offset="0" Color="#9FBDE5" />
+        <GradientStop Offset="1" Color="#D3E3F7" />
+    </LinearGradientBrush>
+    <SolidColorBrush x:Key="UnoDock.ToolTitleForegroundBrush" Color="#000000" />
+    <SolidColorBrush x:Key="UnoDock.ActiveToolTitleForegroundBrush" Color="#000000" />
     <SolidColorBrush x:Key="UnoDock.ToolTabStripBrush" Color="#EDF0FA" />
-    <SolidColorBrush x:Key="UnoDock.ToolTabBrush" Color="#EDF0FA" />
+    <LinearGradientBrush x:Key="UnoDock.ToolTabBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Offset="0" Color="#EBEBEB" />
+        <GradientStop Offset="1" Color="#D6D6D6" />
+    </LinearGradientBrush>
     <SolidColorBrush x:Key="UnoDock.SelectedToolTabBrush" Color="#FFFFFF" />
     <SolidColorBrush x:Key="UnoDock.ToolTabForegroundBrush" Color="#6D7078" />
+    <SolidColorBrush x:Key="UnoDock.SelectedToolTabForegroundBrush" Color="#000000" />
     <SolidColorBrush x:Key="UnoDock.RailBrush" Color="#EBEEFA" />
     <LinearGradientBrush x:Key="UnoDock.AnchorTabBrush" StartPoint="0,0" EndPoint="1,0">
-        <GradientStop Offset="0" Color="#F6F8FC" />
-        <GradientStop Offset="1" Color="#DCE4F1" />
+        <GradientStop Offset="0" Color="#F0F0F0" />
+        <GradientStop Offset="1" Color="#E0E0E0" />
     </LinearGradientBrush>
+    <SolidColorBrush x:Key="UnoDock.AnchorTabForegroundBrush" Color="#000000" />
     <SolidColorBrush x:Key="UnoDock.PaneBorderBrush" Color="#898C95" />
     <SolidColorBrush x:Key="UnoDock.FloatingBorderBrush" Color="#898C95" />
     <SolidColorBrush x:Key="UnoDock.ActiveFloatingBorderBrush" Color="#5A8FD0" />
+    <x:Double x:Key="UnoDock.FloatingBorderThickness">4</x:Double>
+    <SolidColorBrush x:Key="UnoDock.ChromeButtonHoverBorderBrush" Color="#7DA2CE" />
 
     <x:Double x:Key="UnoDock.TitleHeight">21</x:Double>
     <x:Double x:Key="UnoDock.TabHeight">23</x:Double>
