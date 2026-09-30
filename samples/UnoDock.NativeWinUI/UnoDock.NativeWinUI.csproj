@@ -1,0 +1,20 @@
+<Project Sdk="Uno.Sdk">
+  <PropertyGroup>
+    <!-- Native WinUI 3 head: the Window is never registered with the library,
+         like a typical WinUI app, so host resolution uses the island's AppWindow. -->
+    <TargetFrameworks>net10.0-windows10.0.26100.0</TargetFrameworks>
+    <OutputType>WinExe</OutputType>
+    <UnoSingleProject>true</UnoSingleProject>
+    <IsPackable>false</IsPackable>
+    <WindowsPackageType>None</WindowsPackageType>
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <ApplicationTitle>UnoDock native WinUI</ApplicationTitle>
+    <ApplicationId>org.unodock.nativewinui</ApplicationId>
+    <ApplicationDisplayVersion>0.1.0</ApplicationDisplayVersion>
+    <ApplicationVersion>1</ApplicationVersion>
+    <ApplicationPublisher>UnoDock contributors</ApplicationPublisher>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/UnoDock/UnoDock.csproj" />
+  </ItemGroup>
+</Project>

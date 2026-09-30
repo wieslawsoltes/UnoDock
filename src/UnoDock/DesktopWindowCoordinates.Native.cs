@@ -6,7 +6,7 @@ namespace UnoDock;
 public sealed partial class DesktopWindowCoordinates
 {
     internal static Window? WindowFor(FrameworkElement element) => Microsoft.Windows.Shell.WindowRegistry.Find(element);
-    internal bool TryGetPointer(Window window, out DesktopPointerState state)
+    internal bool TryGetPointer(Window? window, out DesktopPointerState state)
     {
         Verify();
         state = default;
@@ -25,7 +25,7 @@ public sealed partial class DesktopWindowCoordinates
             return true;
         }
 
-        if (OperatingSystem.IsLinux() && Uno.UI.Xaml.WindowHelper.GetNativeWindow(window) is Uno.UI.NativeElementHosting.X11NativeWindow native)
+        if (OperatingSystem.IsLinux() && window != null && Uno.UI.Xaml.WindowHelper.GetNativeWindow(window) is Uno.UI.NativeElementHosting.X11NativeWindow native)
         {
             var connection = Connection;
             var reply = Xcb.PointerReply(connection, Xcb.Pointer(connection, Id(native.WindowId)), out var error);
@@ -134,6 +134,13 @@ public sealed partial class DesktopWindowCoordinates
 
 #endif
         return false;
+    }
+
+    /// <summary>Win32 ownership by the owner's top-level handle (WinUI host islands).</summary>
+    internal IDisposable? ConfigureOwner(Window window, nint owner, bool tool)
+    {
+        Verify();
+        return owner != 0 && OperatingSystem.IsWindows() ? W32.Own(WindowsHandle(window), owner, tool) : null;
     }
 
     internal IDisposable? ConfigureOwner(Window window, Window? owner, bool tool)

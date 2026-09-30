@@ -151,6 +151,23 @@ jobs:
             artifacts/packages/*.nupkg
             artifacts/packages/*.snupkg
           if-no-files-found: error
+      - name: Build the native WinUI head
+        run: msbuild samples/UnoDock.NativeWinUI/UnoDock.NativeWinUI.csproj -restore -p:Configuration=Release -p:Platform=x64 -v:minimal
+      # The sample never registers its Window: owner, drop targeting and shutdown
+      # must work from the host island alone. The process exits only when the
+      # floating windows close together with the main window.
+      - name: Run the native WinUI host-island smoke test
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem samples/UnoDock.NativeWinUI/bin -Recurse -Filter UnoDock.NativeWinUI.exe | Select-Object -First 1
+          if (-not $exe) { throw 'The native WinUI head was not built.' }
+          $result = Join-Path $env:RUNNER_TEMP 'native-winui.txt'
+          $env:UNODOCK_SMOKE = $result
+          $process = Start-Process -FilePath $exe.FullName -PassThru
+          if (-not $process.WaitForExit(120000)) { $process.Kill($true); Get-Content $result -ErrorAction SilentlyContinue; throw 'The native WinUI head did not exit: floating windows outlived their owner.' }
+          $lines = Get-Content $result
+          $lines
+          if ($lines.Count -lt 4 -or ($lines | Where-Object { $_ -notlike 'PASS *' })) { throw 'The native WinUI smoke test failed.' }
   browser:
     name: Browser
     runs-on: ubuntu-latest

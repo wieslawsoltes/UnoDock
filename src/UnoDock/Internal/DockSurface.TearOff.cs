@@ -30,11 +30,13 @@ internal sealed partial class DockSurface
         if (_dragWholePane && floatingModel != null)
             return false;
         var sourceWindow = DesktopWindowCoordinates.WindowFor(source);
+        // Win32 reads the global pointer; a WinUI host island has no Window object.
+        var pointerSource = sourceWindow != null || OperatingSystem.IsWindows() && Manager.HostHandle != 0;
         DesktopPointerState pointer = default;
-        var hasPointer = sourceWindow != null && coordinates.TryGetPointer(sourceWindow, out pointer);
+        var hasPointer = pointerSource && coordinates.TryGetPointer(sourceWindow, out pointer);
         if (s_trace)
             Trace($"leave window={sourceWindow != null} pointer={hasPointer} left={pointer.LeftDown} escape={pointer.EscapeDown} at={pointer.Position}");
-        if (sourceWindow == null || !hasPointer || !pointer.LeftDown || pointer.EscapeDown)
+        if (!pointerSource || !hasPointer || !pointer.LeftDown || pointer.EscapeDown)
             return false;
         if (soleFloating)
         {

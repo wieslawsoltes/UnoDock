@@ -54,6 +54,20 @@ public sealed partial class DesktopWindowCoordinates
                     return true;
                 }
 
+                foreach (var (root, handle) in Microsoft.Windows.Shell.WindowRegistry.HostSnapshot())
+                {
+                    if (handle != current)
+                        continue;
+                    if (W32.IsWindowEnabled(handle) && W32.GetClientRect(handle, out var client))
+                    {
+                        var origin = W32.ClientOrigin(handle);
+                        if (new Rect(origin.X, origin.Y, client.Right - client.Left, client.Bottom - client.Top).Contains(screen))
+                            hitRoot = root;
+                    }
+
+                    return true;
+                }
+
                 if (Environment.GetEnvironmentVariable("UNODOCK_INPUT_TRACE") == "1")
                 {
                     var name = new System.Text.StringBuilder(256);
