@@ -267,7 +267,7 @@ public sealed partial class GalleryPage : IDisposable
 
             if (_samplePicker != null)
                 _samplePicker.SelectedIndex = (int)sample;
-            _status.Text = "Ready  |  Drag tabs to dock  |  Ctrl+Tab: switch  |  Ctrl+F4: close  |  UnoDock preview 16";
+            _status.Text = "Ready  |  Drag tabs to dock  |  Ctrl+Tab: switch  |  Ctrl+F4: close  |  UnoDock " + (typeof(DockingManager).Assembly.GetCustomAttributes(typeof(System.Reflection.AssemblyInformationalVersionAttribute), false).OfType<System.Reflection.AssemblyInformationalVersionAttribute>().FirstOrDefault()?.InformationalVersion.Split('+')[0] ?? "");
         }
         finally
         {
