@@ -35,6 +35,9 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
         Margin = new Thickness(10, 6, 10, 6),
         VerticalAlignment = VerticalAlignment.Center
     };
+    // Icon and title (or DocumentTitleTemplate/AnchorableTitleTemplate) of the
+    // caption content. The whole header lets input through to the drag handle.
+    private readonly DockHeaderPresenter _captionHeader;
     private readonly Grid _title = new();
     private bool _closingHost, _syncBounds, _hostDisposed;
     private Window? _window;
@@ -142,8 +145,14 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
         });
         InitializeCaptionDrag();
         _caption.IsHitTestVisible = false;
+        _captionHeader = new(_caption)
+        {
+            IsHitTestVisible = false,
+            VerticalAlignment = VerticalAlignment.Center,
+            IconSpacing = 5
+        };
         _title.Children.Add(_dragHandle);
-        _title.Children.Add(_caption);
+        _title.Children.Add(_captionHeader);
         var actions = CreateCaptionButtons();
         Grid.SetColumn(actions, 1);
         _title.Children.Add(actions);
@@ -165,7 +174,7 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
         _frame.Children.Add(_dropOverlay);
         // One retained caption handle moves and docks the whole window. Pane
         // tabs retain their separate single-item tear-off interaction.
-        _caption.HorizontalAlignment = HorizontalAlignment.Left;
+        _captionHeader.HorizontalAlignment = HorizontalAlignment.Left;
         GotFocus += (_, _) => MarkInteraction();
         Content = _frame;
         BorderThickness = new(1);
@@ -371,10 +380,16 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
         _frame.RequestedTheme = DockThemeResources.EffectiveTheme(manager);
         _caption.Foreground = palette.Foreground;
         _caption.FontSize = palette.FontSize;
-        _caption.Margin = new Thickness(8, 3, 8, 3);
+        _caption.Margin = new Thickness(0, 3, 0, 3);
+        _captionHeader.Margin = new Thickness(8, 0, 8, 0);
+        _captionHeader.Templated.FontSize = palette.FontSize;
         // Keep WindowChrome's explicitly owned caption MinHeight independent.
         _caption.MinHeight = Math.Max(0, palette.TitleHeight - 6);
-        _caption.Text = CaptionContent?.Title ?? (Model is LayoutDocumentFloatingWindow ? "Document" : "Tools");
+        var fallback = Model is LayoutDocumentFloatingWindow ? "Document" : "Tools";
+        if (CaptionContent is { } captionContent)
+            _captionHeader.Update(manager, captionContent, manager.HeaderTemplate(captionContent, _captionHeader, title: true), captionContent.Title ?? fallback);
+        else
+            _captionHeader.Reset(fallback);
         if (_window != null)
             _window.Title = _caption.Text;
         _frame.Background = palette.Surface;

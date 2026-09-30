@@ -175,19 +175,26 @@ public partial class LayoutCachePaneControl
 
     private void ShowDocuments()
     {
+        if (CreateDocumentsMenu() is { } menu)
+            DockVisuals.ShowBelow(menu, _documentsButton);
+    }
+    /// <summary>The open-documents list: one checkable row per listed content,
+        /// presented by DocumentPaneMenuItemHeaderTemplate or as icon and title.</summary>
+        internal MenuFlyout? CreateDocumentsMenu()
+    {
         if (Pane?.Root?.Manager is not { } manager)
-            return;
+            return null;
         var root = manager.Layout;
         var pane = Pane;
-        var menu = new MenuFlyout();
+        var palette = DockMenuPalette.Resolve(manager);
+        var menu = new MenuFlyout
+        {
+            MenuFlyoutPresenterStyle = DockMenuRow.PresenterStyle(palette)
+        };
         foreach (var model in Items.Where(c => c is not LayoutDocument { IsVisible: false }).ToArray())
         {
-            var item = new ToggleMenuFlyoutItem
-            {
-                Text = model.Title ?? "Untitled",
-                IsChecked = model.IsSelected,
-                IsEnabled = model.IsEnabled
-            };
+            var item = new DockDocumentMenuRow();
+            item.Configure(manager, palette, model);
             item.Click += (_, _) =>
             {
                 // Revalidate after an asynchronously open menu; a reset can detach the model.
@@ -197,6 +204,6 @@ public partial class LayoutCachePaneControl
             menu.Items.Add(item);
         }
 
-        DockVisuals.ShowBelow(menu, _documentsButton);
+        return menu;
     }
 }

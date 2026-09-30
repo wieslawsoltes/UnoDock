@@ -48,6 +48,12 @@ public sealed partial class NavigatorListBox : ListBox
             row.Invoked -= RowInvoked;
             row.Invoked += RowInvoked;
             row.Configure(_palette, _surface);
+            // The stock item template shows the title only. Rows present the
+            // content's header template or icon unless the application replaced it.
+            if (item is LayoutItem layoutItem && ReferenceEquals(ItemTemplate, _itemTemplate) && ItemTemplateSelector == null)
+                row.PresentHeader(layoutItem);
+            else
+                row.ReleaseHeader();
         }
     }
 

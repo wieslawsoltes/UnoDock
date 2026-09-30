@@ -19,16 +19,10 @@ public abstract partial class LayoutTabItemBase : DockInputControl
         Visibility = Visibility.Collapsed
     };
     private readonly DockChromeButton _label;
-    private readonly Image _icon = new()
+    private readonly DockHeaderPresenter _header = new()
     {
-        Width = 16,
-        Height = 16,
-        Margin = new Thickness(0, 0, 3, 0),
-        Visibility = Visibility.Collapsed
-    };
-    private readonly ContentPresenter _header = new()
-    {
-        VerticalAlignment = VerticalAlignment.Center
+        VerticalAlignment = VerticalAlignment.Center,
+        IconSpacing = 3
     };
     private readonly DockChromeButton _close;
     private Microsoft.UI.Xaml.Shapes.Path? _shape;
@@ -59,19 +53,7 @@ public abstract partial class LayoutTabItemBase : DockInputControl
             Width = GridLength.Auto
         });
         _label = DockChrome.Button("", ActivateFromKeyboard);
-        var header = new Grid();
-        header.ColumnDefinitions.Add(new()
-        {
-            Width = GridLength.Auto
-        });
-        header.ColumnDefinitions.Add(new()
-        {
-            Width = new(1, GridUnitType.Star)
-        });
-        header.Children.Add(_icon);
-        Grid.SetColumn(_header, 1);
-        header.Children.Add(_header);
-        _label.Content = header;
+        _label.Content = _header;
         _label.MinWidth = 44;
         _label.MaxWidth = 260;
         _label.Padding = new Thickness(1, 0, 1, 0);
@@ -188,11 +170,9 @@ public abstract partial class LayoutTabItemBase : DockInputControl
         if (Model == null)
             return;
         SetLayoutItem(manager.GetLayoutItemFromModel(Model));
-        var template = manager.HeaderTemplate(Model, this);
-        _header.ContentTemplate = template;
-        _header.Content = template == null ? Model.Title : Model;
-        _icon.Source = template == null ? Model.IconSource as ImageSource : null;
-        _icon.Visibility = _icon.Source == null ? Visibility.Collapsed : Visibility.Visible;
+        // A header template owns the whole header; otherwise the icon (through
+        // IconContentTemplate when set) precedes the title.
+        _header.Update(manager, Model, manager.HeaderTemplate(Model, this));
         _label.IsEnabled = Model.IsEnabled;
         _close.IsEnabled = Model.IsEnabled;
         var palette = DockChrome.Palette(manager);

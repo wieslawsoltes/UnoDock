@@ -33,6 +33,7 @@ internal sealed partial class NavigatorListItem
             action.Click += ActionClicked;
         }
 
+        AttachHeader();
         Paint();
     }
 
