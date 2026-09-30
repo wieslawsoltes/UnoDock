@@ -43,17 +43,14 @@ internal sealed partial class DockSurface
         _lastDragPoint = point;
         if (suppress)
         {
-            _dragScrollTimer.Stop();
+            StopDragTimer();
             ShowDragPreview(null);
         }
         else
         {
-            UpdateDragAdorners(point);
-            if (OwnsFloatingDrag(window, generation) && !_dragScrollTimer.IsEnabled)
-            {
-                _lastScrollTick = Stopwatch.GetTimestamp();
-                _dragScrollTimer.Start();
-            }
+            RefreshDragAdorners(point);
+            if (OwnsFloatingDrag(window, generation))
+                StartDragTimer();
         }
 
         return OwnsFloatingDrag(window, generation);
@@ -71,7 +68,7 @@ internal sealed partial class DockSurface
         _floatingDrag = null;
         _dragContent = null;
         var closing = ++_floatingDragGeneration;
-        _dragScrollTimer.Stop();
+        StopDragTimer();
         try
         {
             // Guide Visibility/Unloaded and IsDragging observers are application

@@ -183,7 +183,8 @@ internal static class MacDesktopInterop
         try
         {
             SendChild(parent, Sel("addChildWindow:ordered:"), child, 1);
-            SendBool(child, Sel("setHidesOnDeactivate:"), tool);
+            // Floating tool windows stay visible while the application is inactive,
+            // like floating documents; child-window ordering keeps them above the owner.
             SendBool(child, Sel("setExcludedFromWindowsMenu:"), tool);
             return lease;
         }

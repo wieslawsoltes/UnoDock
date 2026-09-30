@@ -46,8 +46,19 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
     private Window? _pendingNativeSync;
     private NativeWindowMessageHook? _messageHook;
     private DockRect? _displayBounds;
+    // The coordinate space the persisted floating bounds were last shown in:
+    // desktop DIPs for a native host (true), surface coordinates otherwise.
+    private bool? _nativeHostSpace;
     internal bool IsMinimized => _minimized;
+    internal bool IsHostDisposed => _hostDisposed;
+    /// <summary>True when the persisted bounds are desktop DIPs of a native host.</summary>
+    internal bool IsInNativeHostSpace => _nativeHostSpace == true;
+    /// <summary>True while this control is presented, natively or in the surface.</summary>
+    internal bool IsHostVisible => !_hostDisposed && (_window is { } window ? window.AppWindow.IsVisible : Visibility == Visibility.Visible && VisualTreeHelper.GetParent(this) != null);
 
+    /// <summary>A floating model is kept while hidden content can still return to it;
+        /// its host is shown only while it has content to present.</summary>
+        internal static bool CanPresent(LayoutFloatingWindow model) => model.IsValid && model.Descendents().OfType<LayoutContent>().Any();
     public event EventHandler<Exception>? MessageFilterFailed;
     /// <summary>The caption row; for a single-pane tool window it is also that
         /// pane's title, so it accepts tab insertion like a pane title does.</summary>
@@ -313,6 +324,8 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
             // Show) but its host closes; showing a tool creates a new host.
             if (Model is LayoutFloatingWindow { IsValid: false } or LayoutAnchorableFloatingWindow { IsVisible: false } || Model.Root == null)
                 CloseHost();
+            else if (Model is LayoutFloatingWindow model && !CanPresent(model))
+                HideHost();
         }
         finally
         {
@@ -329,6 +342,9 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
         try
         {
             DoHide();
+            // Hidden tools keep this model for Show(); never leave an empty host.
+            if (!_hostDisposed && Model is LayoutFloatingWindow model && !CanPresent(model))
+                HideHost();
         }
         finally
         {
@@ -453,6 +469,7 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
         EnsureInitialized();
         if (_hostDisposed)
             return;
+        EnterHostSpace(true);
         Visibility = Visibility.Visible;
         if (_window == null)
         {
@@ -530,7 +547,14 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
             QueueInitialNativeLayout(_window);
         }
         else if (!_window.AppWindow.IsVisible && !_minimized)
+        {
+#if WINDOWS
+            // A host hidden while its tools were hidden is shown at its retained frame.
+            _window.AppWindow.Show();
+#endif
             _window.Activate();
+        }
+
         try
         {
             ConfigureNativeDragHost();
@@ -692,33 +716,82 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
             _window.AppWindow.Hide();
 #else
         // Uno has no AppWindow.Hide: release the host, retaining the control and content.
-        if (_window is { } window)
+        ReleaseNativeWindow();
+#endif
+        Visibility = Visibility.Collapsed;
+    }
+
+    /// <summary>Closes the native window, retaining this control, its content and
+        /// its model so the same control can be shown again natively or in-surface.</summary>
+        private void ReleaseNativeWindow()
+    {
+        if (_window is not { } window)
+            return;
+        CancelFrameResize(false);
+        ReleaseNativeDragHost(false);
+        _closingHost = true;
+        try
         {
-            _closingHost = true;
+            ReleaseNativeChrome();
+            _messageHook?.Dispose();
+            _messageHook = null;
+            window.AppWindow.Closing -= OnNativeClosing;
+            window.AppWindow.Changed -= OnNativeChanged;
+            window.Closed -= OnNativeClosed;
+            window.Activated -= OnNativeActivated;
+            DesktopWindowCoordinates.HideNativeClientBeforeClose(window);
+            window.Content = null;
+            window.Close();
+            _systemRegistration?.Dispose();
+            _systemRegistration = null;
+            _window = null;
+        }
+        finally
+        {
+            _closingHost = false;
+        }
+    }
+
+    /// <summary>Moves this control into the native (desktop DIP) or in-surface
+        /// (surface coordinate) host space. When the manager's floating mode changed
+        /// since it was last shown, the native window is released and the persisted
+        /// origin is converted so the window stays where it appeared.</summary>
+        internal void EnterHostSpace(bool native)
+    {
+        if (_hostDisposed)
+            return;
+        var previous = _nativeHostSpace;
+        Point? origin = null;
+        if (previous is { } space && space != native && Model.Root?.Manager is { Surface: { IsLoaded: true } surface } manager && manager.CrossWindowCoordinates is DesktopWindowCoordinates coordinates && PositionModel != null)
+        {
+            var bounds = RestoredBounds;
             try
             {
-                ReleaseNativeChrome();
-                _messageHook?.Dispose();
-                _messageHook = null;
-                window.AppWindow.Closing -= OnNativeClosing;
-                window.AppWindow.Changed -= OnNativeChanged;
-                window.Closed -= OnNativeClosed;
-                window.Activated -= OnNativeActivated;
-                DesktopWindowCoordinates.HideNativeClientBeforeClose(window);
-                window.Content = null;
-                window.Close();
-                _systemRegistration?.Dispose();
-                _systemRegistration = null;
-                _window = null;
+                origin = native ? coordinates.ToDesktopPoint(surface, new(bounds.X, bounds.Y)) : coordinates.FromDesktopPoint(new(bounds.X, bounds.Y), surface);
             }
-            finally
+            catch (Exception error) when (DockCoordinates.IsUnavailable(error))
             {
-                _closingHost = false;
             }
         }
 
-#endif
-        Visibility = Visibility.Collapsed;
+        if (!native)
+            ReleaseNativeWindow();
+        _nativeHostSpace = native;
+        if (origin is { } converted && double.IsFinite(converted.X) && double.IsFinite(converted.Y))
+        {
+            using (Model.Root is LayoutRoot root ? root.BeginUpdate() : null)
+                foreach (var content in Contents.ToArray())
+                {
+                    content.FloatingLeft = converted.X;
+                    content.FloatingTop = converted.Y;
+                }
+        }
+
+        if (!native)
+        {
+            ApplyManagedBounds();
+            UpdateChromeControls();
+        }
     }
 
     internal void CloseHost()
@@ -778,9 +851,21 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
     {
         if (_hostDisposed || IsMaximized || _minimized)
             return;
-        if (_window != null)
+        if (_window is { } window)
         {
-            _window.AppWindow.Move(new Windows.Graphics.PointInt32 { X = _window.AppWindow.Position.X + (int)Math.Round(x * (XamlRoot?.RasterizationScale ?? 1)), Y = _window.AppWindow.Position.Y + (int)Math.Round(y * (XamlRoot?.RasterizationScale ?? 1)) });
+            // Same convention as caption drags: live native origin, AppKit points
+            // (bottom-left, Y-up) on macOS and physical pixels elsewhere.
+            try
+            {
+                var origin = _dragCoordinates.GetNativeOrigin(window);
+                var scale = OperatingSystem.IsMacOS() ? 1 : DesktopWindowCoordinates.Scale(this);
+                DesktopWindowCoordinates.MoveNative(window, new(origin.X + x * scale, origin.Y + (OperatingSystem.IsMacOS() ? -y : y) * scale));
+            }
+            catch (Exception error) when (DockCoordinates.IsUnavailable(error))
+            {
+                ReportFilterFailure(error);
+            }
+
             return;
         }
 

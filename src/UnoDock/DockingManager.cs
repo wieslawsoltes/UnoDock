@@ -331,6 +331,7 @@ public partial class DockingManager : Control, IDisposable, UnoDock.Compatibilit
             return;
         _loaded = true;
         ObserveThemeParameters();
+        AttachHostWindow();
         if (!_initialized)
         {
             _initialized = true;
@@ -471,6 +472,10 @@ public partial class DockingManager : Control, IDisposable, UnoDock.Compatibilit
 
     private LayoutFloatingWindowControl EnsureFloatingWindow(LayoutFloatingWindow model, bool immutable = false)
     {
+        // A host closed outside the library (for example Window.Close()) is
+        // permanently disposed; never reuse it for a model that is still floating.
+        foreach (var disposed in _floating.Where(w => w.IsHostDisposed && ReferenceEquals(w.Model, model)).ToArray())
+            _floating.Remove(disposed);
         var existing = _floating.FirstOrDefault(w => ReferenceEquals(w.Model, model));
         if (existing != null)
             return existing;
@@ -481,17 +486,38 @@ public partial class DockingManager : Control, IDisposable, UnoDock.Compatibilit
 
     private void SyncFloatingWindows()
     {
-        foreach (var window in _floating.Where(w => !Layout.FloatingWindows.Contains((LayoutFloatingWindow)w.Model)).ToArray())
+        foreach (var window in _floating.Where(w => w.IsHostDisposed || !Layout.FloatingWindows.Contains((LayoutFloatingWindow)w.Model)).ToArray())
         {
             window.CloseHost();
             _floating.Remove(window);
         }
 
-        foreach (var model in Layout.FloatingWindows.Where(f => f.IsValid))
+        foreach (var model in Layout.FloatingWindows.ToArray())
         {
+            if (!LayoutFloatingWindowControl.CanPresent(model))
+            {
+                // Hidden tools keep their floating model for Show(); its host is
+                // hidden, retaining the control and its bounds, until content returns.
+                if (_floating.FirstOrDefault(w => ReferenceEquals(w.Model, model)) is { IsHostVisible: true } empty)
+                    empty.HideHost();
+                continue;
+            }
+
             var control = EnsureFloatingWindow(model);
-            control.UpdateView();
             var native = UsesNativeFloatingWindows;
+            if (!native && _loaded && control.IsInNativeHostSpace)
+            {
+                // A runtime switch to in-surface windows: convert the persisted
+                // desktop bounds, release the native host and present a fresh
+                // control, since a former window root keeps that window's XamlRoot.
+                control.EnterHostSpace(false);
+                var immutable = control.IsContentImmutable;
+                control.CloseHost();
+                _floating.Remove(control);
+                control = EnsureFloatingWindow(model, immutable);
+            }
+
+            control.UpdateView();
             if (_loaded)
             {
                 if (native)
@@ -607,6 +633,7 @@ public partial class DockingManager : Control, IDisposable, UnoDock.Compatibilit
         _items.Clear();
         if (_host != null)
             _host.Content = null;
+        DetachHostWindow();
         _handlers.Clear();
         _documents.Clear();
         _anchorables.Clear();

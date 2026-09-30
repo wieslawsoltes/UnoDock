@@ -168,6 +168,8 @@ internal sealed partial class DockSurface : Grid, IDisposable
 
     internal void ShowFloating(LayoutFloatingWindowControl control)
     {
+        // A runtime switch from native windows releases the native host first.
+        control.EnterHostSpace(false);
         if (!_floats.Children.Contains(control))
         {
             VisualParenting.Detach(control);
@@ -482,13 +484,9 @@ internal sealed partial class DockSurface : Grid, IDisposable
         }
 
         _lastDragPoint = point;
-        UpdateDragAdorners(point);
-        if (!_dragScrollTimer.IsEnabled)
-        {
-            _lastScrollTick = Stopwatch.GetTimestamp();
-            _dragScrollTimer.Start();
-        }
-
+        RefreshDragAdorners(point);
+        if (_dragContent != null)
+            StartDragTimer();
         args.Handled = true;
     }
 
@@ -620,14 +618,20 @@ internal sealed partial class DockSurface : Grid, IDisposable
     {
         if (_disposed || _dragContent == null || (_drag.State != DockDragState.Dragging && _floatingDrag == null))
         {
-            _dragScrollTimer.Stop();
+            StopDragTimer();
+            return;
+        }
+
+        if (DesktopWindowCoordinates.IsEscapeDown())
+        {
+            CancelDrag();
             return;
         }
 
         var now = Stopwatch.GetTimestamp();
         var seconds = Stopwatch.GetElapsedTime(_lastScrollTick, now).TotalSeconds;
         _lastScrollTick = now;
-        var plan = UpdateDragAdorners(_lastDragPoint);
+        var plan = CurrentDragAdorners(_lastDragPoint, now);
         if (plan?.CanExecute != true)
             return;
         if (GetView(plan.Target) is not LayoutCachePaneControl pane)
@@ -638,7 +642,7 @@ internal sealed partial class DockSurface : Grid, IDisposable
             {
                 pane.UpdateLayout(); // Insertion indices must use the newly scrolled geometry.
                 if (_dragContent != null)
-                    UpdateDragAdorners(_lastDragPoint);
+                    RefreshDragAdorners(_lastDragPoint);
             }
         }
         catch (Exception error) when (DockCoordinates.IsUnavailable(error))
@@ -649,7 +653,7 @@ internal sealed partial class DockSurface : Grid, IDisposable
 
     private void DetachDrag()
     {
-        _dragScrollTimer.Stop();
+        StopDragTimer();
         var source = _dragSource;
         var input = _dragInput;
         var floating = _floatingDrag;

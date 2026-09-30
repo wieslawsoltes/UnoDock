@@ -14,7 +14,7 @@ public sealed partial class DesktopWindowCoordinates
         {
             if (!W32.GetCursorPos(out var point))
                 return false;
-            state = new(new(point.X, point.Y), W32.Down(1), W32.Down(0x11), W32.Down(0x1b));
+            state = new(new(point.X, point.Y), W32.Down(W32.PrimaryButton), W32.Down(0x11), W32.Down(0x1b));
             return true;
         }
 
@@ -49,6 +49,10 @@ public sealed partial class DesktopWindowCoordinates
         return false;
     }
 
+    /// <summary>Polls Escape where the host has a global keyboard state query, so a
+        /// drag can be cancelled while keyboard focus is outside the docking visuals.
+        /// Other hosts report false and rely on routed key events.</summary>
+        internal static bool IsEscapeDown() => OperatingSystem.IsWindows() && W32.Down(0x1b);
     internal static Point NativeOrigin(Window window)
     {
         using var coordinates = new DesktopWindowCoordinates();
@@ -183,6 +187,10 @@ public sealed partial class DesktopWindowCoordinates
         }
 
         internal static bool Down(int key) => (GetAsyncKeyState(key) & 0x8000) != 0;
+        /// <summary>GetAsyncKeyState reads physical buttons: with SM_SWAPBUTTON the
+                /// primary (logical left) button is the physical right one.</summary>
+                internal static int PrimaryButton => GetSystemMetrics(23) != 0 ? 0x02 : 0x01;
+
         internal static Point ClientOrigin(nint handle)
         {
             var point = new NativePoint();
@@ -235,6 +243,8 @@ public sealed partial class DesktopWindowCoordinates
 
         [DllImport("user32.dll", ExactSpelling = true)]
         internal static extern short GetAsyncKeyState(int key);
+        [DllImport("user32.dll", ExactSpelling = true)]
+        internal static extern int GetSystemMetrics(int index);
         [DllImport("user32.dll", ExactSpelling = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static extern bool GetCursorPos(out NativePoint point);

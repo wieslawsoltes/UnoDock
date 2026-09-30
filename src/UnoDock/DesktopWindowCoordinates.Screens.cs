@@ -58,6 +58,18 @@ public sealed partial class DesktopWindowCoordinates
         return new(screen.X / scale, screen.Y / scale);
     }
 
+    /// <summary>Inverse of <see cref = "ToDesktopPoint"/>: maps a top-left desktop
+        /// DIP point into the coordinate space of <paramref name = "destination"/>.</summary>
+        internal Point FromDesktopPoint(Point point, FrameworkElement destination)
+    {
+#if !WINDOWS
+        if (OperatingSystem.IsMacOS())
+            return FromScreen(new(point.X, Internal.MacDesktopInterop.PrimaryScreenHeight() - point.Y), destination);
+#endif
+        var scale = Scale(destination);
+        return FromScreen(new(point.X * scale, point.Y * scale), destination);
+    }
+
     internal static IReadOnlyList<DockRect> WorkAreas(double scale)
     {
         if (!(scale > 0) || !double.IsFinite(scale))
