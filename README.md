@@ -148,7 +148,7 @@ The Gallery shows the classic docking layout, an IDE workspace, MVVM binding, co
 
 - [Getting started](docs/getting-started.md) · [Architecture](docs/architecture.md) · [XAML and MVVM](docs/xaml-workbench.md) · [Templates](docs/templates.md)
 - [Themes](docs/themes.md) · [Floating windows](docs/floating-windows.md) · [Docking guides](docs/docking-guides.md) · [Localization](docs/localization.md)
-- [Browser workspaces](docs/browser-workspaces.md) · [Platform support](docs/platform-support.md) · [Build and verification](docs/testing.md) · [Publishing](docs/publishing.md)
+- [Browser workspaces](docs/browser-workspaces.md) · [Platform support](docs/platform-support.md) · [Parity status](docs/parity.md) · [Build and verification](docs/testing.md) · [Publishing](docs/publishing.md)
 
 ## Building and testing
 

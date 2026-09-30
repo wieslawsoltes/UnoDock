@@ -22,7 +22,8 @@ The remaining 53 entries are WPF framework plumbing with no WinUI equivalent:
 
 * **HWND hosting** — `FilterMessage(hwnd, msg, …)` overrides and
   `HwndHost.BuildWindowCore/DestroyWindowCore` on the auto-hide window. UnoDock
-  exposes the same message filter through `NativeWindowMessageHook` on Windows.
+  handles the corresponding native messages internally on Windows and raises
+  `LayoutFloatingWindowControl.MessageFilterFailed` for diagnostics.
 * **WPF element lifecycle overrides** — `OnInitialized`, `LogicalChildren`,
   `OnApplyTemplate` signatures, `Freezable.CreateInstanceCore` and WPF mouse
   overrides (`OnMouseLeave`, `OnMouseRightButtonDown`, …). UnoDock provides the
