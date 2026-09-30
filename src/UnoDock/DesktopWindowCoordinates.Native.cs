@@ -136,6 +136,13 @@ public sealed partial class DesktopWindowCoordinates
         return false;
     }
 
+    /// <summary>Brings a top-level window (a WinUI host island) to the foreground.</summary>
+    internal static void ActivateHandle(nint handle)
+    {
+        if (handle != 0 && OperatingSystem.IsWindows())
+            W32.SetForegroundWindow(handle);
+    }
+
     /// <summary>Win32 ownership by the owner's top-level handle (WinUI host islands).</summary>
     internal IDisposable? ConfigureOwner(Window window, nint owner, bool tool)
     {
@@ -276,6 +283,9 @@ public sealed partial class DesktopWindowCoordinates
         [DllImport("user32.dll", ExactSpelling = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static extern bool IsWindowEnabled(nint window);
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static extern bool SetForegroundWindow(nint window);
         [DllImport("user32.dll", ExactSpelling = true)]
         internal static extern nint GetTopWindow(nint parent);
         [DllImport("user32.dll", ExactSpelling = true)]

@@ -30,7 +30,10 @@ internal sealed partial class DockSurface
         bool Current() => OwnsNavigator(navigator) && generation == _navigatorGeneration && ReferenceEquals(Manager.Layout, root) && ReferenceEquals(root.Manager, Manager);
         try
         {
-            Microsoft.Windows.Shell.WindowRegistry.Find(Manager)?.Activate();
+            if (Microsoft.Windows.Shell.WindowRegistry.Find(Manager) is { } host)
+                host.Activate();
+            else if (Manager.HostHandle != 0)
+                DesktopWindowCoordinates.ActivateHandle(Manager.HostHandle);
             if (!Current())
                 return;
             navigator.HorizontalAlignment = HorizontalAlignment.Center;

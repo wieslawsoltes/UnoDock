@@ -74,6 +74,13 @@ Applications can use the same desktop coordinate space for their own windows:
 `DesktopWindowCoordinates.SetWindowBounds(window, bounds, scale)` and
 `coordinates.ToDesktopPoint(element, point)` all use top-left DIPs.
 
+On Windows each monitor keeps its own scale (mixed DPI). A monitor's DIP
+rectangle starts at its physical origin and is sized by its own scale, so a
+window's bounds convert through the monitor it is on: saved bounds reopen on the
+same monitor at the same physical place and size, a single monitor at the
+desktop origin maps as pixels ÷ scale, and monitors never overlap in DIPs.
+macOS uses AppKit points and Linux the host's single scale.
+
 ![Floating tool and document windows under Openbox on Linux](images/floating/linux-openbox-vs2010.png)
 
 ## Platform notes

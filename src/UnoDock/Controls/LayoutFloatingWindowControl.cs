@@ -499,10 +499,13 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
             var bounds = FloatingPlacement.Fit(RestoredBounds, DesktopWindowCoordinates.WorkAreas(scale));
             if (bounds != RestoredBounds && PositionModel?.IsMaximized != true)
                 SetBounds(bounds);
+            // Physical frame on the monitor receiving the window (its own scale on
+            // Windows with mixed DPI; the host scale elsewhere).
+            var physical = DesktopWindowCoordinates.DipToPhysical(bounds, scale);
             _syncBounds = true;
             try
             {
-                _window.AppWindow.Resize(new Windows.Graphics.SizeInt32 { Width = (int)(bounds.Width * scale), Height = (int)(bounds.Height * scale) });
+                _window.AppWindow.Resize(new Windows.Graphics.SizeInt32 { Width = (int)physical.Width, Height = (int)physical.Height });
 #if !WINDOWS
                 // Persisted floating bounds are top-left screen coordinates on
                 // every platform; AppKit frame origins are bottom-left.
@@ -510,7 +513,7 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
                     MacDesktopInterop.MoveTopLeft(_window, new(bounds.X, bounds.Y));
                 else
 #endif
-                _window.AppWindow.Move(new Windows.Graphics.PointInt32 { X = (int)(bounds.X * scale), Y = (int)(bounds.Y * scale) });
+                _window.AppWindow.Move(new Windows.Graphics.PointInt32 { X = (int)physical.X, Y = (int)physical.Y });
 #if !WINDOWS
                 if (OperatingSystem.IsLinux())
                 {
@@ -682,7 +685,7 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
 
 #endif
         var origin = _dragCoordinates.GetNativeOrigin(window);
-        return new(origin.X / scale, origin.Y / scale, native.Size.Width / scale, native.Size.Height / scale);
+        return DesktopWindowCoordinates.PhysicalToDip(new DockRect(origin.X, origin.Y, native.Size.Width, native.Size.Height), scale);
     }
 
     internal void SynchronizeNativeState(DockRect bounds, OverlappedPresenterState state)

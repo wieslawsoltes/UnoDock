@@ -10,7 +10,9 @@ public partial class DockingManager
     private bool _hostWindowDiagnosed;
     private nint _hostHandle;
     private IDisposable? _hostIslandLease;
+#if WINDOWS
     private Microsoft.UI.Windowing.AppWindow? _hostAppWindow;
+#endif
     /// <summary>The top-level window handle of the host island on WinUI, where the
         /// hosting Window object cannot be resolved; zero elsewhere.</summary>
         internal nint HostHandle => _hostHandle;
@@ -92,12 +94,14 @@ public partial class DockingManager
 #endif
     }
 
+#if WINDOWS
     private void OnHostAppWindowDestroying(Microsoft.UI.Windowing.AppWindow sender, object args)
     {
         if (ReferenceEquals(sender, _hostAppWindow))
             CloseWithHost();
     }
 
+#endif
     private void ReportUnresolvedHostWindow()
     {
         if (_hostWindowDiagnosed || OperatingSystem.IsBrowser() || OperatingSystem.IsAndroid() || OperatingSystem.IsIOS())
@@ -133,9 +137,11 @@ public partial class DockingManager
         var lease = _hostWindowLease;
         _hostWindowLease = null;
         lease?.Dispose();
+#if WINDOWS
         if (_hostAppWindow is { } appWindow)
             appWindow.Destroying -= OnHostAppWindowDestroying;
         _hostAppWindow = null;
+#endif
         _hostHandle = 0;
         var island = _hostIslandLease;
         _hostIslandLease = null;

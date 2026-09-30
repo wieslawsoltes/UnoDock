@@ -114,22 +114,17 @@ Deferred focus retries are guarded by root, active content and navigation genera
 Hyperlink/text-selection/IME-caret restoration and every custom focus scope are not certified.
 
 A shortcut originating in a native float routes to its manager and activates the main
-window for the navigator. On native WinUI, register the main Window for explicit lookup:
+window for the navigator. Closing an overlay does not by itself dispose application-owned
+editor content.
 
-```csharp
-using Microsoft.Windows.Shell;
-var lease = SystemCommands.RegisterWindow(mainWindow);
-mainWindow.Closed += (_, _) => lease.Dispose();
-```
-
-The gallery does this automatically. Portable Uno hosts also expose application-window
-enumeration. Closing an overlay does not by itself dispose application-owned editor content.
-
-When it loads, a DockingManager resolves its hosting Window (through registration, Uno
-window enumeration or, on WinUI, the XamlRoot's AppWindowId among registered windows)
-and keeps it registered. That window owns the native floating windows, which close with
-it; the layout model is retained. When the host cannot be resolved, a Debug diagnostic
-names the missing registration.
+When it loads, a DockingManager resolves its host: a registered Window, a window from Uno's
+application-window enumeration, or, on native WinUI (which cannot enumerate windows), the
+host island of its XamlRoot. The island's AppWindowId gives the top-level window handle
+that owns the native floating windows, is activated for the navigator and maps drop
+targets to the manager; the floating windows close when that AppWindow is destroyed. No
+registration is needed. `SystemCommands.RegisterWindow(window)` remains available for
+application code that wants explicit lookup of its own windows. The layout model is
+retained when the host closes.
 
 ## Gallery and validation
 
