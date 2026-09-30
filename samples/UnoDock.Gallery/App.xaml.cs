@@ -123,6 +123,7 @@ public partial class App : Application
                         ("localization", true, () => Testing.LocalizationTests.Run(output)),
                         ("window-placement", true, () => Testing.WindowPlacementTests.Run(output)),
                         ("tabview-strip", true, () => Testing.TabViewStripTests.Run(output)),
+                        ("templates-icons", true, () => Testing.TemplateIconTests.Run(output)),
                         ("windows-floating-input", true, () => Testing.WindowsFloatingInputTests.Run(output)),
                         ("tear-off", true, () => Testing.TearOffInputTests.Run(output))
                     };
