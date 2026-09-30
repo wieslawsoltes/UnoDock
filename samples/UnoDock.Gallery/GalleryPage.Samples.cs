@@ -47,7 +47,7 @@ public sealed partial class GalleryPage : IDisposable
             });
         var menu = SampleChrome.CreateMenuBar();
         AddMenu("File", ("New document", "new", AddDocument), ("Save layout", "save", () => Run(Save)), ("Restore layout", "restore", () => Run(Restore)), ("Inspect layout XML", "xml", ShowXml));
-        AddMenu("Layout", ("Float / Dock", "float", ToggleFloating), ("Auto-hide / Pin", "pin", TogglePin), ("New vertical tab group", "split-right", () => Split(UnoDock.Core.DockPosition.Right)), ("New horizontal tab group", "split-bottom", () => Split(UnoDock.Core.DockPosition.Bottom)), ("Show hidden tools", "show-tools", ShowHiddenTools), ("Reset current sample", "reset", () => SwitchSample(CurrentSample)));
+        AddMenu("Layout", ("Float / Dock", "float", ToggleFloating), ("Auto-hide / Pin", "pin", TogglePin), ("New vertical tab group", "split-right", () => Split(UnoDock.Core.DockPosition.Right)), ("New horizontal tab group", "split-bottom", () => Split(UnoDock.Core.DockPosition.Bottom)), ("Show hidden tools", "show-tools", ShowHiddenTools), ("New tool window", "new-tool", AddTool), ("Reset current sample", "reset", () => SwitchSample(CurrentSample)));
         AddMenu("Samples", ("XAML workspaces", "xaml-workspaces", ShowXamlSamples), ("XAML workbench", "xaml-workbench", ShowXamlWorkbench), ("XAML MVVM", "xaml-mvvm", ShowXamlMvvm), ("Docking", "classic", () => SwitchSample(SampleKind.Classic)), ("IDE workspace", "workspace", () => SwitchSample(SampleKind.Workspace)), ("MVVM binding", "binding", () => SwitchSample(SampleKind.Binding)), ("Add 1,000 tabs", "stress", Stress));
         AddMenu("Diagnostics", ("Public contracts", "parity", ShowParityLab), ("Converters", "converters", ShowConverterLab), ("Native windows", "windows", ShowNativeWindowLab), ("Window shell", "shell", ShowShellLab), ("Window lifecycle", "lifecycle", ShowWindowLifecycleLab), ("Input extensions", "input", ShowInputExtensionsLab), ("Visual observations", "visual", ShowVisualParityLab), ("Navigator", "navigator", ShowNavigatorLab), ("Docking guides", "guides", ShowDockingGuidesLab), ("Splitters", "splitters", ShowSplitterLab), ("Auto-hide", "autohide", ShowAutoHideLab), ("Menus", "menus", ShowMenuLab));
         AddMenu("View", ("Left-to-right", "ltr", () => Dock.FlowDirection = FlowDirection.LeftToRight), ("Right-to-left", "rtl", () => Dock.FlowDirection = FlowDirection.RightToLeft), ("Normal density", "normal-density", () => SetDensity(12)), ("Large text", "large-text", () => SetDensity(18)), ("Docking tab strip", "docking-tabs", () => Dock.DocumentTabStripMode = DocumentTabStripMode.Docking), ("Native TabView tabs", "tabview-tabs", () => Dock.DocumentTabStripMode = DocumentTabStripMode.TabView));
@@ -247,6 +247,9 @@ public sealed partial class GalleryPage : IDisposable
             Dock.AnchorablesSource = null;
             Dock.LayoutItemTemplate = null;
             Dock.LayoutItemContainerStyle = null;
+            Dock.LayoutUpdateStrategy = null;
+            Dock.AnchorableContextMenu = null;
+            Dock.DocumentPaneMenuItemHeaderTemplate = null;
             _content.Clear();
             CurrentSample = sample;
             switch (sample)
@@ -277,7 +280,7 @@ public sealed partial class GalleryPage : IDisposable
         // Independently authored from the publicly illustrated sample arrangement.
         // No original sample XAML, resource dictionary or image is loaded here.
         _sampleInspector = new SamplePropertyInspector(Dock);
-        var properties = ToolModel("properties", "Properties", _sampleInspector);
+        var properties = ToolModel("properties", "Properties", _sampleInspector, "properties");
         properties.CanHide = false;
         properties.CanClose = false;
         properties.AutoHideWidth = 240;
@@ -307,8 +310,8 @@ public sealed partial class GalleryPage : IDisposable
             BorderThickness = new(0)
         };
         alarms.ItemContainerStyle = (Style)Microsoft.UI.Xaml.Markup.XamlReader.Load("<Style xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation' TargetType='ListBoxItem'><Setter Property='MinHeight' Value='22'/><Setter Property='Padding' Value='4,1'/><Setter Property='FontSize' Value='12'/></Style>");
-        var alarmModel = ToolModel("alarms", "Alarms", alarms);
-        var journal = ToolModel("journal", "Journal", Editor("Journal\n\nAn editable journal accompanies this docking sample.\nSwitch tools, float this window, then dock it back: the same editor is retained."));
+        var alarmModel = ToolModel("alarms", "Alarms", alarms, "alarm");
+        var journal = ToolModel("journal", "Journal", Editor("Journal\n\nAn editable journal accompanies this docking sample.\nSwitch tools, float this window, then dock it back: the same editor is retained."), "journal");
         var right = new LayoutAnchorablePane(alarmModel);
         right.Children.Add(journal);
         var rightGroup = new LayoutAnchorablePaneGroup
@@ -328,22 +331,23 @@ public sealed partial class GalleryPage : IDisposable
             RootPanel = panel
         };
         var rail = new LayoutAnchorGroup();
-        rail.Children.Add(ToolModel("agenda", "Agenda", Editor("Agenda\n\n09:00  Review workspace\n10:30  Layout design\n14:00  Runtime validation")));
-        rail.Children.Add(ToolModel("contacts", "Contacts", Editor("Contacts\n\nProject team\nDesign review\nSupport")));
+        rail.Children.Add(ToolModel("agenda", "Agenda", Editor("Agenda\n\n09:00  Review workspace\n10:30  Layout design\n14:00  Runtime validation"), "agenda"));
+        rail.Children.Add(ToolModel("contacts", "Contacts", Editor("Contacts\n\nProject team\nDesign review\nSupport"), "contact"));
         root.LeftSide.Children.Add(rail);
         Dock.AllowMixedOrientation = true;
         Dock.Layout = root;
         first.IsActive = true;
     }
 
-    private LayoutAnchorable ToolModel(string id, string title, object content)
+    private LayoutAnchorable ToolModel(string id, string title, object content, string icon = "tool")
     {
         _content[id] = content;
         return new()
         {
             ContentId = id,
             Title = title,
-            Content = content
+            Content = content,
+            IconSource = GalleryIcons.Get(icon)
         };
     }
 

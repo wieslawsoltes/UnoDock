@@ -57,14 +57,15 @@ public sealed partial class GalleryPage : Page
             _events.RemoveAt(_events.Count - 1);
     }
 
-    private LayoutDocument Document(string id, string title, object content)
+    private LayoutDocument Document(string id, string title, object content, string icon = "document")
     {
         _content[id] = content;
         return new()
         {
             ContentId = id,
             Title = title,
-            Content = content
+            Content = content,
+            IconSource = GalleryIcons.Get(icon)
         };
     }
 
@@ -89,7 +90,7 @@ public sealed partial class GalleryPage : Page
         Dock.LayoutItemContainerStyle = null;
         _content.Clear();
         var welcome = Document("welcome", "Welcome.md", Welcome());
-        var code = Document("code", "Workspace.cs", Editor("using UnoDock;\nusing UnoDock.Layout;\n\n// UnoDock namespaces; framework types are Uno / WinUI.\nvar documents = new LayoutDocumentPane();\ndocuments.Children.Add(new LayoutDocument\n{\n    Title = \"Hello, Uno\",\n    ContentId = \"hello\",\n    Content = new TextBox { Text = \"Edit me\" }\n});\n\nvar manager = new DockingManager\n{\n    Layout = new LayoutRoot\n    {\n        RootPanel = new LayoutPanel(documents)\n    }\n};\n"));
+        var code = Document("code", "Workspace.cs", Editor("using UnoDock;\nusing UnoDock.Layout;\n\n// UnoDock namespaces; framework types are Uno / WinUI.\nvar documents = new LayoutDocumentPane();\ndocuments.Children.Add(new LayoutDocument\n{\n    Title = \"Hello, Uno\",\n    ContentId = \"hello\",\n    Content = new TextBox { Text = \"Edit me\" }\n});\n\nvar manager = new DockingManager\n{\n    Layout = new LayoutRoot\n    {\n        RootPanel = new LayoutPanel(documents)\n    }\n};\n"), "code");
         var draft = Document("draft", "Protected draft.txt", Editor("This tab demonstrates cancellable document closing.\n\nDisable protection in the Properties tool to allow closing.\nEdit this text, switch tabs, float it, and dock it again: the same editor instance is preserved."));
         var docs = new LayoutDocumentPane(welcome);
         docs.Children.Add(code);
@@ -98,6 +99,7 @@ public sealed partial class GalleryPage : Page
         {
             Title = "Explorer",
             ContentId = "explorer",
+            IconSource = GalleryIcons.Get("folder"),
             Content = Explorer(),
             CanClose = false
         };
@@ -105,6 +107,7 @@ public sealed partial class GalleryPage : Page
         {
             Title = "Properties",
             ContentId = "properties",
+            IconSource = GalleryIcons.Get("properties"),
             Content = Properties(),
             CanClose = false
         };
@@ -112,6 +115,7 @@ public sealed partial class GalleryPage : Page
         {
             Title = "Output",
             ContentId = "output",
+            IconSource = GalleryIcons.Get("output"),
             Content = new ListView
             {
                 ItemsSource = _events,
@@ -124,6 +128,7 @@ public sealed partial class GalleryPage : Page
         {
             Title = "Layout inspector",
             ContentId = "inspector",
+            IconSource = GalleryIcons.Get("tree"),
             Content = Inspector(),
             CanClose = true
         };
@@ -149,6 +154,7 @@ public sealed partial class GalleryPage : Page
         };
         var bottom = new LayoutAnchorablePane(output)
         {
+            Name = WorkspaceToolsPane,
             DockHeight = new(155),
             DockMinHeight = 80
         };
@@ -169,6 +175,11 @@ public sealed partial class GalleryPage : Page
             RootPanel = panel
         };
         code.IsActive = true;
+        // Workspace-only demonstrations: runtime tool placement, the tool menu and
+        // the open-documents list template. SwitchSample clears all three.
+        Dock.LayoutUpdateStrategy = new NamedPaneLayoutStrategy(WorkspaceToolsPane);
+        Dock.AnchorableContextMenu = WorkspaceToolMenu();
+        Dock.DocumentPaneMenuItemHeaderTemplate = (DataTemplate)_galleryChrome["Gallery.DocumentMenuItem"];
         _status.Text = "Ready  ·  Drag tabs to dock  ·  All editors retain their state";
         Log("Workspace initialized. This preview has an explicit compatibility report in docs/compatibility.md.");
     }
