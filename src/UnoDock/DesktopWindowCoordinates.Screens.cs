@@ -138,8 +138,9 @@ public sealed partial class DesktopWindowCoordinates
 #if !WINDOWS
     private static class ScreensX11
     {
-        /// <summary>The window manager's _NET_WORKAREA for the current desktop, or
-                /// the root window when no EWMH window manager publishes it.</summary>
+        /// <summary>One work area per RandR monitor, clipped by the window manager's
+                /// _NET_WORKAREA for the current desktop (panels and docks). Without RandR
+                /// monitors the work area (or the root window) is a single area.</summary>
                 internal static List<DockRect> WorkAreas()
         {
             var display = XOpenDisplay(0);
@@ -149,28 +150,18 @@ public sealed partial class DesktopWindowCoordinates
             {
                 var screen = XDefaultScreen(display);
                 var root = XRootWindow(display, screen);
-                var atom = XInternAtom(display, "_NET_WORKAREA", true);
-                if (atom != 0 && XGetWindowProperty(display, root, atom, 0, 4, false, 6, out _, out var format, out var count, out _, out var data) == 0 && data != 0)
+                var work = WorkArea(display, root) ?? new DockRect(0, 0, XDisplayWidth(display, screen), XDisplayHeight(display, screen));
+                var areas = new List<DockRect>();
+                foreach (var monitor in Monitors(display, root))
                 {
-                    try
-                    {
-                        if (format == 32 && count >= 4)
-                        {
-                            var x = Marshal.ReadInt64(data, 0);
-                            var y = Marshal.ReadInt64(data, 8);
-                            var w = Marshal.ReadInt64(data, 16);
-                            var h = Marshal.ReadInt64(data, 24);
-                            if (w > 0 && h > 0)
-                                return [new(x, y, w, h)];
-                        }
-                    }
-                    finally
-                    {
-                        XFree(data);
-                    }
+                    var left = Math.Max(monitor.X, work.X);
+                    var top = Math.Max(monitor.Y, work.Y);
+                    var right = Math.Min(monitor.X + monitor.Width, work.X + work.Width);
+                    var bottom = Math.Min(monitor.Y + monitor.Height, work.Y + work.Height);
+                    areas.Add(right > left && bottom > top ? new(left, top, right - left, bottom - top) : monitor);
                 }
 
-                return [new(0, 0, XDisplayWidth(display, screen), XDisplayHeight(display, screen))];
+                return areas.Count > 0 ? areas : [work];
             }
             finally
             {
@@ -178,6 +169,77 @@ public sealed partial class DesktopWindowCoordinates
             }
         }
 
+        private static DockRect? WorkArea(nint display, nuint root)
+        {
+            var desktop = 0L;
+            var current = XInternAtom(display, "_NET_CURRENT_DESKTOP", true);
+            if (current != 0 && XGetWindowProperty(display, root, current, 0, 1, false, 6, out _, out var desktopFormat, out var desktopCount, out _, out var desktopData) == 0 && desktopData != 0)
+            {
+                if (desktopFormat == 32 && desktopCount >= 1)
+                    desktop = Math.Max(0, Marshal.ReadInt64(desktopData, 0));
+                XFree(desktopData);
+            }
+
+            var atom = XInternAtom(display, "_NET_WORKAREA", true);
+            if (atom == 0 || XGetWindowProperty(display, root, atom, (nint)(desktop * 4), 4, false, 6, out _, out var format, out var count, out _, out var data) != 0 || data == 0)
+                return null;
+            try
+            {
+                if (format != 32 || count < 4)
+                    return null;
+                var x = Marshal.ReadInt64(data, 0);
+                var y = Marshal.ReadInt64(data, 8);
+                var w = Marshal.ReadInt64(data, 16);
+                var h = Marshal.ReadInt64(data, 24);
+                return w > 0 && h > 0 ? new DockRect(x, y, w, h) : null;
+            }
+            finally
+            {
+                XFree(data);
+            }
+        }
+
+        private static List<DockRect> Monitors(nint display, nuint root)
+        {
+            var monitors = new List<DockRect>();
+            try
+            {
+                var list = XRRGetMonitors(display, root, true, out var count);
+                if (list == 0)
+                    return monitors;
+                try
+                {
+                    // XRRMonitorInfo: Atom name; Bool primary, automatic; int noutput,
+                    // x, y, width, height, mwidth, mheight; RROutput* outputs.
+                    var size = IntPtr.Size == 8 ? 56 : 44;
+                    var offset = IntPtr.Size;
+                    for (var i = 0; i < count; i++)
+                    {
+                        var item = list + i * size + offset;
+                        var x = Marshal.ReadInt32(item, 12);
+                        var y = Marshal.ReadInt32(item, 16);
+                        var width = Marshal.ReadInt32(item, 20);
+                        var height = Marshal.ReadInt32(item, 24);
+                        if (width > 0 && height > 0)
+                            monitors.Add(new(x, y, width, height));
+                    }
+                }
+                finally
+                {
+                    XRRFreeMonitors(list);
+                }
+            }
+            catch (Exception error) when (error is DllNotFoundException or EntryPointNotFoundException)
+            {
+            }
+
+            return monitors;
+        }
+
+        [DllImport("libXrandr.so.2")]
+        private static extern nint XRRGetMonitors(nint display, nuint window, [MarshalAs(UnmanagedType.I4)] bool active, out int count);
+        [DllImport("libXrandr.so.2")]
+        private static extern void XRRFreeMonitors(nint monitors);
         [DllImport("libX11.so.6")]
         private static extern nint XOpenDisplay(nint name);
         [DllImport("libX11.so.6")]
