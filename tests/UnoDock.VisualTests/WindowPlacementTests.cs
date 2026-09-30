@@ -138,10 +138,12 @@ internal static class WindowPlacementTests
                 using var f = new Fixture(FloatingWindowMode.Native);
                 await f.Show();
                 var client = f.ClientOrigin();
-                f.Tool.FloatingLeft = client.X + 220;
-                f.Tool.FloatingTop = client.Y + 160;
-                f.Tool.FloatingWidth = 300;
-                f.Tool.FloatingHeight = 220;
+                // Keep the window inside the surface at any display scale (the host
+                // is sized in physical pixels), so the in-surface copy is not clamped.
+                f.Tool.FloatingLeft = client.X + 120;
+                f.Tool.FloatingTop = client.Y + 60;
+                f.Tool.FloatingWidth = 240;
+                f.Tool.FloatingHeight = 150;
                 f.Tool.Float();
                 var control = await f.Floating(f.Tool);
                 await Wait(() => NativeVisible(control));
