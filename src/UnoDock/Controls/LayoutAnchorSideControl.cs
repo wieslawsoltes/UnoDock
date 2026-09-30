@@ -54,7 +54,7 @@ public class LayoutAnchorSideControl : ContentControl, ILayoutControl
 
         _panel.Orientation = IsLeftSide || IsRightSide ? Orientation.Vertical : Orientation.Horizontal;
         var palette = DockChrome.Palette(manager);
-        Background = palette.Header;
+        Background = palette.States.Rail;
         Width = IsLeftSide || IsRightSide ? palette.RailThickness : double.NaN;
         Height = IsTopSide || IsBottomSide ? palette.RailThickness : double.NaN;
         Visibility = models.Length == 0 ? Visibility.Collapsed : Visibility.Visible;

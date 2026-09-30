@@ -22,6 +22,11 @@ public partial class App : Application
             windowRegistration.Dispose();
             gallery.Dispose();
         };
+        // Presentation options for documentation screenshots and manual review.
+        if (Enum.TryParse<SampleTheme>(Environment.GetEnvironmentVariable("UNODOCK_GALLERY_THEME"), true, out var startTheme))
+            gallery.Loaded += (_, _) => gallery.SetSampleTheme(startTheme);
+        if (Environment.GetEnvironmentVariable("UNODOCK_GALLERY_SIZE") is { } size && size.Split('x') is [var w, var h] && int.TryParse(w, out var width) && int.TryParse(h, out var height))
+            _window.AppWindow.Resize(new Windows.Graphics.SizeInt32 { Width = width, Height = height });
         if (Environment.GetEnvironmentVariable("UNODOCK_SELFTEST") == "1")
             gallery.Loaded += async (_, _) =>
             {
@@ -83,6 +88,7 @@ public partial class App : Application
                         ("floating-resize-policy-documents", true, () => Testing.FloatingChromeTests.RunResizePolicy(output, false)),
                         ("floating-resize-policy-tools", true, () => Testing.FloatingChromeTests.RunResizePolicy(output, true)),
                         ("uno-theme", true, () => Testing.UnoThemeTests.Run(output)),
+                        ("classic-themes", true, () => Testing.ClassicThemeTests.Run(output)),
                         ("windows-floating-input", true, () => Testing.WindowsFloatingInputTests.Run(output))
                     };
                     var selected = suites.Where(s => string.IsNullOrEmpty(requested) || requested == "all" || (requested == "windows-acceptance" ? s.Windows : requested == "desktop-acceptance" ? s.Name is "mac-native" or "desktop-floating" or "floating-drag-cleanup" or "uno-theme" or "windows-floating-input" : requested == "floating-resize-policy" ? s.Name.StartsWith("floating-resize-policy-", StringComparison.Ordinal) : requested == "floating-chrome" ? s.Name is "floating-chrome-documents" or "floating-chrome-tools" or "floating-resize-policy-documents" or "floating-resize-policy-tools" : s.Name == requested)).ToArray();

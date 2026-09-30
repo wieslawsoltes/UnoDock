@@ -1,0 +1,12 @@
+<Project Sdk="Uno.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks Condition="'$(UnoDockLibraryFrameworks)' == ''">net10.0;net10.0-windows10.0.26100.0</TargetFrameworks>
+    <TargetFrameworks Condition="'$(UnoDockLibraryFrameworks)' != ''">$(UnoDockLibraryFrameworks)</TargetFrameworks>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting><IsPackable>true</IsPackable>
+    <PackageId>UnoDock.Themes.VS2010</PackageId><RootNamespace>UnoDock.Themes.VS2010</RootNamespace><AssemblyName>UnoDock.Themes.VS2010</AssemblyName>
+    <Description>VS2010-style docking theme for UnoDock.</Description>
+    <PackageTags>uno;winui;docking;dock;theme;VS2010</PackageTags>
+    <GenerateLibraryLayout>true</GenerateLibraryLayout>
+  </PropertyGroup>
+  <ItemGroup><ProjectReference Include="../UnoDock/UnoDock.csproj" /></ItemGroup>
+</Project>

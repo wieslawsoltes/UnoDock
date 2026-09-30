@@ -10,6 +10,10 @@ public abstract partial class Theme : DependencyObject
     /// <summary>Notify attached managers after a declarative theme setting changes.</summary>
     protected void InvalidateTheme() => Changed?.Invoke(this, EventArgs.Empty);
     public abstract Uri GetResourceUri();
+    /// <summary>Light or Dark when the theme's chrome is designed for one fixed
+        /// color scheme; Default follows the owning element's ActualTheme.</summary>
+        protected internal virtual ElementTheme ChromeTheme => ElementTheme.Default;
+
     public virtual ResourceDictionary GetResourceDictionary() => new()
     {
         Source = GetResourceUri()

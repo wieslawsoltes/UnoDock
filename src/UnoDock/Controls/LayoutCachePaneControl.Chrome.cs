@@ -114,14 +114,16 @@ public partial class LayoutCachePaneControl
     {
         var p = DockChrome.Palette(manager);
         var tool = pane is LayoutAnchorablePane;
-        _layout.BorderBrush = p.Border;
-        _layout.BorderThickness = new(1);
+        var states = p.States;
+        var activeDocumentPane = !tool && models.Any(m => m.IsActive);
+        _layout.BorderBrush = activeDocumentPane ? states.ActiveDocumentPaneBorder : states.PaneBorder;
+        _layout.BorderThickness = new(activeDocumentPane ? states.ActiveDocumentPaneBorderThickness : states.PaneBorderThickness);
         _layout.CornerRadius = new(p.PaneCornerRadius);
         _layout.Background = p.Surface;
         _content.Background = p.Surface;
         _content.Margin = new(2, tool ? 0 : 1, 2, 2);
-        _headers.Background = p.Header;
-        _tabBar.Background = p.Header;
+        _headers.Background = tool ? states.ToolTabStrip : states.DocumentTabStrip;
+        _tabBar.Background = _headers.Background;
         Grid.SetRow(_tabBar, tool ? 2 : 0);
         Grid.SetRow(_content, 1);
         Grid.SetRow(_titleRow, 0);
@@ -136,9 +138,10 @@ public partial class LayoutCachePaneControl
         _scroll.MaxHeight = tool ? p.ToolTabHeight : p.TabHeight;
         _documentsButton.Visibility = tool ? Visibility.Collapsed : Visibility.Visible;
         _documentsButton.Configure(p);
+        _documentsButton.ForegroundOverride = states.DocumentTabForeground;
         _tabBar.BorderBrush = p.Border;
         _tabBar.BorderThickness = tool ? new(0, 1, 0, 0) : new(0, 0, 0, 1);
-        _titleRow.Background = Selector?.SelectedContent?.IsActive == true ? p.ActiveTitle : p.Header;
+        _titleRow.Background = Selector?.SelectedContent?.IsActive == true ? states.ActiveToolTitle : states.ToolTitle;
     }
 
     private void UpdateTitle(bool visible, LayoutAnchorable? selected, DockingManager manager)
@@ -148,7 +151,8 @@ public partial class LayoutCachePaneControl
         _titleManager = manager;
         var p = DockChrome.Palette(manager);
         _title.FontSize = p.FontSize;
-        _title.Foreground = selected?.IsActive == true || !p.UsesFluentControls ? p.Foreground : p.SecondaryForeground ?? p.Foreground;
+        var titleForeground = selected?.IsActive == true ? p.States.ActiveToolTitleForeground : p.States.ToolTitleForeground;
+        _title.Foreground = titleForeground ?? (selected?.IsActive == true || !p.UsesFluentControls ? p.Foreground : p.SecondaryForeground ?? p.Foreground);
         _title.FontWeight = p.UsesFluentControls ? Microsoft.UI.Text.FontWeights.SemiBold : Microsoft.UI.Text.FontWeights.Normal;
         _title.Margin = new(p.UsesFluentControls ? p.TabHorizontalPadding : 2, 0, 0, 0);
         _title.Text = selected?.Title ?? "Tools";
@@ -158,6 +162,7 @@ public partial class LayoutCachePaneControl
         _menuButton.Configure(p);
         _pinButton.Configure(p);
         _hideButton.Configure(p);
+        _menuButton.ForegroundOverride = _pinButton.ForegroundOverride = _hideButton.ForegroundOverride = titleForeground;
         _menuButton.IsEnabled = selected?.IsEnabled == true;
         _pinButton.Visibility = selected?.CanAutoHide == true ? Visibility.Visible : Visibility.Collapsed;
         _pinButton.IsEnabled = selected?.IsEnabled == true;

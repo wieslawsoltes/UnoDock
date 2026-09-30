@@ -102,7 +102,7 @@ public partial class NavigatorWindow
         _chrome.RowDefinitions[3].Height = new(fluent ? 8 : 42);
         _toolHeading.FontWeight = _documentHeading.FontWeight = fluent ? Microsoft.UI.Text.FontWeights.SemiBold : Microsoft.UI.Text.FontWeights.Bold;
         _selectionTitle.FontWeight = fluent ? Microsoft.UI.Text.FontWeights.SemiBold : Microsoft.UI.Text.FontWeights.Normal;
-        var dark = _manager.ActualTheme == ElementTheme.Dark && _manager.Theme is not Themes.GenericTheme;
+        var dark = DockThemeResources.EffectiveTheme(_manager) == ElementTheme.Dark;
         // An explicit dictionary palette can disagree with RequestedTheme/OS mode.
         // Never combine its foreground with unrelated stock-light backgrounds.
         var usePalette = dark || _manager.Theme is Themes.DictionaryTheme;

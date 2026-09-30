@@ -116,11 +116,11 @@ public abstract partial class LayoutGridControl<T> : Grid, ILayoutControl, IRefr
         }
 
         AttachResizeObservers();
-        Background = DockChrome.Palette(surface.Manager).Header;
+        var palette = DockChrome.Palette(surface.Manager);
+        Background = palette.States.Workspace;
         foreach (var splitter in Children.OfType<LayoutGridResizerControl>())
         {
-            var palette = DockChrome.Palette(surface.Manager);
-            splitter.Background = palette.Header;
+            splitter.Background = palette.States.Splitter;
             splitter.ConfigureAutomation(palette);
         }
 

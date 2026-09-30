@@ -26,6 +26,9 @@
     <Compile Include="../../tests/UnoDock.Runtime.Tests/InputExtensionTests.cs" Link="Testing/InputExtensionTests.cs" />
     <ProjectReference Include="../../src/UnoDock/UnoDock.csproj" />
     <ProjectReference Include="../../src/UnoDock.Browser/UnoDock.Browser.csproj" />
+    <ProjectReference Include="../../src/UnoDock.Themes.Aero/UnoDock.Themes.Aero.csproj" />
+    <ProjectReference Include="../../src/UnoDock.Themes.Metro/UnoDock.Themes.Metro.csproj" />
+    <ProjectReference Include="../../src/UnoDock.Themes.VS2010/UnoDock.Themes.VS2010.csproj" />
     <Compile Include="../../tests/UnoDock.Runtime.Tests/ShellTests*.cs" Link="Testing/%(Filename)%(Extension)" />
     <Compile Include="../../tests/UnoDock.Testing/Check.cs" Link="Testing/Check.cs" />
     <Compile Include="../../tests/UnoDock.Testing/TestRunner.cs" Link="Testing/TestRunner.cs" />

@@ -29,6 +29,8 @@ public sealed class FluentTheme : DictionaryTheme
         }
     }
 
+    protected internal override ElementTheme ChromeTheme => RequestedTheme;
+
     private void ChangeRequestedTheme(DependencyPropertyChangedEventArgs args)
     {
         if (_restoringTheme)
