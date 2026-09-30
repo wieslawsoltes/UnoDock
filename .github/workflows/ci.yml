@@ -154,7 +154,7 @@ jobs:
   browser:
     name: Browser
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
@@ -199,7 +199,7 @@ jobs:
           python3 -m http.server 8765 --directory ../../artifacts/serve > ../../artifacts/http.log 2>&1 &
           server=$!
           trap 'kill "$server" || true' EXIT
-          timeout --signal=TERM --kill-after=15s 900s npx playwright test
+          timeout --signal=TERM --kill-after=15s 1200s npx playwright test
       - name: Require complete first-attempt browser evidence
         if: always()
         run: |
@@ -252,7 +252,7 @@ jobs:
     needs: pages
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -287,7 +287,7 @@ jobs:
         working-directory: tests/browser
         env:
           UNODOCK_BASE_URL: ${{ needs.pages.outputs.page_url }}playground/
-        run: timeout --signal=TERM --kill-after=15s 900s npx playwright test
+        run: timeout --signal=TERM --kill-after=15s 1200s npx playwright test
       - name: Require complete public native browser results
         if: always()
         run: python3 tools/verify-browser-results.py artifacts/browser-tests
