@@ -178,6 +178,7 @@ public partial class LayoutCachePaneControl
         if (CreateDocumentsMenu() is { } menu)
             DockVisuals.ShowBelow(menu, _documentsButton);
     }
+
     /// <summary>The open-documents list: one checkable row per listed content,
         /// presented by DocumentPaneMenuItemHeaderTemplate or as icon and title.</summary>
         internal MenuFlyout? CreateDocumentsMenu()
