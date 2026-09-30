@@ -37,9 +37,12 @@ Win32 uses ClientToScreen on the public native HWND; Linux requires `libxcb.so.1
 The manager retains a single pointer owner for the whole drag. Captured events from
 another native root are translated into manager-surface coordinates before hit testing.
 Dropping re-evaluates the current plan instead of executing a stale painted preview.
-Tool tabs can move into and out of native tool windows. A single floating document's
-caption is its content-docking handle; the remaining chrome and OS title bar retain
-window movement. OS title-bar drop/snapping integration is not implemented here.
+Tool tabs can move into and out of native tool windows. A floating window's caption
+is its docking handle; with the optional system title bar
+(`FloatingWindowTitleBarMode.System`) the OS move loop feeds the same docking
+guides, and on Windows 11 the Snap Layouts overlay shown during that move does not
+block drop targets. Dragging a tab out of its strip tears it off into a new window
+mid-gesture (see [Floating windows](floating-windows.md)).
 
 A tab strip is an insertion surface and takes precedence over the pane's top split
 region. Hidden document models still count toward the destination model index. Body
@@ -85,12 +88,13 @@ X11/WM variations, mixed physical-monitor DPI, touch and pen still need device t
 
 ## Remaining platform boundaries
 
-Native WinUI and Skia Win32 coordinate conversion are implemented but have not received
-the same input acceptance tests. macOS, embedded/non-X11 Linux and custom hosts require
+Skia Win32 coordinate conversion and docking are covered by physical-input suites;
+native WinUI conversion is implemented and compile-checked. macOS, embedded/non-X11 Linux and custom hosts require
 `ICrossWindowCoordinates`; unsupported targets are omitted safely. Cross-manager
 transfers remain rejected by the shared-root ownership policy. Full header
-virtualization, arbitrary transformed tab insertion, WM snapping/title-bar dragging,
-mobile heads and complete accessibility/input parity remain separate work.
+virtualization, arbitrary transformed tab insertion, window-manager edge snapping
+of custom captions, mobile heads and complete accessibility/input parity remain
+separate work.
 
 ## Primary contracts used
 

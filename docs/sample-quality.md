@@ -13,7 +13,8 @@ native Uno controls. It does not copy LiveExplorer implementation, XAML template
 resource definitions, logos, artwork, fonts or separately licensed commercial themes.
 The gallery's toolbar glyph paths and templates are independently authored. Generic
 stock presentation is the fidelity target. The Light and Dark options are UnoDock
-palettes, not assertions of Aero, Metro or VS2010 theme equivalence.
+Fluent palettes; the Aero, Metro and VS2010 options use the independently authored
+theme packages described in [Themes](themes.md).
 
 ## Sample structure and real commands
 
