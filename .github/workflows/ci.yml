@@ -118,7 +118,11 @@ jobs:
   packages:
     name: NuGet packages
     runs-on: windows-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
+    env:
+      # CI-only prerelease version; release versions come from publish.yml alone.
+      PACKAGE_VERSION: 0.0.0-ci.${{ github.run_number }}
+      PYTHONUTF8: '1'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
@@ -130,14 +134,23 @@ jobs:
           key: nuget-packages-${{ hashFiles('global.json', '**/Directory.*.props', '**/*.csproj') }}
           restore-keys: nuget-packages-
       - uses: microsoft/setup-msbuild@v2
-      - name: Build generic Uno and native WinUI package targets
-        run: msbuild src/UnoDock/UnoDock.csproj -restore -t:Pack -p:Configuration=Release -p:PackageOutputPath=${{ github.workspace }}/artifacts/packages -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg
-      - name: Package independent core
-        run: dotnet pack src/UnoDock.Core -c Release -o artifacts/packages -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg
+      - name: Pack every packable project (portable, Uno and native WinUI targets, symbols)
+        shell: pwsh
+        run: |
+          python tools/nuget-packages.py pack --output artifacts/packages --version $env:PACKAGE_VERSION
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Verify package contents, metadata and symbols
+        shell: pwsh
+        run: |
+          python tools/nuget-packages.py verify --output artifacts/packages --version $env:PACKAGE_VERSION --commit (git rev-parse HEAD)
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - uses: actions/upload-artifact@v4
         with:
-          name: nuget-preview
-          path: artifacts/packages/
+          name: nuget-packages-ci
+          path: |
+            artifacts/packages/*.nupkg
+            artifacts/packages/*.snupkg
+          if-no-files-found: error
   browser:
     name: Browser
     runs-on: ubuntu-latest

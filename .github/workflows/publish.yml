@@ -1,23 +1,38 @@
 name: Publish NuGet
+# Trusted publishing: nuget.org exchanges this workflow's GitHub OIDC token for a
+# short-lived API key. No long-lived NuGet API key is stored in the repository.
 on:
-  release:
-    types: [published]
+  push:
+    tags: ['v*']
   workflow_dispatch:
     inputs:
       version:
-        description: 'NuGet semantic version, for example 0.1.0-preview.3'
+        description: 'Package version (SemVer 2.0, for example 0.2.0-preview.1)'
         required: true
         type: string
+      dry-run:
+        description: 'Validate, pack and verify only; do not attest or push to nuget.org'
+        required: false
+        type: boolean
+        default: true
 permissions:
   contents: read
 concurrency:
-  group: nuget-release
+  group: nuget-publish
   cancel-in-progress: false
+env:
+  DOTNET_NOLOGO: 'true'
+  DOTNET_CLI_TELEMETRY_OPTOUT: 'true'
+  PYTHONUTF8: '1'
 jobs:
   validate:
+    name: Validate release
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     outputs:
       version: ${{ steps.version.outputs.version }}
+      prerelease: ${{ steps.version.outputs.prerelease }}
+      publish: ${{ steps.version.outputs.publish }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -25,95 +40,194 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
-      - name: Validate version and stable-release attestation
+      - name: Resolve version, verify tag commit and stable-release attestation
         id: version
         env:
+          EVENT_NAME: ${{ github.event_name }}
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
+          REF: ${{ github.ref }}
           REQUESTED_VERSION: ${{ inputs.version }}
-          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          DRY_RUN: ${{ inputs.dry-run }}
         run: |
           python3 - <<'PY'
           import json, os, pathlib, re, subprocess
-          tag = os.environ.get('RELEASE_TAG', '')
-          version = tag.removeprefix('v') if tag else os.environ['REQUESTED_VERSION']
-          match = re.fullmatch(r'(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-([0-9A-Za-z]+(?:[.-][0-9A-Za-z]+)*))?', version)
+
+          def git(*args):
+              return subprocess.check_output(['git', *args], text=True).strip()
+
+          event = os.environ['EVENT_NAME']
+          if event == 'push':
+              if os.environ['REF_TYPE'] != 'tag':
+                  raise SystemExit('Publishing is triggered by version tags only.')
+              tag = os.environ['REF_NAME']
+              if not tag.startswith('v'):
+                  raise SystemExit(f'Release tag {tag} must have the form v<semver>.')
+              version, publish = tag[1:], True
+          else:
+              tag = ''
+              version = os.environ['REQUESTED_VERSION'].strip().removeprefix('v')
+              publish = os.environ['DRY_RUN'] != 'true'
+              if publish and os.environ['REF'] != 'refs/heads/main':
+                  raise SystemExit('A manual publish (dry-run disabled) must run on main; use a tag otherwise.')
+
+          match = re.fullmatch(r'(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?', version)
           if not match:
-              raise SystemExit('Invalid semantic package version')
-          sha = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
-          if tag and subprocess.check_output(['git','rev-parse',tag+'^{commit}'],text=True).strip() != sha:
-              raise SystemExit('Release tag does not identify the checked-out commit')
+              raise SystemExit(f'Invalid semantic package version: {version!r}')
+
+          head = git('rev-parse', 'HEAD')
+          if tag:
+              if git('rev-parse', f'refs/tags/{tag}^{{commit}}') != head:
+                  raise SystemExit(f'Tag {tag} does not identify the checked-out commit {head}.')
+              if subprocess.run(['git', 'merge-base', '--is-ancestor', head, 'origin/main']).returncode != 0:
+                  raise SystemExit(f'Tag {tag} must point at a commit on main.')
+
+          # Stable 1.0+ releases require a reviewed compatibility attestation for this exact tree.
           if int(match[1]) >= 1 and not match[4]:
               path = pathlib.Path('contracts/release-attestation.json')
               attestation = json.loads(path.read_text()) if path.exists() else {}
-              if attestation.get('fullCompatibilityVerified') is not True or attestation.get('sourceTreeSha256') != subprocess.check_output(['python3', 'tools/source-fingerprint.py'], text=True).strip():
-                  raise SystemExit('Stable 1.0+ requires a compatibility attestation for this exact source tree')
-          with open(os.environ['GITHUB_OUTPUT'],'a') as output:
-              output.write('version='+version+'\n')
+              fingerprint = subprocess.check_output(['python3', 'tools/source-fingerprint.py'], text=True).strip()
+              if attestation.get('fullCompatibilityVerified') is not True or attestation.get('sourceTreeSha256') != fingerprint:
+                  raise SystemExit('Stable 1.0+ requires a compatibility attestation for this exact source tree.')
+
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              output.write(f'version={version}\n')
+              output.write(f'prerelease={str(bool(match[4])).lower()}\n')
+              output.write(f'publish={str(publish).lower()}\n')
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as summary:
+              summary.write(f'Version `{version}` from `{tag or "workflow_dispatch"}` at `{head}`; publish: **{publish}**\n')
           PY
       - name: Portable tests
         run: dotnet run --project tests/UnoDock.Core.Tests -c Release -- artifacts/test-results
       - name: Check generated adapters
         run: python3 tools/generate-property-adapters.py && git diff --exit-code -- src/
-      - name: Verify resolved API no-regression gate
+      - name: Resolved API metadata gate
         run: bash tools/check-metadata.sh
-      - name: Build runtime test host
-        run: dotnet build samples/UnoDock.Gallery -c Release -f net10.0-desktop -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0
-      - run: sudo apt-get update && sudo apt-get install -y xvfb libx11-6 libxi6 libxrandr2 libxcursor1 libfontconfig1 libgl1 libice6 libsm6 libxcb1 libxtst6
-      - name: Real Uno model and UI tests
-        env:
-          UNODOCK_SELFTEST: '1'
-          UNODOCK_NATIVE_INPUT_TESTS: '1'
-          UNODOCK_TEST_RESULTS: ${{ github.workspace }}/artifacts/test-results
-        run: timeout 300s xvfb-run -a -s "-screen 0 2560x1440x24" dotnet run --project samples/UnoDock.Gallery -c Release -f net10.0-desktop --no-build -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: release-test-results
+          name: release-validation
           path: artifacts/
-  publish:
+          if-no-files-found: ignore
+
+  pack:
+    name: Pack and verify
     needs: validate
     runs-on: windows-latest
-    environment: nuget
-    permissions:
-      contents: read
-      id-token: write
+    timeout-minutes: 45
     env:
       PACKAGE_VERSION: ${{ needs.validate.outputs.version }}
-      NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
       - uses: microsoft/setup-msbuild@v2
-      - name: Package generic Uno, native WinUI and portable core with symbols
+      - name: Pack every packable project (portable, Uno and native WinUI targets, symbols)
         shell: pwsh
         run: |
-          msbuild src/UnoDock/UnoDock.csproj -restore -t:Pack -p:Configuration=Release -p:PackageOutputPath="${{ github.workspace }}/artifacts/packages" -p:Version=$env:PACKAGE_VERSION -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg
+          python tools/nuget-packages.py pack --output artifacts/packages --version $env:PACKAGE_VERSION
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          dotnet pack src/UnoDock.Core -c Release -o artifacts/packages -p:Version=$env:PACKAGE_VERSION -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg
+      - name: Verify package contents, metadata and symbols
+        shell: pwsh
+        run: |
+          python tools/nuget-packages.py verify --output artifacts/packages --version $env:PACKAGE_VERSION --commit $env:GITHUB_SHA
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - uses: actions/upload-artifact@v4
         with:
-          name: release-packages
-          path: artifacts/packages/
-      - name: Verify authentication configuration
-        shell: pwsh
+          name: nuget-packages
+          path: |
+            artifacts/packages/*.nupkg
+            artifacts/packages/*.snupkg
+          if-no-files-found: error
+
+  attest:
+    name: Attest build provenance
+    needs: [validate, pack]
+    if: needs.validate.outputs.publish == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: nuget-packages
+          path: artifacts/packages
+      - uses: actions/attest-build-provenance@v4
+        with:
+          subject-path: artifacts/packages/*.nupkg
+
+  publish:
+    name: Push to nuget.org
+    needs: [validate, attest]
+    if: needs.validate.outputs.publish == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: nuget
+      url: https://www.nuget.org/packages/UnoDock/${{ needs.validate.outputs.version }}
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: nuget-packages
+          path: artifacts/packages
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Require the nuget.org account variable
         env:
           NUGET_USER: ${{ vars.NUGET_USER }}
         run: |
-          if (-not $env:NUGET_API_KEY -and -not $env:NUGET_USER) { throw 'Configure NUGET_API_KEY or NUGET_USER plus a NuGet trusted-publishing policy.' }
-      - name: Exchange GitHub OIDC token
-        if: env.NUGET_API_KEY == ''
+          if [ -z "$NUGET_USER" ]; then
+            echo '::error::Set the NUGET_USER repository variable to the nuget.org account that owns the trusted publishing policy.'
+            exit 1
+          fi
+      - name: Exchange GitHub OIDC token for a short-lived NuGet API key
         id: login
         uses: NuGet/login@v1
         with:
           user: ${{ vars.NUGET_USER }}
-      - name: Push NuGet packages and symbols
-        shell: pwsh
+      - name: Push packages and symbols
         env:
-          PUSH_KEY: ${{ steps.login.outputs.NUGET_API_KEY || secrets.NUGET_API_KEY }}
+          NUGET_API_KEY: ${{ steps.login.outputs.NUGET_API_KEY }}
         run: |
-          Get-ChildItem artifacts/packages/*.nupkg | ForEach-Object {
-            dotnet nuget push $_.FullName --source https://api.nuget.org/v3/index.json --api-key $env:PUSH_KEY --skip-duplicate
-            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          }
+          for package in artifacts/packages/*.nupkg; do
+            # dotnet nuget push also pushes the matching .snupkg from the same folder.
+            dotnet nuget push "$package" --api-key "$NUGET_API_KEY" \
+              --source https://api.nuget.org/v3/index.json --skip-duplicate
+          done
+
+  release:
+    name: GitHub release
+    needs: [validate, publish]
+    if: github.event_name == 'push' && needs.publish.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: nuget-packages
+          path: artifacts/packages
+      - name: Create release with generated notes and packages
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+          PRERELEASE: ${{ needs.validate.outputs.prerelease }}
+        run: |
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            gh release upload "$TAG" artifacts/packages/*.nupkg artifacts/packages/*.snupkg --clobber
+          else
+            flags=()
+            if [ "$PRERELEASE" = 'true' ]; then flags+=(--prerelease); fi
+            gh release create "$TAG" artifacts/packages/*.nupkg artifacts/packages/*.snupkg \
+              --verify-tag --title "$TAG" --generate-notes "${flags[@]}"
+          fi
