@@ -83,7 +83,9 @@ test('failed primary blocks dock-all without partial return and resumes after re
     await recover(page);
     await expect(dockAll).toBeEnabled();
     const closed = child.waitForEvent('close');
-    await dockAll.click();
+    // This click closes its own window; the close event and the returned content,
+    // not Playwright's post-click round trip into the closing page, prove it landed.
+    await dockAll.click({ noWaitAfter: true });
     await closed;
     await expect.poll(() => ids(page)).toEqual(['architecture', 'notes', 'output', 'welcome']);
     const returned = (await snapshot(page)).items;

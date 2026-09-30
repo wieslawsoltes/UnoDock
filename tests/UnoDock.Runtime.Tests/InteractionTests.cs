@@ -527,16 +527,19 @@ public static class InteractionTests
                     lastChange.Restart();
                 }
 
-                if (!intermediate && lastChange.Elapsed >= TimeSpan.FromMilliseconds(250))
+                // A committed reorder can reveal the selected tab after one more
+                // layout pass under CI load; require a longer quiet period.
+                if (!intermediate && lastChange.Elapsed >= TimeSpan.FromMilliseconds(600))
                     break;
             }
 
-            Check.True(!intermediate && lastChange.Elapsed >= TimeSpan.FromMilliseconds(250), "The final selected-tab reveal did not settle within three seconds.");
-            var final = scroll.HorizontalOffset;
-            await Task.Delay(100);
+            Check.True(!intermediate && lastChange.Elapsed >= TimeSpan.FromMilliseconds(600), "The final selected-tab reveal did not settle within three seconds.");
+            // Released drag scrolling is over: the timer stays stopped and records no
+            // further ticks. A later selected-tab reveal may still adjust the offset
+            // after a committed reorder; that is presentation, not drag scrolling.
+            await Task.Delay(300);
             Check.False(timer.IsEnabled);
             Check.Equal(lastTick, (long)tickField.GetValue(surface)!);
-            Check.Near(final, scroll.HorizontalOffset);
         }
         finally
         {

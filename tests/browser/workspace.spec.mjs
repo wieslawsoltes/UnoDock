@@ -26,6 +26,12 @@ async function popup(page, id) {
 }
 
 async function replaceNativeText(page, id, text) {
+    // Chip selection reaches the native layout on its next projection. Until the
+    // report acknowledges it, the editor may sit in an unselected tab: its semantic
+    // proxy still passes toBeVisible (a 0x0 textarea keeps its border box), but Uno
+    // refuses managed focus for the collapsed TextBox and never retries it, so every
+    // later keystroke is dropped. Type only into the projected, active content.
+    await expect.poll(() => page.evaluate(() => window.UnoDockBrowser.applied.active)).toBe(id);
     const editor = page.frameLocator('#app').getByRole('textbox', { name: 'Editor ' + id, exact: true });
     await expect(editor).toBeVisible();
     // Uno's Skia TextBox owns selection and keyboard editing. DOM fill/select()
@@ -70,7 +76,12 @@ test('two native browser windows exchange tools and documents without duplicate 
     await expect.poll(() => ids(one)).not.toContain('architecture');
     await expect.poll(() => ids(two)).toContain('architecture');
     await expect.poll(() => ids(two)).toContain('notes');
-    await two.getByRole('button', { name: 'Dock all & close window', exact: true }).click();
+    const closing = two.waitForEvent('close');
+    // This click closes its own window. Playwright's post-click hit-target round
+    // trip into the closing page races the close (TargetClosedError); the close
+    // event and the returned content are the evidence that the click landed.
+    await two.getByRole('button', { name: 'Dock all & close window', exact: true }).click({ noWaitAfter: true });
+    await closing;
     await expect.poll(() => ids(page)).toContain('architecture');
     await expect.poll(() => ids(page)).toContain('notes');
     await one.close();
