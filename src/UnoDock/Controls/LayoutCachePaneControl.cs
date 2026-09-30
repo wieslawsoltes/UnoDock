@@ -166,7 +166,7 @@ public partial class LayoutCachePaneControl : DockSelectionControl
         }
     }
 
-    internal bool IsOverHeader(Point point, DockSurface surface) => IsOverHeaderElement(_scroll, point, surface) || IsOverHeaderElement(_titlePresenter, point, surface);
+    internal bool IsOverHeader(Point point, DockSurface surface) => IsOverHeaderElement(_scroll, point, surface) || IsOverHeaderElement(_titlePresenter, point, surface) || Pane is { } pane && IsCaptionOwned(pane) && this.FindVisualAncestor<LayoutFloatingWindowControl>() is { } window && IsOverHeaderElement(window.CaptionElement, point, surface);
     private static bool IsOverHeaderElement(FrameworkElement header, Point point, DockSurface surface)
     {
         if (header.ActualWidth <= 0 || header.ActualHeight <= 0)

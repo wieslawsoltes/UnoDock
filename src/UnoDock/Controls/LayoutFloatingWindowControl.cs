@@ -46,6 +46,9 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
     internal bool IsMinimized => _minimized;
 
     public event EventHandler<Exception>? MessageFilterFailed;
+    /// <summary>The caption row; for a single-pane tool window it is also that
+    /// pane's title, so it accepts tab insertion like a pane title does.</summary>
+    internal FrameworkElement CaptionElement => _title;
     internal double ChromeCaptionHeight
     {
         get => _title.MinHeight;
