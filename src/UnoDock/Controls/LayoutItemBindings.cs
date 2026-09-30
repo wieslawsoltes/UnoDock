@@ -1,6 +1,6 @@
 namespace UnoDock.Controls;
 /// <summary>
-/// Portable Uno/WinUI counterpart of binding-valued AvalonDock container setters.
+/// Portable Uno/WinUI counterpart of binding-valued container setters of the reference WPF docking library.
 /// Native Style setters carry definitions; each LayoutItem gets its own Binding.
 /// </summary>
 public static class LayoutItemBindings

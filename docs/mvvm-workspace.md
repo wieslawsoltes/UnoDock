@@ -82,9 +82,9 @@ editors. This explicitly separates layout persistence from application content s
 
 ## Provenance and acceptance
 
-The sample was independently authored against public Uno controls, public AvalonDock
+The sample was independently authored against public Uno controls, public reference-library
 concepts and the public feature description at:
-https://xceed.com/documentation/xceed-toolkit-plus-for-wpf/AvalonDock.html
+https://xceed.com/documentation/xceed-toolkit-plus-for-wpf/
 
 No original implementation, sample source bodies, templates, artwork or fonts are
 imported. The original deterministic inventories, fixtures, type mappings, comparator

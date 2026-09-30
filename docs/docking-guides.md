@@ -2,7 +2,7 @@
 
 This increment replaces the rectangle-only drag presentation with independently drawn
 workspace-edge glyphs and a pane compass. Rendering, hit-testing and release share the
-same `DockDropPlan` validation. It is not a certificate of complete AvalonDock parity.
+same `DockDropPlan` validation. It is not a certificate of complete reference-library parity.
 
 ## Observed stock geometry
 

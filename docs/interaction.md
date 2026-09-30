@@ -1,7 +1,7 @@
 # Interaction compatibility — preview 3
 
 This increment implements native Linux/X11 content dragging and portable header
-scrolling. It does not certify full AvalonDock feature or API equivalence.
+scrolling. It does not certify full reference-library feature or API equivalence.
 
 ## Coordinates and hit testing
 
@@ -101,4 +101,4 @@ mobile heads and complete accessibility/input parity remain separate work.
 - XTEST server input semantics:
   https://xorg.freedesktop.org/archive/current/doc/libXtst/xtestlib.html
 
-No AvalonDock implementation bodies, templates, artwork or resources were copied.
+No reference-library implementation bodies, templates, artwork or resources were copied.

@@ -26,8 +26,8 @@ all inherited input-event APIs are not claimed to be reproduced. In particular, 
 a docking event's Handled flag does not undo a child control's action that already ran.
 
 ```csharp
-using Xceed.Wpf.AvalonDock.Compatibility;
-using Xceed.Wpf.AvalonDock.Controls;
+using UnoDock.Compatibility;
+using UnoDock.Controls;
 
 public sealed class GuardedTab : LayoutDocumentTabItem
 {
@@ -177,4 +177,4 @@ Primary platform references:
 - https://learn.microsoft.com/windows/windows-app-sdk/api/winrt/microsoft.ui.xaml.input.pointerroutedeventargs
 - https://learn.microsoft.com/windows/windows-app-sdk/api/winrt/microsoft.ui.xaml.uielement.gettingfocus
 - https://learn.microsoft.com/windows/windows-app-sdk/api/winrt/microsoft.ui.xaml.uielement.pointercapturelost
-- Pinned public/protected contracts in contracts/avalondock-metadata-release.json.
+- Pinned public/protected contracts in contracts/reference-metadata-release.json.

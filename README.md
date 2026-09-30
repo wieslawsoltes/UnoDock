@@ -2,7 +2,7 @@
 
 # UnoDock
 
-**AvalonDock-style workspaces, built for Uno Platform.**
+**Classic WPF-style docking workspaces, built for Uno Platform.**
 
 Composable documents and tool windows. Native Fluent controls. Desktop and browser hosting.
 
@@ -96,7 +96,7 @@ Application content remains application-owned. In a browser, separate windows ha
 
 ## Compatibility and release status
 
-UnoDock follows public AvalonDock-style model and interaction conventions, adapted to Uno/WinUI. It **does not promise WPF binary compatibility, arbitrary WPF XAML support, or complete API/pixel equivalence**. The reference checks report remaining differences rather than hiding them behind a broad compatibility claim.
+UnoDock follows the public model and interaction conventions of the reference WPF docking library, adapted to Uno/WinUI. It **does not promise WPF binary compatibility, arbitrary WPF XAML support, or complete API/pixel equivalence**. The reference checks report remaining differences rather than hiding them behind a broad compatibility claim.
 
 The repository is a **preview**. The version in `Directory.Build.props` describes source/package metadata; a successful CI package build is not evidence of a published NuGet release. Build from source or use an explicitly published release artifact. [Compatibility and platform boundaries →](docs/platform-support.md)
 
@@ -110,4 +110,4 @@ Historical preview notes have moved to [the archive](docs/history/early-preview-
 
 ## License
 
-[MIT](LICENSE). Independently authored and not affiliated with or endorsed by Xceed or Uno Platform. AvalonDock, Uno Platform, and WinUI are names of their respective projects/owners.
+[MIT](LICENSE). Independently authored and not affiliated with or endorsed by Xceed or Uno Platform. Uno Platform, WinUI and the reference library are names of their respective projects/owners.

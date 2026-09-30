@@ -1,9 +1,9 @@
 # Compact chrome and observed visual conformance (preview 7)
 
 The default docking chrome is independently constructed from Uno controls and small
-original vector geometries. No original AvalonDock templates, resources, artwork, fonts
+original vector geometries. No original reference-library templates, resources, artwork, fonts
 or implementation bodies are used. The target is the **stock theme of the pinned public
-AvalonDock repository**, not the separately licensed commercial theme collection.
+reference repository**, not the separately licensed commercial theme collection.
 
 ## Reference evidence
 

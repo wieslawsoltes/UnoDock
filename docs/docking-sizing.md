@@ -1,6 +1,6 @@
 # Multi-pane docking and sizing
 
-The layout remains an AvalonDock-style model (root, panels, pane groups and panes)
+The layout remains the reference library's model (root, panels, pane groups and panes)
 rendered by Uno controls. DockWidth/DockHeight are GridLengths and DockMinWidth /
 DockMinHeight remain minimum constraints, not alternative preferred dimensions.
 The original two-pane splitter protocol observations and their assertions are
@@ -65,11 +65,11 @@ minimum-bound-peer cases passed on both. The tests reuse one native window so
 native window startup does not become a per-case timing precondition. Earlier
 interrupted local runs are not counted as completed evidence.
 
-This increment does not assert complete WPF, AvalonDock binary/pixel or arbitrary
+This increment does not assert complete WPF, reference-library binary/pixel or arbitrary
 layout parity. Native WinUI runtime, physical AppKit pointer input, pure Wayland,
 mixed-DPI hardware and general large-data-table behavior remain separate coverage.
 No packages are published by these changes.
 
 Public contract references:
-- https://xceed.com/documentation/xceed-toolkit-plus-for-wpf/AvalonDock.html
-- https://xceed.com/documentation/xceed-toolkit-plus-for-wpf/Xceed.Wpf.AvalonDock~Xceed.Wpf.AvalonDock.Layout.LayoutPositionableGroup%601~DockMinWidth.html
+- Vendor documentation for the pinned reference library: https://xceed.com/documentation/xceed-toolkit-plus-for-wpf/
+- Recorded `Reference.Layout.LayoutPositionableGroup`1` DockMinWidth/DockMinHeight contracts in contracts/reference-metadata-release.json

@@ -1,10 +1,27 @@
 # Provenance and reference process
 
-Reference: https://github.com/xceedsoftware/wpftoolkit
+Reference: the pinned reference revision recorded in `contracts/reference.json`
+(`repository`, `revision` and project `path`). That manifest is the only place the
+reference library is named; recorded contracts, tools and documentation use the neutral
+term "the reference library" and the neutral root namespace token `Reference`.
 
 Pinned revision: `2c71faba5eecc1b6ae6cd3d269408e0df37715d8`
 
-Scope: `ExtendedWPFToolkitSolution/Src/Xceed.Wpf.AvalonDock`.
+Scope: the reference project directory recorded as `path` in `contracts/reference.json`.
+
+## Neutral naming
+
+`contracts/reference.json` records the original root namespace (`referenceNamespace`,
+which is also the reference assembly name) and its neutral replacement
+(`neutralNamespace`, `Reference`). The generators apply the substitution themselves:
+`tools/ApiScan` and `tools/ApiMetadata` take `--namespace-alias <original>=<neutral>`,
+and the reference workflows read both values from the manifest. ApiMetadata substitutes
+every emitted string, keeps record order from the original metadata and re-sorts only
+the hashed declaration list, so a regeneration reproduces the recorded
+`contracts/reference-*.{json,txt}` files. The original-runner probes import
+`tools/ReferenceIdentity/ReferenceIdentity.targets`, which references the pinned
+assembly, generates the probe's namespace imports into the intermediate directory and
+normalizes recorded type names through `ReferenceIdentity.Normalize`.
 
 ## Declaration inventory
 
@@ -54,10 +71,9 @@ hashes, metadata and public behavior observations are exported as reference arti
 
 ## Primary public documentation
 
-* Xceed DockingManager and layout model documentation:
-  https://xceed.com/documentation/xceed-toolkit-plus-for-wpf/Xceed.Wpf.AvalonDock~Xceed.Wpf.AvalonDock.DockingManager.html
-* Xceed XML serializer documentation:
-  https://xceed.com/documentation/xceed-toolkit-plus-for-wpf/Xceed.Wpf.AvalonDock~Xceed.Wpf.AvalonDock.Layout.Serialization.XmlLayoutSerializer.html
+* Vendor documentation for the reference library's DockingManager, layout model and
+  XML layout serializer (entries under the root namespace pinned in contracts/reference.json):
+  https://xceed.com/documentation/xceed-toolkit-plus-for-wpf/
 * Uno windowing:
   https://platform.uno/docs/articles/features/windows-ui-xaml-window.html
 * Uno SDK:
@@ -97,4 +113,4 @@ scenarios through public APIs. Raw measured XML from run 35817270444 is recorded
 input/probe/artifact/file hashes. The observed visibility transition is retained, not
 hidden by screenshot-only assertions. Product templates and geometry are independently
 authored. Uno framework source was consulted for platform API integration; the requested
-original AvalonDock implementation bodies/templates/resources were not inspected.
+original reference-library implementation bodies/templates/resources were not inspected.

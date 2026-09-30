@@ -1,6 +1,6 @@
 # Navigator rendering, interaction and extension quality (preview 8)
 
-The navigator is independently implemented from public AvalonDock observations and
+The navigator is independently implemented from public reference-library observations and
 Uno's public control APIs. The reference probe contains only application-owned test
 content, public constructor/property calls, public visual-tree traversal, and pixel
 capture. No reference templates, resources, source bodies, IL or fonts are imported.
@@ -101,7 +101,7 @@ silently restyled. For reliable realized model-adapter rows on Uno, use Navigato
 <ControlTemplate
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:dock="using:Xceed.Wpf.AvalonDock.Controls">
+    xmlns:dock="using:UnoDock.Controls">
   <StackPanel Width="360">
     <dock:NavigatorListBox x:Name="PART_AnchorableListBox" MaxHeight="120" />
     <dock:NavigatorListBox x:Name="PART_DocumentListBox" MaxHeight="320" />

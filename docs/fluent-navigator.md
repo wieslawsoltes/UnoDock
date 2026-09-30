@@ -76,7 +76,7 @@ CI is the authority for the complete regression matrix.
 Windows runtime uses Uno Skia Win32; native WinUI is compiled/package validated.
 Real OS high contrast, physical AppKit pointer input, pure Wayland and mixed-DPI
 hardware remain separate acceptance. This is a presentation/composition increment,
-not full AvalonDock binary/WPF/pixel equivalence or a ListBox implementation change.
+not full reference-library binary/WPF/pixel equivalence or a ListBox implementation change.
 
 The first hosted preparation passed all 276 unchanged navigator-quality, commit
 and revocation cases and 29 of the 30 new cases. Its new held-Space fixture

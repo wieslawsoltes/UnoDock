@@ -4,7 +4,7 @@
     <TargetFrameworks Condition="'$(UnoDockLibraryFrameworks)' != ''">$(UnoDockLibraryFrameworks)</TargetFrameworks>
     <EnableWindowsTargeting>true</EnableWindowsTargeting><IsPackable>true</IsPackable>
     <PackageId>UnoDock</PackageId><RootNamespace>UnoDock</RootNamespace><AssemblyName>UnoDock</AssemblyName>
-    <Description>Independent AvalonDock-style docking controls and layout models for Uno Platform and WinUI.</Description>
+    <Description>Independent docking controls and layout models for Uno Platform and WinUI, following the public API of a classic WPF docking library.</Description>
     <GenerateLibraryLayout>true</GenerateLibraryLayout>
     <NoWarn>$(NoWarn);CS1591</NoWarn>
   </PropertyGroup>

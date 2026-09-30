@@ -61,7 +61,7 @@
                                     </Grid>
                                 </layout:LayoutDocument>
                                 <layout:LayoutDocument Title="Notes.md" ContentId="declarative-notes">
-                                    <TextBox Padding="20" AcceptsReturn="True" TextWrapping="Wrap" Text="Document tabs stay at the top. Tool tabs stay at the bottom, following AvalonDock conventions."/>
+                                    <TextBox Padding="20" AcceptsReturn="True" TextWrapping="Wrap" Text="Document tabs stay at the top. Tool tabs stay at the bottom, following classic WPF docking conventions."/>
                                 </layout:LayoutDocument>
                             </layout:LayoutDocumentPane>
                             <layout:LayoutAnchorablePane DockHeight="150" DockMinHeight="90">

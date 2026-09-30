@@ -3,6 +3,7 @@ import hashlib
 import json
 from pathlib import Path
 import re
+import subprocess
 import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -12,6 +13,14 @@ PROBES = ('tools/ReferenceProbe', 'tools/ReferenceVisualProbe', 'tools/Reference
 
 def read(name):
     return json.loads((ROOT / name).read_text())
+
+def tracked_files():
+    try:
+        names = subprocess.run(['git', 'ls-files', '-z'], cwd=ROOT, check=True, capture_output=True).stdout.decode().split('\0')
+        return [ROOT / n for n in names if n and (ROOT / n).is_file()]
+    except (OSError, subprocess.CalledProcessError):
+        skip = {'.git', 'bin', 'obj', 'node_modules', 'artifacts'}
+        return [p for p in ROOT.rglob('*') if p.is_file() and not skip.intersection(p.relative_to(ROOT).parts)]
 
 class NamespaceMigrationTests(unittest.TestCase):
     def test_original_inventory_and_comparator_bytes(self):
@@ -47,6 +56,16 @@ class NamespaceMigrationTests(unittest.TestCase):
         for name in ('contracts/reference-metadata-release.json', 'contracts/reference-metadata-debug.json', 'contracts/reference-declarations.json'):
             with self.subTest(file=name):
                 self.assertTrue(any(line.startswith(POLICY['from'] + '.') for line in read(name)['declarations']))
+
+    def test_original_name_pinned_only_in_reference_manifest(self):
+        product = PIN['referenceNamespace'].rsplit('.', 1)[-1].lower()
+        offenders = []
+        for p in tracked_files():
+            if p.relative_to(ROOT).as_posix() == 'contracts/reference.json':
+                continue
+            if product in p.relative_to(ROOT).as_posix().lower() or product.encode() in p.read_bytes().lower():
+                offenders.append(p.relative_to(ROOT).as_posix())
+        self.assertEqual([], offenders)
 
     def test_product_and_sample_code_have_no_legacy_namespace(self):
         for directory in ('src','samples'):

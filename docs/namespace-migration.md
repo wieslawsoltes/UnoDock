@@ -1,7 +1,7 @@
 # Preview 14 namespace migration
 
-Preview 14 intentionally changes product CLR type identity from
-`Xceed.Wpf.AvalonDock.*` to `UnoDock.*`. This is a source **and binary breaking change**;
+Preview 14 intentionally changes product CLR type identity from the reference
+library's root namespace (pinned in contracts/reference.json) to `UnoDock.*`. This is a source **and binary breaking change**;
 recompile dependents. No forwarding assemblies or compatibility aliases are supplied.
 
 ```csharp
@@ -35,16 +35,19 @@ migration by the application; arbitrary CLR object serialization is not supporte
 
 ## Reference integrity
 
-Original metadata, public observations, original-runner probes and historical validation
-records deliberately retain their original names. They are evidence, not product API.
-Tests which consume original recorded full type names translate at their input boundary.
-`tools/VisualScene/SceneContent.cs` retains the historical code-text scene for repeatable
-existing visual comparisons; it is not sample API usage guidance.
+Original metadata and public observations are evidence, not product API. Recorded
+contracts spell the reference root namespace with the neutral token `Reference`; only
+contracts/reference.json pins the original namespace, and the generators apply that
+substitution themselves, so re-running the reference workflows reproduces the recorded
+files. Original-runner probes obtain their namespace imports from the same pin at build
+time. Tests which consume recorded full type names translate `Reference.*` to
+`UnoDock.*` at their input boundary. The code text in `tools/VisualScene/SceneContent.cs`
+is scene content only; editor text does not affect the recorded pane geometry.
 
 `contracts/type-mappings.json` enumerates each renamed original exported type, including
 generic definition spellings. The resolved metadata comparator is unchanged. The old
 diagnostic allowlist is byte-for-byte equal after JSON parsing; only its mapping digest
-changes. `contracts/namespace-migration.json` records the original inventory/comparator
+changes. `contracts/namespace-migration.json` records the reference inventory/comparator
 file hashes and the diagnostic-list digest. The migration tests verify these constraints
 and the emitted product namespaces. This rename is never counted as a parity gain.
 

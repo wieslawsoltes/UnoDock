@@ -16,8 +16,8 @@ not permanent closure. The close-completed flag is set before callbacks for reen
 ```csharp
 using System;
 using System.ComponentModel;
-using Xceed.Wpf.AvalonDock.Controls;
-using Xceed.Wpf.AvalonDock.Layout;
+using UnoDock.Controls;
+using UnoDock.Layout;
 
 public sealed class GuardedDocumentWindow : LayoutDocumentFloatingWindowControl
 {
@@ -164,4 +164,4 @@ Primary references:
 - https://learn.microsoft.com/windows/win32/api/commctrl/nf-commctrl-removewindowsubclass
 - https://learn.microsoft.com/dotnet/api/system.windows.window.onclosing
 - https://platform.uno/docs/articles/features/windows-ui-xaml-window.html
-- Pinned exported contracts in contracts/avalondock-metadata-release.json.
+- Pinned exported contracts in contracts/reference-metadata-release.json.

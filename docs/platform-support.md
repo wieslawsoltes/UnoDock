@@ -12,8 +12,8 @@ Implementation support, successful compilation, and exercised runtime behavior a
 
 The browser workbench runs each window in its own runtime and transfers registered payloads. It cannot move arbitrary live .NET objects between windows or suppress browser-owned chrome. Pure Wayland, mixed-DPI hardware, OS high-contrast transitions, mobile-specific workspace design, and arbitrary third-party native content are not implied by the hosted matrix.
 
-## AvalonDock conventions
+## Reference-library conventions
 
-The project follows public AvalonDock-style layout models and interaction conventions through an independent implementation. Frozen public reference inventories and normalized API comparisons remain review artifacts. Remaining signature/attribute/behavior differences are reported rather than hidden.
+The project follows the public layout models of the reference WPF docking library and interaction conventions through an independent implementation. Frozen public reference inventories and normalized API comparisons remain review artifacts. Remaining signature/attribute/behavior differences are reported rather than hidden.
 
 This is not WPF binary compatibility, a WPF parser, arbitrary WPF resource/trigger support, or a reproduction of separately licensed commercial themes. Native Uno/WinUI XAML is the supported markup model. The implementation is MIT and is not affiliated with Xceed or Uno Platform.

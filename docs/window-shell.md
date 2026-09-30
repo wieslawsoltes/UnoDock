@@ -142,4 +142,4 @@ acceptance. The dedicated pipeline artifacts record test results for the consume
 - https://learn.microsoft.com/windows/windows-app-sdk/api/winrt/microsoft.ui.windowing.overlappedpresenter
 - https://learn.microsoft.com/windows/win32/api/dwmapi/nf-dwmapi-dwmextendframeintoclientarea
 - https://platform.uno/docs/articles/features/windows-ui-xaml-window.html
-- Pinned declaration and PE contracts in contracts/avalondock-metadata-release.json.
+- Pinned declaration and PE contracts in contracts/reference-metadata-release.json.
