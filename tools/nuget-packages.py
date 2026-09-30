@@ -33,7 +33,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 REPOSITORY_URL = 'https://github.com/wieslawsoltes/UnoDock'
 LICENSE = 'MIT'
 SEMVER = re.compile(r'(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?')
-OPC_ENTRIES = re.compile(r'(_rels/\.rels|\[Content_Types\]\.xml|package/services/metadata/core-properties/[0-9a-f]+\.psmdcp)')
+OPC_ENTRIES = re.compile(r'(_rels/\.rels|\[Content_Types\]\.xml|package/services/metadata/core-properties/[0-9A-Za-z]+\.psmdcp)')
 FORBIDDEN = re.compile(r'(^|/)(obj|bin)/|\.(pdb|cs|csproj|props\.user|user|nupkg|snupkg)$|(^|/)(\.DS_Store|Thumbs\.db)$', re.IGNORECASE)
 
 
