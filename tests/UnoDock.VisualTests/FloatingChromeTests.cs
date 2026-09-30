@@ -55,7 +55,6 @@ internal static partial class FloatingChromeTests
                 foreach (var id in new[]
                 {
                     "Menu",
-                    "Minimize",
                     "Maximize",
                     "Close"
                 }
@@ -64,6 +63,22 @@ internal static partial class FloatingChromeTests
                 {
                     var button = f.Button(id);
                     Check.True(button.IsLoaded && button.Visibility == Visibility.Visible && button.ActualWidth > 0);
+                }
+
+                // The caption carries no minimize button; the system menu keeps
+                // the presenter's minimize command.
+                Check.False(f.Control.FindVisualChildren<Button>().Any(b => Microsoft.UI.Xaml.Automation.AutomationProperties.GetAutomationId(b) == "FloatingWindowMinimize"));
+                if (!tools)
+                {
+                    // Document windows show the position menu only when the theme asks for it.
+                    f.Manager.Theme = new GenericTheme();
+                    f.Manager.Refresh();
+                    await Task.Delay(60);
+                    Check.Equal(Visibility.Collapsed, f.Button("Menu").Visibility);
+                    f.Manager.Theme = new VS2010Theme();
+                    f.Manager.Refresh();
+                    await Task.Delay(60);
+                    Check.Equal(Visibility.Visible, f.Button("Menu").Visibility);
                 }
 
                 foreach (var edge in Edges)

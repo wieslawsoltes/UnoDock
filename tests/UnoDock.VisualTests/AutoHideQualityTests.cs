@@ -280,6 +280,24 @@ public static class AutoHideQualityTests
                 Check.Same(next, dock.AutoHideWindow!.Model);
                 Check.Equal(0, Ghosts().Length);
             });
+            tests.Test("activating an auto-hidden tool from code opens its flyout", async () =>
+            {
+                await Reset();
+                var next = new LayoutAnchorable
+                {
+                    Title = "Activated",
+                    ContentId = "activated",
+                    Content = new TextBox()
+                };
+                next.AddToLayout(dock, AnchorableShowStrategy.Left);
+                next.ToggleAutoHide();
+                Call(dock, "CloseAutoHide");
+                await Settle();
+                Check.True(dock.AutoHideWindow == null);
+                next.IsActive = true;
+                await Settle();
+                Check.Same(next, dock.AutoHideWindow?.Model);
+            });
             tests.Test("disabled tool closes flyout and discards resize", async () =>
             {
                 await Reset();

@@ -30,7 +30,8 @@ including any icon: bind `IconSource` inside the template to keep one.
 
 - Open-documents rows remain standard `ToggleMenuFlyoutItem` controls, so the
   menu's keyboard focus, navigation and invocation apply unchanged. The selected
-  content is checked, disabled contents are disabled, and a row activates its
+  content is checked (exposed through `IsChecked` and automation; the list draws
+  no check mark), disabled contents are disabled, and a row activates its
   content only if it still belongs to the pane when invoked.
 - Navigator rows keep the list's selection and commit behavior; their content is
   still the `LayoutItem` that is selected. Replacing the navigator list's

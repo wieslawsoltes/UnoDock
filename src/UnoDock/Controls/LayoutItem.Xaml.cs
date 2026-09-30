@@ -151,6 +151,7 @@ public abstract partial class LayoutItem
         "HideCommand" when this is LayoutAnchorableItem => LayoutAnchorableItem.HideCommandProperty,
         "AutoHideCommand" when this is LayoutAnchorableItem => LayoutAnchorableItem.AutoHideCommandProperty,
         "DockCommand" when this is LayoutAnchorableItem => LayoutAnchorableItem.DockCommandProperty,
+        nameof(Visibility) => VisibilityProperty,
         _ => throw new ArgumentException("Unknown or incompatible layout-item binding target: " + name)
     };
 }

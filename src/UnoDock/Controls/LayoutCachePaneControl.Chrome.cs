@@ -85,7 +85,11 @@ public partial class LayoutCachePaneControl
             if (_titleModel != null && _titleManager != null)
                 DockVisuals.ShowBelow(DockVisuals.Menu(_titleManager, _titleModel), _menuButton);
         }, Properties.Resources.Anchorable_CxMenu_Hint);
-        _pinButton = DockChrome.Icon(DockGlyph.Pin, () => _titleModel?.ToggleAutoHide(), Properties.Resources.Anchorable_BtnAutoHide_Hint);
+        _pinButton = DockChrome.Icon(DockGlyph.Pin, () =>
+        {
+            if (_titleModel != null)
+                DockVisuals.ToggleAutoHide(_titleModel);
+        }, Properties.Resources.Anchorable_BtnAutoHide_Hint);
         _hideButton = DockChrome.Icon(DockGlyph.Close, () =>
         {
             if (_titleModel != null)
@@ -104,9 +108,9 @@ public partial class LayoutCachePaneControl
         _titlePresenter.DoubleTapped += (_, _) =>
         {
             if (_titleModel?.IsFloating == true)
-                _titleModel.Dock();
-            else
-                _titleModel?.Float();
+                DockVisuals.Dock(_titleModel);
+            else if (_titleModel != null)
+                DockVisuals.Float(_titleModel);
         };
     }
 
@@ -116,16 +120,27 @@ public partial class LayoutCachePaneControl
         var tool = pane is LayoutAnchorablePane;
         var states = p.States;
         var activeDocumentPane = !tool && models.Any(m => m.IsActive);
-        _layout.BorderBrush = activeDocumentPane ? states.ActiveDocumentPaneBorder : states.PaneBorder;
-        _layout.BorderThickness = new(activeDocumentPane ? states.ActiveDocumentPaneBorderThickness : states.PaneBorderThickness);
-        _layout.CornerRadius = new(p.PaneCornerRadius);
-        _layout.Background = p.Surface;
+        var documentFrame = activeDocumentPane ? states.ActiveDocumentPaneBorder : states.DocumentPaneBorder ?? states.PaneBorder;
+        var documentThickness = activeDocumentPane ? states.ActiveDocumentPaneBorderThickness : states.DocumentPaneBorderThickness;
+        // A theme may frame only the content below the document tabs; the tab
+        // strip and tool panes then stand directly on the workspace.
+        var contentFramed = states.DocumentFrameAroundContent;
+        _layout.BorderBrush = tool ? states.PaneBorder : documentFrame;
+        _layout.BorderThickness = contentFramed ? new(0) : tool ? new(states.PaneBorderThickness) : documentThickness;
+        _layout.CornerRadius = new(contentFramed ? 0 : p.PaneCornerRadius);
+        _layout.Background = contentFramed ? states.Workspace : p.Surface;
+        _contentFrame.BorderBrush = contentFramed && !tool ? documentFrame : null;
+        _contentFrame.BorderThickness = contentFramed && !tool ? documentThickness : new(0);
+        _contentFrame.CornerRadius = new(contentFramed && !tool ? states.DocumentFrameCornerRadius : 0);
+        _contentFrame.Margin = contentFramed ? new(0) : new(2, tool ? 0 : 1, 2, 2);
         _content.Background = p.Surface;
-        _content.Margin = new(2, tool ? 0 : 1, 2, 2);
+        _content.BorderBrush = states.ContentBorder;
+        _content.BorderThickness = new(states.ContentBorder == null ? 0 : 1);
         _headers.Background = tool ? states.ToolTabStrip : states.DocumentTabStrip;
+        _headers.Margin = new(tool ? 0 : states.DocumentTabStripInset, 0, 0, 0);
         _tabBar.Background = _headers.Background;
         Grid.SetRow(_tabBar, tool ? 2 : 0);
-        Grid.SetRow(_content, 1);
+        Grid.SetRow(_contentFrame, 1);
         Grid.SetRow(_titleRow, 0);
         _layout.RowDefinitions[0].Height = new(tool ? IsCaptionOwned(pane) ? 0 : p.TitleHeight : p.TabHeight);
         _layout.RowDefinitions[1].Height = new(1, GridUnitType.Star);
@@ -137,11 +152,11 @@ public partial class LayoutCachePaneControl
         _scroll.Visibility = Visibility.Visible;
         _scroll.MaxHeight = tool ? p.ToolTabHeight : p.TabHeight;
         _documentsButton.Visibility = tool ? Visibility.Collapsed : Visibility.Visible;
-        _documentsButton.Configure(p);
-        _documentsButton.ForegroundOverride = states.DocumentTabForeground;
+        _documentsButton.ConfigureCaption(p, states.CaptionButtonForeground ?? states.DocumentTabForeground);
         _tabBar.BorderBrush = p.Border;
-        _tabBar.BorderThickness = tool ? new(0, 1, 0, 0) : new(0, 0, 0, 1);
+        _tabBar.BorderThickness = contentFramed ? new(0) : tool ? new(0, 1, 0, 0) : new(0, 0, 0, 1);
         _titleRow.Background = Selector?.SelectedContent?.IsActive == true ? states.ActiveToolTitle : states.ToolTitle;
+        _titleRow.CornerRadius = new(states.ToolTitleCornerRadius, states.ToolTitleCornerRadius, 0, 0);
     }
 
     /// <summary>The sole pane of a floating tool window shows its title, menu and
@@ -162,12 +177,12 @@ public partial class LayoutCachePaneControl
         var template = selected == null ? null : manager.HeaderTemplate(selected, _titlePresenter, title: true);
         _titlePresenter.ContentTemplate = template;
         _titlePresenter.Content = template == null ? _title : selected;
-        _menuButton.Configure(p);
-        _pinButton.Configure(p);
-        _hideButton.Configure(p);
-        _menuButton.ForegroundOverride = _pinButton.ForegroundOverride = _hideButton.ForegroundOverride = titleForeground;
+        var buttonForeground = (selected?.IsActive == true ? p.States.ActiveCaptionButtonForeground : p.States.CaptionButtonForeground) ?? titleForeground;
+        _menuButton.ConfigureCaption(p, buttonForeground);
+        _pinButton.ConfigureCaption(p, buttonForeground);
+        _hideButton.ConfigureCaption(p, buttonForeground);
         _menuButton.IsEnabled = selected?.IsEnabled == true;
-        _pinButton.Visibility = selected?.CanAutoHide == true ? Visibility.Visible : Visibility.Collapsed;
+        _pinButton.Visibility = selected is { CanAutoHide: true, IsFloating: false } ? Visibility.Visible : Visibility.Collapsed;
         _pinButton.IsEnabled = selected?.IsEnabled == true;
         _hideButton.Visibility = selected is { CanHide: true } or { CanClose: true } ? Visibility.Visible : Visibility.Collapsed;
         _hideButton.IsEnabled = selected?.IsEnabled == true;
@@ -192,7 +207,9 @@ public partial class LayoutCachePaneControl
         {
             MenuFlyoutPresenterStyle = DockMenuRow.PresenterStyle(palette)
         };
-        foreach (var model in Items.Where(c => c is not LayoutDocument { IsVisible: false }).ToArray())
+        // Listed by title, like the pane's ChildrenSorted.
+        var listed = pane is LayoutDocumentPane documents ? documents.ChildrenSorted.Where(Items.Contains) : Items;
+        foreach (var model in listed.Where(c => c is not LayoutDocument { IsVisible: false }).ToArray())
         {
             var item = new DockDocumentMenuRow();
             item.Configure(manager, palette, model);

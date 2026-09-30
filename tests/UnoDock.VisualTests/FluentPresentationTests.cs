@@ -384,11 +384,13 @@ internal static class FluentPresentationTests
                             Check.True(label.Focus(FocusState.Keyboard));
                             await Wait(() => label.XamlRoot is { } root && ReferenceEquals(Microsoft.UI.Xaml.Input.FocusManager.GetFocusedElement(root), label));
                             await Task.Delay(60);
+                            var resting = label.Background;
                             input.KeyDown(0x20);
                             await Wait(() => label.IsPressed);
                             Check.Equal(0, clicks);
+                            // The active tab keeps its state fill while pressed.
                             if (mode == SampleTheme.Generic)
-                                Check.Same(Brush(page.Dock, "Pressed"), label.Background);
+                                Check.Same(resting, label.Background);
                             else
                             {
                                 await Wait(() => label.FindVisualChildren<FrameworkElement>().SelectMany(VisualStateManager.GetVisualStateGroups).Any(group => group.Name == "CommonStates" && group.CurrentState?.Name == "Pressed"));

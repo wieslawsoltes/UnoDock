@@ -35,6 +35,7 @@
     <Compile Include="../../tests/UnoDock.Runtime.Tests/WindowLifecycleTests.cs" Link="Testing/WindowLifecycleTests.cs" />
     <Compile Include="../../tests/UnoDock.Runtime.Tests/RuntimeTests.cs" Link="Testing/RuntimeTests.cs" />
     <Compile Include="../../tests/UnoDock.Runtime.Tests/InteropTests.cs" Link="Testing/InteropTests.cs" />
+    <Compile Include="../../tests/UnoDock.Runtime.Tests/ReferenceBehaviorTests.cs" Link="Testing/ReferenceBehaviorTests.cs" />
     <Compile Include="../../tests/UnoDock.Runtime.Tests/ParityTests.cs" Link="Testing/ParityTests.cs" />
     <Compile Include="../../tests/UnoDock.Runtime.Tests/LifecycleTests.cs" Link="Testing/LifecycleTests.cs" />
     <Compile Include="../../tests/UnoDock.Runtime.Tests/RestoreOwnershipTests.cs" Link="Testing/RestoreOwnershipTests.cs" />

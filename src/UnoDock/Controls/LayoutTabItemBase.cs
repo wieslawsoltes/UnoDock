@@ -63,9 +63,9 @@ public abstract partial class LayoutTabItemBase : DockInputControl
         _label.DoubleTapped += (_, _) =>
         {
             if (Model?.IsFloating == true)
-                Model.Dock();
-            else
-                Model?.Float();
+                DockVisuals.Dock(Model);
+            else if (Model != null)
+                DockVisuals.Float(Model);
         };
         _close = DockChrome.Icon(DockGlyph.Close, () =>
         {
@@ -148,10 +148,13 @@ public abstract partial class LayoutTabItemBase : DockInputControl
         base.OnMouseRightButtonDown(e);
     }
 
+    private bool _pointerOver;
     protected override void OnMouseEnter(DockMouseEventArgs e)
     {
         if (!e.Handled)
             VisualStateManager.GoToState(this, "PointerOver", false);
+        _pointerOver = true;
+        UpdateCloseVisibility();
         base.OnMouseEnter(e);
     }
 
@@ -159,7 +162,18 @@ public abstract partial class LayoutTabItemBase : DockInputControl
     {
         if (!e.Handled)
             VisualStateManager.GoToState(this, "Normal", false);
+        _pointerOver = false;
+        UpdateCloseVisibility();
         base.OnMouseLeave(e);
+    }
+
+    // A document tab offers its close button when selected or under the pointer.
+    private void UpdateCloseVisibility()
+    {
+        if (Model == null)
+            return;
+        var tool = Model is LayoutAnchorable && Model.Parent is not LayoutDocumentPane;
+        _close.Visibility = !tool && Model.CanClose && (Model.IsSelected || _pointerOver) ? Visibility.Visible : Visibility.Collapsed;
     }
 
     protected override void OnMouseMove(DockMouseEventArgs e) => base.OnMouseMove(e);
@@ -187,10 +201,13 @@ public abstract partial class LayoutTabItemBase : DockInputControl
         var foreground = tool ? Model.IsSelected ? states.SelectedToolTabForeground : states.ToolTabForeground : !Model.IsSelected ? states.DocumentTabForeground : Model.IsActive ? states.ActiveDocumentTabForeground ?? states.SelectedDocumentTabForeground : states.SelectedDocumentTabForeground;
         _label.ForegroundOverride = foreground;
         _close.ForegroundOverride = foreground;
-        _label.HoverOverride = states.TabHover;
+        // Hover feedback belongs to tabs that can still be selected; a selected
+        // or active tab keeps its state fill under the pointer and while pressed.
+        _label.HoverOverride = Model.IsSelected ? DockChrome.Transparent : states.TabHover;
+        _label.PressedOverride = Model.IsSelected ? DockChrome.Transparent : null;
         _chrome.CornerRadius = tool ? new(0, 0, palette.TabCornerRadius, palette.TabCornerRadius) : new(palette.TabCornerRadius, palette.TabCornerRadius, 0, 0);
         _selectionIndicator.CornerRadius = new(palette.UsesFluentControls ? 1 : 0);
-        _close.Visibility = !tool && Model.CanClose && Model.IsSelected ? Visibility.Visible : Visibility.Collapsed;
+        UpdateCloseVisibility();
         var background = tool ? Model.IsSelected ? states.SelectedToolTab : states.ToolTab : !Model.IsSelected ? states.DocumentTab : Model.IsActive ? states.ActiveDocumentTab : states.SelectedDocumentTab;
         _selectionIndicator.Height = palette.ActiveTabIndicatorThickness;
         _selectionIndicator.Background = Model.IsActive ? states.ActiveTabIndicator : states.SelectedTabIndicator;
@@ -220,7 +237,11 @@ public abstract partial class LayoutTabItemBase : DockInputControl
         }
 
         MinHeight = 0;
-        Height = tool ? palette.ToolTabHeight - 2 : palette.TabHeight - 1;
+        // Some themes draw the selected document tab taller than its siblings;
+        // unselected tabs then sit on the strip's baseline, lower by the raise.
+        var raise = tool || Model.IsSelected ? 0 : states.SelectedTabRaise;
+        Height = (tool ? palette.ToolTabHeight - 2 : palette.TabHeight - 1) - raise;
+        VerticalAlignment = raise > 0 ? VerticalAlignment.Bottom : VerticalAlignment.Stretch;
         DockVisuals.SetName(_label, Model.Title ?? "Document");
         ToolTipService.SetToolTip(_label, Model.ToolTip ?? Model.Title);
         MenuContext.SetTarget(this, Model);
@@ -322,6 +343,7 @@ public abstract partial class LayoutTabItemBase : DockInputControl
         _label.HoverOverride = DockChrome.Transparent;
         Margin = new(0);
         Height = double.NaN;
+        VerticalAlignment = VerticalAlignment.Stretch;
         MinHeight = 0;
     }
 

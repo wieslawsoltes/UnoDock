@@ -179,7 +179,9 @@ public static class InteropTests
         tests.Test("XML restores explicit non-first selection", () =>
         {
             using var manager = new DockingManager();
-            new XmlLayoutSerializer(manager).Deserialize(new StringReader("<LayoutRoot><RootPanel><LayoutDocumentPane><LayoutDocument ContentId='a'/><LayoutDocument ContentId='b' IsSelected='True'/></LayoutDocumentPane></RootPanel></LayoutRoot>"));
+            var serializer = new XmlLayoutSerializer(manager);
+            serializer.LayoutSerializationCallback += (_, e) => e.Content = e.Model.ContentId;
+            serializer.Deserialize(new StringReader("<LayoutRoot><RootPanel><LayoutDocumentPane><LayoutDocument ContentId='a'/><LayoutDocument ContentId='b' IsSelected='True'/></LayoutDocumentPane></RootPanel></LayoutRoot>"));
             var pane = manager.Layout.Descendents().OfType<LayoutDocumentPane>().Single();
             Check.Equal("b", pane.SelectedContent!.ContentId);
             Check.Equal(1, pane.Children.Count(c => c.IsSelected));
@@ -233,7 +235,7 @@ public static class InteropTests
             doc.Dock();
             Check.True(doc.IsFloating);
         });
-        tests.Test("CanRepositionItems prevents dock-as-document", () =>
+        tests.Test("CanRepositionItems does not prevent dock-as-document", () =>
         {
             using var manager = new DockingManager();
             var tool = new LayoutAnchorable();
@@ -246,7 +248,7 @@ public static class InteropTests
                 RootPanel = new(pane)
             };
             tool.DockAsDocument();
-            Check.Same(pane, tool.Parent);
+            Check.True(tool.Parent is LayoutDocumentPane);
         });
         return await tests.Run(output, "interop");
     }
@@ -260,7 +262,11 @@ public static class InteropTests
     private static void Load(DockingManager manager, string file)
     {
         using var stream = typeof(InteropTests).Assembly.GetManifestResourceStream("ReferenceFixtures." + file)!;
-        new XmlLayoutSerializer(manager).Deserialize(stream);
+        // The reference workspaces were built with content; without a callback
+        // unmatched items would be hidden or dropped on restore.
+        var serializer = new XmlLayoutSerializer(manager);
+        serializer.LayoutSerializationCallback += (_, e) => e.Content = e.Model.ContentId;
+        serializer.Deserialize(stream);
     }
 
     private static string Topology(XElement node) => node.Name.LocalName + "[" + (string?)node.Attribute("Orientation") + ":" + (string?)node.Attribute("ContentId") + "](" + string.Join(',', node.Elements().Where(e => e.Name.LocalName is not ("TopSide" or "LeftSide" or "BottomSide" or "RightSide" or "FloatingWindows" or "Hidden")).Select(Topology)) + ")";

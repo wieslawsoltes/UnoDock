@@ -10,20 +10,24 @@ Every floating window draws its own caption, in the active theme's colors:
 | Element | Tools | Documents |
 |---|---|---|
 | Title | Selected tool of a single-pane window | Floating document |
-| ▾ Window position | Tool menu (Float, Dock, Dock as Tabbed Document, Auto Hide, Hide) | Document menu (Close, Close All But This, Close All, Float, Dock as Tabbed Document, New Horizontal/Vertical Tab Group) |
-| Minimize | Custom native captions only | Custom native captions only |
+| ▾ Window position | Tool menu (Float, Dock, Dock as Tabbed Document, Auto Hide, Hide) | Document menu (Close, Close All But This, Close All, Float, Dock as Tabbed Document, New Horizontal/Vertical Tab Group) when the theme's `FloatingDocumentMenuButton` is `True` (every theme except Generic) |
 | □ / ❐ Maximize / Restore | Yes | Yes |
 | × Close | Hides or closes the window's tools | Closes the document |
 
 A floating tool window with a single pane shows its tool title only once: the
 pane's own title row is merged into the window caption. Windows with several
-panes keep a title row per pane. Double-clicking the caption maximizes or
-restores the window; right-clicking it opens the system menu.
+panes keep a title row per pane. The caption has no minimize button; minimizing
+remains available from the system menu when the window's presenter allows it.
+Double-clicking the caption maximizes or restores the window; right-clicking it
+opens the system menu.
 
 Caption and frame colors follow window activation through the theme keys
-`ToolTitleBrush`/`ActiveToolTitleBrush`, their foregrounds, and
+`ToolTitleBrush`/`ActiveToolTitleBrush`, their foregrounds, the caption button
+keys (`CaptionButtonForegroundBrush`, `ChromeButtonHover*`), and
 `FloatingBorderBrush`/`ActiveFloatingBorderBrush` with
-`FloatingBorderThickness` (see [Themes](themes.md)).
+`FloatingBorderThickness` (see [Themes](themes.md)). The classic themes draw a
+3–4 pixel frame that changes color when the window becomes active; Fluent and
+the automatic palette draw no frame of their own.
 
 ## Tearing content off
 

@@ -125,6 +125,12 @@ mainWindow.Closed += (_, _) => lease.Dispose();
 The gallery does this automatically. Portable Uno hosts also expose application-window
 enumeration. Closing an overlay does not by itself dispose application-owned editor content.
 
+When it loads, a DockingManager resolves its hosting Window (through registration, Uno
+window enumeration or, on WinUI, the XamlRoot's AppWindowId among registered windows)
+and keeps it registered. That window owns the native floating windows, which close with
+it; the layout model is retained. When the host cannot be resolved, a Debug diagnostic
+names the missing registration.
+
 ## Gallery and validation
 
 The **Window lifecycle** laboratory creates managed/native document specimens, displays

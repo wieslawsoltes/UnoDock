@@ -257,6 +257,14 @@ public partial class DockingManager : Control, IDisposable, UnoDock.Compatibilit
         {
             _syncActive = false;
         }
+
+        // Activating an auto-hidden tool (IsActive, ActiveContent) shows its flyout.
+        if (Layout.ActiveContent is LayoutAnchorable { IsAutoHidden: true } tool && _surface is { } surface && !ReferenceEquals(surface.OpenAutoHideModel, tool))
+            DispatcherQueue.TryEnqueue(() =>
+            {
+                if (ReferenceEquals(Layout.ActiveContent, tool) && tool.IsAutoHidden && !ReferenceEquals(surface.OpenAutoHideModel, tool))
+                    OpenAutoHide(tool, false);
+            });
     }
 
     internal void InvalidateView()
@@ -331,6 +339,7 @@ public partial class DockingManager : Control, IDisposable, UnoDock.Compatibilit
             return;
         _loaded = true;
         ObserveThemeParameters();
+        AttachHostWindow();
         if (!_initialized)
         {
             _initialized = true;
@@ -471,6 +480,10 @@ public partial class DockingManager : Control, IDisposable, UnoDock.Compatibilit
 
     private LayoutFloatingWindowControl EnsureFloatingWindow(LayoutFloatingWindow model, bool immutable = false)
     {
+        // A host closed outside the library (for example Window.Close()) is
+        // permanently disposed; never reuse it for a model that is still floating.
+        foreach (var disposed in _floating.Where(w => w.IsHostDisposed && ReferenceEquals(w.Model, model)).ToArray())
+            _floating.Remove(disposed);
         var existing = _floating.FirstOrDefault(w => ReferenceEquals(w.Model, model));
         if (existing != null)
             return existing;
@@ -481,17 +494,38 @@ public partial class DockingManager : Control, IDisposable, UnoDock.Compatibilit
 
     private void SyncFloatingWindows()
     {
-        foreach (var window in _floating.Where(w => !Layout.FloatingWindows.Contains((LayoutFloatingWindow)w.Model)).ToArray())
+        foreach (var window in _floating.Where(w => w.IsHostDisposed || !Layout.FloatingWindows.Contains((LayoutFloatingWindow)w.Model)).ToArray())
         {
             window.CloseHost();
             _floating.Remove(window);
         }
 
-        foreach (var model in Layout.FloatingWindows.Where(f => f.IsValid))
+        foreach (var model in Layout.FloatingWindows.ToArray())
         {
+            if (!LayoutFloatingWindowControl.CanPresent(model))
+            {
+                // Hidden tools keep their floating model for Show(); its host is
+                // hidden, retaining the control and its bounds, until content returns.
+                if (_floating.FirstOrDefault(w => ReferenceEquals(w.Model, model)) is { IsHostVisible: true } empty)
+                    empty.HideHost();
+                continue;
+            }
+
             var control = EnsureFloatingWindow(model);
-            control.UpdateView();
             var native = UsesNativeFloatingWindows;
+            if (!native && _loaded && control.IsInNativeHostSpace)
+            {
+                // A runtime switch to in-surface windows: convert the persisted
+                // desktop bounds, release the native host and present a fresh
+                // control, since a former window root keeps that window's XamlRoot.
+                control.EnterHostSpace(false);
+                var immutable = control.IsContentImmutable;
+                control.CloseHost();
+                _floating.Remove(control);
+                control = EnsureFloatingWindow(model, immutable);
+            }
+
+            control.UpdateView();
             if (_loaded)
             {
                 if (native)
@@ -543,8 +577,17 @@ public partial class DockingManager : Control, IDisposable, UnoDock.Compatibilit
     protected override void OnKeyDown(KeyRoutedEventArgs e)
     {
         base.OnKeyDown(e);
-        if (!e.Handled)
-            HandleDockingKey(e);
+        if (e.Handled)
+            return;
+        // Content saw Escape first and left it unhandled: close an open flyout.
+        if (e.Key == Windows.System.VirtualKey.Escape && _surface?.IsAutoHideOpen == true)
+        {
+            CloseAutoHide();
+            e.Handled = true;
+            return;
+        }
+
+        HandleDockingKey(e);
     }
 
     private void HandleDockingKey(KeyRoutedEventArgs e)
@@ -552,10 +595,9 @@ public partial class DockingManager : Control, IDisposable, UnoDock.Compatibilit
         var ctrl = InputState.ControlDown;
         if (e.Key == Windows.System.VirtualKey.Escape)
         {
-            _surface?.CancelDrag();
-            CloseAutoHide();
-            _surface?.CloseNavigator(false);
-            e.Handled = true;
+            // Only a drag or navigator session consumes Escape; editors keep it.
+            if (_surface?.CancelTransientSession() == true)
+                e.Handled = true;
         }
         else if (ctrl && e.Key == Windows.System.VirtualKey.Tab)
         {
@@ -566,8 +608,10 @@ public partial class DockingManager : Control, IDisposable, UnoDock.Compatibilit
         {
             var command = GetLayoutItemFromModel(active).CloseCommand;
             if (command?.CanExecute(null) == true)
+            {
                 command.Execute(null);
-            e.Handled = true;
+                e.Handled = true;
+            }
         }
     }
 
@@ -597,6 +641,7 @@ public partial class DockingManager : Control, IDisposable, UnoDock.Compatibilit
         _items.Clear();
         if (_host != null)
             _host.Content = null;
+        DetachHostWindow();
         _handlers.Clear();
         _documents.Clear();
         _anchorables.Clear();

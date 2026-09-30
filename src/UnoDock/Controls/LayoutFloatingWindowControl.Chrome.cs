@@ -22,7 +22,7 @@ public abstract partial class LayoutFloatingWindowControl
     };
     private readonly Dictionary<ChromeHit, ResizeGrip> _resizeGrips = [];
     private Thumb? _legacyResizeGrip;
-    private DockChromeButton _menuCaptionButton = null!, _minimizeCaptionButton = null!, _maximizeCaptionButton = null!, _closeCaptionButton = null!;
+    private DockChromeButton _menuCaptionButton = null!, _maximizeCaptionButton = null!, _closeCaptionButton = null!;
     /// <summary>True only after a custom decoration adapter has attached to this native host.</summary>
     public bool IsCustomTitleBar => _nativeChrome != null;
     public bool IsResizing => _frameResize != null;
@@ -34,10 +34,8 @@ public abstract partial class LayoutFloatingWindowControl
             Orientation = Orientation.Horizontal
         };
         _menuCaptionButton = Add(DockGlyph.Menu, ShowCaptionMenu, Properties.Resources.Window_Position, "FloatingWindowMenu");
-        _minimizeCaptionButton = Add(DockGlyph.Minimize, () => PerformSystemAction(WindowAction.Minimize), Properties.Resources.Window_Minimize, "FloatingWindowMinimize");
         _maximizeCaptionButton = Add(DockGlyph.Maximize, () => PerformSystemAction(IsMaximized ? WindowAction.Restore : WindowAction.Maximize), Properties.Resources.Window_Maximize, "FloatingWindowMaximize");
         _closeCaptionButton = Add(DockGlyph.Close, Close, Properties.Resources.Window_Close, "FloatingWindowClose");
-        _minimizeCaptionButton.Visibility = Visibility.Collapsed;
         WindowChrome.SetIsHitTestVisibleInChrome(actions, true);
         return actions;
         DockChromeButton Add(DockGlyph glyph, Action command, string help, string id)
@@ -113,7 +111,10 @@ public abstract partial class LayoutFloatingWindowControl
         _dragHandle.RightTapped += (_, e) =>
         {
             CancelCaptionDrag();
-            SystemCommands.CreateSystemMenu(this).ShowAt(_dragHandle, new FlyoutShowOptions { Position = e.GetPosition(_dragHandle) });
+            // The caption's context menu is the content's docking menu; a window
+            // without single caption content falls back to the system menu.
+            FlyoutBase menu = Model.Root?.Manager is { } manager && CaptionContent is { } content ? DockVisuals.Menu(manager, content) : SystemCommands.CreateSystemMenu(this);
+            menu.ShowAt(_dragHandle, new FlyoutShowOptions { Position = e.GetPosition(_dragHandle) });
             e.Handled = true;
         };
         Unloaded += (_, _) => CancelFrameResize(false);
@@ -135,25 +136,32 @@ public abstract partial class LayoutFloatingWindowControl
         var states = palette.States;
         _title.Background = active ? states.ActiveToolTitle : states.ToolTitle;
         var foreground = (active ? states.ActiveToolTitleForeground : states.ToolTitleForeground) ?? palette.Foreground;
+        var buttonForeground = (active ? states.ActiveCaptionButtonForeground : states.CaptionButtonForeground) ?? foreground;
         _caption.Foreground = foreground;
         _captionHeader.Icon.Foreground = foreground;
         _captionHeader.Templated.Foreground = foreground;
         foreach (var button in new[]
         {
             _menuCaptionButton,
-            _minimizeCaptionButton,
             _maximizeCaptionButton,
             _closeCaptionButton
         }
 
         )
         {
-            button.Configure(palette);
-            button.ForegroundOverride = foreground;
+            button.ConfigureCaption(palette, buttonForeground);
         }
 
+        // Tool windows always offer the window-position menu; whether a floating
+        // document window shows it is a theme decision.
+        _menuCaptionButton.Visibility = Model is LayoutDocumentFloatingWindow && !states.FloatingDocumentMenuButton ? Visibility.Collapsed : Visibility.Visible;
         BorderBrush = active ? states.ActiveFloatingBorder : states.FloatingBorder;
         BorderThickness = new(states.FloatingBorderThickness);
+        // The composed frame draws the window edge; the caption and body sit
+        // inside it while the resize grips still reach the outer edge.
+        _frame.BorderBrush = BorderBrush;
+        _frame.BorderThickness = BorderThickness;
+        _resizeChrome.Margin = new(-states.FloatingBorderThickness);
     }
 
     internal void RefreshNativeChrome()
@@ -258,8 +266,6 @@ public abstract partial class LayoutFloatingWindowControl
         _resizeChrome.Visibility = canResize ? Visibility.Visible : Visibility.Collapsed;
         if (_legacyResizeGrip != null)
             _legacyResizeGrip.Visibility = custom ? Visibility.Collapsed : Visibility.Visible;
-        _minimizeCaptionButton.Visibility = custom ? Visibility.Visible : Visibility.Collapsed;
-        _minimizeCaptionButton.IsEnabled = CanPerformSystemAction(WindowAction.Minimize);
         _maximizeCaptionButton.IsEnabled = CanPerformSystemAction(IsMaximized ? WindowAction.Restore : WindowAction.Maximize);
         _closeCaptionButton.IsEnabled = CanPerformSystemAction(WindowAction.Close);
         _menuCaptionButton.IsEnabled = !_hostDisposed && CaptionContent is { IsEnabled: true };

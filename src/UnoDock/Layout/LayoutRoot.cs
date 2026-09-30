@@ -241,16 +241,35 @@ public partial class LayoutRoot : LayoutElement, ILayoutContainer, ILayoutRoot, 
     public void CollectGarbage()
     {
         using var batch = BeginUpdate();
-        var referenced = this.Descendents().OfType<ILayoutPreviousContainer>().Select(c => c.PreviousContainer).Where(c => c != null).ToHashSet();
-        var documentPane = RootPanel.Descendents().OfType<LayoutDocumentPane>().FirstOrDefault();
-        foreach (var item in this.Descendents().OfType<ILayoutGroup>().Reverse().ToArray())
+        // Repeat until stable: removing a group can release the only reference
+        // that kept another empty pane alive.
+        for (var pass = 0; pass < 32; pass++)
         {
-            if (item.ChildrenCount == 0 && item is not LayoutAnchorSide && !ReferenceEquals(item, RootPanel) && !ReferenceEquals(item, documentPane) && !referenced.Contains(item))
-                item.Parent?.RemoveChild(item);
+            var referenced = this.Descendents().OfType<ILayoutPreviousContainer>().Select(c => c.PreviousContainer).Where(c => c != null).ToHashSet();
+            // Keep one document pane in the main window: an empty one only when it
+            // is the last, so closing a split's documents removes its pane.
+            var documentPanes = RootPanel.Descendents().OfType<LayoutDocumentPane>().ToArray();
+            var keep = documentPanes.FirstOrDefault(p => p.ChildrenCount > 0) ?? documentPanes.FirstOrDefault();
+            var removed = false;
+            foreach (var item in this.Descendents().OfType<ILayoutGroup>().Reverse().ToArray())
+            {
+                if (item.ChildrenCount == 0 && item is not LayoutAnchorSide && !ReferenceEquals(item, RootPanel) && !ReferenceEquals(item, keep) && !referenced.Contains(item) && item.Parent != null)
+                {
+                    item.Parent.RemoveChild(item);
+                    removed = true;
+                }
+            }
+
+            foreach (var f in FloatingWindows.Where(f => !f.IsValid).ToArray())
+            {
+                FloatingWindows.Remove(f);
+                removed = true;
+            }
+
+            if (!removed)
+                break;
         }
 
-        foreach (var f in FloatingWindows.Where(f => !f.IsValid).ToArray())
-            FloatingWindows.Remove(f);
         if (!RootPanel.Descendents().OfType<LayoutDocumentPane>().Any())
             RootPanel.Children.Add(new LayoutDocumentPane());
     }

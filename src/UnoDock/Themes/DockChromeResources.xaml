@@ -73,9 +73,7 @@
                 <ColumnDefinition Width="29"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-            <Border x:Name="PART_MenuGutter" BorderThickness="0,0,1,0" IsHitTestVisible="False">
-                <ContentPresenter x:Name="PART_MenuCheck" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-            </Border>
+            <Border x:Name="PART_MenuGutter" BorderThickness="0,0,1,0" IsHitTestVisible="False"/>
             <ContentPresenter x:Name="PART_MenuHeader" Grid.Column="1" Foreground="{TemplateBinding Foreground}" FontSize="{TemplateBinding FontSize}" Margin="6,0,10,0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" VerticalAlignment="Center" IsHitTestVisible="False"/>
             <Border Grid.ColumnSpan="2" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}" IsHitTestVisible="False"/>
         </Grid>

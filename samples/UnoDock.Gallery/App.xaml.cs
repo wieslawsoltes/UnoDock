@@ -9,6 +9,18 @@ public partial class App : Application
     {
         if (TryLaunchBrowserWorkspace())
             return;
+        if (ReferenceScenario.Mode is { } scenario)
+        {
+            // Side-by-side review scene (see ReferenceScenario).
+            _window = new Window
+            {
+                Title = "UnoDock - " + scenario
+            };
+            _window.Content = ReferenceScenario.Create(_window, scenario);
+            _window.Activate();
+            return;
+        }
+
         _window = new Window
         {
             Title = "UnoDock Samples"
@@ -79,6 +91,7 @@ public partial class App : Application
                         ("layout-mutation-invariants", true, () => Testing.LayoutMutationInvariantTests.Run(output)),
                         ("runtime", false, () => Testing.RuntimeTests.Run(gallery.Dock, output)),
                         ("interop", false, () => Testing.InteropTests.Run(output)),
+                        ("reference-behavior", true, () => Testing.ReferenceBehaviorTests.Run(output)),
                         ("parity", false, () => Testing.ParityTests.Run(gallery.Dock, output)),
                         ("lifecycle", false, () => Testing.LifecycleTests.Run(gallery.Dock, output)),
                         ("interaction", false, () => Testing.InteractionTests.Run(gallery.Dock, output)),

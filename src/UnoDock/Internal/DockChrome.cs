@@ -74,13 +74,13 @@ internal static class DockChrome
             "AccentBrush" => "AccentFillColorDefaultBrush",
             "ActiveTitleBrush" => "ControlFillColorInputActiveBrush",
             _ => key
-        }, fallback);
+        }, DockGenericThemeResources.Find(manager, key) as Brush ?? fallback);
         double N(string key, double fallback, double min, double max) => Find(key) is double number && double.IsFinite(number) ? Math.Clamp(number, min, max) : fallback;
         object? Find(string key)
         {
             if (DockThemeResources.UsesFluent(manager))
                 return DockThemeResources.FindMetric(manager, key);
-            return manager.Resources.TryGetValue("UnoDock." + key, out var value) ? value : null;
+            return manager.Resources.TryGetValue("UnoDock." + key, out var value) ? value : DockGenericThemeResources.Find(manager, key);
         }
     }
 
@@ -167,9 +167,6 @@ internal static class DockChrome
                 Line(new(1.5, 3.5), new(6.5, 3.5));
                 Line(new(1.5, 4.5), new(6.5, 4.5));
                 Outline(new(1.5, 3.5), new(1.5, 8.5), new(6.5, 8.5), new(6.5, 3.5));
-                break;
-            case DockGlyph.Check:
-                Outline(new(1.5, 5), new(4, 7.5), new(8.5, 2.5));
                 break;
         }
 

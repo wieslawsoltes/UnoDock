@@ -135,21 +135,22 @@ internal static class TemplateIconTests
             var (menu, rows) = await f.OpenDocuments();
             try
             {
-                Check.Equal("Program.cs,App.xaml,Locked.txt", string.Join(',', rows.Select(r => r.Text)));
-                Check.Equal("Program.cs", Microsoft.UI.Xaml.Automation.AutomationProperties.GetName(rows[0]));
-                Check.True(rows[0].IsChecked);
-                Check.False(rows[1].IsChecked);
-                Check.True(rows[1].IsEnabled);
-                Check.False(rows[2].IsEnabled);
-                Check.True(ShowsIcon(rows[0], f.Document.IconSource!));
-                Check.True(ShowsText(rows[1], "App.xaml"));
-                Check.True(ShowsIcon(rows[1], f.Second.IconSource!));
+                // Listed by title, like the pane's ChildrenSorted.
+                Check.Equal("App.xaml,Locked.txt,Program.cs", string.Join(',', rows.Select(r => r.Text)));
+                Check.Equal("Program.cs", Microsoft.UI.Xaml.Automation.AutomationProperties.GetName(rows[2]));
+                Check.True(rows[2].IsChecked);
+                Check.False(rows[0].IsChecked);
+                Check.True(rows[0].IsEnabled);
+                Check.False(rows[1].IsEnabled);
+                Check.True(ShowsIcon(rows[2], f.Document.IconSource!));
+                Check.True(ShowsText(rows[0], "App.xaml"));
+                Check.True(ShowsIcon(rows[0], f.Second.IconSource!));
                 Check.True(rows.All(r => r.ActualHeight >= 20));
                 // Rows stay keyboard-focusable menu items with a focus highlight.
-                Check.True(rows[1].Focus(FocusState.Keyboard));
+                Check.True(rows[0].Focus(FocusState.Keyboard));
                 await f.Settle();
-                Check.False(ReferenceEquals(rows[1].Background, rows[0].Background));
-                await VisualCapture.Save(rows[0], Path.Combine(output, "templates-icons", "document-row.png"));
+                Check.False(ReferenceEquals(rows[0].Background, rows[2].Background));
+                await VisualCapture.Save(rows[2], Path.Combine(output, "templates-icons", "document-row.png"));
             }
             finally
             {
@@ -164,14 +165,14 @@ internal static class TemplateIconTests
             var (menu, rows) = await f.OpenDocuments();
             try
             {
-                foreach (var (row, content) in rows.Zip(new LayoutContent[] { f.Document, f.Second, f.Third }))
+                foreach (var (row, content) in rows.Zip(new LayoutContent[] { f.Second, f.Third, f.Document }))
                 {
                     Check.True(ShowsText(row, "menu-row"));
                     Check.True(ShowsText(row, content.ContentId!), "The row data context must be the listed LayoutDocument.");
                     Check.False(row.FindVisualChildren<Image>().Any(Visible));
                 }
 
-                Check.True(rows[0].IsChecked);
+                Check.True(rows[2].IsChecked);
             }
             finally
             {
@@ -185,9 +186,9 @@ internal static class TemplateIconTests
             try
             {
                 Check.True(selector.Items.Contains(f.Document));
-                Check.True(ShowsText(rows[1], "second-row"));
-                Check.True(ShowsIcon(rows[0], f.Document.IconSource!), "A null selection keeps the default row.");
-                Check.True(ShowsText(rows[0], f.Document.Title!));
+                Check.True(ShowsText(rows[0], "second-row"));
+                Check.True(ShowsIcon(rows[2], f.Document.IconSource!), "A null selection keeps the default row.");
+                Check.True(ShowsText(rows[2], f.Document.Title!));
             }
             finally
             {
@@ -203,8 +204,8 @@ internal static class TemplateIconTests
             try
             {
                 var clicked = false;
-                rows[1].Click += (_, _) => clicked = true;
-                Invoke(rows[1]);
+                rows[0].Click += (_, _) => clicked = true;
+                Invoke(rows[0]);
                 var activeNow = f.Second.IsActive;
                 await f.Settle();
                 Check.True(clicked, "The row invocation must raise Click.");
@@ -224,7 +225,7 @@ internal static class TemplateIconTests
                 // A row of a content that left the pane must not activate it.
                 f.Document.Close();
                 await f.Settle();
-                Invoke(rows[0]);
+                Invoke(rows[2]);
                 await f.Settle();
                 Check.False(f.Document.IsActive);
                 Check.True(f.Document.Parent == null);
@@ -423,6 +424,23 @@ internal static class TemplateIconTests
             {
                 window.Close();
             }
+        });
+        tests.Test("tabs: a hovered document tab shows its close button like the selected one", async () =>
+        {
+            using var f = new Fixture();
+            await f.Show();
+            var tab = f.Manager.FindVisualChildren<LayoutDocumentTabItem>().First(t => ReferenceEquals(t.Model, f.Second));
+            var close = (FrameworkElement)typeof(LayoutTabItemBase).GetField("_close", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(tab)!;
+            var hover = typeof(LayoutTabItemBase).GetField("_pointerOver", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!;
+            var refresh = typeof(LayoutTabItemBase).GetMethod("UpdateCloseVisibility", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!;
+            Check.False(f.Second.IsSelected);
+            Check.Equal(Visibility.Collapsed, close.Visibility);
+            hover.SetValue(tab, true);
+            refresh.Invoke(tab, null);
+            Check.Equal(Visibility.Visible, close.Visibility);
+            hover.SetValue(tab, false);
+            refresh.Invoke(tab, null);
+            Check.Equal(Visibility.Collapsed, close.Visibility);
         });
         return await tests.Run(output, "templates-icons");
     }

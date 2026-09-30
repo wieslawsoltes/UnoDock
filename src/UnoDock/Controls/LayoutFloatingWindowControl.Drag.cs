@@ -434,7 +434,7 @@ public abstract partial class LayoutFloatingWindowControl
             _lastNativeOrigin = _dragCoordinates.GetNativeOrigin(window);
         if (ReferenceEquals(_nativeOwnerConfiguredWindow, window) || Model.Root?.Manager is not { } manager)
             return;
-        var owner = DesktopWindowCoordinates.WindowFor(manager);
+        var owner = manager.HostWindow ?? DesktopWindowCoordinates.WindowFor(manager);
         if (owner == null)
             return;
         _nativeOwnerLease = _dragCoordinates.ConfigureOwner(window, owner, Model is LayoutAnchorableFloatingWindow);

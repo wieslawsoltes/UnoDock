@@ -70,7 +70,10 @@ Application changes to native state are not unconditionally overwritten.
 
 ## Interaction
 
-The caption exposes Dock, Minimize, Maximize/Restore and Close commands. Double
+The caption exposes the window-position menu, Maximize/Restore and Close
+commands; a floating document window shows the menu button only when the theme's
+`FloatingDocumentMenuButton` allows it. There is no minimize caption button: the
+system-command menu keeps Minimize, enabled when the presenter supports it. Double
 click toggles maximization; right click opens the existing system-command menu.
 Close follows the existing vetoable model/host lifecycle. The caption follows the
 manager's palette and active/inactive state. The eight independently hit-tested

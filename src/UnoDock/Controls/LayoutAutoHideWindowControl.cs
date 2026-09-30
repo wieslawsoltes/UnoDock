@@ -230,7 +230,7 @@ public partial class LayoutAutoHideWindowControl : ContentControl, ILayoutContro
         var manager = _manager;
         manager?.CloseAutoHide();
         if (model.IsAutoHidden && ReferenceEquals(model.Root, manager?.Layout))
-            model.ToggleAutoHide();
+            DockVisuals.ToggleAutoHide(model);
     }
 
     private void ModelChanged(object? sender, PropertyChangedEventArgs e) => ValidateResize();
@@ -288,25 +288,31 @@ public partial class LayoutAutoHideWindowControl : ContentControl, ILayoutContro
             _gutter = gutter;
         }
 
+        // The flyout caption is a tool title: it takes the same state brushes as
+        // a docked tool caption, so light theme text never lands on a dark bar.
+        var states = p.States;
+        var titleForeground = (model.IsActive ? states.ActiveToolTitleForeground : states.ToolTitleForeground) ?? p.Foreground;
+        var buttonForeground = (model.IsActive ? states.ActiveCaptionButtonForeground : states.CaptionButtonForeground) ?? titleForeground;
         _title.Text = model.Title;
         _title.FontSize = p.FontSize;
-        _title.Foreground = p.Foreground;
+        _title.Foreground = titleForeground;
         // Stock public screen observations have a compact gray caption. Resource
         // overrides and explicit theme dictionaries retain ownership of colors.
         var titleHeight = manager.Resources.TryGetValue("UnoDock.AutoHideTitleHeight", out var value) && value is double h && double.IsFinite(h) ? Math.Clamp(h, 16, 96) : 16;
         _layout.RowDefinitions[0].Height = new(Math.Max(titleHeight, p.FontSize * 4 / 3));
-        var titleBrush = p.Header;
+        Brush? captionOverride = null;
         if (manager.Theme == null && manager.ActualTheme == ElementTheme.Light && !manager.Resources.TryGetValue("UnoDock.HeaderBrush", out _))
-            titleBrush = _stockCaption ??= DockChrome.Color(0xf0f0f0);
+            captionOverride = _stockCaption ??= DockChrome.Color(0xf0f0f0);
         if (manager.Resources.TryGetValue("UnoDock.AutoHideTitleBrush", out var brush) && brush is Brush custom)
-            titleBrush = custom;
-        _root.Background = titleBrush;
+            captionOverride = custom;
+        var titleBrush = captionOverride ?? states.ToolTitle;
+        _root.Background = captionOverride ?? p.Header;
         Background = _layout.Background = p.Surface;
-        _titleBar.Background = model.IsActive ? p.ActiveTitle : titleBrush;
+        _titleBar.Background = model.IsActive ? states.ActiveToolTitle : titleBrush;
         BorderBrush = _layout.BorderBrush = p.Border;
-        _menuButton.Configure(p);
-        _pinButton.Configure(p);
-        _hideButton.Configure(p);
+        _menuButton.ConfigureCaption(p, buttonForeground);
+        _pinButton.ConfigureCaption(p, buttonForeground);
+        _hideButton.ConfigureCaption(p, buttonForeground);
         _pinButton.Visibility = model.CanAutoHide ? Visibility.Visible : Visibility.Collapsed;
         _hideButton.Visibility = model.CanHide || model.CanClose ? Visibility.Visible : Visibility.Collapsed;
         _menuButton.IsEnabled = _pinButton.IsEnabled = _hideButton.IsEnabled = model.IsEnabled;

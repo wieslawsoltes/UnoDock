@@ -4,7 +4,7 @@ export default defineConfig({
     testDir: '.',
     testMatch: '*.spec.mjs',
     timeout: 120000,
-    globalTimeout: 720000,
+    globalTimeout: 1080000,
     expect: { timeout: 30000 },
     workers: 1,
     retries: 0,

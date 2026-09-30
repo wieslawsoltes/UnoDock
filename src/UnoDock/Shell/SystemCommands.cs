@@ -41,7 +41,12 @@ public static class SystemCommands
         Validate(window);
         var menu = new MenuFlyout();
         Add(UnoDock.Properties.Resources.Window_Restore, RestoreWindowCommand);
-        Add(UnoDock.Properties.Resources.Window_Minimize, MinimizeWindowCommand);
+        // An in-surface floating window has no task bar or dock entry to restore
+        // it from, so its caption menu does not offer to minimize it.
+        if (window is LayoutFloatingWindowControl { NativeWindow: null })
+            menu.Items.Add(new MenuFlyoutItem { Text = UnoDock.Properties.Resources.Window_Minimize, IsEnabled = false });
+        else
+            Add(UnoDock.Properties.Resources.Window_Minimize, MinimizeWindowCommand);
         Add(UnoDock.Properties.Resources.Window_Maximize, MaximizeWindowCommand);
         menu.Items.Add(new MenuFlyoutSeparator());
         Add(UnoDock.Properties.Resources.Window_Close, CloseWindowCommand);

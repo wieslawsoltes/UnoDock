@@ -103,6 +103,7 @@ public abstract class LayoutSerializer
     protected virtual void FixupLayout(LayoutRoot layout)
     {
         using var batch = layout.BeginUpdate();
+        var unhandled = LayoutSerializationCallback == null;
         foreach (var content in layout.Descendents().OfType<LayoutContent>().ToArray())
         {
             EnsureCurrentRestore();
@@ -125,11 +126,32 @@ public abstract class LayoutSerializer
             EnsureCurrentRestore();
             if (!ReferenceEquals(content.Root, layout))
                 continue;
-            content.IconSource = previous?.IconSource;
+            if (args.Content == null && unhandled && previous == null)
+            {
+                // Without a callback, items matching no previous content are not
+                // restored: tools are hidden (and can be shown again), documents
+                // are dropped. A callback that leaves Content empty keeps them.
+                if (content is LayoutAnchorable tool && content.Parent is not LayoutRoot)
+                {
+                    if (content.Parent is ILayoutGroup group)
+                        tool.SetPrevious(group, group.IndexOfChild(tool));
+                    layout.Hidden.Add(tool);
+                }
+                else if (content is not LayoutAnchorable)
+                    content.Parent?.RemoveChild(content);
+                EnsureCurrentRestore();
+                continue;
+            }
+
+            // Values set by the callback on the restored item win over the
+            // previous item's presentation values.
+            if (previous != null && content.IconSource == null)
+                content.IconSource = previous.IconSource;
             EnsureCurrentRestore();
             if (!ReferenceEquals(content.Root, layout))
                 continue;
-            content.ToolTip = previous?.ToolTip;
+            if (previous != null && content.ToolTip == null)
+                content.ToolTip = previous.ToolTip;
             EnsureCurrentRestore();
         }
 
