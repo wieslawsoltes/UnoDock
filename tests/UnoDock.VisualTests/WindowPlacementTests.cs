@@ -35,7 +35,7 @@ internal static class WindowPlacementTests
                 var control = await f.Floating(f.Tool);
                 Check.True(Math.Abs(f.Tool.FloatingWidth - size.Width) <= 1, $"Width {f.Tool.FloatingWidth} vs pane {size.Width}.");
                 Check.True(Math.Abs(f.Tool.FloatingLeft - paneOrigin.X) <= 2, $"Left {f.Tool.FloatingLeft} vs pane {paneOrigin.X}.");
-                Check.True(f.Tool.FloatingTop < paneOrigin.Y, "The caption sits above the pane's former client area.");
+                Check.True(f.Tool.FloatingTop <= paneOrigin.Y, "The caption sits above (or, at the screen top, level with) the pane's former client area.");
                 await Wait(() => Near(f.Coordinates.ToDesktopPoint(control, default), new(f.Tool.FloatingLeft, f.Tool.FloatingTop), 40));
             });
             tests.Test("placement: remembered floating bounds are reused", async () =>
