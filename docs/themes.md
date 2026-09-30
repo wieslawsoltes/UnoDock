@@ -25,6 +25,12 @@ Aero, Metro and VS2010 are fixed light designs: their chrome keeps its colors
 when the application or window switches to Dark. The Gallery's **Theme** picker
 switches between all of them at runtime.
 
+| Generic | Aero | Metro |
+|---|---|---|
+| ![Generic](images/themes/generic.png) | ![Aero](images/themes/aero.png) | ![Metro](images/themes/metro.png) |
+| **VS2010** | **Fluent Light** | **Fluent Dark** |
+| ![VS2010](images/themes/vs2010.png) | ![Fluent Light](images/themes/light.png) | ![Fluent Dark](images/themes/dark.png) |
+
 ## Resource keys
 
 Every theme is a resource dictionary of `UnoDock.*` keys. The same keys can be
