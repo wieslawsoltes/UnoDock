@@ -2,13 +2,16 @@
 
 Original reference inventories/fixtures/probes remain byte-identical. The diagnostic
 allowlist is unchanged; only its explicit mapping digest is rebound to the new names.
+The original root namespace is read from contracts/reference.json; recorded contracts
+spell it with the neutral token, so mapping sources use that token. Re-running is a no-op.
 """
 from pathlib import Path
 import hashlib
 import json
 
 ROOT = Path(__file__).resolve().parent.parent
-OLD, NEW = 'Xceed.Wpf.AvalonDock', 'UnoDock'
+PIN = json.loads((ROOT / 'contracts/reference.json').read_text())
+OLD, NEUTRAL, NEW = PIN['referenceNamespace'], PIN['neutralNamespace'], 'UnoDock'
 
 def migrate():
     protected = [p for folder in ('contracts', 'tools/ReferenceProbe', 'tools/ReferenceVisualProbe')
@@ -30,7 +33,7 @@ def migrate():
     p = ROOT / 'tools/audit-api.py'
     text = p.read_text()
     marker = 'def canonical(value):\n'
-    insertion = "    value = re.sub(r'\\bXceed\\.Wpf\\.AvalonDock(?=\\.|\\s|$)', 'UnoDock', value)\n"
+    insertion = "    value = re.sub(r'(?<![\\w.])' + re.escape(neutral) + r'(?=\\.|\\s|$)', 'UnoDock', value)\n"
     if insertion not in text:
         assert text.count(marker) == 1
         text = text.replace(marker, marker + insertion)
@@ -40,11 +43,11 @@ def migrate():
     for item in data['types']:
         item['target'] = item['target'].replace(OLD, NEW)
     existing = {v['source'] for v in data['types']}
-    reference = json.loads((ROOT / 'contracts/avalondock-metadata-release.json').read_text())
-    names = {t['name'] for t in reference['types'] if t['name'].startswith(OLD + '.')}
+    reference = json.loads((ROOT / 'contracts/reference-metadata-release.json').read_text())
+    names = {t['name'] for t in reference['types'] if t['name'].startswith(NEUTRAL + '.')}
     names.update(n.split('`')[0] for n in tuple(names) if '`' in n)
     for name in sorted(names - existing):
-        data['types'].append({'source': name, 'target': NEW + name[len(OLD):],
+        data['types'].append({'source': name, 'target': NEW + name[len(NEUTRAL):],
                               'kind': 'namespace-migration',
                               'note': 'Preview 14 breaking namespace rename; no signature or behavior normalization.'})
     p.write_text(json.dumps(data, indent=2, ensure_ascii=False) + '\n')

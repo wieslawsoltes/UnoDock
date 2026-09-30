@@ -1,12 +1,14 @@
 """Deterministic WinUI property adapters from the pinned declaration-only contract.
 Only public property names and types are read; implementation and defaults are independent.
 """
+import json
 import pathlib
 import re
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-lines = (ROOT / 'contracts/avalondock.txt').read_text(encoding='utf-8').splitlines()
-namespace = 'Xceed.Wpf.AvalonDock'
+lines = (ROOT / 'contracts/reference-declarations.txt').read_text(encoding='utf-8').splitlines()
+# Recorded declarations spell the reference root namespace with the neutral token.
+namespace = json.loads((ROOT / 'contracts/reference.json').read_text(encoding='utf-8'))['neutralNamespace']
 classes = [namespace + '.DockingManager', namespace + '.Controls.LayoutItem', namespace + '.Controls.LayoutAnchorableItem', namespace + '.Controls.LayoutDocumentItem']
 defaults = {'AllowMixedOrientation': 'false', 'AllowMovingFloatingWindowWithKeyboard': 'false', 'ShowSystemMenu': 'true', 'GridSplitterHeight': '6d', 'GridSplitterWidth': '6d', 'AutoHideWindowClosingTimer': '1500', 'CanClose': 'true', 'CanFloat': 'true', 'CanHide': 'true'}
 skip = {'Layout', 'FloatingWindows', 'LogicalChildrenPublic', 'View', 'LayoutElement', 'Model'}

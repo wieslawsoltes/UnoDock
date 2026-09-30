@@ -2,11 +2,11 @@
 
 ## Public target and provenance
 
-The public AvalonDock documentation describes two documents, a left Properties pane,
+The public reference-library documentation describes two documents, a left Properties pane,
 right Alarms/Journal tools, and left Agenda/Contacts auto-hide tools:
 
-- https://github.com/xceedsoftware/wpftoolkit/wiki/AvalonDock
-- https://xceed.com/documentation/xceed-toolkit-plus-for-wpf/Xceed.Wpf.AvalonDock~Xceed.Wpf.AvalonDock.DockingManager.html
+- The pinned reference repository wiki (contracts/reference.json `repository`)
+- https://xceed.com/documentation/xceed-toolkit-plus-for-wpf/ (reference-library `Reference.DockingManager`)
 
 Preview 14 independently recreates that public arrangement using UnoDock models and
 native Uno controls. It does not copy LiveExplorer implementation, XAML templates,

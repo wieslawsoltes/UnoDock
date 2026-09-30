@@ -8,9 +8,6 @@ using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Xml.Linq;
-using Xceed.Wpf.AvalonDock;
-using Xceed.Wpf.AvalonDock.Layout;
-using Xceed.Wpf.AvalonDock.Layout.Serialization;
 
 internal static class Program
 {
@@ -28,17 +25,17 @@ internal static class Program
         };
         foreach (var instance in instances.OrderBy(o => o.GetType().FullName, StringComparer.Ordinal))
         {
-            var type = instance.GetType(); var record = new XElement("Type", new XAttribute("Name", type.FullName));
+            var type = instance.GetType(); var record = new XElement("Type", new XAttribute("Name", ReferenceIdentity.Normalize(type.FullName)));
             foreach (var property in type.GetProperties(BindingFlags.Instance | BindingFlags.Public).OrderBy(p => p.Name, StringComparer.Ordinal))
             {
                 if (property.GetIndexParameters().Length != 0 || property.GetMethod == null ||
-                    !(property.DeclaringType.Namespace ?? "").StartsWith("Xceed.Wpf.AvalonDock", StringComparison.Ordinal) || !Scalar(property.PropertyType)) continue;
+                    !ReferenceIdentity.Declares(property.DeclaringType) || !Scalar(property.PropertyType)) continue;
                 try { record.Add(Value("Property", property.Name, property.PropertyType, property.GetValue(instance))); }
-                catch (TargetInvocationException e) { record.Add(new XElement("GetterError", new XAttribute("Name", property.Name), new XAttribute("Type", e.InnerException.GetType().FullName))); }
+                catch (TargetInvocationException e) { record.Add(new XElement("GetterError", new XAttribute("Name", property.Name), new XAttribute("Type", ReferenceIdentity.Normalize(e.InnerException.GetType().FullName)))); }
             }
             foreach (var field in type.GetFields(BindingFlags.Static | BindingFlags.Public | BindingFlags.FlattenHierarchy).OrderBy(p => p.Name, StringComparer.Ordinal))
             {
-                if (field.FieldType != typeof(DependencyProperty) || !(field.DeclaringType.Namespace ?? "").StartsWith("Xceed.Wpf.AvalonDock", StringComparison.Ordinal)) continue;
+                if (field.FieldType != typeof(DependencyProperty) || !ReferenceIdentity.Declares(field.DeclaringType)) continue;
                 var property = (DependencyProperty)field.GetValue(null); var metadata = property.GetMetadata(type);
                 var item = Value("DependencyProperty", property.Name, property.PropertyType, metadata.DefaultValue);
                 if (metadata is FrameworkPropertyMetadata framework)
@@ -77,11 +74,11 @@ internal static class Program
     private static bool Scalar(Type type) => type.IsPrimitive || type.IsEnum || type == typeof(string) || type == typeof(decimal) || type == typeof(GridLength);
     private static XElement Value(string kind, string name, Type type, object value)
     {
-        var item = new XElement(kind, new XAttribute("Name", name), new XAttribute("Type", type.FullName));
+        var item = new XElement(kind, new XAttribute("Name", name), new XAttribute("Type", ReferenceIdentity.Normalize(type.FullName)));
         if (value == null) item.SetAttributeValue("Null", true);
         else if (value is GridLength length) item.SetAttributeValue("Value", length.IsAuto ? "Auto" : length.IsStar ? length.Value.ToString("R", CultureInfo.InvariantCulture) + "*" : length.Value.ToString("R", CultureInfo.InvariantCulture));
         else if (Scalar(value.GetType())) item.SetAttributeValue("Value", Convert.ToString(value, CultureInfo.InvariantCulture));
-        else item.SetAttributeValue("ValueType", value.GetType().FullName);
+        else item.SetAttributeValue("ValueType", ReferenceIdentity.Normalize(value.GetType().FullName));
         return item;
     }
     private static DockingManager Workspace()

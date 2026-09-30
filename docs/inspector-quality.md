@@ -1,9 +1,9 @@
 # Preview 15: classic sample property inspection
 
 The default classic docking scene remains the independently authored arrangement described
-in the public AvalonDock documentation: Properties / Documents / Alarms and Journal,
+in the public reference-library documentation: Properties / Documents / Alarms and Journal,
 with Agenda and Contacts on the auto-hide rail. Product namespaces remain `UnoDock.*`;
-original reference observations and probes deliberately retain their original names.
+recorded reference observations use the neutral `Reference.*` namespace token.
 
 ## Visual and interaction work
 
@@ -25,7 +25,7 @@ execution in the inspector. This does not implement arbitrary custom type descri
 collection/object editors, multiple selection or full Xceed PropertyGrid compatibility.
 
 Public feature guidance:
-- https://xceed.com/documentation/xceed-toolkit-plus-for-wpf/AvalonDock.html
+- https://xceed.com/documentation/xceed-toolkit-plus-for-wpf/
 - https://xceed.com/documentation/xceed-toolkit-plus-for-wpf/PropertyGrid%20class.html
 
 No original PropertyGrid templates, implementation bodies, artwork or font resources
@@ -74,7 +74,7 @@ The previous sample, presentation, original-geometry and namespace invariant sui
 remain enabled without relaxed assertions. CI's JSON/JUnit records and exact revision
 establish what executed; configured case counts are not themselves execution evidence.
 
-This increment changes sample behavior and presentation, not the normalized AvalonDock
+This increment changes sample behavior and presentation, not the normalized reference
 API match count. Native HwndHost/Freezable contracts, inherited WPF semantics, arbitrary
 templates, full accessibility, mobile input and workload-level performance parity remain
 separate acceptance areas. The current original namespace migration and comparator

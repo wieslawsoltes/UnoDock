@@ -3,13 +3,24 @@ import hashlib
 import json
 from pathlib import Path
 import re
+import subprocess
 import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
 POLICY = json.loads((ROOT / 'contracts/namespace-migration.json').read_text())
+PIN = json.loads((ROOT / 'contracts/reference.json').read_text())
+PROBES = ('tools/ReferenceProbe', 'tools/ReferenceVisualProbe', 'tools/ReferenceSampleProbe', 'tools/NavigatorSelectionProbe')
 
 def read(name):
     return json.loads((ROOT / name).read_text())
+
+def tracked_files():
+    try:
+        names = subprocess.run(['git', 'ls-files', '-z'], cwd=ROOT, check=True, capture_output=True).stdout.decode().split('\0')
+        return [ROOT / n for n in names if n and (ROOT / n).is_file()]
+    except (OSError, subprocess.CalledProcessError):
+        skip = {'.git', 'bin', 'obj', 'node_modules', 'artifacts'}
+        return [p for p in ROOT.rglob('*') if p.is_file() and not skip.intersection(p.relative_to(ROOT).parts)]
 
 class NamespaceMigrationTests(unittest.TestCase):
     def test_original_inventory_and_comparator_bytes(self):
@@ -28,7 +39,7 @@ class NamespaceMigrationTests(unittest.TestCase):
 
     def test_explicit_exported_type_mapping(self):
         mappings = {m['source']: m['target'] for m in read('contracts/type-mappings.json')['types']}
-        for record in read('contracts/avalondock-metadata-release.json')['types']:
+        for record in read('contracts/reference-metadata-release.json')['types']:
             name = record['name']
             if name.startswith(POLICY['from'] + '.'):
                 self.assertEqual(POLICY['to'] + name[len(POLICY['from']):], mappings[name])
@@ -38,19 +49,42 @@ class NamespaceMigrationTests(unittest.TestCase):
         self.assertEqual(len(entries),len({m['source'] for m in entries}))
         for m in entries:
             self.assertNotIn('*',m['source'])
-            self.assertFalse(m['target'].startswith(POLICY['from']))
+            self.assertFalse(m['target'].startswith(POLICY['from'] + '.'))
+
+    def test_recorded_contracts_use_neutral_namespace(self):
+        self.assertEqual(PIN['neutralNamespace'], POLICY['from'])
+        for name in ('contracts/reference-metadata-release.json', 'contracts/reference-metadata-debug.json', 'contracts/reference-declarations.json'):
+            with self.subTest(file=name):
+                self.assertTrue(any(line.startswith(POLICY['from'] + '.') for line in read(name)['declarations']))
+
+    def test_original_name_pinned_only_in_reference_manifest(self):
+        product = PIN['referenceNamespace'].rsplit('.', 1)[-1].lower()
+        offenders = []
+        for p in tracked_files():
+            if p.relative_to(ROOT).as_posix() == 'contracts/reference.json':
+                continue
+            if product in p.relative_to(ROOT).as_posix().lower() or product.encode() in p.read_bytes().lower():
+                offenders.append(p.relative_to(ROOT).as_posix())
+        self.assertEqual([], offenders)
 
     def test_product_and_sample_code_have_no_legacy_namespace(self):
         for directory in ('src','samples'):
             for p in (ROOT / directory).rglob('*'):
                 if p.suffix in ('.cs','.xaml','.csproj') and not {'bin','obj'}.intersection(p.parts):
                     with self.subTest(file=str(p.relative_to(ROOT))):
-                        self.assertNotIn(POLICY['from'],p.read_text(encoding='utf-8-sig'))
+                        self.assertNotIn(PIN['referenceNamespace'],p.read_text(encoding='utf-8-sig'))
 
     def test_reference_probes_still_use_original_public_api(self):
-        for directory in ('tools/ReferenceProbe','tools/ReferenceVisualProbe','tools/ReferenceSampleProbe'):
-            source = '\n'.join(p.read_text(encoding='utf-8-sig') for p in (ROOT/directory).glob('*.cs'))
-            self.assertIn('Xceed.Wpf.AvalonDock',source)
+        targets = (ROOT / 'tools/ReferenceIdentity/ReferenceIdentity.targets').read_text()
+        self.assertIn('<Reference Include="$(ReferenceNamespace)">', targets)
+        self.assertIn('referenceNamespace', targets)
+        for directory in PROBES:
+            with self.subTest(probe=directory):
+                project = next((ROOT / directory).glob('*.csproj')).read_text()
+                self.assertIn('<Import Project="../ReferenceIdentity/ReferenceIdentity.targets" />', project)
+                source = '\n'.join(p.read_text(encoding='utf-8-sig') for p in (ROOT/directory).glob('*.cs'))
+                self.assertIn('DockingManager', source)
+                self.assertNotIn(PIN['referenceNamespace'], source)
 
     def test_declared_product_namespace_not_confused_with_test_namespace(self):
         namespaces = set()

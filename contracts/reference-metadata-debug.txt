@@ -1,0 +1,1020 @@
+Microsoft.Windows.Shell.SystemCommands | public static class : System.Object interfaces[]
+Microsoft.Windows.Shell.SystemCommands | public static method System.Void CloseWindow(System.Windows.Window window)
+Microsoft.Windows.Shell.SystemCommands | public static method System.Void MaximizeWindow(System.Windows.Window window)
+Microsoft.Windows.Shell.SystemCommands | public static method System.Void MinimizeWindow(System.Windows.Window window)
+Microsoft.Windows.Shell.SystemCommands | public static method System.Void RestoreWindow(System.Windows.Window window)
+Microsoft.Windows.Shell.SystemCommands | public static method System.Void ShowSystemMenu(System.Windows.Window window,System.Windows.Point screenLocation)
+Microsoft.Windows.Shell.SystemCommands | public static property System.Windows.Input.RoutedCommand CloseWindowCommand() { public get;  }
+Microsoft.Windows.Shell.SystemCommands | public static property System.Windows.Input.RoutedCommand MaximizeWindowCommand() { public get;  }
+Microsoft.Windows.Shell.SystemCommands | public static property System.Windows.Input.RoutedCommand MinimizeWindowCommand() { public get;  }
+Microsoft.Windows.Shell.SystemCommands | public static property System.Windows.Input.RoutedCommand RestoreWindowCommand() { public get;  }
+Microsoft.Windows.Shell.SystemCommands | public static property System.Windows.Input.RoutedCommand ShowSystemMenuCommand() { public get;  }
+Microsoft.Windows.Shell.SystemParameters2 | public  class : System.Object interfaces[System.ComponentModel.INotifyPropertyChanged]
+Microsoft.Windows.Shell.SystemParameters2 | public  event System.ComponentModel.PropertyChangedEventHandler PropertyChanged
+Microsoft.Windows.Shell.SystemParameters2 | public  property System.Boolean HighContrast() { public get;  }
+Microsoft.Windows.Shell.SystemParameters2 | public  property System.Boolean IsGlassEnabled() { public get;  }
+Microsoft.Windows.Shell.SystemParameters2 | public  property System.Double WindowCaptionHeight() { public get;  }
+Microsoft.Windows.Shell.SystemParameters2 | public  property System.String UxThemeColor() { public get;  }
+Microsoft.Windows.Shell.SystemParameters2 | public  property System.String UxThemeName() { public get;  }
+Microsoft.Windows.Shell.SystemParameters2 | public  property System.Windows.CornerRadius WindowCornerRadius() { public get;  }
+Microsoft.Windows.Shell.SystemParameters2 | public  property System.Windows.Media.Color WindowGlassColor() { public get;  }
+Microsoft.Windows.Shell.SystemParameters2 | public  property System.Windows.Media.SolidColorBrush WindowGlassBrush() { public get;  }
+Microsoft.Windows.Shell.SystemParameters2 | public  property System.Windows.Rect WindowCaptionButtonsLocation() { public get;  }
+Microsoft.Windows.Shell.SystemParameters2 | public  property System.Windows.Size SmallIconSize() { public get;  }
+Microsoft.Windows.Shell.SystemParameters2 | public  property System.Windows.Thickness WindowNonClientFrameThickness() { public get;  }
+Microsoft.Windows.Shell.SystemParameters2 | public  property System.Windows.Thickness WindowResizeBorderThickness() { public get;  }
+Microsoft.Windows.Shell.SystemParameters2 | public static property Microsoft.Windows.Shell.SystemParameters2 Current() { public get;  }
+Microsoft.Windows.Shell.WindowChrome | protected override method System.Windows.Freezable CreateInstanceCore()
+Microsoft.Windows.Shell.WindowChrome | public  class : System.Windows.Freezable interfaces[]
+Microsoft.Windows.Shell.WindowChrome | public  constructor System.Void .ctor()
+Microsoft.Windows.Shell.WindowChrome | public  property System.Boolean ShowSystemMenu() { public get; public set;  }
+Microsoft.Windows.Shell.WindowChrome | public  property System.Double CaptionHeight() { public get; public set;  }
+Microsoft.Windows.Shell.WindowChrome | public  property System.Windows.CornerRadius CornerRadius() { public get; public set;  }
+Microsoft.Windows.Shell.WindowChrome | public  property System.Windows.Thickness GlassFrameThickness() { public get; public set;  }
+Microsoft.Windows.Shell.WindowChrome | public  property System.Windows.Thickness ResizeBorderThickness() { public get; public set;  }
+Microsoft.Windows.Shell.WindowChrome | public static field System.Windows.DependencyProperty CaptionHeightProperty readonly
+Microsoft.Windows.Shell.WindowChrome | public static field System.Windows.DependencyProperty CornerRadiusProperty readonly
+Microsoft.Windows.Shell.WindowChrome | public static field System.Windows.DependencyProperty GlassFrameThicknessProperty readonly
+Microsoft.Windows.Shell.WindowChrome | public static field System.Windows.DependencyProperty IsHitTestVisibleInChromeProperty readonly
+Microsoft.Windows.Shell.WindowChrome | public static field System.Windows.DependencyProperty ResizeBorderThicknessProperty readonly
+Microsoft.Windows.Shell.WindowChrome | public static field System.Windows.DependencyProperty WindowChromeProperty readonly
+Microsoft.Windows.Shell.WindowChrome | public static method Microsoft.Windows.Shell.WindowChrome GetWindowChrome(System.Windows.Window window)
+Microsoft.Windows.Shell.WindowChrome | public static method System.Boolean GetIsHitTestVisibleInChrome(System.Windows.IInputElement inputElement)
+Microsoft.Windows.Shell.WindowChrome | public static method System.Void SetIsHitTestVisibleInChrome(System.Windows.IInputElement inputElement,System.Boolean hitTestVisible)
+Microsoft.Windows.Shell.WindowChrome | public static method System.Void SetWindowChrome(System.Windows.Window window,Microsoft.Windows.Shell.WindowChrome chrome)
+Microsoft.Windows.Shell.WindowChrome | public static property System.Windows.Thickness GlassFrameCompleteThickness() { public get;  }
+Reference.Controls.AnchorablePaneControlOverlayArea | public  class : Reference.Controls.OverlayArea interfaces[]
+Reference.Controls.AnchorablePaneTabPanel | protected override method System.Windows.Size ArrangeOverride(System.Windows.Size finalSize)
+Reference.Controls.AnchorablePaneTabPanel | protected override method System.Windows.Size MeasureOverride(System.Windows.Size availableSize)
+Reference.Controls.AnchorablePaneTabPanel | public  class : System.Windows.Controls.Panel interfaces[]
+Reference.Controls.AnchorablePaneTabPanel | public  constructor System.Void .ctor()
+Reference.Controls.AnchorablePaneTitle | protected  method System.Void SetLayoutItem(Reference.Controls.LayoutItem value)
+Reference.Controls.AnchorablePaneTitle | protected override method System.Void OnMouseLeave(System.Windows.Input.MouseEventArgs e)
+Reference.Controls.AnchorablePaneTitle | protected override method System.Void OnMouseLeftButtonDown(System.Windows.Input.MouseButtonEventArgs e)
+Reference.Controls.AnchorablePaneTitle | protected override method System.Void OnMouseLeftButtonUp(System.Windows.Input.MouseButtonEventArgs e)
+Reference.Controls.AnchorablePaneTitle | protected override method System.Void OnMouseMove(System.Windows.Input.MouseEventArgs e)
+Reference.Controls.AnchorablePaneTitle | protected virtual method System.Void OnModelChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Reference.Controls.AnchorablePaneTitle | public  class : System.Windows.Controls.Control interfaces[]
+Reference.Controls.AnchorablePaneTitle | public  constructor System.Void .ctor()
+Reference.Controls.AnchorablePaneTitle | public  property Reference.Controls.LayoutItem LayoutItem() { public get;  }
+Reference.Controls.AnchorablePaneTitle | public  property Reference.Layout.LayoutAnchorable Model() { public get; public set;  }
+Reference.Controls.AnchorablePaneTitle | public static field System.Windows.DependencyProperty LayoutItemProperty readonly
+Reference.Controls.AnchorablePaneTitle | public static field System.Windows.DependencyProperty ModelProperty readonly
+Reference.Controls.ContextMenuEx | protected override method System.Void OnOpened(System.Windows.RoutedEventArgs e)
+Reference.Controls.ContextMenuEx | protected override method System.Windows.DependencyObject GetContainerForItemOverride()
+Reference.Controls.ContextMenuEx | public  class : System.Windows.Controls.ContextMenu interfaces[]
+Reference.Controls.ContextMenuEx | public  constructor System.Void .ctor()
+Reference.Controls.DockingManagerOverlayArea | public  class : Reference.Controls.OverlayArea interfaces[]
+Reference.Controls.DocumentPaneControlOverlayArea | public  class : Reference.Controls.OverlayArea interfaces[]
+Reference.Controls.DocumentPaneTabPanel | protected override method System.Void OnMouseLeave(System.Windows.Input.MouseEventArgs e)
+Reference.Controls.DocumentPaneTabPanel | protected override method System.Windows.Size ArrangeOverride(System.Windows.Size finalSize)
+Reference.Controls.DocumentPaneTabPanel | protected override method System.Windows.Size MeasureOverride(System.Windows.Size availableSize)
+Reference.Controls.DocumentPaneTabPanel | public  class : System.Windows.Controls.Panel interfaces[]
+Reference.Controls.DocumentPaneTabPanel | public  constructor System.Void .ctor()
+Reference.Controls.DropAreaType | public  constructor System.Void .ctor()
+Reference.Controls.DropAreaType | public sealed enum : System.Enum interfaces[]
+Reference.Controls.DropAreaType | public static field Reference.Controls.DropAreaType AnchorablePane const=3
+Reference.Controls.DropAreaType | public static field Reference.Controls.DropAreaType DockingManager const=0
+Reference.Controls.DropAreaType | public static field Reference.Controls.DropAreaType DocumentPane const=1
+Reference.Controls.DropAreaType | public static field Reference.Controls.DropAreaType DocumentPaneGroup const=2
+Reference.Controls.DropArea`1 | public  class : System.Object interfaces[Reference.Controls.IDropArea] <T:System.Windows.FrameworkElement>
+Reference.Controls.DropArea`1 | public  property Reference.Controls.DropAreaType Type() { public get;  }
+Reference.Controls.DropArea`1 | public  property System.Windows.Rect DetectionRect() { public get;  }
+Reference.Controls.DropArea`1 | public  property T AreaElement() { public get;  }
+Reference.Controls.DropDownButton | protected override method System.Void OnClick()
+Reference.Controls.DropDownButton | protected virtual method System.Void OnDropDownContextMenuChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Reference.Controls.DropDownButton | public  class : System.Windows.Controls.Primitives.ToggleButton interfaces[]
+Reference.Controls.DropDownButton | public  constructor System.Void .ctor()
+Reference.Controls.DropDownButton | public  property System.Object DropDownContextMenuDataContext() { public get; public set;  }
+Reference.Controls.DropDownButton | public  property System.Windows.Controls.ContextMenu DropDownContextMenu() { public get; public set;  }
+Reference.Controls.DropDownButton | public static field System.Windows.DependencyProperty DropDownContextMenuDataContextProperty readonly
+Reference.Controls.DropDownButton | public static field System.Windows.DependencyProperty DropDownContextMenuProperty readonly
+Reference.Controls.DropDownControlArea | protected override method System.Void OnMouseRightButtonDown(System.Windows.Input.MouseButtonEventArgs e)
+Reference.Controls.DropDownControlArea | protected override method System.Void OnPreviewMouseRightButtonUp(System.Windows.Input.MouseButtonEventArgs e)
+Reference.Controls.DropDownControlArea | public  class : System.Windows.Controls.UserControl interfaces[]
+Reference.Controls.DropDownControlArea | public  constructor System.Void .ctor()
+Reference.Controls.DropDownControlArea | public  property System.Object DropDownContextMenuDataContext() { public get; public set;  }
+Reference.Controls.DropDownControlArea | public  property System.Windows.Controls.ContextMenu DropDownContextMenu() { public get; public set;  }
+Reference.Controls.DropDownControlArea | public static field System.Windows.DependencyProperty DropDownContextMenuDataContextProperty readonly
+Reference.Controls.DropDownControlArea | public static field System.Windows.DependencyProperty DropDownContextMenuProperty readonly
+Reference.Controls.DropTargetType | public  constructor System.Void .ctor()
+Reference.Controls.DropTargetType | public sealed enum : System.Enum interfaces[]
+Reference.Controls.DropTargetType | public static field Reference.Controls.DropTargetType AnchorablePaneDockBottom const=13
+Reference.Controls.DropTargetType | public static field Reference.Controls.DropTargetType AnchorablePaneDockInside const=14
+Reference.Controls.DropTargetType | public static field Reference.Controls.DropTargetType AnchorablePaneDockLeft const=10
+Reference.Controls.DropTargetType | public static field Reference.Controls.DropTargetType AnchorablePaneDockRight const=12
+Reference.Controls.DropTargetType | public static field Reference.Controls.DropTargetType AnchorablePaneDockTop const=11
+Reference.Controls.DropTargetType | public static field Reference.Controls.DropTargetType DockingManagerDockBottom const=3
+Reference.Controls.DropTargetType | public static field Reference.Controls.DropTargetType DockingManagerDockLeft const=0
+Reference.Controls.DropTargetType | public static field Reference.Controls.DropTargetType DockingManagerDockRight const=2
+Reference.Controls.DropTargetType | public static field Reference.Controls.DropTargetType DockingManagerDockTop const=1
+Reference.Controls.DropTargetType | public static field Reference.Controls.DropTargetType DocumentPaneDockAsAnchorableBottom const=18
+Reference.Controls.DropTargetType | public static field Reference.Controls.DropTargetType DocumentPaneDockAsAnchorableLeft const=15
+Reference.Controls.DropTargetType | public static field Reference.Controls.DropTargetType DocumentPaneDockAsAnchorableRight const=17
+Reference.Controls.DropTargetType | public static field Reference.Controls.DropTargetType DocumentPaneDockAsAnchorableTop const=16
+Reference.Controls.DropTargetType | public static field Reference.Controls.DropTargetType DocumentPaneDockBottom const=7
+Reference.Controls.DropTargetType | public static field Reference.Controls.DropTargetType DocumentPaneDockInside const=8
+Reference.Controls.DropTargetType | public static field Reference.Controls.DropTargetType DocumentPaneDockLeft const=4
+Reference.Controls.DropTargetType | public static field Reference.Controls.DropTargetType DocumentPaneDockRight const=6
+Reference.Controls.DropTargetType | public static field Reference.Controls.DropTargetType DocumentPaneDockTop const=5
+Reference.Controls.DropTargetType | public static field Reference.Controls.DropTargetType DocumentPaneGroupDockInside const=9
+Reference.Controls.Extentions | public static class : System.Object interfaces[]
+Reference.Controls.Extentions | public static method System.Collections.Generic.IEnumerable<System.Windows.DependencyObject> FindLogicalAncestorsAndSelf(System.Windows.DependencyObject self)
+Reference.Controls.Extentions | public static method System.Collections.Generic.IEnumerable<T> FindLogicalChildren<T:System.Windows.DependencyObject>(System.Windows.DependencyObject depObj)
+Reference.Controls.Extentions | public static method System.Collections.Generic.IEnumerable<T> FindVisualChildren<T:System.Windows.DependencyObject>(System.Windows.DependencyObject depObj)
+Reference.Controls.Extentions | public static method System.Windows.DependencyObject FindVisualTreeRoot(System.Windows.DependencyObject initial)
+Reference.Controls.Extentions | public static method T FindLogicalAncestor<T:class>(System.Windows.DependencyObject dependencyObject)
+Reference.Controls.Extentions | public static method T FindVisualAncestor<T:class>(System.Windows.DependencyObject dependencyObject)
+Reference.Controls.IDropArea | public abstract interface :  interfaces[]
+Reference.Controls.IDropArea | public abstract property Reference.Controls.DropAreaType Type() { public get;  }
+Reference.Controls.IDropArea | public abstract property System.Windows.Rect DetectionRect() { public get;  }
+Reference.Controls.LayoutAnchorControl | protected  method System.Void SetSide(Reference.Layout.AnchorSide value)
+Reference.Controls.LayoutAnchorControl | protected override method System.Void OnMouseDown(System.Windows.Input.MouseButtonEventArgs e)
+Reference.Controls.LayoutAnchorControl | protected override method System.Void OnMouseEnter(System.Windows.Input.MouseEventArgs e)
+Reference.Controls.LayoutAnchorControl | protected override method System.Void OnMouseLeave(System.Windows.Input.MouseEventArgs e)
+Reference.Controls.LayoutAnchorControl | public  class : System.Windows.Controls.Control interfaces[Reference.Layout.ILayoutControl]
+Reference.Controls.LayoutAnchorControl | public  property Reference.Layout.AnchorSide Side() { public get;  }
+Reference.Controls.LayoutAnchorControl | public  property Reference.Layout.ILayoutElement Model() { public get;  }
+Reference.Controls.LayoutAnchorControl | public static field System.Windows.DependencyProperty SideProperty readonly
+Reference.Controls.LayoutAnchorGroupControl | public  class : System.Windows.Controls.Control interfaces[Reference.Layout.ILayoutControl]
+Reference.Controls.LayoutAnchorGroupControl | public  property Reference.Layout.ILayoutElement Model() { public get;  }
+Reference.Controls.LayoutAnchorGroupControl | public  property System.Collections.ObjectModel.ObservableCollection<Reference.Controls.LayoutAnchorControl> Children() { public get;  }
+Reference.Controls.LayoutAnchorSideControl | protected  method System.Void SetIsBottomSide(System.Boolean value)
+Reference.Controls.LayoutAnchorSideControl | protected  method System.Void SetIsLeftSide(System.Boolean value)
+Reference.Controls.LayoutAnchorSideControl | protected  method System.Void SetIsRightSide(System.Boolean value)
+Reference.Controls.LayoutAnchorSideControl | protected  method System.Void SetIsTopSide(System.Boolean value)
+Reference.Controls.LayoutAnchorSideControl | public  class : System.Windows.Controls.Control interfaces[Reference.Layout.ILayoutControl]
+Reference.Controls.LayoutAnchorSideControl | public  property Reference.Layout.ILayoutElement Model() { public get;  }
+Reference.Controls.LayoutAnchorSideControl | public  property System.Boolean IsBottomSide() { public get;  }
+Reference.Controls.LayoutAnchorSideControl | public  property System.Boolean IsLeftSide() { public get;  }
+Reference.Controls.LayoutAnchorSideControl | public  property System.Boolean IsRightSide() { public get;  }
+Reference.Controls.LayoutAnchorSideControl | public  property System.Boolean IsTopSide() { public get;  }
+Reference.Controls.LayoutAnchorSideControl | public  property System.Collections.ObjectModel.ObservableCollection<Reference.Controls.LayoutAnchorGroupControl> Children() { public get;  }
+Reference.Controls.LayoutAnchorSideControl | public static field System.Windows.DependencyProperty IsBottomSideProperty readonly
+Reference.Controls.LayoutAnchorSideControl | public static field System.Windows.DependencyProperty IsLeftSideProperty readonly
+Reference.Controls.LayoutAnchorSideControl | public static field System.Windows.DependencyProperty IsRightSideProperty readonly
+Reference.Controls.LayoutAnchorSideControl | public static field System.Windows.DependencyProperty IsTopSideProperty readonly
+Reference.Controls.LayoutAnchorableControl | protected  method System.Void SetLayoutItem(Reference.Controls.LayoutItem value)
+Reference.Controls.LayoutAnchorableControl | protected override method System.Void OnGotKeyboardFocus(System.Windows.Input.KeyboardFocusChangedEventArgs e)
+Reference.Controls.LayoutAnchorableControl | protected virtual method System.Void OnModelChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Reference.Controls.LayoutAnchorableControl | public  class : System.Windows.Controls.Control interfaces[]
+Reference.Controls.LayoutAnchorableControl | public  constructor System.Void .ctor()
+Reference.Controls.LayoutAnchorableControl | public  property Reference.Controls.LayoutItem LayoutItem() { public get;  }
+Reference.Controls.LayoutAnchorableControl | public  property Reference.Layout.LayoutAnchorable Model() { public get; public set;  }
+Reference.Controls.LayoutAnchorableControl | public static field System.Windows.DependencyProperty LayoutItemProperty readonly
+Reference.Controls.LayoutAnchorableControl | public static field System.Windows.DependencyProperty ModelProperty readonly
+Reference.Controls.LayoutAnchorableFloatingWindowControl | protected override method System.Boolean CanClose(System.Object parameter=null)
+Reference.Controls.LayoutAnchorableFloatingWindowControl | protected override method System.Boolean CanHide(System.Object parameter=null)
+Reference.Controls.LayoutAnchorableFloatingWindowControl | protected override method System.IntPtr FilterMessage(System.IntPtr hwnd,System.Int32 msg,System.IntPtr wParam,System.IntPtr lParam,ref System.Boolean handled)
+Reference.Controls.LayoutAnchorableFloatingWindowControl | protected override method System.Void DoHide()
+Reference.Controls.LayoutAnchorableFloatingWindowControl | protected override method System.Void OnClosed(System.EventArgs e)
+Reference.Controls.LayoutAnchorableFloatingWindowControl | protected override method System.Void OnInitialized(System.EventArgs e)
+Reference.Controls.LayoutAnchorableFloatingWindowControl | protected virtual method System.Void OnSingleContentLayoutItemChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Reference.Controls.LayoutAnchorableFloatingWindowControl | public  class : Reference.Controls.LayoutFloatingWindowControl interfaces[Reference.Controls.IOverlayWindowHost]
+Reference.Controls.LayoutAnchorableFloatingWindowControl | public  property Reference.Controls.LayoutItem SingleContentLayoutItem() { public get; public set;  }
+Reference.Controls.LayoutAnchorableFloatingWindowControl | public  property System.Windows.Input.ICommand CloseWindowCommand() { public get;  }
+Reference.Controls.LayoutAnchorableFloatingWindowControl | public  property System.Windows.Input.ICommand HideWindowCommand() { public get;  }
+Reference.Controls.LayoutAnchorableFloatingWindowControl | public override property Reference.Layout.ILayoutElement Model() { public get;  }
+Reference.Controls.LayoutAnchorableFloatingWindowControl | public static field System.Windows.DependencyProperty SingleContentLayoutItemProperty readonly
+Reference.Controls.LayoutAnchorableItem | protected override method System.Boolean CanExecuteDockAsDocumentCommand()
+Reference.Controls.LayoutAnchorableItem | protected override method System.Void ClearDefaultBindings()
+Reference.Controls.LayoutAnchorableItem | protected override method System.Void ClearDefaultCommands()
+Reference.Controls.LayoutAnchorableItem | protected override method System.Void Close()
+Reference.Controls.LayoutAnchorableItem | protected override method System.Void InitDefaultCommands()
+Reference.Controls.LayoutAnchorableItem | protected override method System.Void OnVisibilityChanged()
+Reference.Controls.LayoutAnchorableItem | protected override method System.Void SetDefaultBindings()
+Reference.Controls.LayoutAnchorableItem | protected virtual method System.Void OnAutoHideCommandChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Reference.Controls.LayoutAnchorableItem | protected virtual method System.Void OnCanHideChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Reference.Controls.LayoutAnchorableItem | protected virtual method System.Void OnDockCommandChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Reference.Controls.LayoutAnchorableItem | protected virtual method System.Void OnHideCommandChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Reference.Controls.LayoutAnchorableItem | public  class : Reference.Controls.LayoutItem interfaces[]
+Reference.Controls.LayoutAnchorableItem | public  property System.Boolean CanHide() { public get; public set;  }
+Reference.Controls.LayoutAnchorableItem | public  property System.Windows.Input.ICommand AutoHideCommand() { public get; public set;  }
+Reference.Controls.LayoutAnchorableItem | public  property System.Windows.Input.ICommand DockCommand() { public get; public set;  }
+Reference.Controls.LayoutAnchorableItem | public  property System.Windows.Input.ICommand HideCommand() { public get; public set;  }
+Reference.Controls.LayoutAnchorableItem | public static field System.Windows.DependencyProperty AutoHideCommandProperty readonly
+Reference.Controls.LayoutAnchorableItem | public static field System.Windows.DependencyProperty CanHideProperty readonly
+Reference.Controls.LayoutAnchorableItem | public static field System.Windows.DependencyProperty DockCommandProperty readonly
+Reference.Controls.LayoutAnchorableItem | public static field System.Windows.DependencyProperty HideCommandProperty readonly
+Reference.Controls.LayoutAnchorablePaneControl | protected override method System.Void OnGotKeyboardFocus(System.Windows.Input.KeyboardFocusChangedEventArgs e)
+Reference.Controls.LayoutAnchorablePaneControl | protected override method System.Void OnMouseLeftButtonDown(System.Windows.Input.MouseButtonEventArgs e)
+Reference.Controls.LayoutAnchorablePaneControl | protected override method System.Void OnMouseRightButtonDown(System.Windows.Input.MouseButtonEventArgs e)
+Reference.Controls.LayoutAnchorablePaneControl | public  class : Reference.Controls.LayoutCachePaneControl interfaces[Reference.Layout.ILayoutControl]
+Reference.Controls.LayoutAnchorablePaneControl | public  constructor System.Void .ctor(Reference.Layout.LayoutAnchorablePane model)
+Reference.Controls.LayoutAnchorablePaneControl | public  property Reference.Layout.ILayoutElement Model() { public get;  }
+Reference.Controls.LayoutAnchorablePaneGroupControl | protected override method System.Void OnFixChildrenDockLengths()
+Reference.Controls.LayoutAnchorablePaneGroupControl | public  class : Reference.Controls.LayoutGridControl<Reference.Layout.ILayoutAnchorablePane> interfaces[Reference.Layout.ILayoutControl]
+Reference.Controls.LayoutAnchorableTabItem | protected  method System.Void SetLayoutItem(Reference.Controls.LayoutItem value)
+Reference.Controls.LayoutAnchorableTabItem | protected override method System.Void OnMouseEnter(System.Windows.Input.MouseEventArgs e)
+Reference.Controls.LayoutAnchorableTabItem | protected override method System.Void OnMouseLeave(System.Windows.Input.MouseEventArgs e)
+Reference.Controls.LayoutAnchorableTabItem | protected override method System.Void OnMouseLeftButtonDown(System.Windows.Input.MouseButtonEventArgs e)
+Reference.Controls.LayoutAnchorableTabItem | protected override method System.Void OnMouseLeftButtonUp(System.Windows.Input.MouseButtonEventArgs e)
+Reference.Controls.LayoutAnchorableTabItem | protected override method System.Void OnMouseMove(System.Windows.Input.MouseEventArgs e)
+Reference.Controls.LayoutAnchorableTabItem | protected virtual method System.Void OnModelChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Reference.Controls.LayoutAnchorableTabItem | public  class : System.Windows.Controls.Control interfaces[]
+Reference.Controls.LayoutAnchorableTabItem | public  constructor System.Void .ctor()
+Reference.Controls.LayoutAnchorableTabItem | public  property Reference.Controls.LayoutItem LayoutItem() { public get;  }
+Reference.Controls.LayoutAnchorableTabItem | public  property Reference.Layout.LayoutContent Model() { public get; public set;  }
+Reference.Controls.LayoutAnchorableTabItem | public static field System.Windows.DependencyProperty LayoutItemProperty readonly
+Reference.Controls.LayoutAnchorableTabItem | public static field System.Windows.DependencyProperty ModelProperty readonly
+Reference.Controls.LayoutAutoHideWindowControl | protected override method System.Boolean HasFocusWithinCore()
+Reference.Controls.LayoutAutoHideWindowControl | protected override method System.Runtime.InteropServices.HandleRef BuildWindowCore(System.Runtime.InteropServices.HandleRef hwndParent)
+Reference.Controls.LayoutAutoHideWindowControl | protected override method System.Void DestroyWindowCore(System.Runtime.InteropServices.HandleRef hwnd)
+Reference.Controls.LayoutAutoHideWindowControl | protected override method System.Windows.Size ArrangeOverride(System.Windows.Size finalSize)
+Reference.Controls.LayoutAutoHideWindowControl | protected override method System.Windows.Size MeasureOverride(System.Windows.Size constraint)
+Reference.Controls.LayoutAutoHideWindowControl | protected override property System.Collections.IEnumerator LogicalChildren() { protected get;  }
+Reference.Controls.LayoutAutoHideWindowControl | public  class : System.Windows.Interop.HwndHost interfaces[Reference.Layout.ILayoutControl]
+Reference.Controls.LayoutAutoHideWindowControl | public  property Reference.Layout.ILayoutElement Model() { public get;  }
+Reference.Controls.LayoutAutoHideWindowControl | public  property System.Windows.Media.Brush Background() { public get; public set;  }
+Reference.Controls.LayoutAutoHideWindowControl | public  property System.Windows.Style AnchorableStyle() { public get; public set;  }
+Reference.Controls.LayoutAutoHideWindowControl | public static field System.Windows.DependencyProperty AnchorableStyleProperty readonly
+Reference.Controls.LayoutAutoHideWindowControl | public static field System.Windows.DependencyProperty BackgroundProperty readonly
+Reference.Controls.LayoutCachePaneControl | protected override method System.Void OnSelectionChanged(System.Windows.Controls.SelectionChangedEventArgs e)
+Reference.Controls.LayoutCachePaneControl | public  class : System.Windows.Controls.TabControl interfaces[]
+Reference.Controls.LayoutCachePaneControl | public  constructor System.Void .ctor()
+Reference.Controls.LayoutDocumentControl | protected  method System.Void SetLayoutItem(Reference.Controls.LayoutItem value)
+Reference.Controls.LayoutDocumentControl | protected override method System.Void OnPreviewGotKeyboardFocus(System.Windows.Input.KeyboardFocusChangedEventArgs e)
+Reference.Controls.LayoutDocumentControl | protected override method System.Void OnPreviewMouseLeftButtonDown(System.Windows.Input.MouseButtonEventArgs e)
+Reference.Controls.LayoutDocumentControl | protected override method System.Void OnPreviewMouseRightButtonDown(System.Windows.Input.MouseButtonEventArgs e)
+Reference.Controls.LayoutDocumentControl | protected virtual method System.Void OnModelChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Reference.Controls.LayoutDocumentControl | public  class : System.Windows.Controls.Control interfaces[]
+Reference.Controls.LayoutDocumentControl | public  constructor System.Void .ctor()
+Reference.Controls.LayoutDocumentControl | public  property Reference.Controls.LayoutItem LayoutItem() { public get;  }
+Reference.Controls.LayoutDocumentControl | public  property Reference.Layout.LayoutContent Model() { public get; public set;  }
+Reference.Controls.LayoutDocumentControl | public static field System.Windows.DependencyProperty LayoutItemProperty readonly
+Reference.Controls.LayoutDocumentControl | public static field System.Windows.DependencyProperty ModelProperty readonly
+Reference.Controls.LayoutDocumentFloatingWindowControl | protected override method System.Boolean CanClose(System.Object parameter=null)
+Reference.Controls.LayoutDocumentFloatingWindowControl | protected override method System.IntPtr FilterMessage(System.IntPtr hwnd,System.Int32 msg,System.IntPtr wParam,System.IntPtr lParam,ref System.Boolean handled)
+Reference.Controls.LayoutDocumentFloatingWindowControl | protected override method System.Void OnClosed(System.EventArgs e)
+Reference.Controls.LayoutDocumentFloatingWindowControl | protected override method System.Void OnInitialized(System.EventArgs e)
+Reference.Controls.LayoutDocumentFloatingWindowControl | public  class : Reference.Controls.LayoutFloatingWindowControl interfaces[]
+Reference.Controls.LayoutDocumentFloatingWindowControl | public  property Reference.Controls.LayoutItem RootDocumentLayoutItem() { public get;  }
+Reference.Controls.LayoutDocumentFloatingWindowControl | public override property Reference.Layout.ILayoutElement Model() { public get;  }
+Reference.Controls.LayoutDocumentItem | protected override method System.Void Close()
+Reference.Controls.LayoutDocumentItem | protected override method System.Void OnVisibilityChanged()
+Reference.Controls.LayoutDocumentItem | protected virtual method System.Void OnDescriptionChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Reference.Controls.LayoutDocumentItem | public  class : Reference.Controls.LayoutItem interfaces[]
+Reference.Controls.LayoutDocumentItem | public  property System.String Description() { public get; public set;  }
+Reference.Controls.LayoutDocumentItem | public static field System.Windows.DependencyProperty DescriptionProperty readonly
+Reference.Controls.LayoutDocumentPaneControl | protected override method System.Void OnMouseLeftButtonDown(System.Windows.Input.MouseButtonEventArgs e)
+Reference.Controls.LayoutDocumentPaneControl | protected override method System.Void OnMouseRightButtonDown(System.Windows.Input.MouseButtonEventArgs e)
+Reference.Controls.LayoutDocumentPaneControl | protected override method System.Void OnSelectionChanged(System.Windows.Controls.SelectionChangedEventArgs e)
+Reference.Controls.LayoutDocumentPaneControl | protected override property System.Collections.IEnumerator LogicalChildren() { protected get;  }
+Reference.Controls.LayoutDocumentPaneControl | public  class : Reference.Controls.LayoutCachePaneControl interfaces[Reference.Layout.ILayoutControl]
+Reference.Controls.LayoutDocumentPaneControl | public  property Reference.Layout.ILayoutElement Model() { public get;  }
+Reference.Controls.LayoutDocumentPaneGroupControl | protected override method System.Void OnFixChildrenDockLengths()
+Reference.Controls.LayoutDocumentPaneGroupControl | public  class : Reference.Controls.LayoutGridControl<Reference.Layout.ILayoutDocumentPane> interfaces[Reference.Layout.ILayoutControl]
+Reference.Controls.LayoutDocumentTabItem | protected  method System.Void SetLayoutItem(Reference.Controls.LayoutItem value)
+Reference.Controls.LayoutDocumentTabItem | protected override method System.Void OnMouseDown(System.Windows.Input.MouseButtonEventArgs e)
+Reference.Controls.LayoutDocumentTabItem | protected override method System.Void OnMouseEnter(System.Windows.Input.MouseEventArgs e)
+Reference.Controls.LayoutDocumentTabItem | protected override method System.Void OnMouseLeave(System.Windows.Input.MouseEventArgs e)
+Reference.Controls.LayoutDocumentTabItem | protected override method System.Void OnMouseLeftButtonDown(System.Windows.Input.MouseButtonEventArgs e)
+Reference.Controls.LayoutDocumentTabItem | protected override method System.Void OnMouseLeftButtonUp(System.Windows.Input.MouseButtonEventArgs e)
+Reference.Controls.LayoutDocumentTabItem | protected override method System.Void OnMouseMove(System.Windows.Input.MouseEventArgs e)
+Reference.Controls.LayoutDocumentTabItem | protected virtual method System.Void OnModelChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Reference.Controls.LayoutDocumentTabItem | public  class : System.Windows.Controls.Control interfaces[]
+Reference.Controls.LayoutDocumentTabItem | public  constructor System.Void .ctor()
+Reference.Controls.LayoutDocumentTabItem | public  property Reference.Controls.LayoutItem LayoutItem() { public get;  }
+Reference.Controls.LayoutDocumentTabItem | public  property Reference.Layout.LayoutContent Model() { public get; public set;  }
+Reference.Controls.LayoutDocumentTabItem | public static field System.Windows.DependencyProperty LayoutItemProperty readonly
+Reference.Controls.LayoutDocumentTabItem | public static field System.Windows.DependencyProperty ModelProperty readonly
+Reference.Controls.LayoutFloatingWindowControl | protected  constructor System.Void .ctor(Reference.Layout.ILayoutElement model)
+Reference.Controls.LayoutFloatingWindowControl | protected  constructor System.Void .ctor(Reference.Layout.ILayoutElement model,System.Boolean isContentImmutable)
+Reference.Controls.LayoutFloatingWindowControl | protected  method System.Void SetIsDragging(System.Boolean value)
+Reference.Controls.LayoutFloatingWindowControl | protected  property System.Boolean CloseInitiatedByUser() { protected get;  }
+Reference.Controls.LayoutFloatingWindowControl | protected override method System.Void OnClosed(System.EventArgs e)
+Reference.Controls.LayoutFloatingWindowControl | protected override method System.Void OnClosing(System.ComponentModel.CancelEventArgs e)
+Reference.Controls.LayoutFloatingWindowControl | protected override method System.Void OnInitialized(System.EventArgs e)
+Reference.Controls.LayoutFloatingWindowControl | protected override method System.Void OnKeyDown(System.Windows.Input.KeyEventArgs e)
+Reference.Controls.LayoutFloatingWindowControl | protected override method System.Void OnPreviewKeyDown(System.Windows.Input.KeyEventArgs e)
+Reference.Controls.LayoutFloatingWindowControl | protected override method System.Void OnStateChanged(System.EventArgs e)
+Reference.Controls.LayoutFloatingWindowControl | protected virtual method System.Boolean CanClose(System.Object parameter=null)
+Reference.Controls.LayoutFloatingWindowControl | protected virtual method System.Boolean CanHide(System.Object parameter=null)
+Reference.Controls.LayoutFloatingWindowControl | protected virtual method System.IntPtr FilterMessage(System.IntPtr hwnd,System.Int32 msg,System.IntPtr wParam,System.IntPtr lParam,ref System.Boolean handled)
+Reference.Controls.LayoutFloatingWindowControl | protected virtual method System.Void DoHide()
+Reference.Controls.LayoutFloatingWindowControl | protected virtual method System.Void OnIsDraggingChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Reference.Controls.LayoutFloatingWindowControl | public  property System.Boolean IsContentImmutable() { public get;  }
+Reference.Controls.LayoutFloatingWindowControl | public  property System.Boolean IsDragging() { public get;  }
+Reference.Controls.LayoutFloatingWindowControl | public  property System.Boolean IsMaximized() { public get;  }
+Reference.Controls.LayoutFloatingWindowControl | public  property System.Windows.Thickness ResizeBorderThickness() { public get; public set;  }
+Reference.Controls.LayoutFloatingWindowControl | public abstract class : System.Windows.Window interfaces[Reference.Layout.ILayoutControl]
+Reference.Controls.LayoutFloatingWindowControl | public abstract property Reference.Layout.ILayoutElement Model() { public get;  }
+Reference.Controls.LayoutFloatingWindowControl | public static field System.Windows.DependencyProperty IsContentImmutableProperty readonly
+Reference.Controls.LayoutFloatingWindowControl | public static field System.Windows.DependencyProperty IsDraggingProperty readonly
+Reference.Controls.LayoutFloatingWindowControl | public static field System.Windows.DependencyProperty IsMaximizedProperty readonly
+Reference.Controls.LayoutFloatingWindowControl | public static field System.Windows.DependencyProperty ResizeBorderThicknessProperty readonly
+Reference.Controls.LayoutGridControl`1 | protected  method System.Void FixChildrenDockLengths()
+Reference.Controls.LayoutGridControl`1 | protected abstract method System.Void OnFixChildrenDockLengths()
+Reference.Controls.LayoutGridControl`1 | protected override method System.Void OnInitialized(System.EventArgs e)
+Reference.Controls.LayoutGridControl`1 | public  property Reference.Layout.ILayoutElement Model() { public get;  }
+Reference.Controls.LayoutGridControl`1 | public  property System.Windows.Controls.Orientation Orientation() { public get;  }
+Reference.Controls.LayoutGridControl`1 | public abstract class : System.Windows.Controls.Grid interfaces[Reference.Layout.ILayoutControl] <T:class&Reference.Layout.ILayoutPanelElement>
+Reference.Controls.LayoutGridResizerControl | public  class : System.Windows.Controls.Primitives.Thumb interfaces[]
+Reference.Controls.LayoutGridResizerControl | public  constructor System.Void .ctor()
+Reference.Controls.LayoutGridResizerControl | public  property System.Double OpacityWhileDragging() { public get; public set;  }
+Reference.Controls.LayoutGridResizerControl | public  property System.Windows.Media.Brush BackgroundWhileDragging() { public get; public set;  }
+Reference.Controls.LayoutGridResizerControl | public static field System.Windows.DependencyProperty BackgroundWhileDraggingProperty readonly
+Reference.Controls.LayoutGridResizerControl | public static field System.Windows.DependencyProperty OpacityWhileDraggingProperty readonly
+Reference.Controls.LayoutItem | protected abstract method System.Void Close()
+Reference.Controls.LayoutItem | protected virtual method System.Boolean CanExecuteDockAsDocumentCommand()
+Reference.Controls.LayoutItem | protected virtual method System.Void ClearDefaultBindings()
+Reference.Controls.LayoutItem | protected virtual method System.Void ClearDefaultCommands()
+Reference.Controls.LayoutItem | protected virtual method System.Void Float()
+Reference.Controls.LayoutItem | protected virtual method System.Void InitDefaultCommands()
+Reference.Controls.LayoutItem | protected virtual method System.Void OnActivateCommandChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Reference.Controls.LayoutItem | protected virtual method System.Void OnCanCloseChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Reference.Controls.LayoutItem | protected virtual method System.Void OnCanFloatChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Reference.Controls.LayoutItem | protected virtual method System.Void OnCloseAllButThisCommandChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Reference.Controls.LayoutItem | protected virtual method System.Void OnCloseAllCommandChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Reference.Controls.LayoutItem | protected virtual method System.Void OnCloseCommandChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Reference.Controls.LayoutItem | protected virtual method System.Void OnContentIdChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Reference.Controls.LayoutItem | protected virtual method System.Void OnDockAsDocumentCommandChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Reference.Controls.LayoutItem | protected virtual method System.Void OnFloatCommandChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Reference.Controls.LayoutItem | protected virtual method System.Void OnIconSourceChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Reference.Controls.LayoutItem | protected virtual method System.Void OnIsActiveChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Reference.Controls.LayoutItem | protected virtual method System.Void OnIsSelectedChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Reference.Controls.LayoutItem | protected virtual method System.Void OnMoveToNextTabGroupCommandChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Reference.Controls.LayoutItem | protected virtual method System.Void OnMoveToPreviousTabGroupCommandChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Reference.Controls.LayoutItem | protected virtual method System.Void OnNewHorizontalTabGroupCommandChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Reference.Controls.LayoutItem | protected virtual method System.Void OnNewVerticalTabGroupCommandChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Reference.Controls.LayoutItem | protected virtual method System.Void OnTitleChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Reference.Controls.LayoutItem | protected virtual method System.Void OnVisibilityChanged()
+Reference.Controls.LayoutItem | protected virtual method System.Void SetDefaultBindings()
+Reference.Controls.LayoutItem | public  property Reference.Layout.LayoutContent LayoutElement() { public get;  }
+Reference.Controls.LayoutItem | public  property System.Boolean CanClose() { public get; public set;  }
+Reference.Controls.LayoutItem | public  property System.Boolean CanFloat() { public get; public set;  }
+Reference.Controls.LayoutItem | public  property System.Boolean IsActive() { public get; public set;  }
+Reference.Controls.LayoutItem | public  property System.Boolean IsSelected() { public get; public set;  }
+Reference.Controls.LayoutItem | public  property System.Object Model() { public get;  }
+Reference.Controls.LayoutItem | public  property System.String ContentId() { public get; public set;  }
+Reference.Controls.LayoutItem | public  property System.String Title() { public get; public set;  }
+Reference.Controls.LayoutItem | public  property System.Windows.Controls.ContentPresenter View() { public get;  }
+Reference.Controls.LayoutItem | public  property System.Windows.Input.ICommand ActivateCommand() { public get; public set;  }
+Reference.Controls.LayoutItem | public  property System.Windows.Input.ICommand CloseAllButThisCommand() { public get; public set;  }
+Reference.Controls.LayoutItem | public  property System.Windows.Input.ICommand CloseAllCommand() { public get; public set;  }
+Reference.Controls.LayoutItem | public  property System.Windows.Input.ICommand CloseCommand() { public get; public set;  }
+Reference.Controls.LayoutItem | public  property System.Windows.Input.ICommand DockAsDocumentCommand() { public get; public set;  }
+Reference.Controls.LayoutItem | public  property System.Windows.Input.ICommand FloatCommand() { public get; public set;  }
+Reference.Controls.LayoutItem | public  property System.Windows.Input.ICommand MoveToNextTabGroupCommand() { public get; public set;  }
+Reference.Controls.LayoutItem | public  property System.Windows.Input.ICommand MoveToPreviousTabGroupCommand() { public get; public set;  }
+Reference.Controls.LayoutItem | public  property System.Windows.Input.ICommand NewHorizontalTabGroupCommand() { public get; public set;  }
+Reference.Controls.LayoutItem | public  property System.Windows.Input.ICommand NewVerticalTabGroupCommand() { public get; public set;  }
+Reference.Controls.LayoutItem | public  property System.Windows.Media.ImageSource IconSource() { public get; public set;  }
+Reference.Controls.LayoutItem | public abstract class : System.Windows.FrameworkElement interfaces[]
+Reference.Controls.LayoutItem | public static field System.Windows.DependencyProperty ActivateCommandProperty readonly
+Reference.Controls.LayoutItem | public static field System.Windows.DependencyProperty CanCloseProperty readonly
+Reference.Controls.LayoutItem | public static field System.Windows.DependencyProperty CanFloatProperty readonly
+Reference.Controls.LayoutItem | public static field System.Windows.DependencyProperty CloseAllButThisCommandProperty readonly
+Reference.Controls.LayoutItem | public static field System.Windows.DependencyProperty CloseAllCommandProperty readonly
+Reference.Controls.LayoutItem | public static field System.Windows.DependencyProperty CloseCommandProperty readonly
+Reference.Controls.LayoutItem | public static field System.Windows.DependencyProperty ContentIdProperty readonly
+Reference.Controls.LayoutItem | public static field System.Windows.DependencyProperty DockAsDocumentCommandProperty readonly
+Reference.Controls.LayoutItem | public static field System.Windows.DependencyProperty FloatCommandProperty readonly
+Reference.Controls.LayoutItem | public static field System.Windows.DependencyProperty IconSourceProperty readonly
+Reference.Controls.LayoutItem | public static field System.Windows.DependencyProperty IsActiveProperty readonly
+Reference.Controls.LayoutItem | public static field System.Windows.DependencyProperty IsSelectedProperty readonly
+Reference.Controls.LayoutItem | public static field System.Windows.DependencyProperty MoveToNextTabGroupCommandProperty readonly
+Reference.Controls.LayoutItem | public static field System.Windows.DependencyProperty MoveToPreviousTabGroupCommandProperty readonly
+Reference.Controls.LayoutItem | public static field System.Windows.DependencyProperty NewHorizontalTabGroupCommandProperty readonly
+Reference.Controls.LayoutItem | public static field System.Windows.DependencyProperty NewVerticalTabGroupCommandProperty readonly
+Reference.Controls.LayoutItem | public static field System.Windows.DependencyProperty TitleProperty readonly
+Reference.Controls.LayoutPanelControl | protected override method System.Void OnFixChildrenDockLengths()
+Reference.Controls.LayoutPanelControl | public  class : Reference.Controls.LayoutGridControl<Reference.Layout.ILayoutPanelElement> interfaces[Reference.Layout.ILayoutControl]
+Reference.Controls.MenuItemEx | protected virtual method System.Void OnIconTemplateChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Reference.Controls.MenuItemEx | protected virtual method System.Void OnIconTemplateSelectorChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Reference.Controls.MenuItemEx | public  class : System.Windows.Controls.MenuItem interfaces[]
+Reference.Controls.MenuItemEx | public  constructor System.Void .ctor()
+Reference.Controls.MenuItemEx | public  property System.Windows.Controls.DataTemplateSelector IconTemplateSelector() { public get; public set;  }
+Reference.Controls.MenuItemEx | public  property System.Windows.DataTemplate IconTemplate() { public get; public set;  }
+Reference.Controls.MenuItemEx | public static field System.Windows.DependencyProperty IconTemplateProperty readonly
+Reference.Controls.MenuItemEx | public static field System.Windows.DependencyProperty IconTemplateSelectorProperty readonly
+Reference.Controls.NavigatorWindow | protected  method System.Void SetAnchorables(System.Collections.Generic.IEnumerable<Reference.Controls.LayoutAnchorableItem> value)
+Reference.Controls.NavigatorWindow | protected  method System.Void SetDocuments(Reference.Controls.LayoutDocumentItem[] value)
+Reference.Controls.NavigatorWindow | protected override method System.Void OnPreviewKeyDown(System.Windows.Input.KeyEventArgs e)
+Reference.Controls.NavigatorWindow | protected override method System.Void OnPreviewKeyUp(System.Windows.Input.KeyEventArgs e)
+Reference.Controls.NavigatorWindow | protected virtual method System.Void OnSelectedAnchorableChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Reference.Controls.NavigatorWindow | protected virtual method System.Void OnSelectedDocumentChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Reference.Controls.NavigatorWindow | public  class : System.Windows.Window interfaces[]
+Reference.Controls.NavigatorWindow | public  constructor System.Void .ctor(Reference.DockingManager manager)
+Reference.Controls.NavigatorWindow | public  property Reference.Controls.LayoutAnchorableItem SelectedAnchorable() { public get; public set;  }
+Reference.Controls.NavigatorWindow | public  property Reference.Controls.LayoutDocumentItem SelectedDocument() { public get; public set;  }
+Reference.Controls.NavigatorWindow | public  property Reference.Controls.LayoutDocumentItem[] Documents() { public get;  }
+Reference.Controls.NavigatorWindow | public  property System.Collections.Generic.IEnumerable<Reference.Controls.LayoutAnchorableItem> Anchorables() { public get;  }
+Reference.Controls.NavigatorWindow | public  property System.String LayoutAnchorablesLabel() { public get; public set;  }
+Reference.Controls.NavigatorWindow | public  property System.String LayoutDocumentsLabel() { public get; public set;  }
+Reference.Controls.NavigatorWindow | public override method System.Void OnApplyTemplate()
+Reference.Controls.NavigatorWindow | public static field System.Windows.DependencyProperty AnchorablesProperty readonly
+Reference.Controls.NavigatorWindow | public static field System.Windows.DependencyProperty DocumentsProperty readonly
+Reference.Controls.NavigatorWindow | public static field System.Windows.DependencyProperty LayoutAnchorablesLabelProperty readonly
+Reference.Controls.NavigatorWindow | public static field System.Windows.DependencyProperty LayoutDocumentsLabelProperty readonly
+Reference.Controls.NavigatorWindow | public static field System.Windows.DependencyProperty SelectedAnchorableProperty readonly
+Reference.Controls.NavigatorWindow | public static field System.Windows.DependencyProperty SelectedDocumentProperty readonly
+Reference.Controls.OverlayArea | protected  method System.Void SetScreenDetectionArea(System.Windows.Rect rect)
+Reference.Controls.OverlayArea | public abstract class : System.Object interfaces[Reference.Controls.IOverlayWindowArea]
+Reference.Controls.OverlayWindow | protected override method System.Void OnClosing(System.ComponentModel.CancelEventArgs e)
+Reference.Controls.OverlayWindow | public  class : System.Windows.Window interfaces[Reference.Controls.IOverlayWindow]
+Reference.Controls.OverlayWindow | public override method System.Void OnApplyTemplate()
+Reference.Controls.OverlayWindowDropTarget | public  class : System.Object interfaces[Reference.Controls.IOverlayWindowDropTarget]
+Reference.Controls.OverlayWindowDropTargetType | public  constructor System.Void .ctor()
+Reference.Controls.OverlayWindowDropTargetType | public sealed enum : System.Enum interfaces[]
+Reference.Controls.OverlayWindowDropTargetType | public static field Reference.Controls.OverlayWindowDropTargetType AnchorablePaneDockBottom const=12
+Reference.Controls.OverlayWindowDropTargetType | public static field Reference.Controls.OverlayWindowDropTargetType AnchorablePaneDockInside const=13
+Reference.Controls.OverlayWindowDropTargetType | public static field Reference.Controls.OverlayWindowDropTargetType AnchorablePaneDockLeft const=9
+Reference.Controls.OverlayWindowDropTargetType | public static field Reference.Controls.OverlayWindowDropTargetType AnchorablePaneDockRight const=11
+Reference.Controls.OverlayWindowDropTargetType | public static field Reference.Controls.OverlayWindowDropTargetType AnchorablePaneDockTop const=10
+Reference.Controls.OverlayWindowDropTargetType | public static field Reference.Controls.OverlayWindowDropTargetType DockingManagerDockBottom const=3
+Reference.Controls.OverlayWindowDropTargetType | public static field Reference.Controls.OverlayWindowDropTargetType DockingManagerDockLeft const=0
+Reference.Controls.OverlayWindowDropTargetType | public static field Reference.Controls.OverlayWindowDropTargetType DockingManagerDockRight const=2
+Reference.Controls.OverlayWindowDropTargetType | public static field Reference.Controls.OverlayWindowDropTargetType DockingManagerDockTop const=1
+Reference.Controls.OverlayWindowDropTargetType | public static field Reference.Controls.OverlayWindowDropTargetType DocumentPaneDockBottom const=7
+Reference.Controls.OverlayWindowDropTargetType | public static field Reference.Controls.OverlayWindowDropTargetType DocumentPaneDockInside const=8
+Reference.Controls.OverlayWindowDropTargetType | public static field Reference.Controls.OverlayWindowDropTargetType DocumentPaneDockLeft const=4
+Reference.Controls.OverlayWindowDropTargetType | public static field Reference.Controls.OverlayWindowDropTargetType DocumentPaneDockRight const=6
+Reference.Controls.OverlayWindowDropTargetType | public static field Reference.Controls.OverlayWindowDropTargetType DocumentPaneDockTop const=5
+Reference.Converters.ActivateCommandLayoutItemFromLayoutModelConverter | public  class : System.Object interfaces[System.Windows.Data.IValueConverter]
+Reference.Converters.ActivateCommandLayoutItemFromLayoutModelConverter | public  constructor System.Void .ctor()
+Reference.Converters.ActivateCommandLayoutItemFromLayoutModelConverter | public  method System.Object Convert(System.Object value,System.Type targetType,System.Object parameter,System.Globalization.CultureInfo culture)
+Reference.Converters.ActivateCommandLayoutItemFromLayoutModelConverter | public  method System.Object ConvertBack(System.Object value,System.Type targetType,System.Object parameter,System.Globalization.CultureInfo culture)
+Reference.Converters.AnchorSideToAngleConverter | public  class : System.Object interfaces[System.Windows.Data.IValueConverter]
+Reference.Converters.AnchorSideToAngleConverter | public  constructor System.Void .ctor()
+Reference.Converters.AnchorSideToAngleConverter | public  method System.Object Convert(System.Object value,System.Type targetType,System.Object parameter,System.Globalization.CultureInfo culture)
+Reference.Converters.AnchorSideToAngleConverter | public  method System.Object ConvertBack(System.Object value,System.Type targetType,System.Object parameter,System.Globalization.CultureInfo culture)
+Reference.Converters.AnchorSideToOrientationConverter | public  class : System.Object interfaces[System.Windows.Data.IValueConverter]
+Reference.Converters.AnchorSideToOrientationConverter | public  constructor System.Void .ctor()
+Reference.Converters.AnchorSideToOrientationConverter | public  method System.Object Convert(System.Object value,System.Type targetType,System.Object parameter,System.Globalization.CultureInfo culture)
+Reference.Converters.AnchorSideToOrientationConverter | public  method System.Object ConvertBack(System.Object value,System.Type targetType,System.Object parameter,System.Globalization.CultureInfo culture)
+Reference.Converters.AnchorableContextMenuAutoHideHeaderConverter | public  class : System.Object interfaces[System.Windows.Data.IValueConverter]
+Reference.Converters.AnchorableContextMenuAutoHideHeaderConverter | public  constructor System.Void .ctor()
+Reference.Converters.AnchorableContextMenuAutoHideHeaderConverter | public  method System.Object Convert(System.Object value,System.Type targetType,System.Object parameter,System.Globalization.CultureInfo culture)
+Reference.Converters.AnchorableContextMenuAutoHideHeaderConverter | public  method System.Object ConvertBack(System.Object value,System.Type targetType,System.Object parameter,System.Globalization.CultureInfo culture)
+Reference.Converters.AnchorableContextMenuHideVisibilityConverter | public  class : System.Object interfaces[System.Windows.Data.IMultiValueConverter]
+Reference.Converters.AnchorableContextMenuHideVisibilityConverter | public  constructor System.Void .ctor()
+Reference.Converters.AnchorableContextMenuHideVisibilityConverter | public  method System.Object Convert(System.Object[] values,System.Type targetType,System.Object parameter,System.Globalization.CultureInfo culture)
+Reference.Converters.AnchorableContextMenuHideVisibilityConverter | public  method System.Object[] ConvertBack(System.Object value,System.Type[] targetTypes,System.Object parameter,System.Globalization.CultureInfo culture)
+Reference.Converters.AutoHideCommandLayoutItemFromLayoutModelConverter | public  class : System.Object interfaces[System.Windows.Data.IValueConverter]
+Reference.Converters.AutoHideCommandLayoutItemFromLayoutModelConverter | public  constructor System.Void .ctor()
+Reference.Converters.AutoHideCommandLayoutItemFromLayoutModelConverter | public  method System.Object Convert(System.Object value,System.Type targetType,System.Object parameter,System.Globalization.CultureInfo culture)
+Reference.Converters.AutoHideCommandLayoutItemFromLayoutModelConverter | public  method System.Object ConvertBack(System.Object value,System.Type targetType,System.Object parameter,System.Globalization.CultureInfo culture)
+Reference.Converters.BoolToVisibilityConverter | public  class : System.Object interfaces[System.Windows.Data.IValueConverter]
+Reference.Converters.BoolToVisibilityConverter | public  constructor System.Void .ctor()
+Reference.Converters.BoolToVisibilityConverter | public  method System.Object Convert(System.Object value,System.Type targetType,System.Object parameter,System.Globalization.CultureInfo culture)
+Reference.Converters.BoolToVisibilityConverter | public  method System.Object ConvertBack(System.Object value,System.Type targetType,System.Object parameter,System.Globalization.CultureInfo culture)
+Reference.Converters.HideCommandLayoutItemFromLayoutModelConverter | public  class : System.Object interfaces[System.Windows.Data.IValueConverter]
+Reference.Converters.HideCommandLayoutItemFromLayoutModelConverter | public  constructor System.Void .ctor()
+Reference.Converters.HideCommandLayoutItemFromLayoutModelConverter | public  method System.Object Convert(System.Object value,System.Type targetType,System.Object parameter,System.Globalization.CultureInfo culture)
+Reference.Converters.HideCommandLayoutItemFromLayoutModelConverter | public  method System.Object ConvertBack(System.Object value,System.Type targetType,System.Object parameter,System.Globalization.CultureInfo culture)
+Reference.Converters.InverseBoolToVisibilityConverter | public  class : System.Object interfaces[System.Windows.Data.IValueConverter]
+Reference.Converters.InverseBoolToVisibilityConverter | public  constructor System.Void .ctor()
+Reference.Converters.InverseBoolToVisibilityConverter | public  method System.Object Convert(System.Object value,System.Type targetType,System.Object parameter,System.Globalization.CultureInfo culture)
+Reference.Converters.InverseBoolToVisibilityConverter | public  method System.Object ConvertBack(System.Object value,System.Type targetType,System.Object parameter,System.Globalization.CultureInfo culture)
+Reference.Converters.LayoutItemFromLayoutModelConverter | public  class : System.Object interfaces[System.Windows.Data.IValueConverter]
+Reference.Converters.LayoutItemFromLayoutModelConverter | public  constructor System.Void .ctor()
+Reference.Converters.LayoutItemFromLayoutModelConverter | public  method System.Object Convert(System.Object value,System.Type targetType,System.Object parameter,System.Globalization.CultureInfo culture)
+Reference.Converters.LayoutItemFromLayoutModelConverter | public  method System.Object ConvertBack(System.Object value,System.Type targetType,System.Object parameter,System.Globalization.CultureInfo culture)
+Reference.Converters.NullToDoNothingConverter | public  class : System.Object interfaces[System.Windows.Data.IValueConverter]
+Reference.Converters.NullToDoNothingConverter | public  constructor System.Void .ctor()
+Reference.Converters.NullToDoNothingConverter | public  method System.Object Convert(System.Object value,System.Type targetType,System.Object parameter,System.Globalization.CultureInfo culture)
+Reference.Converters.NullToDoNothingConverter | public  method System.Object ConvertBack(System.Object value,System.Type targetType,System.Object parameter,System.Globalization.CultureInfo culture)
+Reference.Converters.UriSourceToBitmapImageConverter | public  class : System.Object interfaces[System.Windows.Data.IValueConverter]
+Reference.Converters.UriSourceToBitmapImageConverter | public  constructor System.Void .ctor()
+Reference.Converters.UriSourceToBitmapImageConverter | public  method System.Object Convert(System.Object value,System.Type targetType,System.Object parameter,System.Globalization.CultureInfo culture)
+Reference.Converters.UriSourceToBitmapImageConverter | public  method System.Object ConvertBack(System.Object value,System.Type targetType,System.Object parameter,System.Globalization.CultureInfo culture)
+Reference.DockingManager | protected  method System.Void SetAutoHideWindow(Reference.Controls.LayoutAutoHideWindowControl value)
+Reference.DockingManager | protected internal virtual method System.Void RaiseDockedEvent(Reference.Layout.LayoutContent layoutContent)
+Reference.DockingManager | protected internal virtual method System.Void RaisePreviewDockEvent(Reference.Layout.LayoutContent layoutContent)
+Reference.DockingManager | protected internal virtual method System.Void ShowNavigatorWindow()
+Reference.DockingManager | protected override method System.Void OnInitialized(System.EventArgs e)
+Reference.DockingManager | protected override method System.Void OnKeyDown(System.Windows.Input.KeyEventArgs e)
+Reference.DockingManager | protected override method System.Void OnPreviewKeyDown(System.Windows.Input.KeyEventArgs e)
+Reference.DockingManager | protected override method System.Windows.Size ArrangeOverride(System.Windows.Size arrangeBounds)
+Reference.DockingManager | protected override property System.Collections.IEnumerator LogicalChildren() { protected get;  }
+Reference.DockingManager | protected virtual method System.Boolean OnReceiveWeakEvent(System.Type managerType,System.Object sender,System.EventArgs e)
+Reference.DockingManager | protected virtual method System.Void OnActiveContentChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Reference.DockingManager | protected virtual method System.Void OnAnchorableHeaderTemplateChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Reference.DockingManager | protected virtual method System.Void OnAnchorableHeaderTemplateSelectorChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Reference.DockingManager | protected virtual method System.Void OnAnchorablePaneControlStyleChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Reference.DockingManager | protected virtual method System.Void OnAnchorableTitleTemplateChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Reference.DockingManager | protected virtual method System.Void OnAnchorableTitleTemplateSelectorChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Reference.DockingManager | protected virtual method System.Void OnAnchorablesSourceChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Reference.DockingManager | protected virtual method System.Void OnAutoHideWindowChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Reference.DockingManager | protected virtual method System.Void OnAutoHideWindowClosingTimerChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Reference.DockingManager | protected virtual method System.Void OnBottomSidePanelChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Reference.DockingManager | protected virtual method System.Void OnDocumentHeaderTemplateChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Reference.DockingManager | protected virtual method System.Void OnDocumentHeaderTemplateSelectorChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Reference.DockingManager | protected virtual method System.Void OnDocumentPaneControlStyleChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Reference.DockingManager | protected virtual method System.Void OnDocumentPaneMenuItemHeaderTemplateChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Reference.DockingManager | protected virtual method System.Void OnDocumentPaneMenuItemHeaderTemplateSelectorChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Reference.DockingManager | protected virtual method System.Void OnDocumentTitleTemplateChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Reference.DockingManager | protected virtual method System.Void OnDocumentTitleTemplateSelectorChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Reference.DockingManager | protected virtual method System.Void OnDocumentsSourceChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Reference.DockingManager | protected virtual method System.Void OnLayoutChanged(Reference.Layout.LayoutRoot oldLayout,Reference.Layout.LayoutRoot newLayout)
+Reference.DockingManager | protected virtual method System.Void OnLayoutItemContainerStyleChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Reference.DockingManager | protected virtual method System.Void OnLayoutItemContainerStyleSelectorChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Reference.DockingManager | protected virtual method System.Void OnLayoutItemTemplateChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Reference.DockingManager | protected virtual method System.Void OnLayoutItemTemplateSelectorChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Reference.DockingManager | protected virtual method System.Void OnLayoutRootPanelChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Reference.DockingManager | protected virtual method System.Void OnLeftSidePanelChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Reference.DockingManager | protected virtual method System.Void OnRightSidePanelChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Reference.DockingManager | protected virtual method System.Void OnThemeChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Reference.DockingManager | protected virtual method System.Void OnTopSidePanelChanged(System.Windows.DependencyPropertyChangedEventArgs e)
+Reference.DockingManager | protected virtual method System.Void RaiseFloatedEvent(Reference.Layout.LayoutContent layoutContent)
+Reference.DockingManager | protected virtual method System.Void RaisePreviewFloatEvent(Reference.Layout.LayoutContent layoutContent)
+Reference.DockingManager | public  class : System.Windows.Controls.Control interfaces[System.Windows.IWeakEventListener,Reference.Controls.IOverlayWindowHost]
+Reference.DockingManager | public  constructor System.Void .ctor()
+Reference.DockingManager | public  event System.EventHandler ActiveContentChanged
+Reference.DockingManager | public  event System.EventHandler LayoutChanged
+Reference.DockingManager | public  event System.EventHandler LayoutChanging
+Reference.DockingManager | public  event System.EventHandler<Reference.DocumentClosedEventArgs> DocumentClosed
+Reference.DockingManager | public  event System.EventHandler<Reference.DocumentClosingEventArgs> DocumentClosing
+Reference.DockingManager | public  event System.EventHandler<Reference.LayoutFloatingWindowControlCollectionChangedEventArgs> LayoutFloatingWindowControlCollectionChanged
+Reference.DockingManager | public  event System.Windows.RoutedEventHandler Docked
+Reference.DockingManager | public  event System.Windows.RoutedEventHandler Floated
+Reference.DockingManager | public  event System.Windows.RoutedEventHandler PreviewDock
+Reference.DockingManager | public  event System.Windows.RoutedEventHandler PreviewFloat
+Reference.DockingManager | public  method Reference.Controls.LayoutFloatingWindowControl CreateFloatingWindow(Reference.Layout.LayoutContent contentModel,System.Boolean isContentImmutable)
+Reference.DockingManager | public  method Reference.Controls.LayoutItem GetLayoutItemFromModel(Reference.Layout.LayoutContent content)
+Reference.DockingManager | public  property Reference.Controls.LayoutAnchorSideControl BottomSidePanel() { public get; public set;  }
+Reference.DockingManager | public  property Reference.Controls.LayoutAnchorSideControl LeftSidePanel() { public get; public set;  }
+Reference.DockingManager | public  property Reference.Controls.LayoutAnchorSideControl RightSidePanel() { public get; public set;  }
+Reference.DockingManager | public  property Reference.Controls.LayoutAnchorSideControl TopSidePanel() { public get; public set;  }
+Reference.DockingManager | public  property Reference.Controls.LayoutAutoHideWindowControl AutoHideWindow() { public get;  }
+Reference.DockingManager | public  property Reference.Controls.LayoutPanelControl LayoutRootPanel() { public get; public set;  }
+Reference.DockingManager | public  property Reference.Layout.ILayoutUpdateStrategy LayoutUpdateStrategy() { public get; public set;  }
+Reference.DockingManager | public  property Reference.Layout.LayoutRoot Layout() { public get; public set;  }
+Reference.DockingManager | public  property Reference.Themes.Theme Theme() { public get; public set;  }
+Reference.DockingManager | public  property System.Boolean AllowMixedOrientation() { public get; public set;  }
+Reference.DockingManager | public  property System.Boolean AllowMovingFloatingWindowWithKeyboard() { public get;  }
+Reference.DockingManager | public  property System.Boolean ShowSystemMenu() { public get; public set;  }
+Reference.DockingManager | public  property System.Collections.Generic.IEnumerable<Reference.Controls.LayoutFloatingWindowControl> FloatingWindows() { public get;  }
+Reference.DockingManager | public  property System.Collections.IEnumerable AnchorablesSource() { public get; public set;  }
+Reference.DockingManager | public  property System.Collections.IEnumerable DocumentsSource() { public get; public set;  }
+Reference.DockingManager | public  property System.Collections.IEnumerator LogicalChildrenPublic() { public get;  }
+Reference.DockingManager | public  property System.Double GridSplitterHeight() { public get; public set;  }
+Reference.DockingManager | public  property System.Double GridSplitterWidth() { public get; public set;  }
+Reference.DockingManager | public  property System.Int32 AutoHideWindowClosingTimer() { public get; public set;  }
+Reference.DockingManager | public  property System.Object ActiveContent() { public get; public set;  }
+Reference.DockingManager | public  property System.Windows.Controls.ContextMenu AnchorableContextMenu() { public get; public set;  }
+Reference.DockingManager | public  property System.Windows.Controls.ContextMenu DocumentContextMenu() { public get; public set;  }
+Reference.DockingManager | public  property System.Windows.Controls.ControlTemplate AnchorGroupTemplate() { public get; public set;  }
+Reference.DockingManager | public  property System.Windows.Controls.ControlTemplate AnchorSideTemplate() { public get; public set;  }
+Reference.DockingManager | public  property System.Windows.Controls.ControlTemplate AnchorTemplate() { public get; public set;  }
+Reference.DockingManager | public  property System.Windows.Controls.DataTemplateSelector AnchorableHeaderTemplateSelector() { public get; public set;  }
+Reference.DockingManager | public  property System.Windows.Controls.DataTemplateSelector AnchorableTitleTemplateSelector() { public get; public set;  }
+Reference.DockingManager | public  property System.Windows.Controls.DataTemplateSelector DocumentHeaderTemplateSelector() { public get; public set;  }
+Reference.DockingManager | public  property System.Windows.Controls.DataTemplateSelector DocumentPaneMenuItemHeaderTemplateSelector() { public get; public set;  }
+Reference.DockingManager | public  property System.Windows.Controls.DataTemplateSelector DocumentTitleTemplateSelector() { public get; public set;  }
+Reference.DockingManager | public  property System.Windows.Controls.DataTemplateSelector IconContentTemplateSelector() { public get; public set;  }
+Reference.DockingManager | public  property System.Windows.Controls.DataTemplateSelector LayoutItemTemplateSelector() { public get; public set;  }
+Reference.DockingManager | public  property System.Windows.Controls.StyleSelector LayoutItemContainerStyleSelector() { public get; public set;  }
+Reference.DockingManager | public  property System.Windows.DataTemplate AnchorableHeaderTemplate() { public get; public set;  }
+Reference.DockingManager | public  property System.Windows.DataTemplate AnchorableTitleTemplate() { public get; public set;  }
+Reference.DockingManager | public  property System.Windows.DataTemplate DocumentHeaderTemplate() { public get; public set;  }
+Reference.DockingManager | public  property System.Windows.DataTemplate DocumentPaneMenuItemHeaderTemplate() { public get; public set;  }
+Reference.DockingManager | public  property System.Windows.DataTemplate DocumentTitleTemplate() { public get; public set;  }
+Reference.DockingManager | public  property System.Windows.DataTemplate IconContentTemplate() { public get; public set;  }
+Reference.DockingManager | public  property System.Windows.DataTemplate LayoutItemTemplate() { public get; public set;  }
+Reference.DockingManager | public  property System.Windows.Style AnchorablePaneControlStyle() { public get; public set;  }
+Reference.DockingManager | public  property System.Windows.Style DocumentPaneControlStyle() { public get; public set;  }
+Reference.DockingManager | public  property System.Windows.Style LayoutItemContainerStyle() { public get; public set;  }
+Reference.DockingManager | public override method System.Void OnApplyTemplate()
+Reference.DockingManager | public static field System.Windows.DependencyProperty ActiveContentProperty readonly
+Reference.DockingManager | public static field System.Windows.DependencyProperty AllowMixedOrientationProperty readonly
+Reference.DockingManager | public static field System.Windows.DependencyProperty AllowMovingFloatingWindowWithKeyboardProperty readonly
+Reference.DockingManager | public static field System.Windows.DependencyProperty AnchorGroupTemplateProperty readonly
+Reference.DockingManager | public static field System.Windows.DependencyProperty AnchorSideTemplateProperty readonly
+Reference.DockingManager | public static field System.Windows.DependencyProperty AnchorTemplateProperty readonly
+Reference.DockingManager | public static field System.Windows.DependencyProperty AnchorableContextMenuProperty readonly
+Reference.DockingManager | public static field System.Windows.DependencyProperty AnchorableHeaderTemplateProperty readonly
+Reference.DockingManager | public static field System.Windows.DependencyProperty AnchorableHeaderTemplateSelectorProperty readonly
+Reference.DockingManager | public static field System.Windows.DependencyProperty AnchorablePaneControlStyleProperty readonly
+Reference.DockingManager | public static field System.Windows.DependencyProperty AnchorableTitleTemplateProperty readonly
+Reference.DockingManager | public static field System.Windows.DependencyProperty AnchorableTitleTemplateSelectorProperty readonly
+Reference.DockingManager | public static field System.Windows.DependencyProperty AnchorablesSourceProperty readonly
+Reference.DockingManager | public static field System.Windows.DependencyProperty AutoHideWindowClosingTimerProperty readonly
+Reference.DockingManager | public static field System.Windows.DependencyProperty AutoHideWindowProperty readonly
+Reference.DockingManager | public static field System.Windows.DependencyProperty BottomSidePanelProperty readonly
+Reference.DockingManager | public static field System.Windows.DependencyProperty DocumentContextMenuProperty readonly
+Reference.DockingManager | public static field System.Windows.DependencyProperty DocumentHeaderTemplateProperty readonly
+Reference.DockingManager | public static field System.Windows.DependencyProperty DocumentHeaderTemplateSelectorProperty readonly
+Reference.DockingManager | public static field System.Windows.DependencyProperty DocumentPaneControlStyleProperty readonly
+Reference.DockingManager | public static field System.Windows.DependencyProperty DocumentPaneMenuItemHeaderTemplateProperty readonly
+Reference.DockingManager | public static field System.Windows.DependencyProperty DocumentPaneMenuItemHeaderTemplateSelectorProperty readonly
+Reference.DockingManager | public static field System.Windows.DependencyProperty DocumentTitleTemplateProperty readonly
+Reference.DockingManager | public static field System.Windows.DependencyProperty DocumentTitleTemplateSelectorProperty readonly
+Reference.DockingManager | public static field System.Windows.DependencyProperty DocumentsSourceProperty readonly
+Reference.DockingManager | public static field System.Windows.DependencyProperty GridSplitterHeightProperty readonly
+Reference.DockingManager | public static field System.Windows.DependencyProperty GridSplitterWidthProperty readonly
+Reference.DockingManager | public static field System.Windows.DependencyProperty IconContentTemplateProperty readonly
+Reference.DockingManager | public static field System.Windows.DependencyProperty IconContentTemplateSelectorProperty readonly
+Reference.DockingManager | public static field System.Windows.DependencyProperty LayoutItemContainerStyleProperty readonly
+Reference.DockingManager | public static field System.Windows.DependencyProperty LayoutItemContainerStyleSelectorProperty readonly
+Reference.DockingManager | public static field System.Windows.DependencyProperty LayoutItemTemplateProperty readonly
+Reference.DockingManager | public static field System.Windows.DependencyProperty LayoutItemTemplateSelectorProperty readonly
+Reference.DockingManager | public static field System.Windows.DependencyProperty LayoutProperty readonly
+Reference.DockingManager | public static field System.Windows.DependencyProperty LayoutRootPanelProperty readonly
+Reference.DockingManager | public static field System.Windows.DependencyProperty LayoutUpdateStrategyProperty readonly
+Reference.DockingManager | public static field System.Windows.DependencyProperty LeftSidePanelProperty readonly
+Reference.DockingManager | public static field System.Windows.DependencyProperty RightSidePanelProperty readonly
+Reference.DockingManager | public static field System.Windows.DependencyProperty ShowSystemMenuProperty readonly
+Reference.DockingManager | public static field System.Windows.DependencyProperty ThemeProperty readonly
+Reference.DockingManager | public static field System.Windows.DependencyProperty TopSidePanelProperty readonly
+Reference.DockingManager | public static field System.Windows.RoutedEvent DockedEvent readonly
+Reference.DockingManager | public static field System.Windows.RoutedEvent FloatedEvent readonly
+Reference.DockingManager | public static field System.Windows.RoutedEvent PreviewDockEvent readonly
+Reference.DockingManager | public static field System.Windows.RoutedEvent PreviewFloatEvent readonly
+Reference.DockingManager | public virtual method Reference.Controls.NavigatorWindow CreateNavigatorWindow()
+Reference.DocumentClosedEventArgs | public  class : System.EventArgs interfaces[]
+Reference.DocumentClosedEventArgs | public  constructor System.Void .ctor(Reference.Layout.LayoutDocument document)
+Reference.DocumentClosedEventArgs | public  property Reference.Layout.LayoutDocument Document() { public get;  }
+Reference.DocumentClosingEventArgs | public  class : System.ComponentModel.CancelEventArgs interfaces[]
+Reference.DocumentClosingEventArgs | public  constructor System.Void .ctor(Reference.Layout.LayoutDocument document)
+Reference.DocumentClosingEventArgs | public  property Reference.Layout.LayoutDocument Document() { public get;  }
+Reference.Layout.AnchorSide | public  constructor System.Void .ctor()
+Reference.Layout.AnchorSide | public sealed enum : System.Enum interfaces[]
+Reference.Layout.AnchorSide | public static field Reference.Layout.AnchorSide Bottom const=3
+Reference.Layout.AnchorSide | public static field Reference.Layout.AnchorSide Left const=0
+Reference.Layout.AnchorSide | public static field Reference.Layout.AnchorSide Right const=2
+Reference.Layout.AnchorSide | public static field Reference.Layout.AnchorSide Top const=1
+Reference.Layout.AnchorableShowStrategy | public  constructor System.Void .ctor()
+Reference.Layout.AnchorableShowStrategy | public sealed enum : System.Enum interfaces[]
+Reference.Layout.AnchorableShowStrategy | public static field Reference.Layout.AnchorableShowStrategy Bottom const=32
+Reference.Layout.AnchorableShowStrategy | public static field Reference.Layout.AnchorableShowStrategy Left const=2
+Reference.Layout.AnchorableShowStrategy | public static field Reference.Layout.AnchorableShowStrategy Most const=1
+Reference.Layout.AnchorableShowStrategy | public static field Reference.Layout.AnchorableShowStrategy Right const=4
+Reference.Layout.AnchorableShowStrategy | public static field Reference.Layout.AnchorableShowStrategy Top const=16
+Reference.Layout.ChildrenTreeChange | public  constructor System.Void .ctor()
+Reference.Layout.ChildrenTreeChange | public sealed enum : System.Enum interfaces[]
+Reference.Layout.ChildrenTreeChange | public static field Reference.Layout.ChildrenTreeChange DirectChildrenChanged const=0
+Reference.Layout.ChildrenTreeChange | public static field Reference.Layout.ChildrenTreeChange TreeChanged const=1
+Reference.Layout.ChildrenTreeChangedEventArgs | public  class : System.EventArgs interfaces[]
+Reference.Layout.ChildrenTreeChangedEventArgs | public  constructor System.Void .ctor(Reference.Layout.ChildrenTreeChange change)
+Reference.Layout.ChildrenTreeChangedEventArgs | public  property Reference.Layout.ChildrenTreeChange Change() { public get;  }
+Reference.Layout.Extensions | public static class : System.Object interfaces[]
+Reference.Layout.Extensions | public static method Reference.Layout.AnchorSide GetSide(Reference.Layout.ILayoutElement element)
+Reference.Layout.Extensions | public static method Reference.Layout.ILayoutRoot GetRoot(Reference.Layout.ILayoutElement element)
+Reference.Layout.Extensions | public static method System.Boolean ContainsChildOfType<T,S>(Reference.Layout.ILayoutContainer container)
+Reference.Layout.Extensions | public static method System.Boolean ContainsChildOfType<T>(Reference.Layout.ILayoutContainer element)
+Reference.Layout.Extensions | public static method System.Boolean IsOfType<T,S>(Reference.Layout.ILayoutContainer container)
+Reference.Layout.Extensions | public static method System.Collections.Generic.IEnumerable<Reference.Layout.ILayoutElement> Descendents(Reference.Layout.ILayoutElement element)
+Reference.Layout.Extensions | public static method T FindParent<T>(Reference.Layout.ILayoutElement element)
+Reference.Layout.ILayoutAnchorablePane | public abstract interface :  interfaces[System.ComponentModel.INotifyPropertyChanged,System.ComponentModel.INotifyPropertyChanging,Reference.Layout.ILayoutContainer,Reference.Layout.ILayoutElement,Reference.Layout.ILayoutElementWithVisibility,Reference.Layout.ILayoutPane,Reference.Layout.ILayoutPanelElement]
+Reference.Layout.ILayoutContainer | public abstract interface :  interfaces[System.ComponentModel.INotifyPropertyChanged,System.ComponentModel.INotifyPropertyChanging,Reference.Layout.ILayoutElement]
+Reference.Layout.ILayoutContainer | public abstract method System.Void RemoveChild(Reference.Layout.ILayoutElement element)
+Reference.Layout.ILayoutContainer | public abstract method System.Void ReplaceChild(Reference.Layout.ILayoutElement oldElement,Reference.Layout.ILayoutElement newElement)
+Reference.Layout.ILayoutContainer | public abstract property System.Collections.Generic.IEnumerable<Reference.Layout.ILayoutElement> Children() { public get;  }
+Reference.Layout.ILayoutContainer | public abstract property System.Int32 ChildrenCount() { public get;  }
+Reference.Layout.ILayoutContentSelector | public abstract interface :  interfaces[]
+Reference.Layout.ILayoutContentSelector | public abstract method System.Int32 IndexOf(Reference.Layout.LayoutContent content)
+Reference.Layout.ILayoutContentSelector | public abstract property Reference.Layout.LayoutContent SelectedContent() { public get;  }
+Reference.Layout.ILayoutContentSelector | public abstract property System.Int32 SelectedContentIndex() { public get; public set;  }
+Reference.Layout.ILayoutControl | public abstract interface :  interfaces[]
+Reference.Layout.ILayoutControl | public abstract property Reference.Layout.ILayoutElement Model() { public get;  }
+Reference.Layout.ILayoutDocumentPane | public abstract interface :  interfaces[System.ComponentModel.INotifyPropertyChanged,System.ComponentModel.INotifyPropertyChanging,Reference.Layout.ILayoutContainer,Reference.Layout.ILayoutElement,Reference.Layout.ILayoutElementWithVisibility,Reference.Layout.ILayoutPane,Reference.Layout.ILayoutPanelElement]
+Reference.Layout.ILayoutElement | public abstract interface :  interfaces[System.ComponentModel.INotifyPropertyChanged,System.ComponentModel.INotifyPropertyChanging]
+Reference.Layout.ILayoutElement | public abstract property Reference.Layout.ILayoutContainer Parent() { public get;  }
+Reference.Layout.ILayoutElement | public abstract property Reference.Layout.ILayoutRoot Root() { public get;  }
+Reference.Layout.ILayoutElementWithVisibility | public abstract interface :  interfaces[]
+Reference.Layout.ILayoutElementWithVisibility | public abstract method System.Void ComputeVisibility()
+Reference.Layout.ILayoutGroup | public abstract event System.EventHandler ChildrenCollectionChanged
+Reference.Layout.ILayoutGroup | public abstract interface :  interfaces[System.ComponentModel.INotifyPropertyChanged,System.ComponentModel.INotifyPropertyChanging,Reference.Layout.ILayoutContainer,Reference.Layout.ILayoutElement]
+Reference.Layout.ILayoutGroup | public abstract method System.Int32 IndexOfChild(Reference.Layout.ILayoutElement element)
+Reference.Layout.ILayoutGroup | public abstract method System.Void InsertChildAt(System.Int32 index,Reference.Layout.ILayoutElement element)
+Reference.Layout.ILayoutGroup | public abstract method System.Void RemoveChildAt(System.Int32 index)
+Reference.Layout.ILayoutGroup | public abstract method System.Void ReplaceChildAt(System.Int32 index,Reference.Layout.ILayoutElement element)
+Reference.Layout.ILayoutOrientableGroup | public abstract interface :  interfaces[System.ComponentModel.INotifyPropertyChanged,System.ComponentModel.INotifyPropertyChanging,Reference.Layout.ILayoutContainer,Reference.Layout.ILayoutElement,Reference.Layout.ILayoutGroup]
+Reference.Layout.ILayoutOrientableGroup | public abstract property System.Windows.Controls.Orientation Orientation() { public get; public set;  }
+Reference.Layout.ILayoutPane | public abstract interface :  interfaces[System.ComponentModel.INotifyPropertyChanged,System.ComponentModel.INotifyPropertyChanging,Reference.Layout.ILayoutContainer,Reference.Layout.ILayoutElement,Reference.Layout.ILayoutElementWithVisibility]
+Reference.Layout.ILayoutPane | public abstract method System.Void MoveChild(System.Int32 oldIndex,System.Int32 newIndex)
+Reference.Layout.ILayoutPane | public abstract method System.Void RemoveChildAt(System.Int32 childIndex)
+Reference.Layout.ILayoutPanelElement | public abstract interface :  interfaces[System.ComponentModel.INotifyPropertyChanged,System.ComponentModel.INotifyPropertyChanging,Reference.Layout.ILayoutElement]
+Reference.Layout.ILayoutPanelElement | public abstract property System.Boolean IsVisible() { public get;  }
+Reference.Layout.ILayoutRoot | public abstract interface :  interfaces[]
+Reference.Layout.ILayoutRoot | public abstract method System.Void CollectGarbage()
+Reference.Layout.ILayoutRoot | public abstract property Reference.DockingManager Manager() { public get;  }
+Reference.Layout.ILayoutRoot | public abstract property Reference.Layout.LayoutAnchorSide BottomSide() { public get;  }
+Reference.Layout.ILayoutRoot | public abstract property Reference.Layout.LayoutAnchorSide LeftSide() { public get;  }
+Reference.Layout.ILayoutRoot | public abstract property Reference.Layout.LayoutAnchorSide RightSide() { public get;  }
+Reference.Layout.ILayoutRoot | public abstract property Reference.Layout.LayoutAnchorSide TopSide() { public get;  }
+Reference.Layout.ILayoutRoot | public abstract property Reference.Layout.LayoutContent ActiveContent() { public get; public set;  }
+Reference.Layout.ILayoutRoot | public abstract property Reference.Layout.LayoutPanel RootPanel() { public get;  }
+Reference.Layout.ILayoutRoot | public abstract property System.Collections.ObjectModel.ObservableCollection<Reference.Layout.LayoutAnchorable> Hidden() { public get;  }
+Reference.Layout.ILayoutRoot | public abstract property System.Collections.ObjectModel.ObservableCollection<Reference.Layout.LayoutFloatingWindow> FloatingWindows() { public get;  }
+Reference.Layout.ILayoutUpdateStrategy | public abstract interface :  interfaces[]
+Reference.Layout.ILayoutUpdateStrategy | public abstract method System.Boolean BeforeInsertAnchorable(Reference.Layout.LayoutRoot layout,Reference.Layout.LayoutAnchorable anchorableToShow,Reference.Layout.ILayoutContainer destinationContainer)
+Reference.Layout.ILayoutUpdateStrategy | public abstract method System.Boolean BeforeInsertDocument(Reference.Layout.LayoutRoot layout,Reference.Layout.LayoutDocument documentToShow,Reference.Layout.ILayoutContainer destinationContainer)
+Reference.Layout.ILayoutUpdateStrategy | public abstract method System.Void AfterInsertAnchorable(Reference.Layout.LayoutRoot layout,Reference.Layout.LayoutAnchorable anchorableShown)
+Reference.Layout.ILayoutUpdateStrategy | public abstract method System.Void AfterInsertDocument(Reference.Layout.LayoutRoot layout,Reference.Layout.LayoutDocument documentShown)
+Reference.Layout.LayoutAnchorGroup | protected override method System.Boolean GetVisibility()
+Reference.Layout.LayoutAnchorGroup | public  class : Reference.Layout.LayoutGroup<Reference.Layout.LayoutAnchorable> interfaces[Reference.Layout.ILayoutPaneSerializable,Reference.Layout.ILayoutPreviousContainer]
+Reference.Layout.LayoutAnchorGroup | public  constructor System.Void .ctor()
+Reference.Layout.LayoutAnchorGroup | public override method System.Void ReadXml(System.Xml.XmlReader reader)
+Reference.Layout.LayoutAnchorGroup | public override method System.Void WriteXml(System.Xml.XmlWriter writer)
+Reference.Layout.LayoutAnchorSide | protected override method System.Boolean GetVisibility()
+Reference.Layout.LayoutAnchorSide | protected override method System.Void OnParentChanged(Reference.Layout.ILayoutContainer oldValue,Reference.Layout.ILayoutContainer newValue)
+Reference.Layout.LayoutAnchorSide | public  class : Reference.Layout.LayoutGroup<Reference.Layout.LayoutAnchorGroup> interfaces[]
+Reference.Layout.LayoutAnchorSide | public  constructor System.Void .ctor()
+Reference.Layout.LayoutAnchorSide | public  property Reference.Layout.AnchorSide Side() { public get;  }
+Reference.Layout.LayoutAnchorable | protected override method System.Void InternalDock()
+Reference.Layout.LayoutAnchorable | protected override method System.Void OnParentChanged(Reference.Layout.ILayoutContainer oldValue,Reference.Layout.ILayoutContainer newValue)
+Reference.Layout.LayoutAnchorable | protected virtual method System.Void OnHidden()
+Reference.Layout.LayoutAnchorable | protected virtual method System.Void OnHiding(System.ComponentModel.CancelEventArgs args)
+Reference.Layout.LayoutAnchorable | public  class : Reference.Layout.LayoutContent interfaces[]
+Reference.Layout.LayoutAnchorable | public  constructor System.Void .ctor()
+Reference.Layout.LayoutAnchorable | public  event System.EventHandler Hidden
+Reference.Layout.LayoutAnchorable | public  event System.EventHandler IsVisibleChanged
+Reference.Layout.LayoutAnchorable | public  event System.EventHandler<System.ComponentModel.CancelEventArgs> Hiding
+Reference.Layout.LayoutAnchorable | public  method System.Void AddToLayout(Reference.DockingManager manager,Reference.Layout.AnchorableShowStrategy strategy)
+Reference.Layout.LayoutAnchorable | public  method System.Void Hide(System.Boolean cancelable=true)
+Reference.Layout.LayoutAnchorable | public  method System.Void Show()
+Reference.Layout.LayoutAnchorable | public  method System.Void ToggleAutoHide()
+Reference.Layout.LayoutAnchorable | public  property System.Boolean CanAutoHide() { public get; public set;  }
+Reference.Layout.LayoutAnchorable | public  property System.Boolean CanDockAsTabbedDocument() { public get; public set;  }
+Reference.Layout.LayoutAnchorable | public  property System.Boolean CanHide() { public get; public set;  }
+Reference.Layout.LayoutAnchorable | public  property System.Boolean IsAutoHidden() { public get;  }
+Reference.Layout.LayoutAnchorable | public  property System.Boolean IsHidden() { public get;  }
+Reference.Layout.LayoutAnchorable | public  property System.Boolean IsVisible() { public get; public set;  }
+Reference.Layout.LayoutAnchorable | public  property System.Double AutoHideHeight() { public get; public set;  }
+Reference.Layout.LayoutAnchorable | public  property System.Double AutoHideMinHeight() { public get; public set;  }
+Reference.Layout.LayoutAnchorable | public  property System.Double AutoHideMinWidth() { public get; public set;  }
+Reference.Layout.LayoutAnchorable | public  property System.Double AutoHideWidth() { public get; public set;  }
+Reference.Layout.LayoutAnchorable | public override method System.Void Close()
+Reference.Layout.LayoutAnchorable | public override method System.Void ReadXml(System.Xml.XmlReader reader)
+Reference.Layout.LayoutAnchorable | public override method System.Void WriteXml(System.Xml.XmlWriter writer)
+Reference.Layout.LayoutAnchorableFloatingWindow | public  class : Reference.Layout.LayoutFloatingWindow interfaces[Reference.Layout.ILayoutElementWithVisibility]
+Reference.Layout.LayoutAnchorableFloatingWindow | public  constructor System.Void .ctor()
+Reference.Layout.LayoutAnchorableFloatingWindow | public  event System.EventHandler IsVisibleChanged
+Reference.Layout.LayoutAnchorableFloatingWindow | public  property Reference.Layout.ILayoutAnchorablePane SinglePane() { public get;  }
+Reference.Layout.LayoutAnchorableFloatingWindow | public  property Reference.Layout.LayoutAnchorablePaneGroup RootPanel() { public get; public set;  }
+Reference.Layout.LayoutAnchorableFloatingWindow | public  property System.Boolean IsSinglePane() { public get;  }
+Reference.Layout.LayoutAnchorableFloatingWindow | public  property System.Boolean IsVisible() { public get;  }
+Reference.Layout.LayoutAnchorableFloatingWindow | public override method System.Void ReadXml(System.Xml.XmlReader reader)
+Reference.Layout.LayoutAnchorableFloatingWindow | public override method System.Void RemoveChild(Reference.Layout.ILayoutElement element)
+Reference.Layout.LayoutAnchorableFloatingWindow | public override method System.Void ReplaceChild(Reference.Layout.ILayoutElement oldElement,Reference.Layout.ILayoutElement newElement)
+Reference.Layout.LayoutAnchorableFloatingWindow | public override property System.Boolean IsValid() { public get;  }
+Reference.Layout.LayoutAnchorableFloatingWindow | public override property System.Collections.Generic.IEnumerable<Reference.Layout.ILayoutElement> Children() { public get;  }
+Reference.Layout.LayoutAnchorableFloatingWindow | public override property System.Int32 ChildrenCount() { public get;  }
+Reference.Layout.LayoutAnchorablePane | protected override method System.Boolean GetVisibility()
+Reference.Layout.LayoutAnchorablePane | protected override method System.Void ChildMoved(System.Int32 oldIndex,System.Int32 newIndex)
+Reference.Layout.LayoutAnchorablePane | protected override method System.Void OnChildrenCollectionChanged()
+Reference.Layout.LayoutAnchorablePane | protected override method System.Void OnParentChanged(Reference.Layout.ILayoutContainer oldValue,Reference.Layout.ILayoutContainer newValue)
+Reference.Layout.LayoutAnchorablePane | public  class : Reference.Layout.LayoutPositionableGroup<Reference.Layout.LayoutAnchorable> interfaces[System.ComponentModel.INotifyPropertyChanged,System.ComponentModel.INotifyPropertyChanging,Reference.Layout.ILayoutAnchorablePane,Reference.Layout.ILayoutContainer,Reference.Layout.ILayoutContentSelector,Reference.Layout.ILayoutElement,Reference.Layout.ILayoutElementForFloatingWindow,Reference.Layout.ILayoutElementWithVisibility,Reference.Layout.ILayoutPane,Reference.Layout.ILayoutPaneSerializable,Reference.Layout.ILayoutPanelElement,Reference.Layout.ILayoutPositionableElement]
+Reference.Layout.LayoutAnchorablePane | public  constructor System.Void .ctor()
+Reference.Layout.LayoutAnchorablePane | public  constructor System.Void .ctor(Reference.Layout.LayoutAnchorable anchorable)
+Reference.Layout.LayoutAnchorablePane | public  method System.Int32 IndexOf(Reference.Layout.LayoutContent content)
+Reference.Layout.LayoutAnchorablePane | public  property Reference.Layout.LayoutContent SelectedContent() { public get;  }
+Reference.Layout.LayoutAnchorablePane | public  property System.Boolean CanClose() { public get;  }
+Reference.Layout.LayoutAnchorablePane | public  property System.Boolean CanHide() { public get;  }
+Reference.Layout.LayoutAnchorablePane | public  property System.Boolean IsDirectlyHostedInFloatingWindow() { public get;  }
+Reference.Layout.LayoutAnchorablePane | public  property System.Boolean IsHostedInFloatingWindow() { public get;  }
+Reference.Layout.LayoutAnchorablePane | public  property System.Int32 SelectedContentIndex() { public get; public set;  }
+Reference.Layout.LayoutAnchorablePane | public  property System.String Name() { public get; public set;  }
+Reference.Layout.LayoutAnchorablePane | public override method System.Void ReadXml(System.Xml.XmlReader reader)
+Reference.Layout.LayoutAnchorablePane | public override method System.Void WriteXml(System.Xml.XmlWriter writer)
+Reference.Layout.LayoutAnchorablePaneGroup | protected override method System.Boolean GetVisibility()
+Reference.Layout.LayoutAnchorablePaneGroup | protected override method System.Void OnDockHeightChanged()
+Reference.Layout.LayoutAnchorablePaneGroup | protected override method System.Void OnDockWidthChanged()
+Reference.Layout.LayoutAnchorablePaneGroup | protected override method System.Void OnIsVisibleChanged()
+Reference.Layout.LayoutAnchorablePaneGroup | public  class : Reference.Layout.LayoutPositionableGroup<Reference.Layout.ILayoutAnchorablePane> interfaces[System.ComponentModel.INotifyPropertyChanged,System.ComponentModel.INotifyPropertyChanging,Reference.Layout.ILayoutAnchorablePane,Reference.Layout.ILayoutContainer,Reference.Layout.ILayoutElement,Reference.Layout.ILayoutElementWithVisibility,Reference.Layout.ILayoutGroup,Reference.Layout.ILayoutOrientableGroup,Reference.Layout.ILayoutPane,Reference.Layout.ILayoutPanelElement]
+Reference.Layout.LayoutAnchorablePaneGroup | public  constructor System.Void .ctor()
+Reference.Layout.LayoutAnchorablePaneGroup | public  constructor System.Void .ctor(Reference.Layout.LayoutAnchorablePane firstChild)
+Reference.Layout.LayoutAnchorablePaneGroup | public  property System.Windows.Controls.Orientation Orientation() { public get; public set;  }
+Reference.Layout.LayoutAnchorablePaneGroup | public override method System.Void ReadXml(System.Xml.XmlReader reader)
+Reference.Layout.LayoutAnchorablePaneGroup | public override method System.Void WriteXml(System.Xml.XmlWriter writer)
+Reference.Layout.LayoutContent | protected override method System.Void OnParentChanged(Reference.Layout.ILayoutContainer oldValue,Reference.Layout.ILayoutContainer newValue)
+Reference.Layout.LayoutContent | protected override method System.Void OnParentChanging(Reference.Layout.ILayoutContainer oldValue,Reference.Layout.ILayoutContainer newValue)
+Reference.Layout.LayoutContent | protected virtual method System.Void InternalDock()
+Reference.Layout.LayoutContent | protected virtual method System.Void OnClosed()
+Reference.Layout.LayoutContent | protected virtual method System.Void OnClosing(System.ComponentModel.CancelEventArgs args)
+Reference.Layout.LayoutContent | protected virtual method System.Void OnIsActiveChanged(System.Boolean oldValue,System.Boolean newValue)
+Reference.Layout.LayoutContent | protected virtual method System.Void OnIsSelectedChanged(System.Boolean oldValue,System.Boolean newValue)
+Reference.Layout.LayoutContent | public  event System.EventHandler Closed
+Reference.Layout.LayoutContent | public  event System.EventHandler IsActiveChanged
+Reference.Layout.LayoutContent | public  event System.EventHandler IsSelectedChanged
+Reference.Layout.LayoutContent | public  event System.EventHandler<System.ComponentModel.CancelEventArgs> Closing
+Reference.Layout.LayoutContent | public  method System.Int32 CompareTo(Reference.Layout.LayoutContent other)
+Reference.Layout.LayoutContent | public  method System.Void Dock()
+Reference.Layout.LayoutContent | public  method System.Void DockAsDocument()
+Reference.Layout.LayoutContent | public  method System.Void Float()
+Reference.Layout.LayoutContent | public  method System.Xml.Schema.XmlSchema GetSchema()
+Reference.Layout.LayoutContent | public  property Reference.Layout.ILayoutContainer PreviousContainer() { public get; protected set;  }
+Reference.Layout.LayoutContent | public  property System.Boolean CanClose() { public get; public set;  }
+Reference.Layout.LayoutContent | public  property System.Boolean CanFloat() { public get; public set;  }
+Reference.Layout.LayoutContent | public  property System.Boolean IsActive() { public get; public set;  }
+Reference.Layout.LayoutContent | public  property System.Boolean IsEnabled() { public get; public set;  }
+Reference.Layout.LayoutContent | public  property System.Boolean IsFloating() { public get;  }
+Reference.Layout.LayoutContent | public  property System.Boolean IsLastFocusedDocument() { public get;  }
+Reference.Layout.LayoutContent | public  property System.Boolean IsMaximized() { public get; public set;  }
+Reference.Layout.LayoutContent | public  property System.Boolean IsSelected() { public get; public set;  }
+Reference.Layout.LayoutContent | public  property System.DateTime? LastActivationTimeStamp() { public get; public set;  }
+Reference.Layout.LayoutContent | public  property System.Double FloatingHeight() { public get; public set;  }
+Reference.Layout.LayoutContent | public  property System.Double FloatingLeft() { public get; public set;  }
+Reference.Layout.LayoutContent | public  property System.Double FloatingTop() { public get; public set;  }
+Reference.Layout.LayoutContent | public  property System.Double FloatingWidth() { public get; public set;  }
+Reference.Layout.LayoutContent | public  property System.Int32 PreviousContainerIndex() { public get; public set;  }
+Reference.Layout.LayoutContent | public  property System.Object Content() { public get; public set;  }
+Reference.Layout.LayoutContent | public  property System.Object ToolTip() { public get; public set;  }
+Reference.Layout.LayoutContent | public  property System.String ContentId() { public get; public set;  }
+Reference.Layout.LayoutContent | public  property System.String PreviousContainerId() { public get; protected set;  }
+Reference.Layout.LayoutContent | public  property System.String Title() { public get; public set;  }
+Reference.Layout.LayoutContent | public  property System.Windows.Media.ImageSource IconSource() { public get; public set;  }
+Reference.Layout.LayoutContent | public abstract class : Reference.Layout.LayoutElement interfaces[System.IComparable<Reference.Layout.LayoutContent>,System.Xml.Serialization.IXmlSerializable,Reference.Layout.ILayoutElementForFloatingWindow,Reference.Layout.ILayoutInitialContainer,Reference.Layout.ILayoutPreviousContainer]
+Reference.Layout.LayoutContent | public abstract method System.Void Close()
+Reference.Layout.LayoutContent | public static field System.Windows.DependencyProperty ContentIdProperty readonly
+Reference.Layout.LayoutContent | public static field System.Windows.DependencyProperty TitleProperty readonly
+Reference.Layout.LayoutContent | public virtual method System.Void ReadXml(System.Xml.XmlReader reader)
+Reference.Layout.LayoutContent | public virtual method System.Void WriteXml(System.Xml.XmlWriter writer)
+Reference.Layout.LayoutDocument | protected override method System.Void InternalDock()
+Reference.Layout.LayoutDocument | public  class : Reference.Layout.LayoutContent interfaces[]
+Reference.Layout.LayoutDocument | public  constructor System.Void .ctor()
+Reference.Layout.LayoutDocument | public  property System.Boolean CanMove() { public get; public set;  }
+Reference.Layout.LayoutDocument | public  property System.Boolean IsVisible() { public get;  }
+Reference.Layout.LayoutDocument | public  property System.String Description() { public get; public set;  }
+Reference.Layout.LayoutDocument | public override method System.Void Close()
+Reference.Layout.LayoutDocument | public override method System.Void ReadXml(System.Xml.XmlReader reader)
+Reference.Layout.LayoutDocument | public override method System.Void WriteXml(System.Xml.XmlWriter writer)
+Reference.Layout.LayoutDocumentFloatingWindow | public  class : Reference.Layout.LayoutFloatingWindow interfaces[]
+Reference.Layout.LayoutDocumentFloatingWindow | public  constructor System.Void .ctor()
+Reference.Layout.LayoutDocumentFloatingWindow | public  event System.EventHandler RootDocumentChanged
+Reference.Layout.LayoutDocumentFloatingWindow | public  property Reference.Layout.LayoutDocument RootDocument() { public get; public set;  }
+Reference.Layout.LayoutDocumentFloatingWindow | public override method System.Void ReadXml(System.Xml.XmlReader reader)
+Reference.Layout.LayoutDocumentFloatingWindow | public override method System.Void RemoveChild(Reference.Layout.ILayoutElement element)
+Reference.Layout.LayoutDocumentFloatingWindow | public override method System.Void ReplaceChild(Reference.Layout.ILayoutElement oldElement,Reference.Layout.ILayoutElement newElement)
+Reference.Layout.LayoutDocumentFloatingWindow | public override property System.Boolean IsValid() { public get;  }
+Reference.Layout.LayoutDocumentFloatingWindow | public override property System.Collections.Generic.IEnumerable<Reference.Layout.ILayoutElement> Children() { public get;  }
+Reference.Layout.LayoutDocumentFloatingWindow | public override property System.Int32 ChildrenCount() { public get;  }
+Reference.Layout.LayoutDocumentPane | protected override method System.Boolean GetVisibility()
+Reference.Layout.LayoutDocumentPane | protected override method System.Void ChildMoved(System.Int32 oldIndex,System.Int32 newIndex)
+Reference.Layout.LayoutDocumentPane | protected override method System.Void OnChildrenCollectionChanged()
+Reference.Layout.LayoutDocumentPane | protected override method System.Void OnIsVisibleChanged()
+Reference.Layout.LayoutDocumentPane | public  class : Reference.Layout.LayoutPositionableGroup<Reference.Layout.LayoutContent> interfaces[System.ComponentModel.INotifyPropertyChanged,System.ComponentModel.INotifyPropertyChanging,Reference.Layout.ILayoutContainer,Reference.Layout.ILayoutContentSelector,Reference.Layout.ILayoutDocumentPane,Reference.Layout.ILayoutElement,Reference.Layout.ILayoutElementForFloatingWindow,Reference.Layout.ILayoutElementWithVisibility,Reference.Layout.ILayoutPane,Reference.Layout.ILayoutPaneSerializable,Reference.Layout.ILayoutPanelElement,Reference.Layout.ILayoutPositionableElement]
+Reference.Layout.LayoutDocumentPane | public  constructor System.Void .ctor()
+Reference.Layout.LayoutDocumentPane | public  constructor System.Void .ctor(Reference.Layout.LayoutContent firstChild)
+Reference.Layout.LayoutDocumentPane | public  method System.Int32 IndexOf(Reference.Layout.LayoutContent content)
+Reference.Layout.LayoutDocumentPane | public  property Reference.Layout.LayoutContent SelectedContent() { public get;  }
+Reference.Layout.LayoutDocumentPane | public  property System.Boolean ShowHeader() { public get; public set;  }
+Reference.Layout.LayoutDocumentPane | public  property System.Collections.Generic.IEnumerable<Reference.Layout.LayoutContent> ChildrenSorted() { public get;  }
+Reference.Layout.LayoutDocumentPane | public  property System.Int32 SelectedContentIndex() { public get; public set;  }
+Reference.Layout.LayoutDocumentPane | public override method System.Void ReadXml(System.Xml.XmlReader reader)
+Reference.Layout.LayoutDocumentPane | public override method System.Void WriteXml(System.Xml.XmlWriter writer)
+Reference.Layout.LayoutDocumentPaneGroup | protected override method System.Boolean GetVisibility()
+Reference.Layout.LayoutDocumentPaneGroup | public  class : Reference.Layout.LayoutPositionableGroup<Reference.Layout.ILayoutDocumentPane> interfaces[System.ComponentModel.INotifyPropertyChanged,System.ComponentModel.INotifyPropertyChanging,Reference.Layout.ILayoutContainer,Reference.Layout.ILayoutDocumentPane,Reference.Layout.ILayoutElement,Reference.Layout.ILayoutElementWithVisibility,Reference.Layout.ILayoutGroup,Reference.Layout.ILayoutOrientableGroup,Reference.Layout.ILayoutPane,Reference.Layout.ILayoutPanelElement]
+Reference.Layout.LayoutDocumentPaneGroup | public  constructor System.Void .ctor()
+Reference.Layout.LayoutDocumentPaneGroup | public  constructor System.Void .ctor(Reference.Layout.LayoutDocumentPane documentPane)
+Reference.Layout.LayoutDocumentPaneGroup | public  property System.Windows.Controls.Orientation Orientation() { public get; public set;  }
+Reference.Layout.LayoutDocumentPaneGroup | public override method System.Void ReadXml(System.Xml.XmlReader reader)
+Reference.Layout.LayoutDocumentPaneGroup | public override method System.Void WriteXml(System.Xml.XmlWriter writer)
+Reference.Layout.LayoutElement | protected virtual method System.Void OnParentChanged(Reference.Layout.ILayoutContainer oldValue,Reference.Layout.ILayoutContainer newValue)
+Reference.Layout.LayoutElement | protected virtual method System.Void OnParentChanging(Reference.Layout.ILayoutContainer oldValue,Reference.Layout.ILayoutContainer newValue)
+Reference.Layout.LayoutElement | protected virtual method System.Void OnRootChanged(Reference.Layout.ILayoutRoot oldRoot,Reference.Layout.ILayoutRoot newRoot)
+Reference.Layout.LayoutElement | protected virtual method System.Void RaisePropertyChanged(System.String propertyName)
+Reference.Layout.LayoutElement | protected virtual method System.Void RaisePropertyChanging(System.String propertyName)
+Reference.Layout.LayoutElement | public  event System.ComponentModel.PropertyChangedEventHandler PropertyChanged
+Reference.Layout.LayoutElement | public  event System.ComponentModel.PropertyChangingEventHandler PropertyChanging
+Reference.Layout.LayoutElement | public  property Reference.Layout.ILayoutContainer Parent() { public get; public set;  }
+Reference.Layout.LayoutElement | public  property Reference.Layout.ILayoutRoot Root() { public get;  }
+Reference.Layout.LayoutElement | public abstract class : System.Windows.DependencyObject interfaces[System.ComponentModel.INotifyPropertyChanged,System.ComponentModel.INotifyPropertyChanging,Reference.Layout.ILayoutElement]
+Reference.Layout.LayoutElementEventArgs | public  class : System.EventArgs interfaces[]
+Reference.Layout.LayoutElementEventArgs | public  constructor System.Void .ctor(Reference.Layout.LayoutElement element)
+Reference.Layout.LayoutElementEventArgs | public  property Reference.Layout.LayoutElement Element() { public get;  }
+Reference.Layout.LayoutFloatingWindow | public  constructor System.Void .ctor()
+Reference.Layout.LayoutFloatingWindow | public  method System.Xml.Schema.XmlSchema GetSchema()
+Reference.Layout.LayoutFloatingWindow | public abstract class : Reference.Layout.LayoutElement interfaces[System.ComponentModel.INotifyPropertyChanged,System.ComponentModel.INotifyPropertyChanging,System.Xml.Serialization.IXmlSerializable,Reference.Layout.ILayoutContainer,Reference.Layout.ILayoutElement]
+Reference.Layout.LayoutFloatingWindow | public abstract method System.Void ReadXml(System.Xml.XmlReader reader)
+Reference.Layout.LayoutFloatingWindow | public abstract method System.Void RemoveChild(Reference.Layout.ILayoutElement element)
+Reference.Layout.LayoutFloatingWindow | public abstract method System.Void ReplaceChild(Reference.Layout.ILayoutElement oldElement,Reference.Layout.ILayoutElement newElement)
+Reference.Layout.LayoutFloatingWindow | public abstract property System.Boolean IsValid() { public get;  }
+Reference.Layout.LayoutFloatingWindow | public abstract property System.Collections.Generic.IEnumerable<Reference.Layout.ILayoutElement> Children() { public get;  }
+Reference.Layout.LayoutFloatingWindow | public abstract property System.Int32 ChildrenCount() { public get;  }
+Reference.Layout.LayoutFloatingWindow | public virtual method System.Void WriteXml(System.Xml.XmlWriter writer)
+Reference.Layout.LayoutGroupBase | protected  constructor System.Void .ctor()
+Reference.Layout.LayoutGroupBase | protected  method System.Void NotifyChildrenTreeChanged(Reference.Layout.ChildrenTreeChange change)
+Reference.Layout.LayoutGroupBase | protected virtual method System.Void OnChildrenCollectionChanged()
+Reference.Layout.LayoutGroupBase | protected virtual method System.Void OnChildrenTreeChanged(Reference.Layout.ChildrenTreeChange change)
+Reference.Layout.LayoutGroupBase | public  event System.EventHandler ChildrenCollectionChanged
+Reference.Layout.LayoutGroupBase | public  event System.EventHandler<Reference.Layout.ChildrenTreeChangedEventArgs> ChildrenTreeChanged
+Reference.Layout.LayoutGroupBase | public abstract class : Reference.Layout.LayoutElement interfaces[]
+Reference.Layout.LayoutGroup`1 | protected abstract method System.Boolean GetVisibility()
+Reference.Layout.LayoutGroup`1 | protected override method System.Void OnParentChanged(Reference.Layout.ILayoutContainer oldValue,Reference.Layout.ILayoutContainer newValue)
+Reference.Layout.LayoutGroup`1 | protected virtual method System.Void ChildMoved(System.Int32 oldIndex,System.Int32 newIndex)
+Reference.Layout.LayoutGroup`1 | protected virtual method System.Void OnIsVisibleChanged()
+Reference.Layout.LayoutGroup`1 | public  method System.Int32 IndexOfChild(Reference.Layout.ILayoutElement element)
+Reference.Layout.LayoutGroup`1 | public  method System.Void ComputeVisibility()
+Reference.Layout.LayoutGroup`1 | public  method System.Void InsertChildAt(System.Int32 index,Reference.Layout.ILayoutElement element)
+Reference.Layout.LayoutGroup`1 | public  method System.Void MoveChild(System.Int32 oldIndex,System.Int32 newIndex)
+Reference.Layout.LayoutGroup`1 | public  method System.Void RemoveChild(Reference.Layout.ILayoutElement element)
+Reference.Layout.LayoutGroup`1 | public  method System.Void RemoveChildAt(System.Int32 childIndex)
+Reference.Layout.LayoutGroup`1 | public  method System.Void ReplaceChild(Reference.Layout.ILayoutElement oldElement,Reference.Layout.ILayoutElement newElement)
+Reference.Layout.LayoutGroup`1 | public  method System.Void ReplaceChildAt(System.Int32 index,Reference.Layout.ILayoutElement element)
+Reference.Layout.LayoutGroup`1 | public  method System.Xml.Schema.XmlSchema GetSchema()
+Reference.Layout.LayoutGroup`1 | public  property System.Boolean IsVisible() { public get; protected set;  }
+Reference.Layout.LayoutGroup`1 | public  property System.Collections.ObjectModel.ObservableCollection<T> Children() { public get;  }
+Reference.Layout.LayoutGroup`1 | public  property System.Int32 ChildrenCount() { public get;  }
+Reference.Layout.LayoutGroup`1 | public abstract class : Reference.Layout.LayoutGroupBase interfaces[System.ComponentModel.INotifyPropertyChanged,System.ComponentModel.INotifyPropertyChanging,System.Xml.Serialization.IXmlSerializable,Reference.Layout.ILayoutContainer,Reference.Layout.ILayoutElement,Reference.Layout.ILayoutGroup] <T:class&Reference.Layout.ILayoutElement>
+Reference.Layout.LayoutGroup`1 | public virtual method System.Void ReadXml(System.Xml.XmlReader reader)
+Reference.Layout.LayoutGroup`1 | public virtual method System.Void WriteXml(System.Xml.XmlWriter writer)
+Reference.Layout.LayoutPanel | protected override method System.Boolean GetVisibility()
+Reference.Layout.LayoutPanel | public  class : Reference.Layout.LayoutPositionableGroup<Reference.Layout.ILayoutPanelElement> interfaces[System.ComponentModel.INotifyPropertyChanged,System.ComponentModel.INotifyPropertyChanging,Reference.Layout.ILayoutContainer,Reference.Layout.ILayoutElement,Reference.Layout.ILayoutElementWithVisibility,Reference.Layout.ILayoutGroup,Reference.Layout.ILayoutOrientableGroup,Reference.Layout.ILayoutPanelElement]
+Reference.Layout.LayoutPanel | public  constructor System.Void .ctor()
+Reference.Layout.LayoutPanel | public  constructor System.Void .ctor(Reference.Layout.ILayoutPanelElement firstChild)
+Reference.Layout.LayoutPanel | public  property System.Windows.Controls.Orientation Orientation() { public get; public set;  }
+Reference.Layout.LayoutPanel | public override method System.Void ReadXml(System.Xml.XmlReader reader)
+Reference.Layout.LayoutPanel | public override method System.Void WriteXml(System.Xml.XmlWriter writer)
+Reference.Layout.LayoutPositionableGroup`1 | protected virtual method System.Void OnDockHeightChanged()
+Reference.Layout.LayoutPositionableGroup`1 | protected virtual method System.Void OnDockWidthChanged()
+Reference.Layout.LayoutPositionableGroup`1 | public  constructor System.Void .ctor()
+Reference.Layout.LayoutPositionableGroup`1 | public  property System.Boolean AllowDuplicateContent() { public get; public set;  }
+Reference.Layout.LayoutPositionableGroup`1 | public  property System.Boolean CanRepositionItems() { public get; public set;  }
+Reference.Layout.LayoutPositionableGroup`1 | public  property System.Boolean IsMaximized() { public get; public set;  }
+Reference.Layout.LayoutPositionableGroup`1 | public  property System.Double DockMinHeight() { public get; public set;  }
+Reference.Layout.LayoutPositionableGroup`1 | public  property System.Double DockMinWidth() { public get; public set;  }
+Reference.Layout.LayoutPositionableGroup`1 | public  property System.Double FloatingHeight() { public get; public set;  }
+Reference.Layout.LayoutPositionableGroup`1 | public  property System.Double FloatingLeft() { public get; public set;  }
+Reference.Layout.LayoutPositionableGroup`1 | public  property System.Double FloatingTop() { public get; public set;  }
+Reference.Layout.LayoutPositionableGroup`1 | public  property System.Double FloatingWidth() { public get; public set;  }
+Reference.Layout.LayoutPositionableGroup`1 | public  property System.Windows.GridLength DockHeight() { public get; public set;  }
+Reference.Layout.LayoutPositionableGroup`1 | public  property System.Windows.GridLength DockWidth() { public get; public set;  }
+Reference.Layout.LayoutPositionableGroup`1 | public abstract class : Reference.Layout.LayoutGroup<T> interfaces[System.ComponentModel.INotifyPropertyChanged,System.ComponentModel.INotifyPropertyChanging,Reference.Layout.ILayoutElement,Reference.Layout.ILayoutElementForFloatingWindow,Reference.Layout.ILayoutPositionableElement,Reference.Layout.ILayoutPositionableElementWithActualSize] <T:class&Reference.Layout.ILayoutElement>
+Reference.Layout.LayoutPositionableGroup`1 | public override method System.Void ReadXml(System.Xml.XmlReader reader)
+Reference.Layout.LayoutPositionableGroup`1 | public override method System.Void WriteXml(System.Xml.XmlWriter writer)
+Reference.Layout.LayoutRoot | public  class : Reference.Layout.LayoutElement interfaces[System.ComponentModel.INotifyPropertyChanged,System.ComponentModel.INotifyPropertyChanging,System.Xml.Serialization.IXmlSerializable,Reference.Layout.ILayoutContainer,Reference.Layout.ILayoutElement,Reference.Layout.ILayoutRoot]
+Reference.Layout.LayoutRoot | public  constructor System.Void .ctor()
+Reference.Layout.LayoutRoot | public  event System.EventHandler Updated
+Reference.Layout.LayoutRoot | public  event System.EventHandler<Reference.Layout.LayoutElementEventArgs> ElementAdded
+Reference.Layout.LayoutRoot | public  event System.EventHandler<Reference.Layout.LayoutElementEventArgs> ElementRemoved
+Reference.Layout.LayoutRoot | public  method System.Void CollectGarbage()
+Reference.Layout.LayoutRoot | public  method System.Void ReadXml(System.Xml.XmlReader reader)
+Reference.Layout.LayoutRoot | public  method System.Void RemoveChild(Reference.Layout.ILayoutElement element)
+Reference.Layout.LayoutRoot | public  method System.Void ReplaceChild(Reference.Layout.ILayoutElement oldElement,Reference.Layout.ILayoutElement newElement)
+Reference.Layout.LayoutRoot | public  method System.Void WriteXml(System.Xml.XmlWriter writer)
+Reference.Layout.LayoutRoot | public  method System.Xml.Schema.XmlSchema GetSchema()
+Reference.Layout.LayoutRoot | public  property Reference.DockingManager Manager() { public get;  }
+Reference.Layout.LayoutRoot | public  property Reference.Layout.LayoutAnchorSide BottomSide() { public get; public set;  }
+Reference.Layout.LayoutRoot | public  property Reference.Layout.LayoutAnchorSide LeftSide() { public get; public set;  }
+Reference.Layout.LayoutRoot | public  property Reference.Layout.LayoutAnchorSide RightSide() { public get; public set;  }
+Reference.Layout.LayoutRoot | public  property Reference.Layout.LayoutAnchorSide TopSide() { public get; public set;  }
+Reference.Layout.LayoutRoot | public  property Reference.Layout.LayoutContent ActiveContent() { public get; public set;  }
+Reference.Layout.LayoutRoot | public  property Reference.Layout.LayoutContent LastFocusedDocument() { public get;  }
+Reference.Layout.LayoutRoot | public  property Reference.Layout.LayoutPanel RootPanel() { public get; public set;  }
+Reference.Layout.LayoutRoot | public  property System.Collections.Generic.IEnumerable<Reference.Layout.ILayoutElement> Children() { public get;  }
+Reference.Layout.LayoutRoot | public  property System.Collections.ObjectModel.ObservableCollection<Reference.Layout.LayoutAnchorable> Hidden() { public get;  }
+Reference.Layout.LayoutRoot | public  property System.Collections.ObjectModel.ObservableCollection<Reference.Layout.LayoutFloatingWindow> FloatingWindows() { public get;  }
+Reference.Layout.LayoutRoot | public  property System.Int32 ChildrenCount() { public get;  }
+Reference.Layout.Serialization.LayoutSerializationCallbackEventArgs | public  class : System.ComponentModel.CancelEventArgs interfaces[]
+Reference.Layout.Serialization.LayoutSerializationCallbackEventArgs | public  constructor System.Void .ctor(Reference.Layout.LayoutContent model,System.Object previousContent)
+Reference.Layout.Serialization.LayoutSerializationCallbackEventArgs | public  property Reference.Layout.LayoutContent Model() { public get;  }
+Reference.Layout.Serialization.LayoutSerializationCallbackEventArgs | public  property System.Object Content() { public get; public set;  }
+Reference.Layout.Serialization.LayoutSerializer | protected  method System.Void EndDeserialization()
+Reference.Layout.Serialization.LayoutSerializer | protected  method System.Void StartDeserialization()
+Reference.Layout.Serialization.LayoutSerializer | protected virtual method System.Void FixupLayout(Reference.Layout.LayoutRoot layout)
+Reference.Layout.Serialization.LayoutSerializer | public  constructor System.Void .ctor(Reference.DockingManager manager)
+Reference.Layout.Serialization.LayoutSerializer | public  event System.EventHandler<Reference.Layout.Serialization.LayoutSerializationCallbackEventArgs> LayoutSerializationCallback
+Reference.Layout.Serialization.LayoutSerializer | public  property Reference.DockingManager Manager() { public get;  }
+Reference.Layout.Serialization.LayoutSerializer | public abstract class : System.Object interfaces[]
+Reference.Layout.Serialization.XmlLayoutSerializer | public  class : Reference.Layout.Serialization.LayoutSerializer interfaces[]
+Reference.Layout.Serialization.XmlLayoutSerializer | public  constructor System.Void .ctor(Reference.DockingManager manager)
+Reference.Layout.Serialization.XmlLayoutSerializer | public  method System.Void Deserialize(System.IO.Stream stream)
+Reference.Layout.Serialization.XmlLayoutSerializer | public  method System.Void Deserialize(System.IO.TextReader reader)
+Reference.Layout.Serialization.XmlLayoutSerializer | public  method System.Void Deserialize(System.String filepath)
+Reference.Layout.Serialization.XmlLayoutSerializer | public  method System.Void Deserialize(System.Xml.XmlReader reader)
+Reference.Layout.Serialization.XmlLayoutSerializer | public  method System.Void Serialize(System.IO.Stream stream)
+Reference.Layout.Serialization.XmlLayoutSerializer | public  method System.Void Serialize(System.IO.TextWriter writer)
+Reference.Layout.Serialization.XmlLayoutSerializer | public  method System.Void Serialize(System.String filepath)
+Reference.Layout.Serialization.XmlLayoutSerializer | public  method System.Void Serialize(System.Xml.XmlWriter writer)
+Reference.LayoutFloatingWindowControlCollectionChangedEventArgs | public  class : System.EventArgs interfaces[]
+Reference.LayoutFloatingWindowControlCollectionChangedEventArgs | public  constructor System.Void .ctor(System.Collections.Specialized.NotifyCollectionChangedEventArgs collectionChangedEventArgs)
+Reference.LayoutFloatingWindowControlCollectionChangedEventArgs | public  property System.Collections.Specialized.NotifyCollectionChangedEventArgs CollectionChangedEventArgs() { public get;  }
+Reference.Properties.Resources | public  class : System.Object interfaces[]
+Reference.Properties.Resources | public static property System.Globalization.CultureInfo Culture() { public get; public set;  }
+Reference.Properties.Resources | public static property System.Resources.ResourceManager ResourceManager() { public get;  }
+Reference.Properties.Resources | public static property System.String Anchorable_AutoHide() { public get;  }
+Reference.Properties.Resources | public static property System.String Anchorable_BtnAutoHide_Hint() { public get;  }
+Reference.Properties.Resources | public static property System.String Anchorable_BtnClose_Hint() { public get;  }
+Reference.Properties.Resources | public static property System.String Anchorable_CxMenu_Hint() { public get;  }
+Reference.Properties.Resources | public static property System.String Anchorable_Dock() { public get;  }
+Reference.Properties.Resources | public static property System.String Anchorable_DockAsDocument() { public get;  }
+Reference.Properties.Resources | public static property System.String Anchorable_Float() { public get;  }
+Reference.Properties.Resources | public static property System.String Anchorable_Hide() { public get;  }
+Reference.Properties.Resources | public static property System.String Document_BtnPinned_Hint() { public get;  }
+Reference.Properties.Resources | public static property System.String Document_Close() { public get;  }
+Reference.Properties.Resources | public static property System.String Document_CloseAll() { public get;  }
+Reference.Properties.Resources | public static property System.String Document_CloseAllButThis() { public get;  }
+Reference.Properties.Resources | public static property System.String Document_CxMenu_Hint() { public get;  }
+Reference.Properties.Resources | public static property System.String Document_DockAsDocument() { public get;  }
+Reference.Properties.Resources | public static property System.String Document_Float() { public get;  }
+Reference.Properties.Resources | public static property System.String Document_MoveToNextTabGroup() { public get;  }
+Reference.Properties.Resources | public static property System.String Document_MoveToPreviousTabGroup() { public get;  }
+Reference.Properties.Resources | public static property System.String Document_NewHorizontalTabGroup() { public get;  }
+Reference.Properties.Resources | public static property System.String Document_NewVerticalTabGroup() { public get;  }
+Reference.Properties.Resources | public static property System.String Window_Maximize() { public get;  }
+Reference.Properties.Resources | public static property System.String Window_Restore() { public get;  }
+Reference.Themes.DictionaryTheme | public  constructor System.Void .ctor()
+Reference.Themes.DictionaryTheme | public  constructor System.Void .ctor(System.Windows.ResourceDictionary themeResourceDictionary)
+Reference.Themes.DictionaryTheme | public  property System.Windows.ResourceDictionary ThemeResourceDictionary() { public get;  }
+Reference.Themes.DictionaryTheme | public abstract class : Reference.Themes.Theme interfaces[]
+Reference.Themes.DictionaryTheme | public override method System.Uri GetResourceUri()
+Reference.Themes.GenericTheme | public  class : Reference.Themes.Theme interfaces[]
+Reference.Themes.GenericTheme | public  constructor System.Void .ctor()
+Reference.Themes.GenericTheme | public override method System.Uri GetResourceUri()
+Reference.Themes.Theme | public  constructor System.Void .ctor()
+Reference.Themes.Theme | public abstract class : System.Windows.DependencyObject interfaces[]
+Reference.Themes.Theme | public abstract method System.Uri GetResourceUri()

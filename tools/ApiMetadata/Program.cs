@@ -5,11 +5,12 @@ using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
 if (args.Length < 2)
-    throw new ArgumentException("Usage: ApiMetadata <assembly.dll> <output-prefix> [--ref-dir <directory>]... [--profile <name>]");
+    throw new ArgumentException("Usage: ApiMetadata <assembly.dll> <output-prefix> [--ref-dir <directory>]... [--profile <name>] [--namespace-alias <original>=<neutral>]");
 var assemblyPath = Path.GetFullPath(args[0]);
 var output = Path.GetFullPath(args[1]);
 var directories = new List<string>
@@ -17,6 +18,7 @@ var directories = new List<string>
     Path.GetDirectoryName(assemblyPath)!
 };
 var profile = "default";
+NamespaceAlias? alias = null;
 for (var i = 2; i < args.Length; i++)
 {
     if (i + 1 == args.Length)
@@ -28,6 +30,9 @@ for (var i = 2; i < args.Length; i++)
             break;
         case "--profile":
             profile = args[i];
+            break;
+        case "--namespace-alias":
+            alias = NamespaceAlias.Parse(args[i]);
             break;
         default:
             throw new ArgumentException("Unknown option: " + args[i - 1]);
@@ -106,9 +111,47 @@ foreach (var type in types)
 if (unresolved.Count != 0)
     throw new InvalidDataException("Unresolved API types: " + string.Join(", ", unresolved));
 var canonical = string.Join("\n", declarations) + "\n";
+var inventory = new
+{
+    schema = 3,
+    scanner = "UnoDock.ApiMetadata/v2",
+    method = "Roslyn symbols imported from PE metadata; no IL bodies, resources or assembly execution",
+    profile,
+    assembly = assembly.Identity.ToString(),
+    sha256 = Hash(Encoding.UTF8.GetBytes(canonical)),
+    inputHashes = hashes,
+    typeCount = types.Length,
+    count = declarations.Count,
+    forwardedTypes = assembly.GetForwardedTypes().Select(TypeName).Order(StringComparer.Ordinal).ToArray(),
+    declarations,
+    types = records
+};
+var indented = new JsonSerializerOptions
+{
+    WriteIndented = true
+};
+string json;
+if (alias == null)
+    json = JsonSerializer.Serialize(inventory, indented);
+else
+{
+    // The neutral alias is a pure text substitution applied to every emitted string and
+    // property name after extraction. Record and member order stays that of the original
+    // metadata; only the hashed declaration list is re-sorted so its digest covers the
+    // neutral text. Re-running with the same alias is byte-for-byte reproducible.
+    var neutral = (JsonObject)alias.Apply(JsonSerializer.SerializeToNode(inventory))!;
+    var sorted = neutral["declarations"]!.AsArray().Select(n => n!.GetValue<string>()).Order(StringComparer.Ordinal).ToArray();
+    canonical = string.Join("\n", sorted) + "\n";
+    neutral["sha256"] = Hash(Encoding.UTF8.GetBytes(canonical));
+    neutral["declarations"] = new JsonArray(sorted.Select(s => (JsonNode?)JsonValue.Create(s)).ToArray());
+    json = neutral.ToJsonString(indented);
+    if (json.Contains(alias.Original, StringComparison.OrdinalIgnoreCase) || json.Contains(alias.OriginalMangled, StringComparison.OrdinalIgnoreCase))
+        throw new InvalidDataException("Namespace alias left an original root namespace token in the inventory.");
+}
+
 Directory.CreateDirectory(Path.GetDirectoryName(output)!);
 File.WriteAllText(output + ".txt", canonical, new UTF8Encoding(false));
-File.WriteAllText(output + ".json", JsonSerializer.Serialize(new { schema = 3, scanner = "UnoDock.ApiMetadata/v2", method = "Roslyn symbols imported from PE metadata; no IL bodies, resources or assembly execution", profile, assembly = assembly.Identity.ToString(), sha256 = Hash(Encoding.UTF8.GetBytes(canonical)), inputHashes = hashes, typeCount = types.Length, count = declarations.Count, forwardedTypes = assembly.GetForwardedTypes().Select(TypeName).Order(StringComparer.Ordinal).ToArray(), declarations, types = records }, new JsonSerializerOptions { WriteIndented = true }) + "\n", new UTF8Encoding(false));
+File.WriteAllText(output + ".json", json + "\n", new UTF8Encoding(false));
 Console.WriteLine($"Metadata: {types.Length} exported types; {declarations.Count} declared API entries; SHA256 {Hash(Encoding.UTF8.GetBytes(canonical))}");
 object MemberRecord(ISymbol member) => new
 {
@@ -272,3 +315,26 @@ static string Typed(TypedConstant value) => value.Kind switch
 };
 static string[] Attributes(ImmutableArray<AttributeData> attributes) => attributes.Select(a => TypeName(a.AttributeClass) + "(" + string.Join(",", a.ConstructorArguments.Select(Typed)) + ")" + "{" + string.Join(",", a.NamedArguments.OrderBy(p => p.Key, StringComparer.Ordinal).Select(p => p.Key + "=" + Typed(p.Value))) + "}").Order(StringComparer.Ordinal).ToArray();
 static string Hash(byte[] bytes) => Convert.ToHexStringLower(SHA256.HashData(bytes));
+// Replaces a root namespace (and its compiler-mangled form used in generated member
+// names, where '.' becomes '-') with a neutral token in every string of an inventory.
+internal sealed record NamespaceAlias(string Original, string Neutral)
+{
+    public string OriginalMangled => Original.Replace('.', '-');
+
+    public static NamespaceAlias Parse(string value)
+    {
+        var parts = value.Split('=');
+        if (parts.Length != 2 || parts[0].Length == 0 || parts[1].Length == 0 || parts[1].Contains(parts[0], StringComparison.Ordinal))
+            throw new ArgumentException("Expected --namespace-alias <original>=<neutral>: " + value);
+        return new NamespaceAlias(parts[0], parts[1]);
+    }
+
+    public string Apply(string value) => value.Replace(Original, Neutral, StringComparison.Ordinal).Replace(OriginalMangled, Neutral.Replace('.', '-'), StringComparison.Ordinal);
+    public JsonNode? Apply(JsonNode? node) => node switch
+    {
+        JsonObject o => new JsonObject(o.Select(p => KeyValuePair.Create(Apply(p.Key), Apply(p.Value)))),
+        JsonArray a => new JsonArray(a.Select(Apply).ToArray()),
+        JsonValue v when v.GetValueKind() == JsonValueKind.String => JsonValue.Create(Apply(v.GetValue<string>())),
+        _ => node?.DeepClone()
+    };
+}

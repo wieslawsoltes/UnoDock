@@ -146,7 +146,7 @@ def compare(reference: dict, implementation: dict, substitutions: dict[str, str]
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("implementation", type=Path)
-    parser.add_argument("--reference", type=Path, default=ROOT / "contracts/avalondock-metadata-release.json")
+    parser.add_argument("--reference", type=Path, default=ROOT / "contracts/reference-metadata-release.json")
     parser.add_argument("--mapping", type=Path, default=ROOT / "contracts/type-mappings.json")
     parser.add_argument("--output", type=Path, default=ROOT / "artifacts/metadata-diff.json")
     parser.add_argument("--baseline", type=Path, help="Fail for new diagnostics relative to a reviewed, reference-bound baseline")

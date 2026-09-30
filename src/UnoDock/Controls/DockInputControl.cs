@@ -4,7 +4,7 @@ using UnoDock.Compatibility;
 
 namespace UnoDock.Controls;
 /// <summary>
-/// Composed control with the named AvalonDock mouse/focus extension points. These
+/// Composed control with the named reference-library mouse/focus extension points. These
 /// stages run locally when Uno delivers the native event, not on a fabricated WPF tunnel.
 /// </summary>
 public abstract class DockInputControl : ContentControl

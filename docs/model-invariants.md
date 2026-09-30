@@ -52,7 +52,7 @@ not cleared by an obsolete root's repair operation.
 
 Last-focused pointers and flags are updated coherently. Root repair adopts active
 content inserted from a detached tree and clears extra flags. These are model
-invariants, not claims of full original AvalonDock event-order equivalence for
+invariants, not claims of full reference-library event-order equivalence for
 arbitrary throwing or reentrant application callbacks.
 
 ## Coverage

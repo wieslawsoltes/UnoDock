@@ -29,16 +29,18 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          source="$RUNNER_TEMP/reference/ExtendedWPFToolkitSolution/Src/Xceed.Wpf.AvalonDock"
-          dotnet run --project tools/ApiScan -- "$source" contracts/avalondock
-          dotnet run --project tools/ApiScan -- "$source" "$RUNNER_TEMP/repeat"
-          cmp contracts/avalondock.json "$RUNNER_TEMP/repeat.json"
+          pin() { python3 -c "import json, sys; print(json.load(open('contracts/reference.json'))[sys.argv[1]])" "$1"; }
+          source="$RUNNER_TEMP/reference/$(pin path)"
+          namespace_alias="$(pin referenceNamespace)=$(pin neutralNamespace)"
+          dotnet run --project tools/ApiScan -- "$source" contracts/reference-declarations --namespace-alias "$namespace_alias"
+          dotnet run --project tools/ApiScan -- "$source" "$RUNNER_TEMP/repeat" --namespace-alias "$namespace_alias"
+          cmp contracts/reference-declarations.json "$RUNNER_TEMP/repeat.json"
           rm -rf "$RUNNER_TEMP/reference"
       - name: Record verified inventory and pins
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add contracts/avalondock.json contracts/avalondock.txt contracts/versions.json global.json
+          git add contracts/reference-declarations.json contracts/reference-declarations.txt contracts/versions.json global.json
           git diff --cached --quiet || (git commit -m 'build: record deterministic reference API inventory and stable Uno pins' && git pull --rebase origin main && git push origin HEAD:main)
       - uses: actions/upload-artifact@v4
         with:

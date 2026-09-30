@@ -104,11 +104,11 @@ and visual parity remains unverified. NuGet publishing is a separate release act
 
 ## Public contract references
 
-- https://xceed.com/documentation/xceed-toolkit-plus-for-wpf/Xceed.Wpf.AvalonDock~Xceed.Wpf.AvalonDock.Controls.DropDownButton~DropDownContextMenu.html
-- https://xceed.com/documentation/xceed-toolkit-plus-for-wpf/Xceed.Wpf.AvalonDock~Xceed.Wpf.AvalonDock.Controls.DropDownControlArea~OnPreviewMouseRightButtonUp.html
+- https://xceed.com/documentation/xceed-toolkit-plus-for-wpf/ (reference-library `Reference.Controls.DropDownButton.DropDownContextMenu`
+  and `Reference.Controls.DropDownControlArea.OnPreviewMouseRightButtonUp`)
 - https://learn.microsoft.com/en-us/windows/windows-app-sdk/api/winrt/microsoft.ui.xaml.controls.primitives.flyoutbase.showat
 - https://learn.microsoft.com/en-us/windows/windows-app-sdk/api/winrt/microsoft.ui.xaml.uielement.contextrequested
 
-The pinned AvalonDock inventory defines the requested surface, not separately licensed
+The pinned reference inventory defines the requested surface, not separately licensed
 PLUS features. Public Uno hosting code was inspected to diagnose native event timing;
-no original AvalonDock algorithms were translated.
+no original reference-library algorithms were translated.

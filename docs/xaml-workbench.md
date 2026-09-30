@@ -65,7 +65,7 @@ Collections retain their get-only ownership collection; declare children inline
 or use DocumentsSource/AnchorablesSource rather than replacing the child list. WPF markup extensions, triggers and arbitrary WPF resources are not WinUI
 XAML and are not emulated.
 
-## Source-backed items and AvalonDock-style container conventions
+## Source-backed items and reference-library container conventions
 
 The normal `DocumentsSource`, `AnchorablesSource`, `LayoutItemTemplate`, template
 selectors, header/title templates and `LayoutItemContainerStyle` entry points

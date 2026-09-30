@@ -1,9 +1,10 @@
 # Preview 14: namespace, sample and presentation acceptance
 
-This increment intentionally renames shipped `Xceed.Wpf.AvalonDock.*` types to
-`UnoDock.*`. Recompile dependents and update C# and `using:` XAML namespaces. Package
-and assembly names stay unchanged. Original public reference data and probe namespaces
-are retained, including historical observations; they are not product API.
+This increment intentionally renames shipped types from the reference library's root
+namespace to `UnoDock.*`. Recompile dependents and update C# and `using:` XAML namespaces. Package
+and assembly names stay unchanged. Original public reference data is retained,
+including historical observations (now recorded with the neutral `Reference.*` namespace
+token); it is not product API.
 
 ## Namespace evidence
 

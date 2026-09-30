@@ -55,6 +55,6 @@ a timeout is a failure. No assertions, reference fixtures, API mappings, compara
 thresholds or diagnostic allowlist entries were relaxed.
 
 Product namespaces remain `UnoDock.*`; the clean-room boundary is unchanged. This
-increment does not claim full AvalonDock API/behavior/pixel parity, native WinUI
+increment does not claim full reference-library API/behavior/pixel parity, native WinUI
 runtime coverage, external UIA transport, or NuGet publication. Exact committed
 CI results, rather than this document, establish executed acceptance counts.

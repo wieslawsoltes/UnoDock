@@ -3,7 +3,7 @@
 This increment reviews the docking transaction, floating-host lifetime, drag input,
 coordinate and stacking adapters, theme consumers, navigator/menu interactions,
 and their acceptance tests. It is not a claim that every repository line has been
-independently audited or that the complete AvalonDock port is finished.
+independently audited or that the complete reference-library port is finished.
 
 ## Theme contract
 
@@ -111,4 +111,4 @@ run IDs and counts are recorded in the PR after final validation, not predicted 
 
 Original reference fixtures, API mappings and comparator thresholds are unchanged.
 No original implementation, templates, artwork or fonts were imported. This work
-does not claim full AvalonDock API/behavior/pixel equivalence or NuGet publication.
+does not claim full reference-library API/behavior/pixel equivalence or NuGet publication.

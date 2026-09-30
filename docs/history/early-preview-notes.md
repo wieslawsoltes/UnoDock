@@ -27,11 +27,11 @@ See [exact behavior, independent observations and safety differences](docs/navig
 [![Build and test](https://github.com/wieslawsoltes/UnoDock/actions/workflows/ci.yml/badge.svg)](https://github.com/wieslawsoltes/UnoDock/actions/workflows/ci.yml)
 [![Reference metadata](https://github.com/wieslawsoltes/UnoDock/actions/workflows/reference-metadata.yml/badge.svg)](https://github.com/wieslawsoltes/UnoDock/actions/workflows/reference-metadata.yml)
 
-Independent AvalonDock-style docking for **Uno Platform 6.7**, using **`UnoDock.*`**
+Independent docking following the reference WPF docking library for **Uno Platform 6.7**, using **`UnoDock.*`**
 namespaces and Uno/WinUI controls.
 
 **Version: 0.1.0-preview.19. Full API, behavioral and visual parity is not verified.**
-The target is the pinned public AvalonDock repository and stock presentation, not
+The target is the pinned public reference repository and stock presentation, not
 separately licensed commercial themes. This is not WPF binary compatibility. The
 independently authored implementation is MIT-licensed and is not affiliated with or
 endorsed by Xceed or Uno Platform.
@@ -111,7 +111,7 @@ changes synchronize the visible selector; redundant padding no longer clips comb
 
 The inspector is sample-owned, not a full Xceed PropertyGrid implementation. No original
 PropertyGrid templates, bodies, artwork or fonts were imported. This increment changes
-sample presentation and editing behavior, **not the normalized AvalonDock API match count**.
+sample presentation and editing behavior, **not the normalized reference API match count**.
 See [inspector implementation, tests and limits](docs/inspector-quality.md).
 
 ## UnoDock namespaces and classic samples

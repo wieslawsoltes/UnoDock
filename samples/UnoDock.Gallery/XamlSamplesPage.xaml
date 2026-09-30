@@ -6,7 +6,7 @@
         </Grid.RowDefinitions>
         <StackPanel Margin="8" Spacing="4">
             <TextBlock Text="XAML workspaces" FontSize="24" FontWeight="SemiBold"/>
-            <TextBlock Text="AvalonDock layout conventions. Uno binding, templates, semantic colors and retained editor views." TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+            <TextBlock Text="Classic WPF docking layout conventions. Uno binding, templates, semantic colors and retained editor views." TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
         </StackPanel>
         <Pivot Grid.Row="1">
             <PivotItem Header="Declarative layout">

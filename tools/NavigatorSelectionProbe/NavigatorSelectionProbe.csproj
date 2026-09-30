@@ -4,6 +4,8 @@
     <IsPackable>false</IsPackable><ImplicitUsings>disable</ImplicitUsings><Nullable>disable</Nullable>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Xceed.Wpf.AvalonDock"><HintPath>$(ReferenceAssembly)</HintPath><Private>true</Private></Reference>
+    <ReferenceUsing Include="Controls" />
+    <ReferenceUsing Include="Layout" />
   </ItemGroup>
+  <Import Project="../ReferenceIdentity/ReferenceIdentity.targets" />
 </Project>

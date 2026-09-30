@@ -7,11 +7,26 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-if (args.Length < 2)
-    throw new ArgumentException("Usage: ApiScan <source-directory> <output-prefix> [preprocessor-symbols-comma-separated]");
-var root = Path.GetFullPath(args[0]);
-var prefix = Path.GetFullPath(args[1]);
-var symbols = args.Length > 2 ? args[2].Split(',', StringSplitOptions.RemoveEmptyEntries) : Array.Empty<string>();
+var positional = args.ToList();
+Func<string, string> neutral = value => value;
+var aliasOption = positional.IndexOf("--namespace-alias");
+if (aliasOption >= 0)
+{
+    // Replaces the original root namespace with a neutral token in every emitted
+    // declaration before sorting, so the recorded inventory never carries the original name.
+    var parts = aliasOption + 1 < positional.Count ? positional[aliasOption + 1].Split('=') : [];
+    if (parts.Length != 2 || parts[0].Length == 0 || parts[1].Length == 0 || parts[1].Contains(parts[0], StringComparison.Ordinal))
+        throw new ArgumentException("Expected --namespace-alias <original>=<neutral>");
+    var (original, replacement) = (parts[0], parts[1]);
+    neutral = value => value.Replace(original, replacement, StringComparison.Ordinal);
+    positional.RemoveRange(aliasOption, 2);
+}
+
+if (positional.Count < 2)
+    throw new ArgumentException("Usage: ApiScan <source-directory> <output-prefix> [preprocessor-symbols-comma-separated] [--namespace-alias <original>=<neutral>]");
+var root = Path.GetFullPath(positional[0]);
+var prefix = Path.GetFullPath(positional[1]);
+var symbols = positional.Count > 2 ? positional[2].Split(',', StringSplitOptions.RemoveEmptyEntries) : Array.Empty<string>();
 var entries = new SortedSet<string>(StringComparer.Ordinal);
 var files = new SortedDictionary<string, string>(StringComparer.Ordinal);
 foreach (var path in Directory.EnumerateFiles(root, "*.cs", SearchOption.AllDirectories).Order(StringComparer.Ordinal))
@@ -20,7 +35,7 @@ foreach (var path in Directory.EnumerateFiles(root, "*.cs", SearchOption.AllDire
     if (relative.Split('/').Any(p => p is "obj" or "bin"))
         continue;
     var text = File.ReadAllText(path);
-    files[relative] = Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(text)));
+    files[neutral(relative)] = Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(text)));
     var tree = CSharpSyntaxTree.ParseText(text, new CSharpParseOptions(LanguageVersion.Preview, preprocessorSymbols: symbols));
     if (tree.GetDiagnostics().Any(d => d.Severity == DiagnosticSeverity.Error))
         throw new InvalidDataException("Parse failed: " + relative);
@@ -53,9 +68,9 @@ foreach (var path in Directory.EnumerateFiles(root, "*.cs", SearchOption.AllDire
         };
         if (node is BaseFieldDeclarationSyntax f)
             foreach (var variable in f.Declaration.Variables)
-                entries.Add($"{owner} | {head} {(node is EventFieldDeclarationSyntax ? "event " : "")}{Flat(f.Declaration.Type)} {variable.Identifier.Text}{(f.Modifiers.Any(SyntaxKind.ConstKeyword) ? Flat(variable.Initializer) : "")}".Trim());
+                entries.Add(neutral($"{owner} | {head} {(node is EventFieldDeclarationSyntax ? "event " : "")}{Flat(f.Declaration.Type)} {variable.Identifier.Text}{(f.Modifiers.Any(SyntaxKind.ConstKeyword) ? Flat(variable.Initializer) : "")}".Trim()));
         else if (declaration != null)
-            entries.Add(owner + " | " + declaration.Trim());
+            entries.Add(neutral(owner + " | " + declaration.Trim()));
     }
 }
 

@@ -56,7 +56,7 @@ WPF UIElement overrides. No inventory, comparator, type mapping or baseline is r
 The no-regression gate and the unsatisfied full strict-parity gate are different checks.
 
 Behavior is independently implemented from public contracts and observed native host
-semantics. No original AvalonDock bodies, templates, resources, artwork or font files are
+semantics. No original reference-library bodies, templates, resources, artwork or font files are
 copied. Robustness tests do not establish original WPF event-ordering equivalence.
 
 ## Scope and artifacts

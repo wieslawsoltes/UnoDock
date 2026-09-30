@@ -2,9 +2,6 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
-using Xceed.Wpf.AvalonDock;
-using Xceed.Wpf.AvalonDock.Layout;
-using Xceed.Wpf.AvalonDock.Layout.Serialization;
 
 // A public entry used from the visual probe; all data is observed via public APIs.
 internal static class AutoHideObservations

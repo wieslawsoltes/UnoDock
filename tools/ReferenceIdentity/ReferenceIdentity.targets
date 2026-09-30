@@ -1,0 +1,39 @@
+<Project>
+  <!-- Shared by the isolated reference probes. The pinned reference build's root
+       namespace (which is also its assembly name) is recorded only in
+       contracts/reference.json. Probe sources never spell it: this file references the
+       assembly, generates the namespace imports each probe declares through
+       ReferenceUsing items, and exposes ReferenceIdentity for neutral output names.
+       Workflows may pass -p:ReferenceNamespace=... explicitly; the default is read from
+       the manifest so local and CI builds agree. -->
+  <PropertyGroup>
+    <ReferenceManifest Condition="'$(ReferenceManifest)' == ''">$(MSBuildThisFileDirectory)../../contracts/reference.json</ReferenceManifest>
+    <ReferenceNamespace Condition="'$(ReferenceNamespace)' == ''">$([System.Text.RegularExpressions.Regex]::Replace($([System.IO.File]::ReadAllText('$(ReferenceManifest)')), '(?s)^.*"referenceNamespace"\s*:\s*"([^"]+)".*$', '$1'))</ReferenceNamespace>
+    <NeutralNamespace Condition="'$(NeutralNamespace)' == ''">$([System.Text.RegularExpressions.Regex]::Replace($([System.IO.File]::ReadAllText('$(ReferenceManifest)')), '(?s)^.*"neutralNamespace"\s*:\s*"([^"]+)".*$', '$1'))</NeutralNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="$(ReferenceNamespace)"><HintPath>$(ReferenceAssembly)</HintPath><Private>true</Private></Reference>
+    <Compile Include="$(MSBuildThisFileDirectory)ReferenceIdentity.cs" Link="ReferenceIdentity.cs" />
+  </ItemGroup>
+  <Target Name="RequireReferenceAssembly" BeforeTargets="ResolveReferences" Condition="!Exists('$(ReferenceAssembly)')">
+    <Error Text="Pass ReferenceAssembly pointing to the isolated pinned reference build ($(ReferenceNamespace).dll)." />
+  </Target>
+  <Target Name="GenerateReferenceIdentity" BeforeTargets="CoreCompile">
+    <Error Condition="'$(ReferenceNamespace)' == '' or $(ReferenceNamespace.Contains('{')) or '$(NeutralNamespace)' == '' or $(NeutralNamespace.Contains('{'))" Text="contracts/reference.json must define referenceNamespace and neutralNamespace." />
+    <PropertyGroup>
+      <ReferenceIdentityFile>$(IntermediateOutputPath)ReferenceIdentity.g.cs</ReferenceIdentityFile>
+    </PropertyGroup>
+    <ItemGroup>
+      <_ReferenceIdentityLine Include="// &lt;auto-generated /&gt; from contracts/reference.json" />
+      <_ReferenceIdentityLine Include="global using ReferenceApi = $(ReferenceNamespace)%3B" />
+      <_ReferenceIdentityLine Include="global using $(ReferenceNamespace)%3B" />
+      <_ReferenceIdentityLine Include="@(ReferenceUsing->'global using $(ReferenceNamespace).%(Identity)%3B')" />
+      <_ReferenceIdentityLine Include="internal static partial class ReferenceIdentity { internal const string Namespace = &quot;$(ReferenceNamespace)&quot;%3B internal const string Neutral = &quot;$(NeutralNamespace)&quot;%3B }" />
+    </ItemGroup>
+    <WriteLinesToFile File="$(ReferenceIdentityFile)" Lines="@(_ReferenceIdentityLine)" Overwrite="true" WriteOnlyWhenDifferent="true" />
+    <ItemGroup>
+      <Compile Include="$(ReferenceIdentityFile)" />
+      <FileWrites Include="$(ReferenceIdentityFile)" />
+    </ItemGroup>
+  </Target>
+</Project>
