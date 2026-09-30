@@ -34,7 +34,23 @@ internal static class DockVisuals
 
     /// <summary>Open a menu from a ▾ chrome button: below the button, aligned to
         /// its leading edge, like a drop-down list.</summary>
-        internal static void ShowBelow(FlyoutBase flyout, FrameworkElement anchor) => flyout.ShowAt(anchor, new FlyoutShowOptions { Placement = FlyoutPlacementMode.BottomEdgeAlignedLeft });
+        internal static void ShowBelow(FlyoutBase flyout, FrameworkElement anchor)
+    {
+        if (anchor is DockChromeButton button)
+        {
+            button.IsMenuOpen = true;
+            void Closed(object? sender, object e)
+            {
+                flyout.Closed -= Closed;
+                button.IsMenuOpen = false;
+            }
+
+            flyout.Closed += Closed;
+        }
+
+        flyout.ShowAt(anchor, new FlyoutShowOptions { Placement = FlyoutPlacementMode.BottomEdgeAlignedLeft });
+    }
+
     internal static MenuFlyout Menu(DockingManager manager, LayoutContent model)
     {
         var item = manager.GetLayoutItemFromModel(model);

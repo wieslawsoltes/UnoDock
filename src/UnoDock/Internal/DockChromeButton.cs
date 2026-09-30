@@ -214,20 +214,36 @@ internal sealed partial class DockChromeButton : Button
         _states?.Refresh(this);
     }
 
+    private bool _menuOpen;
+    /// <summary>A drop-down menu opened from this button is showing: classic chrome
+        /// keeps the button in its pressed look until the menu closes.</summary>
+        internal bool IsMenuOpen
+    {
+        get => _menuOpen;
+        set
+        {
+            if (_menuOpen == value)
+                return;
+            _menuOpen = value;
+            Paint();
+        }
+    }
+
     private void Paint()
     {
         // Classic chrome paints a disabled glyph with the theme's disabled brush.
         // A palette without a distinct disabled brush keeps the dimmed resting
         // foreground, as before.
         var distinctDisabled = !_fluent && _palette.DisabledForeground is { } disabled && !ReferenceEquals(disabled, _palette.Foreground);
-        var hot = IsEnabled && (IsPressed || _over);
+        var pressed = IsPressed || _menuOpen;
+        var hot = IsEnabled && (pressed || _over);
         Brush foreground;
         if (_fluent)
             foreground = _foregroundOverride != null && IsEnabled ? _foregroundOverride : !IsEnabled ? _palette.DisabledForeground ?? _palette.Foreground : _subdued ? _palette.SecondaryForeground ?? _palette.Foreground : _palette.Foreground;
         else if (!IsEnabled)
             foreground = distinctDisabled ? _palette.DisabledForeground! : _palette.Foreground;
         else
-            foreground = (IsPressed ? _pressedForegroundOverride ?? _hoverForegroundOverride : _over ? _hoverForegroundOverride : null) ?? _foregroundOverride ?? _palette.Foreground;
+            foreground = (pressed ? _pressedForegroundOverride ?? _hoverForegroundOverride : _over ? _hoverForegroundOverride : null) ?? _foregroundOverride ?? _palette.Foreground;
         // The pinned browser renderer can stall in inherited brush propagation
         // before attachment. Retain the latest palette and publish the same brush
         // at Loaded; desktop/offscreen presentation keeps its existing contract.
@@ -245,7 +261,7 @@ internal sealed partial class DockChromeButton : Button
             return;
         }
 
-        Background = hot ? IsPressed ? _pressedOverride ?? _palette.Pressed : _hoverOverride ?? _palette.Hover : _backgroundOverride ?? DockChrome.Transparent;
+        Background = hot ? pressed ? _pressedOverride ?? _palette.Pressed : _hoverOverride ?? _palette.Hover : _backgroundOverride ?? DockChrome.Transparent;
         BorderBrush = FocusState == FocusState.Keyboard ? _palette.Accent : hot ? _hoverBorderOverride : null;
         Opacity = IsEnabled || distinctDisabled ? 1 : .45;
     }
