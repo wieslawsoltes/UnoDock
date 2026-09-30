@@ -286,7 +286,12 @@ public static class ReferenceBehaviorTests
 
     private sealed class Fixture : IDisposable
     {
-        internal readonly DockingManager Manager = new();
+        // Model behavior only: floating windows stay in the (unhosted) surface
+        // rather than opening native windows for a manager without a window.
+        internal readonly DockingManager Manager = new()
+        {
+            FloatingWindowMode = FloatingWindowMode.InSurface
+        };
         internal LayoutRoot Root => Manager.Layout;
 
         internal Fixture(Func<DockingManager, LayoutRoot> layout) => Manager.Layout = layout(Manager);
