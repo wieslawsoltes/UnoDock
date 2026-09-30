@@ -316,7 +316,9 @@ internal static class WindowPlacementTests
     private static Task Wait(Func<bool> ready) => Wait(ready, "The window placement did not settle.");
     private static async Task Wait(Func<bool> ready, string message)
     {
-        for (var i = 0; i < 120 && !ready(); i++)
+        // Native placement round-trips through the window manager; allow a
+        // slow first window on shared CI runners.
+        for (var i = 0; i < 240 && !ready(); i++)
             await Task.Delay(25);
         Check.True(ready(), message);
     }
