@@ -9,6 +9,18 @@ public partial class App : Application
     {
         if (TryLaunchBrowserWorkspace())
             return;
+        if (ReferenceScenario.Mode is { } scenario)
+        {
+            // Side-by-side review scene (see ReferenceScenario).
+            _window = new Window
+            {
+                Title = "UnoDock - " + scenario
+            };
+            _window.Content = ReferenceScenario.Create(_window, scenario);
+            _window.Activate();
+            return;
+        }
+
         _window = new Window
         {
             Title = "UnoDock Samples"
