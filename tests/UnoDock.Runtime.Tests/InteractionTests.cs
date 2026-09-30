@@ -527,11 +527,13 @@ public static class InteractionTests
                     lastChange.Restart();
                 }
 
-                if (!intermediate && lastChange.Elapsed >= TimeSpan.FromMilliseconds(250))
+                // A committed reorder can reveal the selected tab after one more
+                // layout pass under CI load; require a longer quiet period.
+                if (!intermediate && lastChange.Elapsed >= TimeSpan.FromMilliseconds(600))
                     break;
             }
 
-            Check.True(!intermediate && lastChange.Elapsed >= TimeSpan.FromMilliseconds(250), "The final selected-tab reveal did not settle within three seconds.");
+            Check.True(!intermediate && lastChange.Elapsed >= TimeSpan.FromMilliseconds(600), "The final selected-tab reveal did not settle within three seconds.");
             var final = scroll.HorizontalOffset;
             await Task.Delay(100);
             Check.False(timer.IsEnabled);

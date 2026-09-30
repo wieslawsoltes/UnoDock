@@ -301,10 +301,17 @@ internal static class DesktopFloatingTests
                         var handle = Field<Border>(f.Control, "_dragHandle");
                         var origin = input.ScreenPoint(f.Control, new(0, 0));
                         var modelOrigin = new Point(f.Source[0].FloatingLeft, f.Source[0].FloatingTop);
-                        input.MoveTo(handle, new(Math.Min(100, handle.ActualWidth / 2), handle.ActualHeight / 2));
+                        // Raise the host so the press lands on its caption, then cross
+                        // the drag threshold before the long motion to the target.
+                        f.Control.NativeWindow!.Activate();
+                        await Task.Delay(120);
+                        var grip = new Point(Math.Min(100, handle.ActualWidth / 2), handle.ActualHeight / 2);
+                        input.MoveTo(handle, grip);
                         await Task.Delay(60);
                         input.Press();
                         await Task.Delay(60);
+                        input.MoveTo(handle, new(grip.X + 12, grip.Y + 6));
+                        await Task.Delay(40);
                         var target = f.DocumentCenter();
                         input.MoveTo(f.Surface, target);
                         await Wait(() => f.Control.IsDragging);
