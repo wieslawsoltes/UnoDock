@@ -8,6 +8,8 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../UnoDock/UnoDock.csproj" />
-    <None Update="Assets/*.mjs" Pack="true" PackagePath="contentFiles/any/any/UnoDock.Browser/" />
+    <!-- Ship the browser shell modules once, as non-compiled content under UnoDock.Browser/Assets/.
+         Declaring them here replaces the Uno.Sdk Assets/** default, which would pack extra copies. -->
+    <Content Include="Assets/*.mjs" Pack="true" PackagePath="contentFiles/any/any/UnoDock.Browser/" BuildAction="None" />
   </ItemGroup>
 </Project>

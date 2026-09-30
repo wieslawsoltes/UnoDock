@@ -1,0 +1,22 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      github-actions:
+        patterns: ['*']
+    commit-message:
+      prefix: ci
+
+  - package-ecosystem: nuget
+    # Libraries, samples, tests and tools; global.json pins the Uno.Sdk MSBuild SDK.
+    directories: ['/', '/src/*', '/samples/*', '/tests/*', '/tools/*']
+    schedule:
+      interval: weekly
+    groups:
+      nuget:
+        patterns: ['*']
+    commit-message:
+      prefix: build

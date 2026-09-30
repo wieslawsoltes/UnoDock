@@ -102,7 +102,7 @@ Windows native WinUI runtime, macOS runtime, browser input, mobile/touch/pen, fu
 screen-reader and range-provider behavior, RTL variants, multi-monitor/DPI changes,
 IME, localization, signing/notarization and workload-level performance equivalence.
 
-Preview NuGet packages may be built. Publishing requires configured credentials or
-trusted publishing and its own successful workflow. Stable 1.0+ requires an explicit
+Preview NuGet packages may be built. Publishing requires the nuget.org trusted-publishing
+policy and its own successful workflow run. Stable 1.0+ requires an explicit
 source-tree-bound full-compatibility attestation; none is supplied. See
 [publishing](publishing.md) and [preview-12 validation](validation-preview12.md).
