@@ -148,10 +148,13 @@ public abstract partial class LayoutTabItemBase : DockInputControl
         base.OnMouseRightButtonDown(e);
     }
 
+    private bool _pointerOver;
     protected override void OnMouseEnter(DockMouseEventArgs e)
     {
         if (!e.Handled)
             VisualStateManager.GoToState(this, "PointerOver", false);
+        _pointerOver = true;
+        UpdateCloseVisibility();
         base.OnMouseEnter(e);
     }
 
@@ -159,7 +162,18 @@ public abstract partial class LayoutTabItemBase : DockInputControl
     {
         if (!e.Handled)
             VisualStateManager.GoToState(this, "Normal", false);
+        _pointerOver = false;
+        UpdateCloseVisibility();
         base.OnMouseLeave(e);
+    }
+
+    // A document tab offers its close button when selected or under the pointer.
+    private void UpdateCloseVisibility()
+    {
+        if (Model == null)
+            return;
+        var tool = Model is LayoutAnchorable && Model.Parent is not LayoutDocumentPane;
+        _close.Visibility = !tool && Model.CanClose && (Model.IsSelected || _pointerOver) ? Visibility.Visible : Visibility.Collapsed;
     }
 
     protected override void OnMouseMove(DockMouseEventArgs e) => base.OnMouseMove(e);
@@ -193,7 +207,7 @@ public abstract partial class LayoutTabItemBase : DockInputControl
         _label.PressedOverride = Model.IsSelected ? DockChrome.Transparent : null;
         _chrome.CornerRadius = tool ? new(0, 0, palette.TabCornerRadius, palette.TabCornerRadius) : new(palette.TabCornerRadius, palette.TabCornerRadius, 0, 0);
         _selectionIndicator.CornerRadius = new(palette.UsesFluentControls ? 1 : 0);
-        _close.Visibility = !tool && Model.CanClose && Model.IsSelected ? Visibility.Visible : Visibility.Collapsed;
+        UpdateCloseVisibility();
         var background = tool ? Model.IsSelected ? states.SelectedToolTab : states.ToolTab : !Model.IsSelected ? states.DocumentTab : Model.IsActive ? states.ActiveDocumentTab : states.SelectedDocumentTab;
         _selectionIndicator.Height = palette.ActiveTabIndicatorThickness;
         _selectionIndicator.Background = Model.IsActive ? states.ActiveTabIndicator : states.SelectedTabIndicator;

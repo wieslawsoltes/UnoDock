@@ -425,6 +425,23 @@ internal static class TemplateIconTests
                 window.Close();
             }
         });
+        tests.Test("tabs: a hovered document tab shows its close button like the selected one", async () =>
+        {
+            using var f = new Fixture();
+            await f.Show();
+            var tab = f.Manager.FindVisualChildren<LayoutDocumentTabItem>().First(t => ReferenceEquals(t.Model, f.Second));
+            var close = (FrameworkElement)typeof(LayoutTabItemBase).GetField("_close", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(tab)!;
+            var hover = typeof(LayoutTabItemBase).GetField("_pointerOver", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!;
+            var refresh = typeof(LayoutTabItemBase).GetMethod("UpdateCloseVisibility", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!;
+            Check.False(f.Second.IsSelected);
+            Check.Equal(Visibility.Collapsed, close.Visibility);
+            hover.SetValue(tab, true);
+            refresh.Invoke(tab, null);
+            Check.Equal(Visibility.Visible, close.Visibility);
+            hover.SetValue(tab, false);
+            refresh.Invoke(tab, null);
+            Check.Equal(Visibility.Collapsed, close.Visibility);
+        });
         return await tests.Run(output, "templates-icons");
     }
 
