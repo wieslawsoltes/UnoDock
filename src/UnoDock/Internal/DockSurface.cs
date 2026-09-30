@@ -561,7 +561,9 @@ internal sealed partial class DockSurface : Grid, IDisposable
         return true;
     }
 
-    internal bool IsAutoHideOpen => _autoHide != null;
+    // The flyout control is reused; it is open while it presents a model.
+    internal bool IsAutoHideOpen => _autoHide?.Model is LayoutAnchorable;
+    internal LayoutAnchorable? OpenAutoHideModel => _autoHide?.Model as LayoutAnchorable;
 
     internal void CancelDrag()
     {

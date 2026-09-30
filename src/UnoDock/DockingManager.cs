@@ -257,6 +257,14 @@ public partial class DockingManager : Control, IDisposable, UnoDock.Compatibilit
         {
             _syncActive = false;
         }
+
+        // Activating an auto-hidden tool (IsActive, ActiveContent) shows its flyout.
+        if (Layout.ActiveContent is LayoutAnchorable { IsAutoHidden: true } tool && _surface is { } surface && !ReferenceEquals(surface.OpenAutoHideModel, tool))
+            DispatcherQueue.TryEnqueue(() =>
+            {
+                if (ReferenceEquals(Layout.ActiveContent, tool) && tool.IsAutoHidden && !ReferenceEquals(surface.OpenAutoHideModel, tool))
+                    OpenAutoHide(tool, false);
+            });
     }
 
     internal void InvalidateView()
