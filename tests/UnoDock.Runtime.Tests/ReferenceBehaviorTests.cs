@@ -48,26 +48,26 @@ public static class ReferenceBehaviorTests
             using var f = new Fixture(Flat);
             var second = f.Document("d2");
             var item = (LayoutDocumentItem)f.Manager.GetLayoutItemFromModel(second);
-            Check.True(item.NewVerticalTabGroupCommand.CanExecute(null));
-            item.NewVerticalTabGroupCommand.Execute(null);
+            Check.True(item.NewVerticalTabGroupCommand!.CanExecute(null));
+            item.NewVerticalTabGroupCommand!.Execute(null);
             Check.Equal("Panel(H)[AnchorablePane[Anchorable:explorer] DocumentPaneGroup(H)[DocumentPane[Document:d1 Document:d3] DocumentPane[Document:d2]]]", Dump(f.Root));
             var first = (LayoutDocumentItem)f.Manager.GetLayoutItemFromModel(f.Document("d1"));
-            Check.True(first.MoveToNextTabGroupCommand.CanExecute(null));
-            Check.True(item.MoveToPreviousTabGroupCommand.CanExecute(null));
-            first.MoveToNextTabGroupCommand.Execute(null);
+            Check.True(first.MoveToNextTabGroupCommand!.CanExecute(null));
+            Check.True(item.MoveToPreviousTabGroupCommand!.CanExecute(null));
+            first.MoveToNextTabGroupCommand!.Execute(null);
             Check.Equal("Panel(H)[AnchorablePane[Anchorable:explorer] DocumentPaneGroup(H)[DocumentPane[Document:d3] DocumentPane[Document:d1 Document:d2]]]", Dump(f.Root));
         });
         tests.Test("new horizontal tab group reorients a single-pane group", () =>
         {
             using var f = new Fixture(Standard);
-            ((LayoutDocumentItem)f.Manager.GetLayoutItemFromModel(f.Document("d2"))).NewHorizontalTabGroupCommand.Execute(null);
+            ((LayoutDocumentItem)f.Manager.GetLayoutItemFromModel(f.Document("d2"))).NewHorizontalTabGroupCommand!.Execute(null);
             Check.Equal("Panel(H)[AnchorablePane[Anchorable:explorer Anchorable:toolbox] Panel(V)[DocumentPaneGroup(V)[DocumentPane[Document:d1 Document:d3] DocumentPane[Document:d2]] AnchorablePane[Anchorable:output Anchorable:errors]] AnchorablePane[Anchorable:props]]", Dump(f.Root));
         });
         tests.Test("closing a split's documents removes its pane and keeps the last empty pane", () =>
         {
             using var f = new Fixture(Flat);
             var second = f.Document("d2");
-            ((LayoutDocumentItem)f.Manager.GetLayoutItemFromModel(second)).NewVerticalTabGroupCommand.Execute(null);
+            ((LayoutDocumentItem)f.Manager.GetLayoutItemFromModel(second)).NewVerticalTabGroupCommand!.Execute(null);
             second.Close();
             Check.Equal("Panel(H)[AnchorablePane[Anchorable:explorer] DocumentPaneGroup(H)[DocumentPane[Document:d1 Document:d3]]]", Dump(f.Root));
             foreach (var document in f.Root.Descendents().OfType<LayoutDocument>().ToArray())
@@ -78,7 +78,7 @@ public static class ReferenceBehaviorTests
         {
             using var f = new Fixture(Flat);
             var second = f.Document("d2");
-            ((LayoutDocumentItem)f.Manager.GetLayoutItemFromModel(second)).NewVerticalTabGroupCommand.Execute(null);
+            ((LayoutDocumentItem)f.Manager.GetLayoutItemFromModel(second)).NewVerticalTabGroupCommand!.Execute(null);
             f.Document("d1").Close();
             f.Document("d3").Close();
             Check.Equal("Panel(H)[AnchorablePane[Anchorable:explorer] DocumentPaneGroup(H)[DocumentPane[Document:d2]]]", Dump(f.Root));
@@ -89,14 +89,14 @@ public static class ReferenceBehaviorTests
             var output = f.Tool("output");
             output.DockAsDocument();
             Check.True(output.Parent is LayoutDocumentPane && output.PreviousContainer == null);
-            Check.False(((LayoutAnchorableItem)f.Manager.GetLayoutItemFromModel(output)).DockCommand.CanExecute(null));
+            Check.False(((LayoutAnchorableItem)f.Manager.GetLayoutItemFromModel(output)).DockCommand!.CanExecute(null));
             output.Dock();
             Check.Equal("Panel(H)[AnchorablePane[Anchorable:explorer Anchorable:toolbox] Panel(V)[DocumentPaneGroup(H)[DocumentPane[Document:d1 Document:d2 Document:d3]] AnchorablePane[Anchorable:errors]] AnchorablePane[Anchorable:props Anchorable:output]]", Dump(f.Root));
         });
         tests.Test("a floated document docks as document into its previous pane and index", () =>
         {
             using var f = new Fixture(Flat);
-            ((LayoutDocumentItem)f.Manager.GetLayoutItemFromModel(f.Document("d2"))).NewVerticalTabGroupCommand.Execute(null);
+            ((LayoutDocumentItem)f.Manager.GetLayoutItemFromModel(f.Document("d2"))).NewVerticalTabGroupCommand!.Execute(null);
             var third = f.Document("d3");
             third.Float();
             third.DockAsDocument();
@@ -110,7 +110,7 @@ public static class ReferenceBehaviorTests
             var output = f.Tool("output");
             ((LayoutAnchorablePane)output.Parent!).CanRepositionItems = false;
             var item = (LayoutAnchorableItem)f.Manager.GetLayoutItemFromModel(output);
-            Check.True(item.FloatCommand.CanExecute(null) && item.DockAsDocumentCommand.CanExecute(null) && item.AutoHideCommand.CanExecute(null) && item.HideCommand.CanExecute(null));
+            Check.True(item.FloatCommand!.CanExecute(null) && item.DockAsDocumentCommand!.CanExecute(null) && item.AutoHideCommand!.CanExecute(null) && item.HideCommand!.CanExecute(null));
             output.Float();
             Check.True(output.IsFloating);
         });
@@ -129,8 +129,8 @@ public static class ReferenceBehaviorTests
             var output = f.Tool("output");
             output.Float();
             var item = (LayoutAnchorableItem)f.Manager.GetLayoutItemFromModel(output);
-            Check.False(item.AutoHideCommand.CanExecute(null));
-            Check.True(item.DockCommand.CanExecute(null) && item.HideCommand.CanExecute(null) && item.DockAsDocumentCommand.CanExecute(null));
+            Check.False(item.AutoHideCommand!.CanExecute(null));
+            Check.True(item.DockCommand!.CanExecute(null) && item.HideCommand!.CanExecute(null) && item.DockAsDocumentCommand!.CanExecute(null));
         });
         tests.Test("tab group moves require an adjacent sibling document pane", () =>
         {
@@ -156,8 +156,8 @@ public static class ReferenceBehaviorTests
                     RootPanel = new(group)
                 };
             });
-            Check.False(((LayoutDocumentItem)f.Manager.GetLayoutItemFromModel(f.Document("a"))).MoveToNextTabGroupCommand.CanExecute(null));
-            Check.False(((LayoutDocumentItem)f.Manager.GetLayoutItemFromModel(f.Document("d"))).MoveToPreviousTabGroupCommand.CanExecute(null));
+            Check.False(((LayoutDocumentItem)f.Manager.GetLayoutItemFromModel(f.Document("a"))).MoveToNextTabGroupCommand!.CanExecute(null));
+            Check.False(((LayoutDocumentItem)f.Manager.GetLayoutItemFromModel(f.Document("d"))).MoveToPreviousTabGroupCommand!.CanExecute(null));
         });
         tests.Test("deselecting the selected content clears the pane selection", () =>
         {
@@ -244,7 +244,7 @@ public static class ReferenceBehaviorTests
             }
 
             var first = f.Manager.GetLayoutItemFromModel(f.Document("d1"));
-            first.CloseAllCommand.Execute(null);
+            first.CloseAllCommand!.Execute(null);
             Check.Equal("d1,d2,d3", string.Join(",", calls));
         });
         return await tests.Run(output, "reference-behavior");
