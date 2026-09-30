@@ -36,6 +36,19 @@ python3 tools/run-ci-desktop.py \
 
 Use a fresh output directory. Linux headless runs require Xvfb; physical-input suites must run on a dedicated display with their explicit opt-in. A passing assertion list alone is insufficient when a native process subsequently fails or never completes.
 
+### Review scenes
+
+```sh
+UNODOCK_GALLERY_THEME=VS2010 UNODOCK_SCENARIO=float-both \
+  dotnet samples/UnoDock.Gallery/bin/Release/net10.0-desktop/UnoDock.Gallery.dll
+```
+
+The Gallery opens a 1280×800 window at (40, 40) with a fixed layout and runs
+the scenario action after the first layout: `docked`, `active-doc`,
+`active-tool`, `floating`, `float-tool`, `float-doc`, `float-both`, `autohide`,
+`context-doc`, `dropdown`, `tool-menu` or `navigator`. Capture the window to
+compare platforms and themes side by side.
+
 ## Browser protocol and runtime
 
 ```sh

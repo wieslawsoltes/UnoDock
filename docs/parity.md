@@ -51,6 +51,30 @@ The remaining 53 entries are WPF framework plumbing with no WinUI equivalent:
 | Themes: Generic, Aero, Metro, VS2010 (+ Fluent and native TabView tabs) | Complete, palettes authored independently |
 | Localized chrome (13 languages) | Complete, translations authored independently |
 
+## Behavior verified against the reference
+
+Layout operations are checked against layout trees recorded from the reference
+driven through its public API with the same layouts and calls. The
+`reference-behavior` suite compares UnoDock's tree dumps with those recordings
+character for character, covering:
+
+* auto-hide (per tool; restore appends) and closing or hiding a floating tool
+  window (the window stays in the layout and `Show()` floats the tools again);
+* New Horizontal/Vertical Tab Group (wraps a panel-level document pane in a
+  document pane group; reorients a single-pane group) and Move To Next/Previous
+  Tab Group (adjacent sibling pane only; inserts at the front);
+* garbage collection of emptied panes, dock as document and back, floating tool
+  commands, `CanRepositionItems` (reordering only), deselection;
+* layout restore without a callback (unmatched tools hidden, documents dropped)
+  and with one (items kept).
+
+For visual comparison the Gallery renders review scenes selected with
+`UNODOCK_SCENARIO` (docked, active-doc, active-tool, float-both, autohide,
+context-doc, dropdown, tool-menu, navigator) and themed with
+`UNODOCK_GALLERY_THEME`. Each uses the same layout, window size and actions as
+the reference review harness, so captures from Windows, macOS and Linux compare
+one to one with reference screenshots.
+
 ## Platform validation
 
 Desktop suites (more than 3,000 tests) run in real Uno hosts on Windows,
