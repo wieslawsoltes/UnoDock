@@ -112,6 +112,10 @@ internal sealed class X11TestInput : IDisposable
         ObjectDisposedException.ThrowIf(_display == 0, this);
         var key = KeysymToKeycode(_display, keysym);
         Check.True(key != 0);
+        // A held key must not autorepeat (release + press) while a slow host
+        // repaints; the server's autorepeat is restored once no key is held.
+        if (_keys.Count == 0)
+            AutoRepeatOff(_display);
         Check.True(FakeKey(_display, key, 1, 0) != 0);
         _keys.Add(key);
         Flush(_display);
@@ -124,6 +128,8 @@ internal sealed class X11TestInput : IDisposable
         Check.True(key != 0);
         Check.True(FakeKey(_display, key, 0, 0) != 0);
         _keys.Remove(key);
+        if (_keys.Count == 0)
+            AutoRepeatOn(_display);
         Flush(_display);
     }
 
@@ -160,6 +166,8 @@ internal sealed class X11TestInput : IDisposable
         {
             foreach (var key in _keys)
                 FakeKey(_display, key, 0, 0);
+            if (_keys.Count > 0)
+                AutoRepeatOn(_display);
             _keys.Clear();
             Flush(_display);
             CloseDisplay(_display);
@@ -175,6 +183,10 @@ internal sealed class X11TestInput : IDisposable
     private static extern int CloseDisplay(nint display);
     [DllImport("libX11.so.6", EntryPoint = "XDefaultRootWindow")]
     private static extern nint DefaultRootWindow(nint display);
+    [DllImport("libX11.so.6", EntryPoint = "XAutoRepeatOff")]
+    private static extern int AutoRepeatOff(nint display);
+    [DllImport("libX11.so.6", EntryPoint = "XAutoRepeatOn")]
+    private static extern int AutoRepeatOn(nint display);
     [DllImport("libX11.so.6", EntryPoint = "XFlush")]
     private static extern int Flush(nint display);
     [DllImport("libX11.so.6", EntryPoint = "XTranslateCoordinates")]
