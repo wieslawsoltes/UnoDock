@@ -25,6 +25,15 @@ python3 tools/run-desktop-tests.py \
   --output artifacts/runtime --selector fluent-navigator
 ```
 
+To reproduce a CI desktop job (every group and its evidence gate, then all
+remaining suites), run the orchestrator; `--only` limits it to named groups:
+
+```sh
+python3 tools/run-ci-desktop.py \
+  --app samples/UnoDock.Gallery/bin/Release/net10.0-desktop/UnoDock.Gallery.dll \
+  --output artifacts/desktop --only fluent-navigator,docking-sizing
+```
+
 Use a fresh output directory. Linux headless runs require Xvfb; physical-input suites must run on a dedicated display with their explicit opt-in. A passing assertion list alone is insufficient when a native process subsequently fails or never completes.
 
 ## Browser protocol and runtime
@@ -42,3 +51,20 @@ The default runtime-test URL is `http://127.0.0.1:8765/UnoDock/playground/`. Bui
 The suite requires an actual Uno adapter report and model-backed editors; a successful HTML-shell load is not counted as application startup. It exercises real popup windows, the native editor, return-on-close, popup-to-popup movement, stale leases, blocked-popup guidance, reload, and the drag-transfer protocol. Protocol unit tests independently exercise owner/lease invariants without a DOM.
 
 The deployment pipeline retains screenshots, traces on failure, JSON/JUnit results, and a source revision. Browser-specific results do not replace desktop docking, chrome, XAML, or original compatibility acceptance.
+
+## Continuous integration
+
+A single workflow, `.github/workflows/ci.yml`, runs on every pull request and on
+`main`:
+
+| Job | Runner | Contents |
+|---|---|---|
+| Checks | Linux | Source organization and formatting, generated adapters, evidence-gate unit tests, portable core tests, API scan and metadata comparison |
+| Desktop | Linux, Windows, macOS | One Gallery build per OS; focused suite groups with their evidence gates, then every remaining registered suite once (Linux: Xvfb, XTEST, Openbox for floating chrome) |
+| NuGet packages | Windows | Uno and native WinUI package targets with symbols |
+| Browser | Linux | WebAssembly publish, documentation site and Playwright runtime tests |
+| Deploy/Verify Pages | Linux | `main` only: deploys the tested site and re-runs the browser suite against it |
+
+Each desktop job uploads one `desktop-<OS>` artifact with per-group JUnit XML,
+logs, captures, the runner's execution records and `ci-desktop-summary.json`.
+Reference-observation workflows run only when their probes change or on demand.

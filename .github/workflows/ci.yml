@@ -1,4 +1,4 @@
-name: Build and test
+name: CI
 on:
   push:
     branches: [main]
@@ -9,24 +9,44 @@ permissions:
   contents: read
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+env:
+  DOTNET_NOLOGO: '1'
+  DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: '1'
 jobs:
-  core:
+  checks:
+    name: Checks
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
-      - name: Portable regression and randomized tests
-        run: dotnet run --project tests/UnoDock.Core.Tests -c Release -- artifacts/test-results
-      - name: Check generated adapters and namespace invariants
+      - uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-checks-${{ hashFiles('global.json', '**/Directory.*.props', '**/*.csproj') }}
+          restore-keys: nuget-checks-
+      - name: Source organization and formatting
+        run: |
+          dotnet run --project tools/SourceMaintenance -c Release -- --check .
+          dotnet run --project tools/SourceMaintenance -c Release --no-build -- --check-format .
+          python3 tests/metadata/test_source_maintenance.py
+          python3 tests/metadata/test_source_formatting.py
+          python3 tests/metadata/test_xaml_sources.py
+      - name: Generated adapters, namespace invariants and evidence gates
         run: |
           python3 tools/generate-property-adapters.py
           git diff --exit-code -- src/
           python3 tests/metadata/test_namespace_migration.py
           python3 tests/metadata/test_desktop_runner.py
+          python3 tests/metadata/test_native_acceptance.py
+          python3 tests/metadata/test_native_inspector_gate.py
+          python3 tools/test-floating-chrome-gate.py
+      - name: Portable regression and randomized tests
+        run: dotnet run --project tests/UnoDock.Core.Tests -c Release -- artifacts/test-results
       - name: Scan implementation and report every declaration difference
         run: |
           dotnet run --project tools/ApiScan -- src/UnoDock artifacts/unodock-api
@@ -47,81 +67,53 @@ jobs:
           name: core-and-api-results
           path: artifacts/
   desktop:
+    name: Desktop (${{ matrix.os }})
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
+    timeout-minutes: 60
+    env:
+      UNODOCK_SELFTEST: '1'
+      UNODOCK_NATIVE_INPUT_TESTS: '1'
+      PYTHONUTF8: '1'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
-      - name: Build actual Uno desktop application with warnings as errors
+      - uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-desktop-${{ runner.os }}-${{ hashFiles('global.json', '**/Directory.*.props', '**/*.csproj') }}
+          restore-keys: nuget-desktop-${{ runner.os }}-
+      - name: Build the Uno desktop Gallery with warnings as errors
         run: dotnet build samples/UnoDock.Gallery -c Release -f net10.0-desktop -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0 -warnaserror
-      - name: Install headless desktop dependencies
+      - name: Install X11, Openbox and XTEST
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y xvfb libx11-6 libxi6 libxrandr2 libxcursor1 libfontconfig1 libgl1 libice6 libsm6 libxcb1 libxtst6
-      - name: Run real Uno runtime and original-layout interoperability tests
-        id: linux_runtime
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends xvfb openbox x11-utils libx11-6 libxi6 libxrandr2 libxcursor1 libfontconfig1 libgl1 libice6 libsm6 libxcb1 libxtst6
+      # One build, every suite once: focused groups with their own evidence
+      # gates, then all remaining registered suites (see tools/run-ci-desktop.py).
+      - name: Run desktop acceptance suites (X11)
         if: runner.os == 'Linux'
-        env:
-          UNODOCK_SELFTEST: '1'
-          UNODOCK_NATIVE_INPUT_TESTS: '1'
-          UNODOCK_TEST_RESULTS: ${{ github.workspace }}/artifacts/test-results
-        run: xvfb-run -a -s "-screen 0 2560x1440x24" python3 tools/run-desktop-tests.py --app samples/UnoDock.Gallery/bin/Release/net10.0-desktop/UnoDock.Gallery.dll --output artifacts/test-results
-      - name: Run Windows lifecycle, HWND filter, input, navigator and visual tests
-        if: runner.os == 'Windows'
-        shell: pwsh
-        env:
-          UNODOCK_SELFTEST: '1'
-          UNODOCK_TEST_SUITE: windows-acceptance
-          UNODOCK_TEST_RESULTS: ${{ github.workspace }}/artifacts/test-results
-        run: python tools/run-desktop-tests.py --app samples/UnoDock.Gallery/bin/Release/net10.0-desktop/UnoDock.Gallery.dll --output artifacts/test-results --selector windows-acceptance
-      - name: Summarize executed platform cases and failing assertions
-        if: always() && (runner.os == 'Linux' || runner.os == 'Windows')
+        run: xvfb-run -a -s "-screen 0 2560x1440x24" python3 tools/run-ci-desktop.py --app samples/UnoDock.Gallery/bin/Release/net10.0-desktop/UnoDock.Gallery.dll --output artifacts/desktop
+      - name: Run desktop acceptance suites (Win32, AppKit)
+        if: runner.os != 'Linux'
         shell: bash
-        run: python3 tools/report-test-results.py artifacts/test-results --output artifacts/test-results/execution-summary.json
-      - uses: actions/upload-artifact@v4
-        if: always() && (runner.os == 'Linux' || runner.os == 'Windows')
-        with:
-          name: visual-parity-${{ runner.os }}
-          path: artifacts/test-results/visuals/
-          if-no-files-found: error
-      - uses: actions/upload-artifact@v4
-        if: always() && runner.os == 'Windows'
-        with:
-          name: windows-runtime-test-results
-          path: artifacts/test-results/
-      - uses: actions/upload-artifact@v4
-        if: always() && runner.os == 'Linux'
-        with:
-          name: runtime-test-results
-          path: artifacts/test-results/
+        run: python3 tools/run-ci-desktop.py --app samples/UnoDock.Gallery/bin/Release/net10.0-desktop/UnoDock.Gallery.dll --output artifacts/desktop
+      - name: Summarize executed cases and failing assertions
+        if: always()
+        shell: bash
+        run: python3 tools/report-test-results.py artifacts/desktop --output artifacts/desktop/execution-summary.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: desktop-${{ runner.os }}
-          path: |
-            artifacts/test-results/
-            samples/UnoDock.Gallery/bin/Release/net10.0-desktop/
-  browser:
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '10.0.x'
-      - run: dotnet workload install wasm-tools
-      - name: Publish browser gallery
-        run: dotnet publish samples/UnoDock.Gallery -c Release -f net10.0-browserwasm -p:UnoDockTargetFrameworks=net10.0-browserwasm -p:UnoDockLibraryFrameworks=net10.0 -o artifacts/browser
-      - uses: actions/upload-artifact@v4
-        with:
-          name: browser-gallery
-          path: artifacts/browser/
+          path: artifacts/desktop/
+          if-no-files-found: error
   packages:
+    name: NuGet packages
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -129,6 +121,11 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
+      - uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-packages-${{ hashFiles('global.json', '**/Directory.*.props', '**/*.csproj') }}
+          restore-keys: nuget-packages-
       - uses: microsoft/setup-msbuild@v2
       - name: Build generic Uno and native WinUI package targets
         run: msbuild src/UnoDock/UnoDock.csproj -restore -t:Pack -p:Configuration=Release -p:PackageOutputPath=${{ github.workspace }}/artifacts/packages -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg
@@ -138,3 +135,149 @@ jobs:
         with:
           name: nuget-preview
           path: artifacts/packages/
+  browser:
+    name: Browser
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: tests/browser/package-lock.json
+      - name: Check browser ownership, source and evidence contracts
+        run: |
+          node --test tests/browser/*.test.mjs
+          python3 tests/metadata/test_browser_site.py
+          python3 tests/metadata/test_browser_results.py
+      - uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-browser-${{ hashFiles('global.json', '**/Directory.*.props', '**/*.csproj') }}
+          restore-keys: nuget-browser-
+      - name: Install WebAssembly build tools
+        run: dotnet workload install wasm-tools
+      - name: Publish the actual Uno application without source instrumentation
+        run: |
+          dotnet publish samples/UnoDock.Gallery -c Release -f net10.0-browserwasm -p:UnoDockTargetFrameworks=net10.0-browserwasm -p:UnoDockLibraryFrameworks=net10.0 -p:WasmShellWebAppBasePath=/UnoDock/gallery/ -o artifacts/publish
+          git diff --exit-code
+      - name: Assemble and check documentation and application routes
+        run: |
+          python3 -m pip install Markdown==3.8.2
+          python3 tools/build-browser-site.py --publish artifacts/publish --output artifacts/site
+          python3 tools/check-browser-site.py artifacts/site
+          mkdir -p artifacts/serve
+          ln -s ../site artifacts/serve/UnoDock
+      - name: Install the locked browser test runner
+        working-directory: tests/browser
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: Exercise real editing, popup windows, docking and recovery
+        working-directory: tests/browser
+        run: |
+          python3 -m http.server 8765 --directory ../../artifacts/serve > ../../artifacts/http.log 2>&1 &
+          server=$!
+          trap 'kill "$server" || true' EXIT
+          timeout --signal=TERM --kill-after=15s 900s npx playwright test
+      - name: Require complete first-attempt browser evidence
+        if: always()
+        run: |
+          mkdir -p artifacts/browser-tests
+          git rev-parse HEAD > artifacts/browser-tests/source-revision.txt
+          python3 tools/verify-browser-results.py artifacts/browser-tests
+      - name: Preserve failure context without a second browser attempt
+        if: always()
+        run: find artifacts/browser-tests -name error-context.md -exec cat {} \; 2>/dev/null || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-runtime-evidence
+          path: |
+            artifacts/browser-tests/
+            artifacts/http.log
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-documentation-site
+          path: artifacts/site/
+          if-no-files-found: error
+      - uses: actions/upload-pages-artifact@v3
+        if: success() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        with:
+          path: artifacts/site
+  pages:
+    name: Deploy Pages
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: browser
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    outputs:
+      page_url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/configure-pages@v5
+      - name: Deploy the tested artifact
+        id: deployment
+        uses: actions/deploy-pages@v4
+  verify-live:
+    name: Verify Pages
+    needs: pages
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: tests/browser/package-lock.json
+      - name: Require the deployed source revision
+        env:
+          SITE_URL: ${{ needs.pages.outputs.page_url }}
+          EXPECTED_REVISION: ${{ github.sha }}
+        run: |
+          python3 - <<'PY'
+          import os,time,urllib.request
+          url=os.environ['SITE_URL'].rstrip('/')+'/revision.txt?revision='+os.environ['EXPECTED_REVISION']
+          for attempt in range(12):
+              try:
+                  with urllib.request.urlopen(url,timeout=20) as response: revision=response.read().decode().strip()
+                  if revision==os.environ['EXPECTED_REVISION']:
+                      print('Verified deployed revision:',revision)
+                      break
+              except OSError as error: print('CDN propagation:',error)
+              time.sleep(5)
+          else: raise SystemExit('GitHub Pages did not serve the deployed source revision.')
+          PY
+      - name: Install browser acceptance dependencies
+        working-directory: tests/browser
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: Verify public multi-window application, not only HTTP availability
+        working-directory: tests/browser
+        env:
+          UNODOCK_BASE_URL: ${{ needs.pages.outputs.page_url }}playground/
+        run: timeout --signal=TERM --kill-after=15s 900s npx playwright test
+      - name: Require complete public native browser results
+        if: always()
+        run: python3 tools/verify-browser-results.py artifacts/browser-tests
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: public-browser-runtime-evidence
+          path: artifacts/browser-tests/
+          if-no-files-found: error
