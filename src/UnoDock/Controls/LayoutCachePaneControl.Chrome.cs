@@ -83,7 +83,7 @@ public partial class LayoutCachePaneControl
         _menuButton = DockChrome.Icon(DockGlyph.Menu, () =>
         {
             if (_titleModel != null && _titleManager != null)
-                DockVisuals.Menu(_titleManager, _titleModel).ShowAt(_menuButton);
+                DockVisuals.ShowBelow(DockVisuals.Menu(_titleManager, _titleModel), _menuButton);
         }, Properties.Resources.Anchorable_CxMenu_Hint);
         _pinButton = DockChrome.Icon(DockGlyph.Pin, () => _titleModel?.ToggleAutoHide(), Properties.Resources.Anchorable_BtnAutoHide_Hint);
         _hideButton = DockChrome.Icon(DockGlyph.Close, () =>
@@ -197,6 +197,6 @@ public partial class LayoutCachePaneControl
             menu.Items.Add(item);
         }
 
-        menu.ShowAt(_documentsButton);
+        DockVisuals.ShowBelow(menu, _documentsButton);
     }
 }

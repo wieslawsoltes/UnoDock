@@ -37,6 +37,13 @@ internal sealed partial class DockSurface
             if (!Current())
                 return;
             navigator.VerticalAlignment = VerticalAlignment.Center;
+            // Keep the switcher inside small workspaces; its lists scroll.
+            if (ActualWidth > 0 && ActualHeight > 0)
+            {
+                navigator.MaxWidth = Math.Min(navigator.MaxWidth, Math.Max(240, ActualWidth - 48));
+                navigator.MaxHeight = Math.Max(160, ActualHeight - 48);
+            }
+
             if (!Current())
                 return;
             _flyouts.Children.Add(navigator);

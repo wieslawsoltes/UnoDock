@@ -7,6 +7,7 @@ InteractionGeometryTests.Register(tests);
 ChromeTests.Register(tests);
 FloatingResizeBoundsTests.Register(tests);
 DockGuideGeometryTests.Register(tests);
+FloatingPlacementTests.Register(tests);
 var star = DockLengthUnit.Star;
 var pixel = DockLengthUnit.Pixel;
 var auto = DockLengthUnit.Auto;

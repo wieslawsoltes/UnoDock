@@ -308,7 +308,7 @@ internal sealed class DropDownMenuSession
             if (_position is { } point)
                 menu.ShowAt(_owner, new FlyoutShowOptions { Position = point });
             else
-                menu.ShowAt(_owner);
+                DockVisuals.ShowBelow(menu, _owner);
             opening.WasShown |= menu.IsOpen;
         }
 

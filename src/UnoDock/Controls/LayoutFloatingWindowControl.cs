@@ -261,6 +261,10 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
         if (IsMaximized && Model.Root?.Manager?.Surface is { } surface)
             _displayBounds = new(0, 0, Math.Max(160, surface.ActualWidth), Math.Max(100, surface.ActualHeight));
         var bounds = Bounds;
+        // Keep in-surface windows reachable when the workspace shrinks or a
+        // layout from a larger host is restored; persisted bounds are kept.
+        if (!IsMaximized && Model.Root?.Manager?.Surface is { ActualWidth: > 0, ActualHeight: > 0 } host)
+            bounds = FloatingPlacement.Fit(bounds, [new DockRect(0, 0, host.ActualWidth, host.ActualHeight)]);
         Width = bounds.Width;
         Height = bounds.Height;
         Canvas.SetLeft(this, bounds.X);
@@ -459,8 +463,10 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
                 ReportFilterFailure(error);
             }
 
-            var bounds = RestoredBounds;
             var scale = HostScale();
+            var bounds = FloatingPlacement.Fit(RestoredBounds, DesktopWindowCoordinates.WorkAreas(scale));
+            if (bounds != RestoredBounds && PositionModel?.IsMaximized != true)
+                SetBounds(bounds);
             _syncBounds = true;
             try
             {
