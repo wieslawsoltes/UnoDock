@@ -1,13 +1,13 @@
 using Microsoft.UI.Xaml.Automation;
 using UnoDock.Layout;
-using Path = Microsoft.UI.Xaml.Shapes.Path;
 
 namespace UnoDock.Internal;
 /// <summary>One row of a document pane's open-documents list. A real
 /// ToggleMenuFlyoutItem keeps menu keyboard navigation, invocation, the checked
 /// state and its Toggle automation peer; only the row presentation is custom:
 /// DocumentPaneMenuItemHeaderTemplate (data context: the listed content) or the
-/// content icon followed by its title.</summary>
+/// content icon followed by its title. The list draws no check mark: the
+/// selected document is exposed through IsChecked and automation only.</summary>
 internal sealed class DockDocumentMenuRow : ToggleMenuFlyoutItem
 {
     [ThreadStatic]
@@ -17,8 +17,7 @@ internal sealed class DockDocumentMenuRow : ToggleMenuFlyoutItem
         IconSpacing = 6,
         HorizontalAlignment = HorizontalAlignment.Stretch
     };
-    private readonly Path _check = DockChrome.Glyph(DockGlyph.Check);
-    private ContentPresenter? _headerHost, _checkHost;
+    private ContentPresenter? _headerHost;
     private Border? _gutter;
     private DockMenuPalette _palette;
     private bool _pointer;
@@ -44,7 +43,6 @@ internal sealed class DockDocumentMenuRow : ToggleMenuFlyoutItem
         GotFocus += (_, _) => Paint();
         LostFocus += (_, _) => Paint();
         IsEnabledChanged += (_, _) => Paint();
-        RegisterPropertyChangedCallback(IsCheckedProperty, (_, _) => Paint());
     }
 
     internal LayoutContent? Model
@@ -57,16 +55,11 @@ internal sealed class DockDocumentMenuRow : ToggleMenuFlyoutItem
     {
         if (_headerHost != null && ReferenceEquals(_headerHost.Content, _header))
             _headerHost.Content = null;
-        if (_checkHost != null && ReferenceEquals(_checkHost.Content, _check))
-            _checkHost.Content = null;
         base.OnApplyTemplate();
         _gutter = GetTemplateChild("PART_MenuGutter") as Border;
         _headerHost = GetTemplateChild("PART_MenuHeader") as ContentPresenter;
-        _checkHost = GetTemplateChild("PART_MenuCheck") as ContentPresenter;
         if (_headerHost != null)
             _headerHost.Content = _header;
-        if (_checkHost != null)
-            _checkHost.Content = _check;
         Paint();
     }
 
@@ -97,8 +90,6 @@ internal sealed class DockDocumentMenuRow : ToggleMenuFlyoutItem
         Background = hot ? _palette.Hover : fluent ? DockChrome.Transparent : _palette.Surface;
         BorderBrush = hot && !fluent ? _palette.HoverBorder : DockChrome.Transparent;
         Foreground = IsEnabled ? _palette.Foreground : _palette.Disabled;
-        _check.Stroke = Foreground;
-        _check.Visibility = IsChecked ? Visibility.Visible : Visibility.Collapsed;
         if (_gutter != null)
         {
             _gutter.Background = hot || fluent ? DockChrome.Transparent : _palette.Gutter;

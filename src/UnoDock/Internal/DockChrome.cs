@@ -168,9 +168,6 @@ internal static class DockChrome
                 Line(new(1.5, 4.5), new(6.5, 4.5));
                 Outline(new(1.5, 3.5), new(1.5, 8.5), new(6.5, 8.5), new(6.5, 3.5));
                 break;
-            case DockGlyph.Check:
-                Outline(new(1.5, 5), new(4, 7.5), new(8.5, 2.5));
-                break;
         }
 
         return new()

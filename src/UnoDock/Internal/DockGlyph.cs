@@ -12,6 +12,5 @@ internal enum DockGlyph
     Documents,
     Minimize,
     Maximize,
-    Restore,
-    Check
+    Restore
 }
