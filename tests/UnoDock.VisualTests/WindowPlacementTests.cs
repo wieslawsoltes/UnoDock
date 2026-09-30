@@ -290,8 +290,7 @@ internal static class WindowPlacementTests
         control.Close();
         Check.False(f.Tool.IsVisible);
         await Wait(() => !f.Manager.FloatingWindows.Any(w => ReferenceEquals(w.Model, model) && (NativeVisible(w) || w.NativeWindow == null && w.Visibility == Visibility.Visible && w.IsLoaded)), "A closed tool window left a visible host.");
-        if (!f.Manager.Layout.FloatingWindows.Contains(model))
-            return; // A layout model that discards the emptied floating window re-docks on Show().
+        Check.True(f.Manager.Layout.FloatingWindows.Contains(model), "Closing hid the tools; the floating window stays in the layout.");
         f.Tool.Show();
         Check.True(f.Tool.IsFloating, "Show() did not return the tool to its floating window.");
         Check.Same(model, f.Tool.FindParent<LayoutFloatingWindow>());
