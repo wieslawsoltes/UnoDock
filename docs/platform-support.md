@@ -6,7 +6,7 @@ actually executed.
 
 | Platform | Hosting | Validation |
 |---|---|---|
-| Windows 10/11 (Uno Skia, Win32) | Native main and floating windows, custom caption, Snap-aware drop targeting | Hosted desktop suites; physical-input suites (`windows-floating-input`, `tear-off`) at 100% and 200% DPI |
+| Windows 10/11 (Uno Skia, Win32) | Native main and floating windows, custom caption, Snap-aware drop targeting | Hosted desktop suites; physical-input suites (`windows-floating-input`, `tear-off`) on a 200% DPI Windows 11 desktop |
 | Windows (native WinUI 3) | Native package target | Compilation and package validation |
 | macOS (Uno Skia, AppKit) | Native child floating windows, Retina-aware sizing, top-left persisted bounds | Hosted desktop suites on Retina displays |
 | Linux (Uno Skia, X11/XWayland) | Native floating windows with Motif, EWMH and ICCCM hints | Hosted desktop suites; XTEST physical input under Xvfb and Openbox |
