@@ -479,6 +479,19 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
                 else
 #endif
                 _window.AppWindow.Move(new Windows.Graphics.PointInt32 { X = (int)(bounds.X * scale), Y = (int)(bounds.Y * scale) });
+#if !WINDOWS
+                if (OperatingSystem.IsLinux())
+                {
+                    try
+                    {
+                        _dragCoordinates.RequestInitialPlacementX11(_window, new(bounds.X * scale, bounds.Y * scale, bounds.Width * scale, bounds.Height * scale));
+                    }
+                    catch (Exception error) when (DockCoordinates.IsUnavailable(error) || error is InvalidOperationException or DllNotFoundException)
+                    {
+                        ReportFilterFailure(error);
+                    }
+                }
+#endif
             }
             finally
             {
