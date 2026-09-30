@@ -2,7 +2,7 @@ name: Reference metadata contract
 on:
   workflow_dispatch:
   push:
-    paths: ['tools/ApiMetadata/**', 'tools/ReferenceProbe/**', 'tools/ReferenceIdentity/**', 'contracts/reference.json', '.github/workflows/reference-metadata.yml']
+    paths: ['tools/ApiMetadata/**', 'tools/ReferenceProbe/**', 'tools/ReferenceIdentity/**', 'tools/check-reference-regeneration.py', 'contracts/reference.json', '.github/workflows/reference-metadata.yml']
 permissions:
   contents: read
 concurrency:
@@ -79,14 +79,10 @@ jobs:
         run: |
           python3 tests/metadata/test_namespace_migration.py
           git diff --exit-code -- contracts/ tools/ReferenceProbe/
-          # The neutral-namespace inventories must regenerate exactly (line endings aside).
-          for name in reference-metadata-release reference-metadata-debug; do
-            for ext in json txt; do
-              python3 -c "import sys; a, b = (open(p, 'rb').read().replace(b'\r\n', b'\n') for p in sys.argv[1:]); sys.exit(a != b)" \
-                "artifacts/reference-public-metadata/$name.$ext" "contracts/$name.$ext" \
-                || { echo "::error::Regenerated $name.$ext differs from contracts/$name.$ext"; exit 1; }
-            done
-          done
+          # Neutral inventories and fixtures must regenerate exactly (line endings aside);
+          # only hashes of the assemblies compiled in this job are build-environment specific.
+          built="$(python3 -c "import json; print(json.load(open('contracts/reference.json'))['neutralNamespace'])").dll"
+          python3 tools/check-reference-regeneration.py artifacts/reference-public-metadata "$built" Xceed.Wpf.Toolkit.dll
       - uses: actions/upload-artifact@v4
         if: always()
         with:
