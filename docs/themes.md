@@ -10,7 +10,7 @@ the theme changes.
 | `FluentTheme` | `UnoDock` | Uno/WinUI semantic colors; follows Light/Dark or a fixed variant. |
 | `AeroTheme` | `UnoDock.Themes.Aero` | Glassy blue captions, slanted document tabs, bold selected title. |
 | `MetroTheme` | `UnoDock.Themes.Metro` | Flat white surfaces, hairline borders, accent bar above the active tab. |
-| `VS2010Theme` | `UnoDock.Themes.VS2010` | Navy workspace, gold active captions, tabs and document frame. |
+| `VS2010Theme` | `UnoDock.Themes.VS2010` | Navy workspace, gold active captions and tabs, a gold band above and below the active document's content. |
 | `ResourceDictionaryTheme` / `DictionaryTheme` | `UnoDock` | Your own dictionary of `UnoDock.*` resources. |
 
 ```xml
@@ -84,19 +84,66 @@ painted the same surface, so existing dictionaries render unchanged.
 | `ActiveDocumentTabBrush` | Selected tab of the active document | `SelectedDocumentTabBrush` |
 | `DocumentTabForegroundBrush`, `SelectedDocumentTabForegroundBrush`, `ActiveDocumentTabForegroundBrush` | Document tab text and glyphs | palette text rule |
 | `ToolTabForegroundBrush`, `SelectedToolTabForegroundBrush` | Tool tab text | palette text rule |
-| `TabHoverBrush` | Hovered tab label | `HoverBrush` |
+| `TabHoverBrush` | Hovered label of an unselected tab (selected and active tabs keep their fill) | `HoverBrush` |
 | `TabBorderBrush` | Tab separators and outlines | `BorderBrush` |
-| `ToolTitleBrush`, `ActiveToolTitleBrush` | Tool captions | `HeaderBrush`, `ActiveTitleBrush` |
-| `ToolTitleForegroundBrush`, `ActiveToolTitleForegroundBrush` | Caption text and buttons | palette text rule |
-| `PaneBorderBrush`, `ActiveDocumentPaneBorderBrush` | Pane frames | `BorderBrush` |
-| `PaneBorderThickness`, `ActiveDocumentPaneBorderThickness` | Pane frame widths | `1` |
+| `ToolTitleBrush`, `ActiveToolTitleBrush` | Tool captions, auto-hide flyout captions and floating window captions | `HeaderBrush`, `ActiveTitleBrush` |
+| `ToolTitleForegroundBrush`, `ActiveToolTitleForegroundBrush` | Caption text (and caption buttons unless overridden below) | palette text rule |
+| `PaneBorderBrush`, `PaneBorderThickness` | Pane frames | `BorderBrush`, `1` |
+| `DocumentPaneBorderBrush`, `DocumentPaneBorderThickness` | Frame of a document pane without the active content | `PaneBorderBrush`, `PaneBorderThickness` |
+| `ActiveDocumentPaneBorderBrush`, `ActiveDocumentPaneBorderThickness` | Frame of the document pane that owns the active content | `PaneBorderBrush`, `DocumentPaneBorderThickness` |
+| `DocumentPaneBorderPlacement` | `Pane` frames the whole pane (tabs included); `Content` frames only the content below the tabs, with no outer frame on tool panes | `Pane` |
+| `DocumentPaneFrameCornerRadius` | Corner radius of a `Content`-placed document frame | `0` |
+| `ContentBorderBrush` | 1 px hairline directly around pane content | none |
 | `SelectedTabIndicatorBrush`, `ActiveTabIndicatorBrush` | Selected-tab indicator | `BorderBrush`, `AccentBrush` |
 | `RailBrush`, `AnchorTabBrush`, `AnchorTabForegroundBrush` | Auto-hide rails and their tabs | `WorkspaceBrush`, transparent, text rule |
-| `FloatingBorderBrush`, `ActiveFloatingBorderBrush` | Floating window frames | `BorderBrush` |
+| `FloatingBorderBrush`, `ActiveFloatingBorderBrush` | Floating window frames (inactive / active window) | `BorderBrush` |
+| `FloatingBorderThickness` | Floating window frame width | `0` (no frame) |
 
-Shape options: `DocumentTabShape` (`Rectangle` or `Slanted`),
-`TabIndicatorPlacement` (`Top` or `Bottom`), `BoldSelectedTab` (`x:Boolean`) and
-`DocumentTabSpacing` (`x:Double`).
+Thickness keys (`PaneBorderThickness` excepted) accept a `Thickness`, a uniform
+`x:Double` or an `x:String` such as `0,3,0,4` (left, top, right, bottom).
+
+#### Caption and title buttons
+
+Tool-caption, auto-hide flyout, floating-caption and documents-list buttons of
+the classic themes use these keys; Fluent keeps the platform `Button` states.
+
+| Key | Meaning | Fallback |
+|---|---|---|
+| `CaptionButtonForegroundBrush`, `ActiveCaptionButtonForegroundBrush` | Resting glyph on an inactive / active caption; the inactive key also paints the documents-list button | caption foreground |
+| `ChromeButtonHoverBrush`, `ChromeButtonPressedBrush` | Hovered / pressed fill | `HoverBrush`, `PressedBrush` |
+| `ChromeButtonHoverForegroundBrush`, `ChromeButtonPressedForegroundBrush` | Hovered / pressed glyph | resting glyph, hover glyph |
+| `ChromeButtonHoverBorderBrush` | Outline while hovered or pressed | none |
+
+A disabled classic button paints its glyph with `DisabledForegroundBrush`; a
+palette without a distinct disabled brush dims the resting glyph instead.
+
+#### Shape and layout options
+
+`DocumentTabShape` (`Rectangle` or `Slanted`), `TabIndicatorPlacement` (`Top` or
+`Bottom`), `BoldSelectedTab` (`x:Boolean`), `DocumentTabSpacing` (`x:Double`),
+`SelectedTabRaise` (`x:Double`: unselected document tabs sit this much lower than
+the selected one), `DocumentTabStripInset` (`x:Double`: space before the first
+document tab), `ToolTitleCornerRadius` (`x:Double`: top corners of tool captions)
+and `FloatingDocumentMenuButton` (`x:Boolean`: whether floating document windows
+show the window-position ▾ button; default `True`).
+
+#### Menus, docking guides, navigator and auto-hide
+
+| Keys | Surface |
+|---|---|
+| `MenuBrush`, `MenuGutterBrush`, `MenuBorderBrush`, `MenuForegroundBrush`, `MenuDisabledBrush`, `MenuHoverBrush`, `MenuHoverBorderBrush`, `MenuPressedBrush`, `MenuRowHeight`, `MenuMinWidth` | Context menus, caption menus and the open-documents list |
+| `GuideBrush`, `GuideBorderBrush`, `GuideAccentBrush`, `GuideFillBrush`, `GuideWindowBrush`, `GuideTitleBrush`, `GuideSelectionBrush`, `GuideSize` | Docking guide compass and edge targets |
+| `NavigatorBrush`, `NavigatorBorderBrush`, `NavigatorSelectionBrush`, `NavigatorSelectionBorderBrush`, `NavigatorCornerRadius` (Fluent) | Ctrl+Tab navigator |
+| `AutoHideTitleBrush`, `AutoHideTitleHeight` | Inactive auto-hide flyout caption fill (overrides `ToolTitleBrush`) and caption height |
+
+#### Built-in Generic values
+
+`GenericTheme` has no dictionary of state keys; while it is assigned, and only
+when neither the application nor another dictionary supplies the key, it uses a
+grey inactive / blue active 3 px floating frame, a light-blue caption button
+outline, a distinct disabled glyph brush, a 2 px raised selected document tab and
+no ▾ button on floating document windows. The automatic palette (no `Theme`)
+is unchanged.
 
 Brushes may be solid or gradient. A minimal custom theme:
 
@@ -120,8 +167,9 @@ assembly its own root namespace; the public theme class can still live in
 ## Verification
 
 The `classic-themes` desktop suite checks that each packaged theme resolves its
-dictionary under a dark host, that VS2010 moves the gold tab and frame with
-document activation, that Metro's indicator takes the accent only while active,
+dictionary under a dark host, that VS2010 moves the gold tab and content band
+with document activation, paints caption buttons with its hover and disabled
+brushes and gives the auto-hide flyout caption the tool title states, that Metro's indicator takes the accent only while active,
 that Aero's slanted outline follows the arranged tab without widening it, and
 that switching back to Generic restores the default chrome while keeping
 application content. It also writes one screenshot per theme.
