@@ -394,7 +394,11 @@ internal sealed partial class DockSurface : Grid, IDisposable
             return null;
         }
 
-        var area = GetDropAreas().OfType<IModelDropArea>().Where(a => ReferenceEquals(a.Model?.FindParent<LayoutFloatingWindow>(), floating?.Model)).Where(a => a.DetectionRect.Width > 0 && a.DetectionRect.Height > 0 && a.DetectionRect.Contains(point)).OrderBy(a => a.Type == DropAreaType.DockingManager ? 1 : 0).ThenBy(a => a.DetectionRect.Width * a.DetectionRect.Height).FirstOrDefault();
+        var areas = GetDropAreas().OfType<IModelDropArea>().Where(a => ReferenceEquals(a.Model?.FindParent<LayoutFloatingWindow>(), floating?.Model)).ToArray();
+        var area = areas.Where(a => a.DetectionRect.Width > 0 && a.DetectionRect.Height > 0 && a.DetectionRect.Contains(point)).OrderBy(a => a.Type == DropAreaType.DockingManager ? 1 : 0).ThenBy(a => a.DetectionRect.Width * a.DetectionRect.Height).FirstOrDefault();
+        // The caption of a single-pane floating tool window is that pane's title.
+        if (area == null && floating != null)
+            area = areas.FirstOrDefault(a => a.Model is LayoutAnchorablePane pane && GetView(pane) is LayoutCachePaneControl view && view.IsOverHeader(point, this));
         return area;
     }
 
