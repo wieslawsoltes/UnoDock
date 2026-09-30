@@ -60,7 +60,7 @@ A single workflow, `.github/workflows/ci.yml`, runs on every pull request and on
 | Job | Runner | Contents |
 |---|---|---|
 | Checks | Linux | Source organization and formatting, generated adapters, evidence-gate unit tests, portable core tests, API scan and metadata comparison |
-| Desktop | Linux, Windows, macOS | One Gallery build per OS; focused suite groups with their evidence gates, then every remaining registered suite once (Linux: Xvfb, XTEST, Openbox for floating chrome) |
+| Desktop | Linux, Windows, macOS | One Gallery build per OS; focused suite groups with their evidence gates; Linux and Windows then run every remaining registered suite once (Linux: Xvfb, XTEST, Openbox for floating chrome). Hosted macOS runners have a small virtual display, so macOS runs the focused groups |
 | NuGet packages | Windows | Uno and native WinUI package targets with symbols |
 | Browser | Linux | WebAssembly publish, documentation site and Playwright runtime tests |
 | Deploy/Verify Pages | Linux | `main` only: deploys the tested site and re-runs the browser suite against it |

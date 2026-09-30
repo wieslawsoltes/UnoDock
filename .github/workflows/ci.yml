@@ -90,6 +90,9 @@ jobs:
           restore-keys: nuget-desktop-${{ runner.os }}-
       - name: Build the Uno desktop Gallery with warnings as errors
         run: dotnet build samples/UnoDock.Gallery -c Release -f net10.0-desktop -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0 -warnaserror
+      - name: Report the macOS display
+        if: runner.os == 'macOS'
+        run: system_profiler SPDisplaysDataType | grep -E "Resolution|Display Type|UI Looks" || true
       - name: Install X11, Openbox and XTEST
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends xvfb openbox x11-utils libx11-6 libxi6 libxrandr2 libxcursor1 libfontconfig1 libgl1 libice6 libsm6 libxcb1 libxtst6

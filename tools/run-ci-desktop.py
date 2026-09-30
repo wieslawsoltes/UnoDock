@@ -4,7 +4,7 @@
 Each group is an isolated run-desktop-tests.py invocation with its own results
 directory and evidence verifier, so a group's gate sees exactly its suites. The
 final "remaining" group runs every other registered suite once, excluding what
-the groups already executed. On Linux, the floating chrome group runs under a
+the groups already executed (Linux and Windows). On Linux, the floating chrome group runs under a
 real window manager (Openbox), started only for that group.
 
 Every group runs even after an earlier failure; the exit code is non-zero if any
@@ -76,7 +76,10 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--app", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
-    parser.add_argument("--remaining-selector", default="windows-acceptance" if SYSTEM == "Windows" else "all")
+    # Hosted macOS runners have a small virtual display that cannot hold the
+    # full-size workspace scenes; macOS runs the focused groups only.
+    default = {"Windows": "windows-acceptance", "Linux": "all"}.get(SYSTEM, "")
+    parser.add_argument("--remaining-selector", default=default, help="Selector for the remaining suites; empty skips them.")
     parser.add_argument("--only", default="", help="Comma-separated group names (local reproduction).")
     args = parser.parse_args()
     revision = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True, text=True, check=True).stdout.strip()
@@ -88,7 +91,7 @@ def main() -> int:
     executed: list[str] = []
     summary = []
     for group in groups(revision):
-        if only and group["name"] not in only:
+        if only and group["name"] not in only or group.get("remaining") and not args.remaining_selector:
             continue
         directory = output / group["dir"]
         started = time.monotonic()
