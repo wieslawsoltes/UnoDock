@@ -99,13 +99,24 @@ internal static class WindowsFloatingInputTests
                     // uses its own thread; the application still receives real input.
                     await Task.Run(async () =>
                     {
-                        input.Move(start);
+                        // The OS modal move loop follows hardware-equivalent motion;
+                        // SetCursorPos alone is not delivered as mouse movement.
+                        input.Glide(start);
                         await Task.Delay(80);
                         input.Press();
                         await Task.Delay(100);
-                        input.Move(new(start.X + 24, start.Y + 8));
-                        await Task.Delay(100);
-                        input.Move(finish);
+                        for (var step = 1; step <= 8; step++)
+                        {
+                            input.Glide(new(start.X + 3 * step, start.Y + step));
+                            await Task.Delay(20);
+                        }
+
+                        for (var step = 1; step <= 16; step++)
+                        {
+                            input.Glide(new(start.X + 24 + (finish.X - start.X - 24) * step / 16, start.Y + 8 + (finish.Y - start.Y - 8) * step / 16));
+                            await Task.Delay(25);
+                        }
+
                         await Task.Delay(200);
                         input.Release();
                     });

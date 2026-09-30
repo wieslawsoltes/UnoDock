@@ -14,17 +14,21 @@ public sealed partial class DesktopWindowCoordinates
         return [.. WorkAreas(Scale(reference)).Select(r => new Rect(r.X, r.Y, r.Width, r.Height))];
     }
 
-    /// <summary>Place a desktop window by its top-left corner and size in DIPs on
-        /// every platform (AppWindow positions are bottom-based on some hosts).</summary>
+    /// <summary>Place a desktop window: <paramref name = "bounds"/> X/Y is the
+        /// window's outer top-left corner and Width/Height its client (content) size,
+        /// all in DIPs, consistently on every platform (AppWindow sizes include the
+        /// frame on some hosts and positions are bottom-based on others).</summary>
         public static void SetWindowBounds(Window window, Rect bounds, double scale)
     {
         ArgumentNullException.ThrowIfNull(window);
         if (!double.IsFinite(bounds.X + bounds.Y + bounds.Width + bounds.Height + scale) || bounds.Width <= 0 || bounds.Height <= 0 || scale <= 0)
             throw new ArgumentOutOfRangeException(nameof(bounds));
+        var frameWidth = Math.Max(0, window.AppWindow.Size.Width - window.AppWindow.ClientSize.Width);
+        var frameHeight = Math.Max(0, window.AppWindow.Size.Height - window.AppWindow.ClientSize.Height);
         window.AppWindow.Resize(new()
         {
-            Width = (int)Math.Round(bounds.Width * scale),
-            Height = (int)Math.Round(bounds.Height * scale)
+            Width = (int)Math.Round(bounds.Width * scale) + frameWidth,
+            Height = (int)Math.Round(bounds.Height * scale) + frameHeight
         });
 #if !WINDOWS
         if (OperatingSystem.IsMacOS())
