@@ -41,6 +41,8 @@ With native floating windows, dragging behaves like a desktop IDE:
 * **Escape** ends the move and keeps the content floating; **Ctrl** suppresses
   docking while held.
 
+![A document torn off its tab strip on Windows, following the pointer over the target pane's docking guides](images/floating/tear-off-windows.png)
+
 Set `DockingManager.ContinuousTearOff = false` to keep drags inside the
 workspace; content then floats only when released outside the window. In-surface
 floating hosts always use that release behavior.
