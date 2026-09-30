@@ -230,7 +230,7 @@ public partial class LayoutAutoHideWindowControl : ContentControl, ILayoutContro
         var manager = _manager;
         manager?.CloseAutoHide();
         if (model.IsAutoHidden && ReferenceEquals(model.Root, manager?.Layout))
-            model.ToggleAutoHide();
+            DockVisuals.ToggleAutoHide(model);
     }
 
     private void ModelChanged(object? sender, PropertyChangedEventArgs e) => ValidateResize();

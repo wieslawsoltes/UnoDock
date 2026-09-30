@@ -551,6 +551,20 @@ internal sealed partial class DockSurface : Grid, IDisposable
             CancelDrag();
     }
 
+    /// <summary>Escape cancels an active drag or navigator session; content keeps
+        /// every other Escape. Returns whether something was cancelled.</summary>
+        internal bool CancelTransientSession()
+    {
+        var active = _dragSource != null || _floatingDrag != null || _navigator != null;
+        if (!active)
+            return false;
+        CancelDrag();
+        CloseNavigator(false);
+        return true;
+    }
+
+    internal bool IsAutoHideOpen => _autoHide != null;
+
     internal void CancelDrag()
     {
         _drag.Cancel();

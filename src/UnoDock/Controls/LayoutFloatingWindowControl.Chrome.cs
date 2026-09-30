@@ -113,7 +113,10 @@ public abstract partial class LayoutFloatingWindowControl
         _dragHandle.RightTapped += (_, e) =>
         {
             CancelCaptionDrag();
-            SystemCommands.CreateSystemMenu(this).ShowAt(_dragHandle, new FlyoutShowOptions { Position = e.GetPosition(_dragHandle) });
+            // The caption's context menu is the content's docking menu; a window
+            // without single caption content falls back to the system menu.
+            FlyoutBase menu = Model.Root?.Manager is { } manager && CaptionContent is { } content ? DockVisuals.Menu(manager, content) : SystemCommands.CreateSystemMenu(this);
+            menu.ShowAt(_dragHandle, new FlyoutShowOptions { Position = e.GetPosition(_dragHandle) });
             e.Handled = true;
         };
         Unloaded += (_, _) => CancelFrameResize(false);

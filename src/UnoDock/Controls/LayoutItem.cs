@@ -316,6 +316,21 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
     }
 
     private IEnumerable<LayoutDocument> Documents() => (LayoutElement.Root as LayoutRoot)?.Descendents().OfType<LayoutDocument>() ?? [];
+    /// <summary>Run a chrome action through the item's (possibly application
+        /// supplied) command, honoring its CanExecute. Without a layout item (content
+        /// outside a manager) the model fallback runs instead.</summary>
+        internal static void Execute(LayoutContent content, Func<LayoutItem, ICommand?> command, Action fallback)
+    {
+        if (content.Root is not LayoutRoot { Manager: { } manager } || manager.GetLayoutItemFromModel(content) is not { } item)
+        {
+            fallback();
+            return;
+        }
+
+        if (command(item) is { } action && action.CanExecute(null))
+            action.Execute(null);
+    }
+
     private bool CanCloseDocuments(bool exceptThis) => LayoutElement.Root is LayoutRoot root && !BulkClosures.GetOrCreateValue(root).Active && Documents().Any(d => d.CanClose && (!exceptThis || !ReferenceEquals(d, LayoutElement)));
     private void CloseDocuments(bool exceptThis)
     {
@@ -336,7 +351,7 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
                 if (!ReferenceEquals(manager.Layout, root) || !ReferenceEquals(root.Manager, manager))
                     break;
                 if (document.CanClose && ReferenceEquals(document.Root, root) && document.Parent != null)
-                    document.Close();
+                    Execute(document, item => item.CloseCommand, document.Close);
             }
         }
         finally
@@ -349,21 +364,23 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
     private void Split(DockPosition position)
     {
         if (LayoutElement.Parent is ILayoutGroup pane && CanSplit(position))
-            DockOperations.Dock(LayoutElement, pane, position);
+            DockOperations.Dock(LayoutElement, pane, position, -1, asDocument: pane is LayoutDocumentPane);
     }
 
+    // Only an immediate sibling document pane in the same group is a target; a
+    // nested group in between is not skipped.
     private LayoutDocumentPane? AdjacentPane(int direction)
     {
-        var panes = LayoutElement.Parent?.Parent is LayoutDocumentPaneGroup group ? group.Children.OfType<LayoutDocumentPane>().ToArray() : [];
-        var index = Array.FindIndex(panes, p => ReferenceEquals(p, LayoutElement.Parent));
-        index += direction;
-        return index >= 0 && index < panes.Length ? panes[index] : null;
+        if (LayoutElement.Parent is not LayoutDocumentPane pane || pane.Parent is not LayoutDocumentPaneGroup group)
+            return null;
+        var index = group.IndexOfChild(pane) + direction;
+        return index >= 0 && index < group.ChildrenCount ? group.Children[index] as LayoutDocumentPane : null;
     }
 
     private void Move(int direction)
     {
         if (AdjacentPane(direction) is { } target)
-            DockOperations.Dock(LayoutElement, target, DockPosition.Inside);
+            DockOperations.Dock(LayoutElement, target, DockPosition.Inside, 0, asDocument: true);
     }
 
 #if WINDOWS

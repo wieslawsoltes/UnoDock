@@ -40,7 +40,9 @@ public partial class LayoutAnchorableFloatingWindow : LayoutFloatingWindow, ILay
     public event EventHandler? IsVisibleChanged;
     public bool IsSinglePane => this.Descendents().OfType<LayoutAnchorablePane>().Count(p => p.ChildrenCount > 0) == 1;
     public ILayoutAnchorablePane? SinglePane => IsSinglePane ? this.Descendents().OfType<LayoutAnchorablePane>().First(p => p.ChildrenCount > 0) : null;
-    public override bool IsValid => this.Descendents().OfType<LayoutAnchorable>().Any();
+    // A window whose tools are all hidden stays in the layout: its panes keep the
+    // tools' previous positions, so Show() floats them again at the same bounds.
+    public override bool IsValid => _panel != null;
     public override int ChildrenCount => _panel == null ? 0 : 1;
 
     public override IEnumerable<ILayoutElement> Children

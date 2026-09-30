@@ -63,9 +63,9 @@ public abstract partial class LayoutTabItemBase : DockInputControl
         _label.DoubleTapped += (_, _) =>
         {
             if (Model?.IsFloating == true)
-                Model.Dock();
-            else
-                Model?.Float();
+                DockVisuals.Dock(Model);
+            else if (Model != null)
+                DockVisuals.Float(Model);
         };
         _close = DockChrome.Icon(DockGlyph.Close, () =>
         {

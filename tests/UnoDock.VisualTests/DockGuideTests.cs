@@ -117,12 +117,14 @@ public static class DockGuideTests
                 c.CanMove = false;
                 Check.Equal(0, Guides(c).Count);
             });
-            tests.Test("CanRepositionItems removes source tool guide intents", async () =>
+            tests.Test("CanRepositionItems keeps guides: it only governs reordering in the pane", async () =>
             {
                 await Reset();
                 var c = Tool();
+                var expected = Guides(c).Count;
                 ((LayoutAnchorablePane)c.Parent!).CanRepositionItems = false;
-                Check.Equal(0, Guides(c).Count);
+                Check.True(expected > 0);
+                Check.Equal(expected, Guides(c).Count);
             });
             tests.Test("tool docking permission suppresses document glyphs but keeps outer tool glyphs", async () =>
             {
@@ -289,7 +291,7 @@ public static class DockGuideTests
                 await Reset();
                 var c = Tool();
                 var g = Guides(c);
-                ((LayoutAnchorablePane)c.Parent!).CanRepositionItems = false;
+                c.IsEnabled = false;
                 overlay.ShowGuides(g, g[0].Plan, dock);
                 Check.False(overlay.IsOpen);
                 Check.Equal(0, overlay.DisplayedGuides.Count);

@@ -2,7 +2,7 @@ namespace UnoDock.Layout;
 /// <summary>All visual and programmatic docking goes through these ownership-preserving operations.</summary>
 public static class DockOperations
 {
-    public static bool CanMove(LayoutContent content) => content.IsEnabled && content is not LayoutDocument { CanMove: false } && content.Parent is not ILayoutPositionableElement { CanRepositionItems: false };
+    public static bool CanMove(LayoutContent content) => content.IsEnabled && content is not LayoutDocument { CanMove: false };
     public static void Float(LayoutContent content)
     {
         ArgumentNullException.ThrowIfNull(content);
@@ -104,8 +104,15 @@ public static class DockOperations
         var previous = content.PreviousContainer as ILayoutGroup;
         if (previous != null && ReferenceEquals(previous.Root, root) && CanContain(previous, content))
         {
-            if (!ReferenceEquals(content.Parent, previous))
+            var handled = content is LayoutAnchorable tool && manager?.LayoutUpdateStrategy?.BeforeInsertAnchorable(root, tool, previous) == true;
+            if (manager != null && !ReferenceEquals(manager.Layout, root) || !ReferenceEquals(previous.Root, root))
+                return;
+            if (!handled && !ReferenceEquals(content.Parent, previous))
                 previous.InsertChildAt(Math.Clamp(content.PreviousContainerIndex, 0, previous.ChildrenCount), content);
+            if (content is LayoutAnchorable inserted && ReferenceEquals(inserted.Root, root))
+                manager?.LayoutUpdateStrategy?.AfterInsertAnchorable(root, inserted);
+            if (ReferenceEquals(content.Parent, previous))
+                content.SetPrevious(null, 0);
         }
         else if (content is LayoutAnchorable anchorable)
             AddAnchorable(root, anchorable, AnchorableShowStrategy.Right);
@@ -130,8 +137,11 @@ public static class DockOperations
             return;
         }
 
-        content.RememberDockPosition();
-        InsertDocument(root, content);
+        if (content.PreviousContainer is LayoutDocumentPane previous && ReferenceEquals(previous.Root, root) && AllowsDrop(previous, content))
+            previous.InsertChildAt(Math.Clamp(content.PreviousContainerIndex, 0, previous.ChildrenCount), content);
+        else
+            InsertDocument(root, content);
+        content.SetPrevious(null, 0);
         if (ReferenceEquals(content.Root, root))
             content.IsActive = true;
         root.CollectGarbage();
@@ -262,6 +272,8 @@ public static class DockOperations
             using var batch = root.BeginUpdate();
             if (ReferenceEquals(content.Parent, target))
             {
+                if (target is ILayoutPositionableElement { CanRepositionItems: false })
+                    return;
                 var from = target.IndexOfChild(content);
                 if (insertionIndex >= 0 && target is ILayoutPane pane)
                 {
@@ -293,6 +305,7 @@ public static class DockOperations
 
         if (parent is not LayoutPanel && parent is not LayoutDocumentPaneGroup && parent is not LayoutAnchorablePaneGroup)
             return;
+        var wrapDocuments = documentKind && targetElement is ILayoutDocumentPane && parent is LayoutPanel;
         var manager = root.Manager;
         using var edgeTransition = manager?.BeginTransition(content, false);
         if (manager != null && edgeTransition == null)
@@ -313,6 +326,27 @@ public static class DockOperations
             }
             else
                 newPane = new LayoutAnchorablePane((LayoutAnchorable)content);
+            if (wrapDocuments)
+            {
+                var group = new LayoutDocumentPaneGroup
+                {
+                    Orientation = orientation
+                };
+                if (targetElement is ILayoutPositionableElement slot && group is ILayoutPositionableElement replacement)
+                {
+                    replacement.DockWidth = slot.DockWidth;
+                    replacement.DockHeight = slot.DockHeight;
+                    replacement.DockMinWidth = slot.DockMinWidth;
+                    replacement.DockMinHeight = slot.DockMinHeight;
+                }
+
+                parent.ReplaceChild(targetElement, group);
+                group.InsertChildAt(0, targetElement);
+                parent = group;
+            }
+
+            if (parent is LayoutDocumentPaneGroup or LayoutAnchorablePaneGroup && parent is ILayoutOrientableGroup single && single.Orientation != orientation && parent.ChildrenCount == 1 && AcceptsPanel(parent, newPane))
+                single.Orientation = orientation;
             if (parent is ILayoutOrientableGroup oriented && oriented.Orientation == orientation && AcceptsPanel(parent, newPane))
                 parent.InsertChildAt(parent.IndexOfChild(targetElement) + (before ? 0 : 1), newPane);
             else

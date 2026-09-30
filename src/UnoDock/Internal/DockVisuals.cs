@@ -55,13 +55,21 @@ internal static class DockVisuals
         return new(rect.X, rect.Y, rect.Width, rect.Height);
     }
 
-    internal static void CloseOrHide(LayoutContent content)
+    /// <summary>The close button of a tab or title: closable content closes, other
+        /// tools hide; both through the item's commands so application handlers run.</summary>
+        internal static void CloseOrHide(LayoutContent content)
     {
-        if (content is LayoutAnchorable a && a.CanHide)
-            a.Hide();
+        if (content is LayoutAnchorable tool && !tool.CanClose)
+        {
+            if (tool.CanHide)
+                LayoutItem.Execute(tool, item => (item as LayoutAnchorableItem)?.HideCommand, () => tool.Hide());
+        }
         else
-            content.Close();
+            LayoutItem.Execute(content, item => item.CloseCommand, content.Close);
     }
 
+    internal static void ToggleAutoHide(LayoutAnchorable tool) => LayoutItem.Execute(tool, item => (item as LayoutAnchorableItem)?.AutoHideCommand, tool.ToggleAutoHide);
+    internal static void Float(LayoutContent content) => LayoutItem.Execute(content, item => item.FloatCommand, content.Float);
+    internal static void Dock(LayoutContent content) => LayoutItem.Execute(content, item => item is LayoutAnchorableItem tool ? tool.DockCommand : item.DockAsDocumentCommand, content.Dock);
     internal static void SetName(DependencyObject element, string name) => AutomationProperties.SetName(element, name);
 }

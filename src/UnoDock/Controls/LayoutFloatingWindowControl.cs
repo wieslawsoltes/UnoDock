@@ -309,7 +309,9 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
                 }
 
             root?.CollectGarbage();
-            if (Model is LayoutFloatingWindow { IsValid: false } || Model.Root == null)
+            // A tool window whose tools are all hidden stays in the layout (for
+            // Show) but its host closes; showing a tool creates a new host.
+            if (Model is LayoutFloatingWindow { IsValid: false } or LayoutAnchorableFloatingWindow { IsVisible: false } || Model.Root == null)
                 CloseHost();
         }
         finally
@@ -852,9 +854,11 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
             return;
         if (e.Key == Windows.System.VirtualKey.Escape)
         {
+            // Escape belongs to the content unless it cancels a resize or drag.
+            var resizing = _frameResize != null;
             CancelFrameResize(true);
-            Model.Root?.Manager?.Surface?.CancelDrag();
-            e.Handled = true;
+            if (Model.Root?.Manager?.Surface?.CancelTransientSession() == true || resizing)
+                e.Handled = true;
             return;
         }
 

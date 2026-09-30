@@ -172,6 +172,8 @@ public abstract partial class LayoutContent : LayoutElement, IComparable<LayoutC
                 return;
             if (value && Parent is ILayoutContentSelector selector && !ReferenceEquals(selector.SelectedContent, this))
                 selector.SelectedContentIndex = selector.IndexOf(this);
+            else if (!value && Parent is ILayoutContentSelector owner && ReferenceEquals(owner.SelectedContent, this))
+                owner.SelectedContentIndex = -1;
             OnIsSelectedChanged(old, value);
             IsSelectedChanged?.Invoke(this, EventArgs.Empty);
         }

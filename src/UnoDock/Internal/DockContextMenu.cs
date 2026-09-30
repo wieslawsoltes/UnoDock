@@ -31,7 +31,8 @@ internal sealed class DockContextMenu : MenuFlyout, IDisposable
             Add("DockAsDocumentCommand", () => Strings.Anchorable_DockAsDocument, () => item.DockAsDocumentCommand);
             Add("AutoHideCommand", () => item.LayoutElement is LayoutAnchorable { IsAutoHidden: true } ? Strings.Window_Restore : Strings.Anchorable_AutoHide, () => tool.AutoHideCommand);
             Add("CloseCommand", () => Strings.Document_Close, () => item.CloseCommand, () => item.CanClose);
-            Add("HideCommand", () => Strings.Anchorable_Hide, () => tool.HideCommand);
+            // A closable tool offers Close instead of Hide.
+            Add("HideCommand", () => Strings.Anchorable_Hide, () => tool.HideCommand, () => !item.CanClose);
         }
         else
         {

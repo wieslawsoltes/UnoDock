@@ -85,7 +85,11 @@ public partial class LayoutCachePaneControl
             if (_titleModel != null && _titleManager != null)
                 DockVisuals.ShowBelow(DockVisuals.Menu(_titleManager, _titleModel), _menuButton);
         }, Properties.Resources.Anchorable_CxMenu_Hint);
-        _pinButton = DockChrome.Icon(DockGlyph.Pin, () => _titleModel?.ToggleAutoHide(), Properties.Resources.Anchorable_BtnAutoHide_Hint);
+        _pinButton = DockChrome.Icon(DockGlyph.Pin, () =>
+        {
+            if (_titleModel != null)
+                DockVisuals.ToggleAutoHide(_titleModel);
+        }, Properties.Resources.Anchorable_BtnAutoHide_Hint);
         _hideButton = DockChrome.Icon(DockGlyph.Close, () =>
         {
             if (_titleModel != null)
@@ -104,9 +108,9 @@ public partial class LayoutCachePaneControl
         _titlePresenter.DoubleTapped += (_, _) =>
         {
             if (_titleModel?.IsFloating == true)
-                _titleModel.Dock();
-            else
-                _titleModel?.Float();
+                DockVisuals.Dock(_titleModel);
+            else if (_titleModel != null)
+                DockVisuals.Float(_titleModel);
         };
     }
 
@@ -167,7 +171,7 @@ public partial class LayoutCachePaneControl
         _hideButton.Configure(p);
         _menuButton.ForegroundOverride = _pinButton.ForegroundOverride = _hideButton.ForegroundOverride = titleForeground;
         _menuButton.IsEnabled = selected?.IsEnabled == true;
-        _pinButton.Visibility = selected?.CanAutoHide == true ? Visibility.Visible : Visibility.Collapsed;
+        _pinButton.Visibility = selected is { CanAutoHide: true, IsFloating: false } ? Visibility.Visible : Visibility.Collapsed;
         _pinButton.IsEnabled = selected?.IsEnabled == true;
         _hideButton.Visibility = selected is { CanHide: true } or { CanClose: true } ? Visibility.Visible : Visibility.Collapsed;
         _hideButton.IsEnabled = selected?.IsEnabled == true;
@@ -192,7 +196,9 @@ public partial class LayoutCachePaneControl
         {
             MenuFlyoutPresenterStyle = DockMenuRow.PresenterStyle(palette)
         };
-        foreach (var model in Items.Where(c => c is not LayoutDocument { IsVisible: false }).ToArray())
+        // Listed by title, like the pane's ChildrenSorted.
+        var listed = pane is LayoutDocumentPane documents ? documents.ChildrenSorted.Where(Items.Contains) : Items;
+        foreach (var model in listed.Where(c => c is not LayoutDocument { IsVisible: false }).ToArray())
         {
             var item = new DockDocumentMenuRow();
             item.Configure(manager, palette, model);

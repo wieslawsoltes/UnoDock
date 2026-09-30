@@ -91,6 +91,7 @@ public partial class App : Application
                         ("layout-mutation-invariants", true, () => Testing.LayoutMutationInvariantTests.Run(output)),
                         ("runtime", false, () => Testing.RuntimeTests.Run(gallery.Dock, output)),
                         ("interop", false, () => Testing.InteropTests.Run(output)),
+                        ("reference-behavior", true, () => Testing.ReferenceBehaviorTests.Run(output)),
                         ("parity", false, () => Testing.ParityTests.Run(gallery.Dock, output)),
                         ("lifecycle", false, () => Testing.LifecycleTests.Run(gallery.Dock, output)),
                         ("interaction", false, () => Testing.InteractionTests.Run(gallery.Dock, output)),

@@ -543,8 +543,17 @@ public partial class DockingManager : Control, IDisposable, UnoDock.Compatibilit
     protected override void OnKeyDown(KeyRoutedEventArgs e)
     {
         base.OnKeyDown(e);
-        if (!e.Handled)
-            HandleDockingKey(e);
+        if (e.Handled)
+            return;
+        // Content saw Escape first and left it unhandled: close an open flyout.
+        if (e.Key == Windows.System.VirtualKey.Escape && _surface?.IsAutoHideOpen == true)
+        {
+            CloseAutoHide();
+            e.Handled = true;
+            return;
+        }
+
+        HandleDockingKey(e);
     }
 
     private void HandleDockingKey(KeyRoutedEventArgs e)
@@ -552,10 +561,9 @@ public partial class DockingManager : Control, IDisposable, UnoDock.Compatibilit
         var ctrl = InputState.ControlDown;
         if (e.Key == Windows.System.VirtualKey.Escape)
         {
-            _surface?.CancelDrag();
-            CloseAutoHide();
-            _surface?.CloseNavigator(false);
-            e.Handled = true;
+            // Only a drag or navigator session consumes Escape; editors keep it.
+            if (_surface?.CancelTransientSession() == true)
+                e.Handled = true;
         }
         else if (ctrl && e.Key == Windows.System.VirtualKey.Tab)
         {
@@ -566,8 +574,10 @@ public partial class DockingManager : Control, IDisposable, UnoDock.Compatibilit
         {
             var command = GetLayoutItemFromModel(active).CloseCommand;
             if (command?.CanExecute(null) == true)
+            {
                 command.Execute(null);
-            e.Handled = true;
+                e.Handled = true;
+            }
         }
     }
 

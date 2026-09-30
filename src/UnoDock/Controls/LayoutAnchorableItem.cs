@@ -23,8 +23,8 @@ public partial class LayoutAnchorableItem : LayoutItem
     {
         base.InitDefaultCommands();
         CommandDefault(HideCommandProperty, () => ((LayoutAnchorable)LayoutElement).Hide(), () => LayoutElement is LayoutAnchorable { CanHide: true, IsHidden: false });
-        CommandDefault(AutoHideCommandProperty, () => ((LayoutAnchorable)LayoutElement).ToggleAutoHide(), () => LayoutElement is LayoutAnchorable { CanAutoHide: true } && LayoutElement.Parent is LayoutAnchorablePane or LayoutAnchorGroup);
-        CommandDefault(DockCommandProperty, () => LayoutElement.Dock(), () => LayoutElement.IsFloating || LayoutElement.Parent is LayoutDocumentPane);
+        CommandDefault(AutoHideCommandProperty, () => ((LayoutAnchorable)LayoutElement).ToggleAutoHide(), () => LayoutElement is LayoutAnchorable { CanAutoHide: true, IsFloating: false } && LayoutElement.Parent is LayoutAnchorablePane or LayoutAnchorGroup);
+        CommandDefault(DockCommandProperty, () => LayoutElement.Dock(), () => LayoutElement.IsFloating);
     }
 
     protected override void ClearDefaultCommands() => base.ClearDefaultCommands();
