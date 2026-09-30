@@ -467,6 +467,13 @@ internal static class DesktopFloatingTests
 
         internal async Task CoverTarget(Point target)
         {
+            // Raise the host above earlier fixtures and other applications so the
+            // target point belongs to this manager before the floating window covers
+            // it. A background macOS app cannot activate itself; order it front.
+            _window.Activate();
+            if (OperatingSystem.IsMacOS())
+                OrderFrontRegardless(_window);
+            await Task.Delay(100);
             var desired = Coordinates.ToScreen(Surface, target);
             var current = Coordinates.ToScreen(Control, new(Control.ActualWidth / 2, Control.ActualHeight / 2));
             var origin = (Point)CallStatic(typeof(DesktopWindowCoordinates), "NativeOrigin", Control.NativeWindow)!;
@@ -512,6 +519,17 @@ internal static class DesktopFloatingTests
         throw new MissingFieldException(name);
     }
 
+    private static void OrderFrontRegardless(Window window)
+    {
+        var interop = typeof(DesktopWindowCoordinates).Assembly.GetType("UnoDock.Internal.MacDesktopInterop", true)!;
+        var handle = (nint)CallStatic(interop, "Handle", window)!;
+        ObjCSend(handle, SelRegisterName("orderFrontRegardless"));
+    }
+
+    [System.Runtime.InteropServices.DllImport("/usr/lib/libobjc.A.dylib", EntryPoint = "objc_msgSend")]
+    private static extern void ObjCSend(nint receiver, nint selector);
+    [System.Runtime.InteropServices.DllImport("/usr/lib/libobjc.A.dylib", EntryPoint = "sel_registerName")]
+    private static extern nint SelRegisterName(string name);
     private static object? CallStatic(Type type, string name, params object?[] args) => Invoke(type, null, name, args, BindingFlags.Static);
     private static object? Call(object target, string name, params object?[] args) => Invoke(target.GetType(), target, name, args, BindingFlags.Instance);
     private static object? Invoke(Type type, object? target, string name, object?[] args, BindingFlags kind)

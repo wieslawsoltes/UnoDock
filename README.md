@@ -6,9 +6,7 @@
 
 Composable documents and tool windows. Native Fluent controls. Desktop and browser hosting.
 
-[![Build and test](https://github.com/wieslawsoltes/UnoDock/actions/workflows/ci.yml/badge.svg)](https://github.com/wieslawsoltes/UnoDock/actions/workflows/ci.yml)
-[![Browser & Pages](https://github.com/wieslawsoltes/UnoDock/actions/workflows/browser-pages.yml/badge.svg)](https://github.com/wieslawsoltes/UnoDock/actions/workflows/browser-pages.yml)
-[![Source quality](https://github.com/wieslawsoltes/UnoDock/actions/workflows/source-quality.yml/badge.svg)](https://github.com/wieslawsoltes/UnoDock/actions/workflows/source-quality.yml)
+[![CI](https://github.com/wieslawsoltes/UnoDock/actions/workflows/ci.yml/badge.svg)](https://github.com/wieslawsoltes/UnoDock/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-6875d9.svg)](LICENSE)
 
 [**Documentation**](https://wieslawsoltes.github.io/UnoDock/docs/index.html) · [**Browser workbench**](https://wieslawsoltes.github.io/UnoDock/playground/) · [**Control gallery**](https://wieslawsoltes.github.io/UnoDock/gallery/) · [**Getting started**](docs/getting-started.md)

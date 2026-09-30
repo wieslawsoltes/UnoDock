@@ -1,6 +1,6 @@
 # Documentation and browser deployment
 
-The `browser-pages.yml` workflow builds one static site containing documentation, the standard Uno gallery, and the multi-window browser workbench. It publishes the real `net10.0-browserwasm` application—not a screenshot or JavaScript-only substitute.
+The `Browser` job of the CI workflow (`ci.yml`) builds one static site containing documentation, the standard Uno gallery, and the multi-window browser workbench. It publishes the real `net10.0-browserwasm` application—not a screenshot or JavaScript-only substitute.
 
 ## Published routes
 

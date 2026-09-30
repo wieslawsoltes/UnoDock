@@ -75,6 +75,11 @@ class DesktopRunnerTests(unittest.TestCase):
                 path = self.directory / "manifest.json"; path.write_text(json.dumps(value))
                 runner.read_manifest(path)
 
+    def test_exclusion(self):
+        self.assertEqual(["b"], runner.exclude_suites(["a", "b", "c"], ["a", "c"]))
+        with self.assertRaises(ValueError): runner.exclude_suites(["a"], ["a"])
+        with self.assertRaises(ValueError): runner.exclude_suites(["a", "b"], ["unknown"])
+
     def test_stale_results_rejected_before_launch(self):
         self.path.write_text("old evidence")
         with self.assertRaises(ValueError): runner.run(self.path, self.directory, "all", "not-executed", 1, 1)

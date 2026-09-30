@@ -56,6 +56,17 @@ def verify_suite(path: Path, name: str) -> dict[str, int]:
     return {"executed": len(cases), "passed": len(cases)}
 
 
+def exclude_suites(suites: list[str], excluded: list[str]) -> list[str]:
+    """Remove suites another invocation already runs; the remainder must be non-empty."""
+    unknown = sorted(set(excluded) - set(suites))
+    if unknown:
+        raise ValueError("Excluded suites are not selected: " + ", ".join(unknown))
+    remaining = [name for name in suites if name not in excluded]
+    if not remaining:
+        raise ValueError("Every selected suite was excluded.")
+    return remaining
+
+
 def execute(command: list[str], env: dict[str, str], log: Path, timeout: float) -> int:
     # Direct dotnet <assembly> execution has no build/restore subprocess. The
     # native windows belong to this process and the OS reclaims them on exit.
@@ -67,7 +78,7 @@ def execute(command: list[str], env: dict[str, str], log: Path, timeout: float) 
             write_console(log.read_text(encoding="utf-8", errors="replace"))
 
 
-def run(app: Path, output: Path, selector: str, dotnet: str, per_suite: float, total: float) -> int:
+def run(app: Path, output: Path, selector: str, dotnet: str, per_suite: float, total: float, excluded: list[str] | None = None) -> int:
     app = app.resolve(strict=True)
     output.mkdir(parents=True, exist_ok=True)
     output = output.resolve()
@@ -82,7 +93,9 @@ def run(app: Path, output: Path, selector: str, dotnet: str, per_suite: float, t
     if code:
         raise RuntimeError(f"Suite discovery exited with {code}")
     suites = read_manifest(output / "selected-suites.json")
-    (output / "execution-plan.json").write_text(json.dumps({"schema": 1, "selector": selector, "suites": suites}, indent=2) + "\n", encoding="utf-8")
+    if excluded:
+        suites = exclude_suites(suites, excluded)
+    (output / "execution-plan.json").write_text(json.dumps({"schema": 1, "selector": selector, "excluded": excluded or [], "suites": suites}, indent=2) + "\n", encoding="utf-8")
     env.pop("UNODOCK_LIST_TESTS")
     results = []
     for name in suites:
@@ -116,11 +129,13 @@ def main() -> int:
     parser.add_argument("--dotnet", default="dotnet")
     parser.add_argument("--suite-timeout", type=float, default=120)
     parser.add_argument("--total-timeout", type=float, default=900)
+    parser.add_argument("--exclude", default="", help="Comma-separated suites to leave out of the selection.")
     args = parser.parse_args()
     if not 0 < args.suite_timeout <= args.total_timeout < float("inf"):
         parser.error("Timeouts must be finite and 0 < suite-timeout <= total-timeout.")
     try:
-        return run(args.app, args.output, args.selector, args.dotnet, args.suite_timeout, args.total_timeout)
+        excluded = [name for name in args.exclude.split(",") if name]
+        return run(args.app, args.output, args.selector, args.dotnet, args.suite_timeout, args.total_timeout, excluded)
     except (OSError, ValueError, ET.ParseError, subprocess.TimeoutExpired, RuntimeError) as error:
         write_console(f"Desktop acceptance incomplete: {error}", error=True)
         return 1
