@@ -21,6 +21,10 @@ internal static class WindowPlacementTests
                 await f.Show();
                 var areas = DesktopWindowCoordinates.GetWorkAreas(f.Manager);
                 Check.True(areas.Count >= 1, "No monitor work area was reported.");
+                // Multi-monitor hosts (for example Xvfb with RandR monitors) state
+                // how many separate work areas they expose.
+                if (int.TryParse(Environment.GetEnvironmentVariable("UNODOCK_EXPECTED_WORK_AREAS"), out var expectedAreas))
+                    Check.Equal(expectedAreas, areas.Count);
                 var area = areas[0];
                 var target = new Rect(area.X + 60, area.Y + 50, 700, 480);
                 DesktopWindowCoordinates.SetWindowBounds(f.Window, target, f.Manager.XamlRoot!.RasterizationScale);
