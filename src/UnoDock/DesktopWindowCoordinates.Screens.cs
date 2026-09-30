@@ -204,7 +204,7 @@ public sealed partial class DesktopWindowCoordinates
             var monitors = new List<DockRect>();
             try
             {
-                var list = XRRGetMonitors(display, root, true, out var count);
+                var list = XRRGetMonitors(display, root, 1, out var count);
                 if (list == 0)
                     return monitors;
                 try
@@ -237,7 +237,7 @@ public sealed partial class DesktopWindowCoordinates
         }
 
         [DllImport("libXrandr.so.2")]
-        private static extern nint XRRGetMonitors(nint display, nuint window, [MarshalAs(UnmanagedType.I4)] bool active, out int count);
+        private static extern nint XRRGetMonitors(nint display, nuint window, int active, out int count);
         [DllImport("libXrandr.so.2")]
         private static extern void XRRFreeMonitors(nint monitors);
         [DllImport("libX11.so.6")]
