@@ -222,10 +222,10 @@ public static class ReferenceBehaviorTests
             var calls = 0;
             var allowed = false;
             item.CloseCommand = new UnoDock.Internal.DelegateCommand(_ => calls++, _ => allowed);
-            UnoDock.Internal.DockVisuals.CloseOrHide(document);
+            CloseOrHide(document);
             Check.Equal(0, calls);
             allowed = true;
-            UnoDock.Internal.DockVisuals.CloseOrHide(document);
+            CloseOrHide(document);
             Check.Equal(1, calls);
             Check.Same(f.Root, document.Root);
         });
@@ -250,6 +250,8 @@ public static class ReferenceBehaviorTests
         return await tests.Run(output, "reference-behavior");
     }
 
+    // The chrome close button's action (internal to the library).
+    private static void CloseOrHide(LayoutContent content) => typeof(DockingManager).Assembly.GetType("UnoDock.Internal.DockVisuals", true)!.GetMethod("CloseOrHide", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!.Invoke(null, [content]);
     private sealed class CountingStrategy : ILayoutUpdateStrategy
     {
         internal int Before, After;
