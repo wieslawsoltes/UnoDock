@@ -7,7 +7,24 @@ public sealed partial class DesktopWindowCoordinates
 {
     /// <summary>Native stacking query with one explicitly excluded drag source.
         /// Foreign windows remain occluders; focus order is never a z-order substitute.</summary>
-        internal bool TryGetTopmostRootExcludingWindow(FrameworkElement source, Point point, out XamlRoot? hitRoot, Window? excluded)
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    private static extern int GetClassNameW(nint window, System.Text.StringBuilder name, int capacity);
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    private static extern int GetWindowTextW(nint window, System.Text.StringBuilder text, int capacity);
+    /// <summary>Input-transparent windows and the Windows 11 Snap Layouts overlay
+        /// (shown while a window is dragged by its OS title bar) never occlude drop
+        /// targets.</summary>
+        private static bool IsShellOverlay(nint window)
+    {
+        if ((GetWindowLongW(window, -20) & 0x20) != 0)
+            return true; // WS_EX_TRANSPARENT
+        var name = new System.Text.StringBuilder(64);
+        return GetClassNameW(window, name, name.Capacity) > 0 && name.ToString() == "XamlExplorerHostIslandWindow";
+    }
+
+    [DllImport("user32.dll")]
+    private static extern int GetWindowLongW(nint window, int index);
+    internal bool TryGetTopmostRootExcludingWindow(FrameworkElement source, Point point, out XamlRoot? hitRoot, Window? excluded)
     {
         Verify();
         Validate(source, point);
@@ -20,7 +37,7 @@ public sealed partial class DesktopWindowCoordinates
             var current = W32.GetTopWindow(0);
             for (var visited = 0; current != 0 && visited < 4096; visited++, current = W32.GetWindow(current, 2))
             {
-                if (current == ignored || !W32.IsWindowVisible(current) || W32.IsIconic(current) || !W32.GetWindowRect(current, out var frame) || screen.X < frame.Left || screen.X >= frame.Right || screen.Y < frame.Top || screen.Y >= frame.Bottom)
+                if (current == ignored || !W32.IsWindowVisible(current) || W32.IsIconic(current) || !W32.GetWindowRect(current, out var frame) || screen.X < frame.Left || screen.X >= frame.Right || screen.Y < frame.Top || screen.Y >= frame.Bottom || IsShellOverlay(current))
                     continue;
                 foreach (var window in windows)
                 {
@@ -35,6 +52,15 @@ public sealed partial class DesktopWindowCoordinates
                     if (new Rect(origin.X, origin.Y, client.Right - client.Left, client.Bottom - client.Top).Contains(screen))
                         hitRoot = root;
                     return true;
+                }
+
+                if (Environment.GetEnvironmentVariable("UNODOCK_INPUT_TRACE") == "1")
+                {
+                    var name = new System.Text.StringBuilder(256);
+                    _ = GetClassNameW(current, name, name.Capacity);
+                    var title = new System.Text.StringBuilder(256);
+                    _ = GetWindowTextW(current, title, title.Capacity);
+                    Console.Error.WriteLine($"HITTEST occluded by hwnd={current} class={name} title={title} ignored={ignored} frame={frame.Left},{frame.Top},{frame.Right},{frame.Bottom} at={screen}");
                 }
 
                 return true;

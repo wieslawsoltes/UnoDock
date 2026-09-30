@@ -64,6 +64,8 @@ internal sealed partial class DockSurface
         if (!OwnsFloatingDrag(window, generation) || _floatingDrag is not { } session)
             return false;
         var plan = !suppress && session.IsCurrent ? GetDropPlan(session.Representative, point) : null;
+        if (s_trace)
+            Trace($"complete point={point} current={session.IsCurrent} plan={plan?.Type} area={FindDropArea(point)?.Type}");
         if (!OwnsFloatingDrag(window, generation))
             return false;
         _floatingDrag = null;
