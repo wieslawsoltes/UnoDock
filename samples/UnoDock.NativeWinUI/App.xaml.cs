@@ -19,6 +19,8 @@ public partial class App : Application
     {
         InitializeComponent();
         UnhandledException += (_, e) => Note("FAIL unhandled exception (" + e.Message + " | " + e.Exception + ")");
+        AppDomain.CurrentDomain.UnhandledException += (_, e) => Note("FAIL unhandled exception (" + e.ExceptionObject + ")");
+        TaskScheduler.UnobservedTaskException += (_, e) => Note("FAIL unobserved task exception (" + e.Exception + ")");
     }
 
     private static void Note(string line)
@@ -142,6 +144,7 @@ public partial class App : Application
         }
 
         File.WriteAllLines(path, lines);
+        Note("INFO closing main window");
         // Floating windows must close with the main window, or the process stays alive.
         window.Close();
     }

@@ -172,6 +172,7 @@ jobs:
           $lines = Get-Content $result
           $lines
           if ($lines.Count -lt 4 -or ($lines | Where-Object { $_ -notlike 'PASS *' })) { throw 'The native WinUI smoke test failed.' }
+          if ($process.ExitCode -ne 0 -or (Get-Content "$result.log" | Where-Object { $_ -like 'FAIL *' })) { throw 'The native WinUI head did not shut down cleanly.' }
   browser:
     name: Browser
     runs-on: ubuntu-latest
