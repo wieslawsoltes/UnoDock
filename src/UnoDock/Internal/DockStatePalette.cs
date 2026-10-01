@@ -99,6 +99,40 @@ internal sealed record DockStatePalette(Brush Workspace, Brush Splitter, Brush D
         get;
         init;
     }
+    /// <summary>Floating window caption fill and text when inactive/active; null
+        /// uses the tool title brushes.</summary>
+        internal Brush? FloatingCaption
+    {
+        get;
+        init;
+    }
+    internal Brush? ActiveFloatingCaption
+    {
+        get;
+        init;
+    }
+    internal Brush? FloatingCaptionForeground
+    {
+        get;
+        init;
+    }
+    internal Brush? ActiveFloatingCaptionForeground
+    {
+        get;
+        init;
+    }
+    /// <summary>Bar above the title of the tool pane owning the active content
+        /// (reserved on every title so activation does not move the layout).</summary>
+        internal Brush? ActiveToolTitleIndicator
+    {
+        get;
+        init;
+    }
+    internal double ActiveToolTitleIndicatorThickness
+    {
+        get;
+        init;
+    }
     /// <summary>Whether a floating document window shows the window-position menu button.</summary>
     internal bool FloatingDocumentMenuButton
     {
@@ -131,6 +165,12 @@ internal sealed record DockStatePalette(Brush Workspace, Brush Splitter, Brush D
             ContentBorder = O("ContentBorderBrush"),
             DocumentFrameCornerRadius = N("DocumentPaneFrameCornerRadius", 0, 0, 12),
             ToolTitleCornerRadius = N("ToolTitleCornerRadius", 0, 0, 12),
+            FloatingCaption = O("FloatingCaptionBrush"),
+            ActiveFloatingCaption = O("ActiveFloatingCaptionBrush"),
+            FloatingCaptionForeground = O("FloatingCaptionForegroundBrush"),
+            ActiveFloatingCaptionForeground = O("ActiveFloatingCaptionForegroundBrush"),
+            ActiveToolTitleIndicator = O("ActiveToolTitleIndicatorBrush"),
+            ActiveToolTitleIndicatorThickness = N("ActiveToolTitleIndicatorThickness", 0, 0, 8),
             CaptionButtonForeground = O("CaptionButtonForegroundBrush"),
             ActiveCaptionButtonForeground = O("ActiveCaptionButtonForegroundBrush"),
             ChromeButtonHover = O("ChromeButtonHoverBrush"),

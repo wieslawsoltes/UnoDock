@@ -134,9 +134,11 @@ public abstract partial class LayoutFloatingWindowControl
     {
         var active = (_window == null || _nativeCaptionActive) && Contents.Any(c => c.IsActive);
         var states = palette.States;
-        _title.Background = active ? states.ActiveToolTitle : states.ToolTitle;
-        var foreground = (active ? states.ActiveToolTitleForeground : states.ToolTitleForeground) ?? palette.Foreground;
-        var buttonForeground = (active ? states.ActiveCaptionButtonForeground : states.CaptionButtonForeground) ?? foreground;
+        _title.Background = active ? states.ActiveFloatingCaption ?? states.ActiveToolTitle : states.FloatingCaption ?? states.ToolTitle;
+        var captionForeground = active ? states.ActiveFloatingCaptionForeground : states.FloatingCaptionForeground;
+        var foreground = captionForeground ?? (active ? states.ActiveToolTitleForeground : states.ToolTitleForeground) ?? palette.Foreground;
+        // A theme-specific caption foreground also colors its glyphs.
+        var buttonForeground = captionForeground ?? (active ? states.ActiveCaptionButtonForeground : states.CaptionButtonForeground) ?? foreground;
         _caption.Foreground = foreground;
         _captionHeader.Icon.Foreground = foreground;
         _captionHeader.Templated.Foreground = foreground;

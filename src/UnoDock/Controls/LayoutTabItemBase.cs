@@ -194,7 +194,8 @@ public abstract partial class LayoutTabItemBase : DockInputControl
         _label.Configure(palette);
         _close.Configure(palette);
         var states = palette.States;
-        var bold = Model.IsSelected && (states.BoldSelectedTab || palette.UsesFluentControls);
+        // Classic themes embolden the selected document tab only; tool tabs stay regular.
+        var bold = Model.IsSelected && (!tool && states.BoldSelectedTab || palette.UsesFluentControls);
         _label.FontWeight = !bold ? Microsoft.UI.Text.FontWeights.Normal : states.BoldSelectedTab ? Microsoft.UI.Text.FontWeights.Bold : Microsoft.UI.Text.FontWeights.SemiBold;
         _label.HorizontalContentAlignment = HorizontalAlignment.Left;
         _label.IsSubdued = !Model.IsSelected;

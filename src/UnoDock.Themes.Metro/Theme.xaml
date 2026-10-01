@@ -48,9 +48,14 @@
     <SolidColorBrush x:Key="UnoDock.AnchorTabBrush" Color="#FFFFFF" />
     <SolidColorBrush x:Key="UnoDock.AnchorTabForegroundBrush" Color="#000000" />
     <SolidColorBrush x:Key="UnoDock.PaneBorderBrush" Color="#CCCEDB" />
-    <SolidColorBrush x:Key="UnoDock.FloatingBorderBrush" Color="#CCCEDB" />
-    <SolidColorBrush x:Key="UnoDock.ActiveFloatingBorderBrush" Color="#41B1E1" />
-    <x:Double x:Key="UnoDock.FloatingBorderThickness">3</x:Double>
+    <SolidColorBrush x:Key="UnoDock.FloatingBorderBrush" Color="#8C8E94" />
+    <SolidColorBrush x:Key="UnoDock.ActiveFloatingBorderBrush" Color="#8C8E94" />
+    <x:Double x:Key="UnoDock.FloatingBorderThickness">4</x:Double>
+    <SolidColorBrush x:Key="UnoDock.FloatingCaptionBrush" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="UnoDock.ActiveFloatingCaptionBrush" Color="#41B1E1" />
+    <SolidColorBrush x:Key="UnoDock.ActiveFloatingCaptionForegroundBrush" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="UnoDock.ActiveToolTitleIndicatorBrush" Color="#41B1E1" />
+    <x:Double x:Key="UnoDock.ActiveToolTitleIndicatorThickness">4</x:Double>
 
     <x:Double x:Key="UnoDock.FontSize">13</x:Double>
     <x:Double x:Key="UnoDock.TitleHeight">24</x:Double>
