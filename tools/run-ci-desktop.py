@@ -76,7 +76,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--app", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
-    default = {"Windows": "windows-acceptance", "Linux": "all", "Darwin": "all"}.get(SYSTEM, "")
+    default = {"Windows": "all", "Linux": "all", "Darwin": "all"}.get(SYSTEM, "")
     parser.add_argument("--remaining-selector", default=default, help="Selector for the remaining suites; empty skips them.")
     parser.add_argument("--only", default="", help="Comma-separated group names (local reproduction).")
     args = parser.parse_args()
