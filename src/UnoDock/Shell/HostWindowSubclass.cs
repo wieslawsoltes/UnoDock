@@ -1,4 +1,6 @@
 #if WINDOWS
+using System.Runtime.InteropServices;
+
 namespace Microsoft.Windows.Shell;
 /// <summary>Observes a WinUI host island's top-level window. The system destroys
 /// owned windows before the owner's AppWindow raises Destroying, which a WinUI
