@@ -137,13 +137,23 @@ public partial class App : Application
 
             output.Float();
             await Until(() => manager.FloatingWindows.FirstOrDefault(w => w.NativeWindow != null && w.IsLoaded));
-            // Diagnostic variant: close the main window with nothing floating.
-            if (Environment.GetEnvironmentVariable("UNODOCK_SMOKE_DOCK_FIRST") == "1")
+            // Diagnostic variants for shutdown: nothing floating, the floating window
+            // closed first, or the tools hidden (host alive but hidden).
+            switch (Environment.GetEnvironmentVariable("UNODOCK_SMOKE_VARIANT"))
             {
-                output.Dock();
-                await Task.Delay(800);
-                Note("INFO docked before closing; floating=" + manager.FloatingWindows.Count());
+                case "docked":
+                    output.Dock();
+                    break;
+                case "close-float":
+                    manager.FloatingWindows.FirstOrDefault()?.NativeWindow?.Close();
+                    break;
+                case "hidden":
+                    output.Hide();
+                    break;
             }
+
+            await Task.Delay(800);
+            Note("INFO before closing main; floating=" + manager.FloatingWindows.Count() + " native=" + manager.FloatingWindows.Count(w => w.NativeWindow != null));
         }
         catch (Exception error)
         {

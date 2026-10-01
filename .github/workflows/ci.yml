@@ -156,18 +156,22 @@ jobs:
       # The sample never registers its Window: owner, drop targeting and shutdown
       # must work from the host island alone. The process exits only when the
       # floating windows close together with the main window.
-      - name: Diagnose native WinUI shutdown without floating windows
+      - name: Diagnose native WinUI shutdown variants
         continue-on-error: true
         shell: pwsh
         run: |
           $exe = Get-ChildItem samples/UnoDock.NativeWinUI/bin -Recurse -Filter UnoDock.NativeWinUI.exe | Select-Object -First 1
-          $result = Join-Path $env:RUNNER_TEMP 'native-winui-docked.txt'
-          $env:UNODOCK_SMOKE = $result
-          $env:UNODOCK_SMOKE_DOCK_FIRST = '1'
-          $process = Start-Process -FilePath $exe.FullName -PassThru
-          $null = $process.WaitForExit(120000)
-          Get-Content "$result.log" -ErrorAction SilentlyContinue
-          "docked-first exit code: $($process.ExitCode)"
+          foreach ($variant in 'docked', 'close-float', 'hidden') {
+            $result = Join-Path $env:RUNNER_TEMP "native-winui-$variant.txt"
+            $env:UNODOCK_SMOKE = $result
+            $env:UNODOCK_SMOKE_VARIANT = $variant
+            $process = Start-Process -FilePath $exe.FullName -PassThru
+            $exited = $process.WaitForExit(90000)
+            if (-not $exited) { $process.Kill($true) }
+            Get-Content "$result.log" -ErrorAction SilentlyContinue | Where-Object { $_ -like 'INFO before*' -or $_ -like 'FAIL*' }
+            "variant $variant exited=$exited exit code: $($process.ExitCode)"
+          }
+          Remove-Item Env:UNODOCK_SMOKE_VARIANT
       - name: Run the native WinUI host-island smoke test
         shell: pwsh
         run: |
