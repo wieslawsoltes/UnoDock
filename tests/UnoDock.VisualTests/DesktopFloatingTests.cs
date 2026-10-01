@@ -447,6 +447,7 @@ internal static class DesktopFloatingTests
         internal async Task Show()
         {
             await Wait(() => Manager.IsLoaded && Manager.ActualHeight > 0);
+            await FitContent();
             Manager.Refresh();
             await Wait(() => Manager.FloatingWindows.Count() == 1);
             Control = Manager.FloatingWindows.Single();
@@ -455,6 +456,27 @@ internal static class DesktopFloatingTests
             Manager.UpdateLayout();
             Control.UpdateLayout();
             await Task.Delay(50);
+        }
+
+        // AppWindow sizes are physical pixels on Windows and DIPs elsewhere. Grow
+        // the window until the whole manager is inside its client area at any
+        // scale, so stacking queries at its points hit this window.
+        private async Task FitContent()
+        {
+            for (var attempt = 0; attempt < 3; attempt++)
+            {
+                var client = Manager.XamlRoot!.Size;
+                if (client.Width >= Manager.Width + 40 && client.Height >= Manager.Height + 40)
+                    return;
+                var size = _window.AppWindow.Size;
+                _window.AppWindow.Resize(new()
+                {
+                    Width = (int)Math.Ceiling(size.Width * (Manager.Width + 60) / Math.Max(1, client.Width)),
+                    Height = (int)Math.Ceiling(size.Height * (Manager.Height + 60) / Math.Max(1, client.Height))
+                });
+                for (var i = 0; i < 50 && Manager.XamlRoot!.Size == client; i++)
+                    await Task.Delay(20);
+            }
         }
 
         internal SessionLease Session() => new(Manager, Control);
@@ -480,6 +502,10 @@ internal static class DesktopFloatingTests
             CallStatic(typeof(DesktopWindowCoordinates), "MoveNative", Control.NativeWindow, new Point(origin.X + desired.X - current.X, origin.Y + desired.Y - current.Y));
             Control.NativeWindow!.Activate();
             await Task.Delay(100);
+            // Native stacking is only observable on the visible Space. Another
+            // application's full-screen Space hides this process's windows.
+            if (OperatingSystem.IsMacOS())
+                Check.True(IsOnActiveSpace(_window), "The test windows are not on the active Space (another application's full-screen Space is current); native stacking cannot be observed.");
         }
 
         public void Dispose()
@@ -526,8 +552,18 @@ internal static class DesktopFloatingTests
         ObjCSend(handle, SelRegisterName("orderFrontRegardless"));
     }
 
+    private static bool IsOnActiveSpace(Window window)
+    {
+        var interop = typeof(DesktopWindowCoordinates).Assembly.GetType("UnoDock.Internal.MacDesktopInterop", true)!;
+        var handle = (nint)CallStatic(interop, "Handle", window)!;
+        return ObjCSendBool(handle, SelRegisterName("isOnActiveSpace"));
+    }
+
     [System.Runtime.InteropServices.DllImport("/usr/lib/libobjc.A.dylib", EntryPoint = "objc_msgSend")]
     private static extern void ObjCSend(nint receiver, nint selector);
+    [System.Runtime.InteropServices.DllImport("/usr/lib/libobjc.A.dylib", EntryPoint = "objc_msgSend")]
+    [return: System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.I1)]
+    private static extern bool ObjCSendBool(nint receiver, nint selector);
     [System.Runtime.InteropServices.DllImport("/usr/lib/libobjc.A.dylib", EntryPoint = "sel_registerName")]
     private static extern nint SelRegisterName(string name);
     private static object? CallStatic(Type type, string name, params object?[] args) => Invoke(type, null, name, args, BindingFlags.Static);
