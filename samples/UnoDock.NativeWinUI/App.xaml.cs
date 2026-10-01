@@ -18,7 +18,7 @@ public partial class App : Application
     public App()
     {
         InitializeComponent();
-        UnhandledException += (_, e) => Note("FAIL unhandled exception (" + e.Exception.GetType().Name + ": " + e.Exception.Message + ")");
+        UnhandledException += (_, e) => Note("FAIL unhandled exception (" + e.Message + " | " + e.Exception + ")");
     }
 
     private static void Note(string line)
@@ -30,6 +30,19 @@ public partial class App : Application
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
         Note("INFO launched");
+        try
+        {
+            Launch();
+        }
+        catch (Exception error)
+        {
+            Note("FAIL launch (" + error + ")");
+            throw;
+        }
+    }
+
+    private void Launch()
+    {
         var output = new LayoutAnchorable
         {
             Title = "Output",
@@ -56,6 +69,7 @@ public partial class App : Application
                 RootPanel = panel
             }
         };
+        Note("INFO manager created");
         _window = new Window
         {
             Title = "UnoDock native WinUI",
@@ -87,6 +101,7 @@ public partial class App : Application
         }
 
         _window.Activate();
+        Note("INFO window activated");
     }
 
     private static async Task SelfTest(Window window, DockingManager manager, LayoutAnchorable output, LayoutDocumentPane documents, string path)
