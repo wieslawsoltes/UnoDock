@@ -136,6 +136,14 @@ public sealed partial class DesktopWindowCoordinates
         return false;
     }
 
+    /// <summary>Hides a native window with Win32 directly: safe while another
+        /// window is being destroyed, where WinUI Windowing calls fail fast.</summary>
+        internal static void HideWithoutActivation(Window window)
+    {
+        if (OperatingSystem.IsWindows())
+            W32.ShowWindow(WindowsHandle(window), 0);
+    }
+
     /// <summary>Brings a top-level window (a WinUI host island) to the foreground.</summary>
     internal static void ActivateHandle(nint handle)
     {
@@ -286,6 +294,9 @@ public sealed partial class DesktopWindowCoordinates
         [DllImport("user32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static extern bool SetForegroundWindow(nint window);
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static extern bool ShowWindow(nint window, int command);
         [DllImport("user32.dll", ExactSpelling = true)]
         internal static extern nint GetTopWindow(nint parent);
         [DllImport("user32.dll", ExactSpelling = true)]

@@ -450,10 +450,12 @@ public abstract partial class LayoutFloatingWindowControl
         /// WinUI window from outside. The host is closed afterwards.</summary>
         internal void PrepareOwnerShutdown()
     {
-#if WINDOWS
-        _window?.AppWindow.Hide();
-#endif
-        _window?.Activated -= OnNativeActivated;
+        if (_window is { } window)
+        {
+            window.Activated -= OnNativeActivated;
+            DesktopWindowCoordinates.HideWithoutActivation(window);
+        }
+
         _nativeOwnerLease?.Dispose();
         _nativeOwnerLease = null;
         _nativeOwnerConfiguredWindow = null;
