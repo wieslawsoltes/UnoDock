@@ -101,10 +101,20 @@ public sealed partial class DesktopWindowCoordinates
         return FromScreen(DipToPhysical(point, Scale(destination)), destination);
     }
 
+    /// <summary>Test seam: a fixed monitor layout used instead of enumeration, so
+        /// mixed-DPI paths run end to end on single-monitor hosts.</summary>
+        internal static IReadOnlyList<DesktopMonitor>? MonitorLayoutOverride
+    {
+        get;
+        set;
+    }
+
     /// <summary>Win32 monitors in physical pixels with their own scales (mixed
         /// DPI); empty on other hosts, whose desktop space has one scale.</summary>
         internal static IReadOnlyList<DesktopMonitor> Monitors()
     {
+        if (MonitorLayoutOverride is { } layout)
+            return layout;
         try
         {
             if (OperatingSystem.IsWindows())
@@ -141,7 +151,7 @@ public sealed partial class DesktopWindowCoordinates
         {
             // Each Windows monitor converts with its own scale (mixed DPI).
             if (OperatingSystem.IsWindows())
-                return [.. ScreensWin32.Monitors().Select(DesktopDipSpace.WorkArea)];
+                return [.. Monitors().Select(DesktopDipSpace.WorkArea)];
 #if !WINDOWS
             if (OperatingSystem.IsMacOS())
                 return Internal.MacDesktopInterop.VisibleFrames();
