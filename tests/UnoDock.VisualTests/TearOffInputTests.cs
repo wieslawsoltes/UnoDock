@@ -231,6 +231,15 @@ internal static class TearOffInputTests
         private const string Quartz = "/System/Library/Frameworks/ApplicationServices.framework/ApplicationServices";
         private Point _position;
         private bool _down;
+        internal MacInput()
+        {
+            // An inactive application's first mouse-down only activates it; the
+            // gesture under test must reach the view, as it does for later gestures.
+            var application = SendPointer(objc_getClass("NSApplication"), sel_registerName("sharedApplication"));
+            SendBool(application, sel_registerName("activateIgnoringOtherApps:"), true);
+            Thread.Sleep(150);
+        }
+
         internal Point ScreenPoint(FrameworkElement element, Point point)
         {
             using var coordinates = new DesktopWindowCoordinates();
@@ -280,6 +289,14 @@ internal static class TearOffInputTests
         private static extern void CGEventPost(uint tap, nint evt);
         [DllImport("/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation")]
         private static extern void CFRelease(nint value);
+        [DllImport("/usr/lib/libobjc.A.dylib")]
+        private static extern nint objc_getClass(string name);
+        [DllImport("/usr/lib/libobjc.A.dylib")]
+        private static extern nint sel_registerName(string name);
+        [DllImport("/usr/lib/libobjc.A.dylib", EntryPoint = "objc_msgSend")]
+        private static extern nint SendPointer(nint receiver, nint selector);
+        [DllImport("/usr/lib/libobjc.A.dylib", EntryPoint = "objc_msgSend")]
+        private static extern void SendBool(nint receiver, nint selector, [MarshalAs(UnmanagedType.I1)] bool value);
     }
 
     private sealed class Fixture : IDisposable
