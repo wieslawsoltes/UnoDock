@@ -433,8 +433,9 @@ internal static class MvvmWorkspaceTests
                     document.Text = "native save";
                     await Settle();
                     window.Activate();
+                    await Task.Delay(80);
                     var button = Button(Editor(document), "MvvmEditorSave");
-                    Check.True(button.IsEnabled);
+                    await Wait(() => button.IsEnabled);
                     using var input = new X11TestInput();
                     input.MoveTo(button, new(button.ActualWidth / 2, button.ActualHeight / 2));
                     input.Press();
@@ -450,7 +451,10 @@ internal static class MvvmWorkspaceTests
                     document.Text = "native revert";
                     await Settle();
                     window.Activate();
+                    await Task.Delay(80);
                     var button = Button(Editor(document), "MvvmEditorRevert");
+                    // Revert is enabled by the dirty state; click only once it is.
+                    await Wait(() => button.IsEnabled);
                     using var input = new X11TestInput();
                     input.MoveTo(button, new(button.ActualWidth / 2, button.ActualHeight / 2));
                     input.Press();

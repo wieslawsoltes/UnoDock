@@ -90,6 +90,15 @@ jobs:
           restore-keys: nuget-desktop-${{ runner.os }}-
       - name: Build the Uno desktop Gallery with warnings as errors
         run: dotnet build samples/UnoDock.Gallery -c Release -f net10.0-desktop -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0 -warnaserror
+      - name: Use a desktop-sized display on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          # Hosted runners default to 1024x768, smaller than the Gallery window, so
+          # points in its lower part are off-screen for native hit testing.
+          Set-DisplayResolution -Width 1920 -Height 1080 -Force
+          Add-Type -AssemblyName System.Windows.Forms
+          "Display: " + [System.Windows.Forms.Screen]::PrimaryScreen.Bounds
       - name: Install dotnet-stack for timed-out suites
         run: dotnet tool install --global dotnet-stack
       - name: Report the macOS display
