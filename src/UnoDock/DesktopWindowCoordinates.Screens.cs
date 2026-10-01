@@ -28,11 +28,14 @@ public sealed partial class DesktopWindowCoordinates
         var frameHeight = Math.Max(0, window.AppWindow.Size.Height - window.AppWindow.ClientSize.Height);
         // On Windows the target monitor's own scale sizes and places the window.
         var physical = DipToPhysical(new DockRect(bounds.X, bounds.Y, bounds.Width, bounds.Height), scale);
-        window.AppWindow.Resize(new()
+        var size = new Windows.Graphics.SizeInt32
         {
             Width = (int)Math.Round(physical.Width) + frameWidth,
             Height = (int)Math.Round(physical.Height) + frameHeight
-        });
+        };
+        window.AppWindow.Resize(size);
+        if (OperatingSystem.IsLinux())
+            ConfirmSize(window, size, 0);
 #if !WINDOWS
         if (OperatingSystem.IsMacOS())
         {
@@ -46,6 +49,33 @@ public sealed partial class DesktopWindowCoordinates
             X = (int)Math.Round(physical.X),
             Y = (int)Math.Round(physical.Y)
         });
+    }
+
+    /// <summary>X11: a resize issued while the window manager is still reparenting
+        /// a newly shown window can be lost. Confirm the size shortly afterwards and
+        /// apply it again, a bounded number of times.</summary>
+        private static void ConfirmSize(Window window, Windows.Graphics.SizeInt32 size, int attempt)
+    {
+        if (attempt >= 5 || window.DispatcherQueue is not { } queue)
+            return;
+        var timer = queue.CreateTimer();
+        timer.Interval = TimeSpan.FromMilliseconds(60);
+        timer.IsRepeating = false;
+        timer.Tick += (sender, _) =>
+        {
+            sender.Stop();
+            try
+            {
+                if (Microsoft.Windows.Shell.WindowRegistry.IsClosed(window) || window.AppWindow.Size is var current && current.Width == size.Width && current.Height == size.Height)
+                    return;
+                window.AppWindow.Resize(size);
+                ConfirmSize(window, size, attempt + 1);
+            }
+            catch (Exception error) when (error is InvalidOperationException or ObjectDisposedException)
+            {
+            }
+        };
+        timer.Start();
     }
 
     /// <summary>Desktop position of a visual point in top-left DIPs: the space of

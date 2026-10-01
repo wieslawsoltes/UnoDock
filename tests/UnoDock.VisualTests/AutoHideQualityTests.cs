@@ -165,25 +165,36 @@ public static class AutoHideQualityTests
             });
             tests.Test("preview is bounded by minimum and viewport without accumulated clamp drift", async () =>
             {
-                await Reset();
-                Begin();
-                Move(-100000);
-                End();
-                await Settle();
-                Check.Near(tool.AutoHideMinWidth, Requested());
-                Begin();
-                Move(100000);
-                Move(25);
-                End();
-                await Settle();
-                Check.Near(tool.AutoHideMinWidth + 25, Requested());
-                Check.True((bool)typeof(DockingManager).Assembly.GetType("UnoDock.Internal.DockSurface", true)!.GetProperty("IsAutoHideOpen", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(surface)!, "The auto-hide flyout closed before the viewport-bound resize.");
-                Begin();
-                Move(100000);
-                End();
-                await Settle();
-                Check.True(flyout.ActualWidth <= 974.1);
-                Check.Near(968, Requested(), .1);
+                // This case is about resize clamping: keep the flyout open across
+                // settles, which take longer than the 120 ms timer on slow hosts.
+                var closing = dock.AutoHideWindowClosingTimer;
+                dock.AutoHideWindowClosingTimer = 60000;
+                try
+                {
+                    await Reset();
+                    Begin();
+                    Move(-100000);
+                    End();
+                    await Settle();
+                    Check.Near(tool.AutoHideMinWidth, Requested());
+                    Begin();
+                    Move(100000);
+                    Move(25);
+                    End();
+                    await Settle();
+                    Check.Near(tool.AutoHideMinWidth + 25, Requested());
+                    Check.True((bool)typeof(DockingManager).Assembly.GetType("UnoDock.Internal.DockSurface", true)!.GetProperty("IsAutoHideOpen", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(surface)!, "The auto-hide flyout closed before the viewport-bound resize.");
+                    Begin();
+                    Move(100000);
+                    End();
+                    await Settle();
+                    Check.True(flyout.ActualWidth <= 974.1);
+                    Check.Near(968, Requested(), .1);
+                }
+                finally
+                {
+                    dock.AutoHideWindowClosingTimer = closing;
+                }
             });
             tests.Test("tiny viewport clips presentation without rewriting saved sizes", async () =>
             {
@@ -433,8 +444,10 @@ public static class AutoHideQualityTests
                 Call(surface, "ExpireAutoHide");
                 Check.Same(flyout, dock.AutoHideWindow);
                 Check.True(((TextBox)doc.Content!).Focus(FocusState.Programmatic));
-                await Task.Delay(220);
-                Check.True(dock.AutoHideWindow == null);
+                // The 120 ms timer re-arms once focus leaves; allow a slow host to run it.
+                for (var i = 0; i < 100 && dock.AutoHideWindow != null; i++)
+                    await Task.Delay(20);
+                Check.True(dock.AutoHideWindow == null, "The re-armed timer did not close the flyout.");
             });
             tests.Test("active resize blocks timeout and cancellation releases it", async () =>
             {
