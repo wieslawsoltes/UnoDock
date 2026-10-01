@@ -466,7 +466,7 @@ internal static class DesktopFloatingTests
             for (var attempt = 0; attempt < 3; attempt++)
             {
                 var client = Manager.XamlRoot!.Size;
-                if (client.Width >= Manager.Width + 40 && client.Height >= Manager.Height + 40)
+                if (client.Width >= Manager.Width && client.Height >= Manager.Height)
                     return;
                 var size = _window.AppWindow.Size;
                 _window.AppWindow.Resize(new()
@@ -476,6 +476,9 @@ internal static class DesktopFloatingTests
                 });
                 for (var i = 0; i < 50 && Manager.XamlRoot!.Size == client; i++)
                     await Task.Delay(20);
+                // A screen smaller than the request constrains the window: stop.
+                if (Manager.XamlRoot!.Size == client)
+                    return;
             }
         }
 
