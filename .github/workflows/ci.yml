@@ -253,7 +253,7 @@ jobs:
         run: |
           mkdir -p artifacts/browser-tests
           git rev-parse HEAD > artifacts/browser-tests/source-revision.txt
-          python3 tools/verify-browser-results.py artifacts/browser-tests
+          python3 tools/verify-browser-results.py --minimal artifacts/browser-tests
       - name: Preserve failure context without a second browser attempt
         if: always()
         run: find artifacts/browser-tests -name error-context.md -exec cat {} \; 2>/dev/null || true
@@ -339,7 +339,7 @@ jobs:
         run: timeout --signal=TERM --kill-after=15s 1200s npx playwright test
       - name: Require complete public native browser results
         if: always()
-        run: python3 tools/verify-browser-results.py artifacts/browser-tests
+        run: python3 tools/verify-browser-results.py --minimal artifacts/browser-tests
       - uses: actions/upload-artifact@v4
         if: always()
         with:

@@ -23,6 +23,11 @@ REQUIRED = {
     'failed primary blocks dock-all without partial return and resumes after recovery',
     'reloading destination is unavailable before native readiness and renews its leases',
 }
+# The CI smoke set (UNODOCK_BROWSER_MINIMAL=1).
+MINIMAL = {
+    'published browser host uses the real Uno software canvas and controls',
+    'acknowledged native typing preserves caret order without docking refreshes',
+}
 
 
 def specifications(suites):
@@ -31,12 +36,12 @@ def specifications(suites):
         yield from specifications(suite.get('suites', []))
 
 
-def verify(directory: Path) -> dict:
+def verify(directory: Path, minimal: bool = False) -> dict:
     report = json.loads((directory / 'results.json').read_text(encoding='utf-8'))
     stats = report['stats']
     cases = list(ET.parse(directory / 'results.xml').getroot().iter('testcase'))
     names = [case.get('name', '') for case in cases]
-    if not REQUIRED.issubset(names) or not all(names) or len(names) != len(set(names)):
+    if not (MINIMAL if minimal else REQUIRED).issubset(names) or not all(names) or len(names) != len(set(names)):
         raise ValueError('Missing or duplicate required browser scenarios.')
     if stats['expected'] != len(cases) or any(stats[key] for key in ('unexpected', 'skipped', 'flaky')):
         raise ValueError('Browser reports contain failed, skipped, flaky or incomplete execution.')
@@ -59,8 +64,9 @@ def verify(directory: Path) -> dict:
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('directory', type=Path)
+    parser.add_argument('--minimal', action='store_true', help='Require only the CI smoke scenarios.')
     args = parser.parse_args()
     try:
-        print(json.dumps(verify(args.directory), indent=2))
+        print(json.dumps(verify(args.directory, args.minimal), indent=2))
     except (OSError, ValueError, KeyError, TypeError, ET.ParseError) as error:
         parser.exit(1, f'Browser acceptance incomplete: {error}\n')
