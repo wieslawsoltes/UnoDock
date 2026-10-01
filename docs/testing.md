@@ -75,7 +75,7 @@ A single workflow, `.github/workflows/ci.yml`, runs on every pull request and on
 | Checks | Linux | Source organization and formatting, generated adapters, evidence-gate unit tests, portable core tests, API scan and metadata comparison |
 | Desktop | Linux, Windows, macOS | One Gallery build per OS; focused suite groups with their evidence gates; Linux then runs every remaining registered suite and Windows its acceptance set (Linux: Xvfb, XTEST, Openbox for floating chrome). Hosted macOS runners have a small virtual display, so macOS runs the focused groups. A suite that times out records its managed stacks when `dotnet-stack` is installed |
 | NuGet packages | Windows | Uno and native WinUI package targets with symbols |
-| Browser | Linux | WebAssembly publish, documentation site and Playwright runtime tests. Pull requests publish without AOT and skip the multi-window stress spec; main publishes the AOT build it deploys and runs every spec |
+| Browser | Linux | WebAssembly publish, documentation site and a minimal Playwright smoke set (`rendering`, `local-edit`; `UNODOCK_BROWSER_MINIMAL=1`). Pull requests publish without AOT; main publishes the AOT build it deploys. Run `npx playwright test` locally for every browser spec |
 | Deploy/Verify Pages | Linux | `main` only: deploys the tested site and re-runs the browser suite against it |
 
 Each desktop job uploads one `desktop-<OS>` artifact with per-group JUnit XML,

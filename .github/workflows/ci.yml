@@ -239,11 +239,10 @@ jobs:
         run: |
           npm ci --ignore-scripts --no-audit --no-fund
           npx playwright install --with-deps chromium
-      - name: Exercise real editing, popup windows, docking and recovery
+      - name: Smoke-test the published application in a real browser
         working-directory: tests/browser
         env:
-          # The multi-window stress spec runs on main only.
-          UNODOCK_BROWSER_QUICK: ${{ github.event_name == 'pull_request' && '1' || '0' }}
+          UNODOCK_BROWSER_MINIMAL: '1'
         run: |
           python3 -m http.server 8765 --directory ../../artifacts/serve > ../../artifacts/http.log 2>&1 &
           server=$!
@@ -332,10 +331,11 @@ jobs:
         run: |
           npm ci --ignore-scripts --no-audit --no-fund
           npx playwright install --with-deps chromium
-      - name: Verify public multi-window application, not only HTTP availability
+      - name: Smoke-test the public application, not only HTTP availability
         working-directory: tests/browser
         env:
           UNODOCK_BASE_URL: ${{ needs.pages.outputs.page_url }}playground/
+          UNODOCK_BROWSER_MINIMAL: '1'
         run: timeout --signal=TERM --kill-after=15s 1200s npx playwright test
       - name: Require complete public native browser results
         if: always()

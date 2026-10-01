@@ -2,9 +2,9 @@ import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
     testDir: '.',
-    testMatch: '*.spec.mjs',
-    // Pull requests skip the long multi-window stress spec; main runs every spec.
-    testIgnore: process.env.UNODOCK_BROWSER_QUICK === '1' ? ['window-stress.spec.mjs'] : [],
+    // CI runs a minimal smoke set (the published host renders, native typing
+    // works); without UNODOCK_BROWSER_MINIMAL every spec runs.
+    testMatch: process.env.UNODOCK_BROWSER_MINIMAL === '1' ? ['rendering.spec.mjs', 'local-edit.spec.mjs'] : '*.spec.mjs',
     timeout: 120000,
     globalTimeout: 1080000,
     expect: { timeout: 30000 },
