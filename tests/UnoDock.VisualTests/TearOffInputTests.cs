@@ -1,3 +1,5 @@
+using System.Reflection;
+using System.Runtime.InteropServices;
 using UnoDock.Controls;
 using UnoDock.Layout;
 using UnoDock.Themes;
@@ -11,7 +13,7 @@ internal static class TearOffInputTests
 {
     internal static async Task<int> Run(string output)
     {
-        if (Environment.GetEnvironmentVariable("UNODOCK_NATIVE_INPUT_TESTS") != "1" || !(OperatingSystem.IsWindows() || OperatingSystem.IsLinux()))
+        if (Environment.GetEnvironmentVariable("UNODOCK_NATIVE_INPUT_TESTS") != "1" || !(OperatingSystem.IsWindows() || OperatingSystem.IsLinux() || OperatingSystem.IsMacOS()))
             return 0;
         var tests = new TestRunner();
         tests.Test("tear-off: a document tab leaves its strip and its window follows the pointer", async () =>
@@ -139,24 +141,28 @@ internal static class TearOffInputTests
         Check.True(ready(), "The native tear-off transition did not settle.");
     }
 
-    /// <summary>Uniform wrapper over the Windows and X11 physical input helpers.</summary>
+    /// <summary>Uniform wrapper over the Windows, X11 and AppKit physical input helpers.</summary>
     private sealed class Input : IDisposable
     {
         private readonly WindowsFloatingInputTests.NativeInput? _windows;
         private readonly X11TestInput? _x11;
-        private Input(WindowsFloatingInputTests.NativeInput? windows, X11TestInput? x11)
+        private readonly MacInput? _mac;
+        private Input(WindowsFloatingInputTests.NativeInput? windows, X11TestInput? x11, MacInput? mac)
         {
             _windows = windows;
             _x11 = x11;
+            _mac = mac;
         }
 
-        internal static Input Create() => OperatingSystem.IsWindows() ? new(new(), null) : new(null, new());
-        internal Point ScreenPoint(FrameworkElement element, Point point) => _windows?.ScreenPoint(element, point) ?? _x11!.ScreenPoint(element, point);
+        internal static Input Create() => OperatingSystem.IsWindows() ? new(new(), null, null) : OperatingSystem.IsMacOS() ? new(null, null, new()) : new(null, new(), null);
+        internal Point ScreenPoint(FrameworkElement element, Point point) => _windows?.ScreenPoint(element, point) ?? _mac?.ScreenPoint(element, point) ?? _x11!.ScreenPoint(element, point);
         internal void MoveTo(FrameworkElement element, Point point) => Move(ScreenPoint(element, point));
         internal void Move(Point screen)
         {
             if (_windows != null)
                 _windows.Glide(screen);
+            else if (_mac != null)
+                _mac.Move(screen);
             else
                 _x11!.Move(screen);
         }
@@ -174,6 +180,8 @@ internal static class TearOffInputTests
         {
             if (_windows != null)
                 _windows.Press();
+            else if (_mac != null)
+                _mac.Button(true);
             else
                 _x11!.Press();
         }
@@ -182,6 +190,8 @@ internal static class TearOffInputTests
         {
             if (_windows != null)
                 _windows.Release();
+            else if (_mac != null)
+                _mac.Button(false);
             else
                 _x11!.Release();
         }
@@ -190,6 +200,8 @@ internal static class TearOffInputTests
         {
             if (_windows != null)
                 _windows.KeyDown(0x1b);
+            else if (_mac != null)
+                _mac.Escape(true);
             else
                 _x11!.KeyDown(0xff1b);
         }
@@ -198,6 +210,8 @@ internal static class TearOffInputTests
         {
             if (_windows != null)
                 _windows.KeyUp(0x1b);
+            else if (_mac != null)
+                _mac.Escape(false);
             else
                 _x11!.KeyUp(0xff1b);
         }
@@ -206,7 +220,66 @@ internal static class TearOffInputTests
         {
             _windows?.Dispose();
             _x11?.Dispose();
+            _mac?.Dispose();
         }
+    }
+
+    /// <summary>AppKit physical input through Quartz HID events, in top-left
+        /// (Y-down) global points like the Windows and X11 helpers.</summary>
+        private sealed class MacInput : IDisposable
+    {
+        private const string Quartz = "/System/Library/Frameworks/ApplicationServices.framework/ApplicationServices";
+        private Point _position;
+        private bool _down;
+        internal Point ScreenPoint(FrameworkElement element, Point point)
+        {
+            using var coordinates = new DesktopWindowCoordinates();
+            var screen = coordinates.ToScreen(element, point);
+            var interop = typeof(DesktopWindowCoordinates).Assembly.GetType("UnoDock.Internal.MacDesktopInterop", true)!;
+            return (Point)interop.GetMethod("ToTopLeft", BindingFlags.Static | BindingFlags.NonPublic)!.Invoke(null, [screen])!;
+        }
+
+        internal void Move(Point screen)
+        {
+            _position = screen;
+            Post(_down ? 6u : 5u); // kCGEventLeftMouseDragged : kCGEventMouseMoved
+        }
+
+        internal void Button(bool down)
+        {
+            _down = down;
+            Post(down ? 1u : 2u); // kCGEventLeftMouseDown : kCGEventLeftMouseUp
+        }
+
+        internal void Escape(bool down)
+        {
+            var key = CGEventCreateKeyboardEvent(0, 53, down);
+            CGEventPost(0, key);
+            CFRelease(key);
+        }
+
+        private void Post(uint type)
+        {
+            var mouse = CGEventCreateMouseEvent(0, type, new(_position.X, _position.Y), 0);
+            CGEventPost(0, mouse); // kCGHIDEventTap
+            CFRelease(mouse);
+        }
+
+        public void Dispose()
+        {
+            if (_down)
+                Button(false);
+        }
+
+        private readonly record struct CGPoint(double X, double Y);
+        [DllImport(Quartz)]
+        private static extern nint CGEventCreateMouseEvent(nint source, uint type, CGPoint position, uint button);
+        [DllImport(Quartz)]
+        private static extern nint CGEventCreateKeyboardEvent(nint source, ushort key, [MarshalAs(UnmanagedType.I1)] bool down);
+        [DllImport(Quartz)]
+        private static extern void CGEventPost(uint tap, nint evt);
+        [DllImport("/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation")]
+        private static extern void CFRelease(nint value);
     }
 
     private sealed class Fixture : IDisposable

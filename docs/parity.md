@@ -78,9 +78,9 @@ one to one with reference screenshots.
 ## Validation by feature
 
 Each area is compared with the reference in the way the last column names, and
-covered by the listed suites. Every desktop suite runs in a real Uno host in CI
-on Windows, macOS and Linux, except where the platform column says otherwise.
-Platform-independent runtime suites run on all three as well.
+covered by the listed suites. Every registered desktop suite runs in a real Uno
+host in CI on Windows (54 suites), macOS (53) and Linux (53); the per-platform
+rows name the suites that exist on one platform only.
 
 | Area | Suites | Platforms | Compared with the reference by |
 |---|---|---|---|
