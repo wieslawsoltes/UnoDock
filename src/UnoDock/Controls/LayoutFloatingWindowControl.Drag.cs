@@ -444,6 +444,15 @@ public abstract partial class LayoutFloatingWindowControl
         _nativeOwnerConfiguredWindow = window;
     }
 
+    /// <summary>Detach from the owner window so destroying the owner does not
+    /// destroy this WinUI window from outside; the host is closed afterwards.</summary>
+    internal void ReleaseNativeOwner()
+    {
+        _nativeOwnerLease?.Dispose();
+        _nativeOwnerLease = null;
+        _nativeOwnerConfiguredWindow = null;
+    }
+
     private void ReleaseNativeDragHost(bool terminal)
     {
         CancelCaptionDrag();
