@@ -98,11 +98,14 @@ public partial class DockingManager
 #if WINDOWS
     private void OnHostAppWindowDestroying(Microsoft.UI.Windowing.AppWindow sender, object args)
     {
-        // Windowing does not allow closing other windows inside Destroying. The
-        // owned floating windows are destroyed with their owner by the system;
-        // release the remaining state once the callback has returned.
-        if (ReferenceEquals(sender, _hostAppWindow))
-            DispatcherQueue.TryEnqueue(CloseWithHost);
+        // Windowing does not allow closing other windows while the owner is being
+        // destroyed. The floating windows are owned by this island (hidden ones
+        // too), so the system destroys them with it; only release the host here.
+        if (!ReferenceEquals(sender, _hostAppWindow))
+            return;
+        DetachHostWindow();
+        _loaded = false;
+        _surface?.CancelDrag();
     }
 
 #endif
