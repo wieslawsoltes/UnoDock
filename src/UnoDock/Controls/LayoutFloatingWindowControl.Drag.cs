@@ -444,10 +444,16 @@ public abstract partial class LayoutFloatingWindowControl
         _nativeOwnerConfiguredWindow = window;
     }
 
-    /// <summary>Detach from the owner window so destroying the owner does not
-        /// destroy this WinUI window from outside; the host is closed afterwards.</summary>
-        internal void ReleaseNativeOwner()
+    /// <summary>The owner is being destroyed: hide this window first (a visible
+        /// window released from its owner is activated and would call into the dying
+        /// owner's XAML), then release ownership so the system does not destroy this
+        /// WinUI window from outside. The host is closed afterwards.</summary>
+        internal void PrepareOwnerShutdown()
     {
+#if WINDOWS
+        _window?.AppWindow.Hide();
+#endif
+        _window?.Activated -= OnNativeActivated;
         _nativeOwnerLease?.Dispose();
         _nativeOwnerLease = null;
         _nativeOwnerConfiguredWindow = null;

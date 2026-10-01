@@ -104,7 +104,7 @@ public partial class DockingManager
         if (!ReferenceEquals(sender, _hostAppWindow))
             return;
         foreach (var window in _floating.ToArray())
-            window.ReleaseNativeOwner();
+            window.PrepareOwnerShutdown();
         DispatcherQueue.TryEnqueue(CloseWithHost);
     }
 
