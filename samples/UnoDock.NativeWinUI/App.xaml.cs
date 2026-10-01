@@ -13,9 +13,23 @@ namespace UnoDock.NativeWinUI;
 public partial class App : Application
 {
     private Window? _window;
-    public App() => InitializeComponent();
+    private static string? ResultPath => Environment.GetEnvironmentVariable("UNODOCK_SMOKE") is { Length: > 0 } path ? path : null;
+
+    public App()
+    {
+        InitializeComponent();
+        UnhandledException += (_, e) => Note("FAIL unhandled exception (" + e.Exception.GetType().Name + ": " + e.Exception.Message + ")");
+    }
+
+    private static void Note(string line)
+    {
+        if (ResultPath is { } path)
+            File.AppendAllLines(path + ".log", [line]);
+    }
+
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
+        Note("INFO launched");
         var output = new LayoutAnchorable
         {
             Title = "Output",
@@ -60,7 +74,15 @@ public partial class App : Application
                 if (started)
                     return;
                 started = true;
-                await SelfTest(_window, manager, output, documents, result);
+                Note("INFO loaded");
+                try
+                {
+                    await SelfTest(_window, manager, output, documents, result);
+                }
+                catch (Exception error)
+                {
+                    Note("FAIL self-test (" + error + ")");
+                }
             };
         }
 

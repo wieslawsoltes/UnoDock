@@ -164,7 +164,11 @@ jobs:
           $result = Join-Path $env:RUNNER_TEMP 'native-winui.txt'
           $env:UNODOCK_SMOKE = $result
           $process = Start-Process -FilePath $exe.FullName -PassThru
-          if (-not $process.WaitForExit(120000)) { $process.Kill($true); Get-Content $result -ErrorAction SilentlyContinue; throw 'The native WinUI head did not exit: floating windows outlived their owner.' }
+          $exited = $process.WaitForExit(120000)
+          Get-Content "$result.log" -ErrorAction SilentlyContinue
+          if (-not $exited) { $process.Kill($true); Get-Content $result -ErrorAction SilentlyContinue; throw 'The native WinUI head did not exit: floating windows outlived their owner.' }
+          "exit code: $($process.ExitCode)"
+          if (-not (Test-Path $result)) { Get-WinEvent -FilterHashtable @{ LogName = 'Application'; Level = 2; StartTime = (Get-Date).AddMinutes(-5) } -MaxEvents 5 -ErrorAction SilentlyContinue | Format-List TimeCreated, ProviderName, Message; throw 'The native WinUI head exited without results.' }
           $lines = Get-Content $result
           $lines
           if ($lines.Count -lt 4 -or ($lines | Where-Object { $_ -notlike 'PASS *' })) { throw 'The native WinUI smoke test failed.' }
