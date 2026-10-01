@@ -23,7 +23,8 @@ public partial class DockingManager
     private void AttachHostWindow()
     {
         var window = ResolveHostWindow();
-        if (ReferenceEquals(window, _hostWindow))
+        // Unchanged host: the same Window, or (without one) an attached island.
+        if (window != null ? ReferenceEquals(window, _hostWindow) : _hostWindow == null && _hostHandle != 0)
             return;
         DetachHostWindow();
         if (window == null)
