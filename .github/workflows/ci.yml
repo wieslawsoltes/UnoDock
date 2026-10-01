@@ -172,7 +172,10 @@ jobs:
           $lines = Get-Content $result
           $lines
           if ($lines.Count -lt 4 -or ($lines | Where-Object { $_ -notlike 'PASS *' })) { throw 'The native WinUI smoke test failed.' }
-          if ($process.ExitCode -ne 0 -or (Get-Content "$result.log" | Where-Object { $_ -like 'FAIL *' })) { throw 'The native WinUI head did not shut down cleanly.' }
+          if ($process.ExitCode -ne 0 -or (Get-Content "$result.log" | Where-Object { $_ -like 'FAIL *' })) {
+            Get-WinEvent -FilterHashtable @{ LogName = 'Application'; StartTime = (Get-Date).AddMinutes(-5) } -ErrorAction SilentlyContinue | Where-Object { $_.ProviderName -in '.NET Runtime', 'Application Error' } | Select-Object -First 3 | ForEach-Object { $_.Message }
+            throw 'The native WinUI head did not shut down cleanly.'
+          }
   browser:
     name: Browser
     runs-on: ubuntu-latest
