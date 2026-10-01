@@ -80,6 +80,6 @@ one to one with reference screenshots.
 Desktop suites (more than 3,000 tests) run in real Uno hosts on Windows,
 macOS and Linux in CI; physical-input suites (`tear-off`,
 `windows-floating-input`, XTEST caption drags) run on dedicated desktops.
-Known environment-dependent cases (window stacking relative to other
-applications on an interactive desktop) are called out in
-[Platform support](platform-support.md).
+The native stacking suites also pass on interactive desktops at 200% scaling.
+On macOS they need a desktop Space to be current: another application's
+full-screen Space hides the test windows, and the suite reports that cause.

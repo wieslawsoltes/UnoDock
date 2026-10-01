@@ -79,7 +79,10 @@ rectangle starts at its physical origin and is sized by its own scale, so a
 window's bounds convert through the monitor it is on: saved bounds reopen on the
 same monitor at the same physical place and size, a single monitor at the
 desktop origin maps as pixels ÷ scale, and monitors never overlap in DIPs.
-macOS uses AppKit points and Linux the host's single scale.
+macOS uses AppKit points and Linux the host's single scale. The per-monitor
+conversion is covered by unit tests (`DesktopDipSpaceTests`) and the single-monitor
+path by the desktop suites at 100% and 200%; it has not yet been run on physical
+mixed-DPI hardware.
 
 ![Floating tool and document windows under Openbox on Linux](images/floating/linux-openbox-vs2010.png)
 

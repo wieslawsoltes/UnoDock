@@ -27,9 +27,6 @@ and fitted to a visible monitor when shown. See
 * The **browser workspace** runs each window in its own runtime and transfers
   registered payloads; it cannot move live .NET objects between windows or
   hide browser-owned chrome.
-* A few native **stacking assertions** in the desktop suites assume the test
-  windows are frontmost; on an interactive desktop, other applications'
-  windows can cover them.
 
 ## Reference conventions
 
