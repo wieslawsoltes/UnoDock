@@ -5,6 +5,11 @@ on:
     paths-ignore: ['tools/ReferenceProbe/**', '.github/workflows/reference-metadata.yml']
   pull_request:
   workflow_dispatch:
+    inputs:
+      full:
+        description: Run every desktop suite on every platform and every browser spec
+        type: boolean
+        default: false
 permissions:
   contents: read
 concurrency:
@@ -90,6 +95,10 @@ jobs:
           restore-keys: nuget-desktop-${{ runner.os }}-
       - name: Build the Uno desktop Gallery with warnings as errors
         run: dotnet build samples/UnoDock.Gallery -c Release -f net10.0-desktop -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0 -warnaserror
+      - name: Use a desktop-sized display for the full Windows run
+        if: inputs.full && runner.os == 'Windows'
+        shell: pwsh
+        run: Set-DisplayResolution -Width 1920 -Height 1080 -Force
       - name: Report the macOS display
         if: runner.os == 'macOS'
         run: system_profiler SPDisplaysDataType | grep -E "Resolution|Display Type|UI Looks" || true
@@ -104,7 +113,7 @@ jobs:
       - name: Run desktop acceptance suites (Win32, AppKit)
         if: runner.os != 'Linux'
         shell: bash
-        run: python3 tools/run-ci-desktop.py --app samples/UnoDock.Gallery/bin/Release/net10.0-desktop/UnoDock.Gallery.dll --output artifacts/desktop
+        run: python3 tools/run-ci-desktop.py --app samples/UnoDock.Gallery/bin/Release/net10.0-desktop/UnoDock.Gallery.dll --output artifacts/desktop ${{ inputs.full && '--remaining-selector all' || '' }}
       - name: Summarize executed cases and failing assertions
         if: always()
         shell: bash
@@ -242,7 +251,7 @@ jobs:
       - name: Smoke-test the published application in a real browser
         working-directory: tests/browser
         env:
-          UNODOCK_BROWSER_MINIMAL: '1'
+          UNODOCK_BROWSER_MINIMAL: ${{ inputs.full && '0' || '1' }}
         run: |
           python3 -m http.server 8765 --directory ../../artifacts/serve > ../../artifacts/http.log 2>&1 &
           server=$!
@@ -253,7 +262,7 @@ jobs:
         run: |
           mkdir -p artifacts/browser-tests
           git rev-parse HEAD > artifacts/browser-tests/source-revision.txt
-          python3 tools/verify-browser-results.py --minimal artifacts/browser-tests
+          python3 tools/verify-browser-results.py ${{ !inputs.full && '--minimal' || '' }} artifacts/browser-tests
       - name: Preserve failure context without a second browser attempt
         if: always()
         run: find artifacts/browser-tests -name error-context.md -exec cat {} \; 2>/dev/null || true
@@ -335,11 +344,11 @@ jobs:
         working-directory: tests/browser
         env:
           UNODOCK_BASE_URL: ${{ needs.pages.outputs.page_url }}playground/
-          UNODOCK_BROWSER_MINIMAL: '1'
+          UNODOCK_BROWSER_MINIMAL: ${{ inputs.full && '0' || '1' }}
         run: timeout --signal=TERM --kill-after=15s 1200s npx playwright test
       - name: Require complete public native browser results
         if: always()
-        run: python3 tools/verify-browser-results.py --minimal artifacts/browser-tests
+        run: python3 tools/verify-browser-results.py ${{ !inputs.full && '--minimal' || '' }} artifacts/browser-tests
       - uses: actions/upload-artifact@v4
         if: always()
         with:
