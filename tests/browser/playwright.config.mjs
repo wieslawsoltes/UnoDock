@@ -3,6 +3,8 @@ import { defineConfig } from '@playwright/test';
 export default defineConfig({
     testDir: '.',
     testMatch: '*.spec.mjs',
+    // Pull requests skip the long multi-window stress spec; main runs every spec.
+    testIgnore: process.env.UNODOCK_BROWSER_QUICK === '1' ? ['window-stress.spec.mjs'] : [],
     timeout: 120000,
     globalTimeout: 1080000,
     expect: { timeout: 30000 },

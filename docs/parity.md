@@ -78,9 +78,9 @@ one to one with reference screenshots.
 ## Validation by feature
 
 Each area is compared with the reference in the way the last column names, and
-covered by the listed suites. Every registered desktop suite runs in a real Uno
-host in CI on Windows (54 suites), macOS (53) and Linux (53); the per-platform
-rows name the suites that exist on one platform only.
+covered by the listed suites. "All" means the suite passes in real Uno hosts on
+Windows, macOS and Linux. Pull-request CI runs a lean subset (see
+[Build and verification](testing.md)); the complete set is run before releases.
 
 | Area | Suites | Platforms | Compared with the reference by |
 |---|---|---|---|

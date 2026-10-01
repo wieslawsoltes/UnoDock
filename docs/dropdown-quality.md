@@ -85,7 +85,7 @@ preparation/opening callbacks, failure cleanup, shared-menu transfer, repeated o
 disable/unload/reattachment, native close vetoes, cross-menu replacement, stale queued
 requests, source-created rows, explicit menu contexts, checked-state rejection and
 click overrides. Native input covers right-button acceptance/veto and the context-menu
-keyboard path. The suite is also included in the full desktop runs on Windows, macOS and Linux.
+keyboard path. The suite is also included in full Linux and Windows-acceptance runs.
 
 Use the workflow conclusion and JSON/JUnit artifact for the exact consumed revision;
 counts here describe registered tests, not an assertion about an unobserved run. Local

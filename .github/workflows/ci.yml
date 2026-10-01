@@ -90,17 +90,6 @@ jobs:
           restore-keys: nuget-desktop-${{ runner.os }}-
       - name: Build the Uno desktop Gallery with warnings as errors
         run: dotnet build samples/UnoDock.Gallery -c Release -f net10.0-desktop -p:UnoDockTargetFrameworks=net10.0-desktop -p:UnoDockLibraryFrameworks=net10.0 -warnaserror
-      - name: Use a desktop-sized display on Windows
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          # Hosted runners default to 1024x768, smaller than the Gallery window, so
-          # points in its lower part are off-screen for native hit testing.
-          Set-DisplayResolution -Width 1920 -Height 1080 -Force
-          Add-Type -AssemblyName System.Windows.Forms
-          "Display: " + [System.Windows.Forms.Screen]::PrimaryScreen.Bounds
-      - name: Install dotnet-stack for timed-out suites
-        run: dotnet tool install --global dotnet-stack
       - name: Report the macOS display
         if: runner.os == 'macOS'
         run: system_profiler SPDisplaysDataType | grep -E "Resolution|Display Type|UI Looks" || true
@@ -235,7 +224,8 @@ jobs:
         run: dotnet workload install wasm-tools
       - name: Publish the actual Uno application without source instrumentation
         run: |
-          dotnet publish samples/UnoDock.Gallery -c Release -f net10.0-browserwasm -p:UnoDockTargetFrameworks=net10.0-browserwasm -p:UnoDockLibraryFrameworks=net10.0 -p:WasmShellWebAppBasePath=/UnoDock/gallery/ -o artifacts/publish
+          # Pull requests skip AOT compilation; main publishes the AOT build it deploys.
+          dotnet publish samples/UnoDock.Gallery -c Release -f net10.0-browserwasm -p:UnoDockTargetFrameworks=net10.0-browserwasm -p:UnoDockLibraryFrameworks=net10.0 -p:WasmShellWebAppBasePath=/UnoDock/gallery/ ${{ github.event_name == 'pull_request' && '-p:WasmShellMonoRuntimeExecutionMode=Interpreter' || '' }} -o artifacts/publish
           git diff --exit-code
       - name: Assemble and check documentation and application routes
         run: |
@@ -251,6 +241,9 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Exercise real editing, popup windows, docking and recovery
         working-directory: tests/browser
+        env:
+          # The multi-window stress spec runs on main only.
+          UNODOCK_BROWSER_QUICK: ${{ github.event_name == 'pull_request' && '1' || '0' }}
         run: |
           python3 -m http.server 8765 --directory ../../artifacts/serve > ../../artifacts/http.log 2>&1 &
           server=$!
