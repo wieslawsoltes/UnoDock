@@ -30,6 +30,49 @@ internal static class WindowPlacementTests
                 DesktopWindowCoordinates.SetWindowBounds(f.Window, target, f.Manager.XamlRoot!.RasterizationScale);
                 await Wait(() => Near(f.ClientOrigin(), new(target.X, target.Y), 48) && Math.Abs(f.Manager.ActualWidth - 700) <= 2, () => $"The window placement did not settle: client origin {f.ClientOrigin()} and width {f.Manager.ActualWidth} for target {target}.");
             });
+            if (OperatingSystem.IsWindows())
+            {
+                // Mixed DPI without such hardware: the real primary monitor plus a
+                // second monitor at a different scale to its right. Real windows are
+                // placed there; only monitor enumeration is replaced.
+                tests.Test("mixed DPI: work areas and SetWindowBounds follow each monitor's own scale", async () =>
+                {
+                    using var f = new Fixture(FloatingWindowMode.Native);
+                    await f.Show();
+                    using var layout = MixedLayout(out var second);
+                    var scale = second.Scale;
+                    var areas = DesktopWindowCoordinates.GetWorkAreas(f.Manager);
+                    Check.Equal(2, areas.Count);
+                    Check.True(NearRect(areas[1], new(second.Bounds.X, second.Bounds.Y, second.WorkArea.Width / scale, second.WorkArea.Height / scale), .01), $"Second work area {areas[1]}.");
+                    var target = new Rect(areas[1].X + 50, areas[1].Y + 40, 400, 300);
+                    DesktopWindowCoordinates.SetWindowBounds(f.Window, target, f.Manager.XamlRoot!.RasterizationScale);
+                    var handle = Handle(f.Window);
+                    var expected = new Rect(second.Bounds.X + 50 * scale, second.Bounds.Y + 40 * scale, 400 * scale, 300 * scale);
+                    await Wait(() => Near(OuterOrigin(handle), new(expected.X, expected.Y), 2) && Near(ClientSize(handle), new(expected.Width, expected.Height), 2), () => $"Window at {OuterOrigin(handle)} with client {ClientSize(handle)}; expected {expected}.");
+                });
+                tests.Test("mixed DPI: floating bounds open and persist through the receiving monitor's scale", async () =>
+                {
+                    using var f = new Fixture(FloatingWindowMode.Native);
+                    await f.Show();
+                    using var layout = MixedLayout(out var second);
+                    var scale = second.Scale;
+                    f.Tool.FloatingLeft = second.Bounds.X + 120;
+                    f.Tool.FloatingTop = second.Bounds.Y + 90;
+                    f.Tool.FloatingWidth = 333;
+                    f.Tool.FloatingHeight = 222;
+                    f.Tool.Float();
+                    var control = await f.Floating(f.Tool);
+                    var handle = Handle(control.NativeWindow!);
+                    var expected = new Rect(second.Bounds.X + 120 * scale, second.Bounds.Y + 90 * scale, 333 * scale, 222 * scale);
+                    await Wait(() => NearRect(OuterBounds(handle), expected, 2), () => $"Floating window at {OuterBounds(handle)}; expected {expected}.");
+                    // A native move on that monitor is persisted in its DIPs.
+                    var outer = OuterBounds(handle);
+                    SetWindowPos(handle, 0, (int)Math.Round(outer.X + 40 * scale), (int)Math.Round(outer.Y + 20 * scale), 0, 0, 0x0001 | 0x0004 | 0x0010);
+                    await Wait(() => Math.Abs(f.Tool.FloatingLeft - (second.Bounds.X + 160)) <= .5 && Math.Abs(f.Tool.FloatingTop - (second.Bounds.Y + 110)) <= .5, () => $"Persisted {Bounds(f.Tool)}; expected origin {second.Bounds.X + 160},{second.Bounds.Y + 110}.");
+                    Check.True(Math.Abs(f.Tool.FloatingWidth - 333) <= .5 && Math.Abs(f.Tool.FloatingHeight - 222) <= .5, $"Persisted size {Bounds(f.Tool)}.");
+                });
+            }
+
             tests.Test("placement: floating a docked tool opens its window over the pane", async () =>
             {
                 using var f = new Fixture(FloatingWindowMode.Native);
@@ -308,6 +351,46 @@ internal static class WindowPlacementTests
     }
 
     private static bool Near(Point a, Point b, double tolerance) => Math.Abs(a.X - b.X) <= tolerance && Math.Abs(a.Y - b.Y) <= tolerance;
+    private static bool NearRect(Rect a, Rect b, double tolerance) => Near(new Point(a.X, a.Y), new Point(b.X, b.Y), tolerance) && Near(new Point(a.Width, a.Height), new Point(b.Width, b.Height), tolerance);
+    /// <summary>The real monitor holding the desktop origin plus a second one to its
+        /// right at a different scale (2, or 1 when the real monitor is already 2).</summary>
+        private static IDisposable MixedLayout(out UnoDock.Core.DesktopMonitor second)
+    {
+        var property = typeof(DesktopWindowCoordinates).GetProperty("MonitorLayoutOverride", BindingFlags.Static | BindingFlags.NonPublic)!;
+        var monitors = (IReadOnlyList<UnoDock.Core.DesktopMonitor>)typeof(DesktopWindowCoordinates).GetMethod("Monitors", BindingFlags.Static | BindingFlags.NonPublic)!.Invoke(null, null)!;
+        Check.True(monitors.Count >= 1, "No monitor was enumerated.");
+        var real = monitors.FirstOrDefault(m => m.Bounds.X <= 0 && m.Bounds.Y <= 0 && m.Bounds.X + m.Bounds.Width > 0 && m.Bounds.Y + m.Bounds.Height > 0);
+        if (real.Bounds.Width <= 0)
+            real = monitors[0];
+        var right = monitors.Max(m => m.Bounds.X + m.Bounds.Width);
+        second = new(new(right, real.Bounds.Y, 1600, 1200), new(right, real.Bounds.Y, 1600, 1160), real.Scale >= 2 ? 1 : 2);
+        property.SetValue(null, new[] { real, second });
+        return new Restore(() => property.SetValue(null, null));
+    }
+
+    private sealed class Restore(Action action) : IDisposable
+    {
+        public void Dispose() => action();
+    }
+
+    private static nint Handle(Window window) => (nint)typeof(DesktopWindowCoordinates).GetMethod("WindowsHandle", BindingFlags.Static | BindingFlags.NonPublic)!.Invoke(null, [window])!;
+    private static Rect OuterBounds(nint handle) => GetWindowRect(handle, out var r) ? new(r.Left, r.Top, r.Right - r.Left, r.Bottom - r.Top) : Rect.Empty;
+    private static Point OuterOrigin(nint handle) => OuterBounds(handle) is var r ? new(r.X, r.Y) : default;
+    private static Point ClientSize(nint handle) => GetClientRect(handle, out var r) ? new(r.Right - r.Left, r.Bottom - r.Top) : default;
+    private struct NativeRect
+    {
+        public int Left, Top, Right, Bottom;
+    }
+
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    [return: System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.Bool)]
+    private static extern bool GetWindowRect(nint window, out NativeRect rect);
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    [return: System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.Bool)]
+    private static extern bool GetClientRect(nint window, out NativeRect rect);
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    [return: System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.Bool)]
+    private static extern bool SetWindowPos(nint window, nint after, int x, int y, int width, int height, uint flags);
     private static bool NativeVisible(LayoutFloatingWindowControl control) => control.NativeWindow is { } window && window.AppWindow.IsVisible;
     private static Rect Bounds(LayoutContent content) => new(content.FloatingLeft, content.FloatingTop, content.FloatingWidth, content.FloatingHeight);
     private static void CheckBounds(Rect expected, Rect actual, double tolerance) => Check.True(Math.Abs(expected.X - actual.X) <= tolerance && Math.Abs(expected.Y - actual.Y) <= tolerance && Math.Abs(expected.Width - actual.Width) <= tolerance && Math.Abs(expected.Height - actual.Height) <= tolerance, $"Bounds {actual} differ from {expected}.");
