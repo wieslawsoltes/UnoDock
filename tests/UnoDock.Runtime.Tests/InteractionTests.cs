@@ -50,9 +50,10 @@ public static class InteractionTests
             {
                 host.DockingGuideMode = DockingGuideMode.GuidesAndEdges;
                 var docs = await Setup(host, 4);
-                var point = At(Pane(host), Surface(host), .5, .65);
+                var pane = Pane(host);
+                var point = At(pane, Surface(host), .5, .65);
                 var plan = host.GetDropPlan(docs[0], point);
-                Check.True(plan != null);
+                Check.True(plan != null, $"No drop plan at {point}: pane {pane.ActualWidth}x{pane.ActualHeight} at {At(pane, Surface(host), 0, 0)}, surface {Surface(host).ActualWidth}x{Surface(host).ActualHeight}, documents {docs.Length}, floating {host.FloatingWindows.Count()}.");
                 Check.Equal(-1, plan!.InsertionIndex);
             }
             finally

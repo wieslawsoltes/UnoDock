@@ -76,8 +76,8 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--app", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
-    # Hosted macOS runners have a small virtual display that cannot hold the
-    # full-size workspace scenes; macOS runs the focused groups only.
+    # Pull-request CI stays lean: Linux runs every remaining suite, Windows its
+    # acceptance set, and macOS (a small hosted display) the focused groups.
     default = {"Windows": "windows-acceptance", "Linux": "all"}.get(SYSTEM, "")
     parser.add_argument("--remaining-selector", default=default, help="Selector for the remaining suites; empty skips them.")
     parser.add_argument("--only", default="", help="Comma-separated group names (local reproduction).")

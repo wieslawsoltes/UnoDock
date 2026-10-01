@@ -368,16 +368,10 @@ public static class VisualParityTests
                 {
                     Content = grid
                 };
-                second.AppWindow.Move(new()
-                {
-                    X = 1180,
-                    Y = 83
-                });
-                second.AppWindow.Resize(new()
-                {
-                    Width = 400,
-                    Height = 300
-                });
+                // Keep the second window on a monitor: hosted macOS runners have a
+                // small display, and resizing a window placed past its edge blocks.
+                var area = DesktopWindowCoordinates.GetWorkAreas(dock)[0];
+                DesktopWindowCoordinates.SetWindowBounds(second, new Rect(Math.Max(area.X, area.X + area.Width - 420), area.Y + 83, 400, 300), dock.XamlRoot!.RasterizationScale);
                 second.Activate();
                 try
                 {

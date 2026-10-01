@@ -75,6 +75,30 @@ context-doc, dropdown, tool-menu, navigator) and themed with
 the reference review harness, so captures from Windows, macOS and Linux compare
 one to one with reference screenshots.
 
+## Validation by feature
+
+Each area is compared with the reference in the way the last column names, and
+covered by the listed suites. "All" means the suite passes in real Uno hosts on
+Windows, macOS and Linux. Pull-request CI runs a lean subset (see
+[Build and verification](testing.md)); the complete set is run before releases.
+
+| Area | Suites | Platforms | Compared with the reference by |
+|---|---|---|---|
+| Public API | `tools/check-metadata.sh` | build | Compiled surface against the reference's metadata (above) |
+| Layout model and operations | `reference-behavior`, `layout-mutation-invariants`, `parity`, `restore-ownership`, `lifecycle` | all | Tree dumps recorded from the reference, compared character for character |
+| Serialization | `interop`, `converters`, `runtime` | all | Layout files written by the reference (`contracts/reference-fixtures`) |
+| Sources, templates, MVVM | `mvvm-workspace`, `mvvm-chrome`, `source-ownership`, `source-identity`, `xaml-workbench`, `xaml-workspaces`, `templates-icons` | all | Public API contracts and observed reference behavior |
+| Commands and menus | `menu-quality`, `menu-context-lifetime`, `dropdown-quality` | all | Captures of the context, tool and document menus |
+| Docking guides and previews | `docking-guides`, `interaction`, `docking-sizing` | all | Captures of guides and resulting layouts |
+| Auto-hide | `auto-hide-quality`, `visual-parity` | all | Arranged geometry and per-item sequences from the reference |
+| Floating windows | `desktop-floating`, `floating-chrome-*`, `floating-resize-policy-*`, `floating-drag-cleanup`, `window-placement`, `window-lifecycle`, `window-coordinates` | all | Captures of floating tool and document windows |
+| Platform window integration | `mac-native` (macOS), `windows-floating-input` (Windows), native WinUI smoke test (Windows) | per platform | Native ownership, activation and shutdown |
+| Tab and pane tear-off | `tear-off` | all | Observed drag behavior |
+| Navigator and keyboard | `navigator-quality`, `navigator-commit`, `navigator-revocation`, `navigator-sample`, `fluent-navigator`, `focus-ownership`, `input-extensions`, `accessibility-quality` | all | Labels, ordering and focused selection captured from the reference |
+| Splitters | `splitter-quality` | all | Observed resize limits |
+| Themes | `classic-themes`, `visual-parity`, `presentation-quality`, `fluent-presentation`, `fluent-state-resources`, `uno-theme`, `tabview-strip` | all | Side-by-side captures of Generic, VS2010, Aero and Metro on Windows |
+| Localization | `localization` | all | Resource keys of the reference |
+
 ## Platform validation
 
 Desktop suites (more than 3,000 tests) run in real Uno hosts on Windows,

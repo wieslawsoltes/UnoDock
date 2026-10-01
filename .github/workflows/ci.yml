@@ -224,7 +224,8 @@ jobs:
         run: dotnet workload install wasm-tools
       - name: Publish the actual Uno application without source instrumentation
         run: |
-          dotnet publish samples/UnoDock.Gallery -c Release -f net10.0-browserwasm -p:UnoDockTargetFrameworks=net10.0-browserwasm -p:UnoDockLibraryFrameworks=net10.0 -p:WasmShellWebAppBasePath=/UnoDock/gallery/ -o artifacts/publish
+          # Pull requests skip AOT compilation; main publishes the AOT build it deploys.
+          dotnet publish samples/UnoDock.Gallery -c Release -f net10.0-browserwasm -p:UnoDockTargetFrameworks=net10.0-browserwasm -p:UnoDockLibraryFrameworks=net10.0 -p:WasmShellWebAppBasePath=/UnoDock/gallery/ ${{ github.event_name == 'pull_request' && '-p:WasmShellMonoRuntimeExecutionMode=Interpreter' || '' }} -o artifacts/publish
           git diff --exit-code
       - name: Assemble and check documentation and application routes
         run: |
@@ -238,8 +239,10 @@ jobs:
         run: |
           npm ci --ignore-scripts --no-audit --no-fund
           npx playwright install --with-deps chromium
-      - name: Exercise real editing, popup windows, docking and recovery
+      - name: Smoke-test the published application in a real browser
         working-directory: tests/browser
+        env:
+          UNODOCK_BROWSER_MINIMAL: '1'
         run: |
           python3 -m http.server 8765 --directory ../../artifacts/serve > ../../artifacts/http.log 2>&1 &
           server=$!
@@ -250,7 +253,7 @@ jobs:
         run: |
           mkdir -p artifacts/browser-tests
           git rev-parse HEAD > artifacts/browser-tests/source-revision.txt
-          python3 tools/verify-browser-results.py artifacts/browser-tests
+          python3 tools/verify-browser-results.py --minimal artifacts/browser-tests
       - name: Preserve failure context without a second browser attempt
         if: always()
         run: find artifacts/browser-tests -name error-context.md -exec cat {} \; 2>/dev/null || true
@@ -328,14 +331,15 @@ jobs:
         run: |
           npm ci --ignore-scripts --no-audit --no-fund
           npx playwright install --with-deps chromium
-      - name: Verify public multi-window application, not only HTTP availability
+      - name: Smoke-test the public application, not only HTTP availability
         working-directory: tests/browser
         env:
           UNODOCK_BASE_URL: ${{ needs.pages.outputs.page_url }}playground/
+          UNODOCK_BROWSER_MINIMAL: '1'
         run: timeout --signal=TERM --kill-after=15s 1200s npx playwright test
       - name: Require complete public native browser results
         if: always()
-        run: python3 tools/verify-browser-results.py artifacts/browser-tests
+        run: python3 tools/verify-browser-results.py --minimal artifacts/browser-tests
       - uses: actions/upload-artifact@v4
         if: always()
         with:

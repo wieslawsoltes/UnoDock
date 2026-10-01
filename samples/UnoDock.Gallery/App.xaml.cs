@@ -145,7 +145,7 @@ public partial class App : Application
                         throw new ArgumentException("Unknown UNODOCK_TEST_SUITE: " + requested);
                     // Registry-owned platform selection also drives isolated CI.
                     // A platform no-op is not an executed (or passed) test suite.
-                    selected = selected.Where(s => (s.Name != "mac-native" || OperatingSystem.IsMacOS()) && (s.Name != "windows-floating-input" || OperatingSystem.IsWindows() && Environment.GetEnvironmentVariable("UNODOCK_NATIVE_INPUT_TESTS") == "1") && (s.Name != "tear-off" || (OperatingSystem.IsWindows() || OperatingSystem.IsLinux()) && Environment.GetEnvironmentVariable("UNODOCK_NATIVE_INPUT_TESTS") == "1")).ToArray();
+                    selected = selected.Where(s => (s.Name != "mac-native" || OperatingSystem.IsMacOS()) && (s.Name != "windows-floating-input" || OperatingSystem.IsWindows() && Environment.GetEnvironmentVariable("UNODOCK_NATIVE_INPUT_TESTS") == "1") && (s.Name != "tear-off" || (OperatingSystem.IsWindows() || OperatingSystem.IsLinux() || OperatingSystem.IsMacOS()) && Environment.GetEnvironmentVariable("UNODOCK_NATIVE_INPUT_TESTS") == "1")).ToArray();
                     exitCode = 0;
                     if (Environment.GetEnvironmentVariable("UNODOCK_LIST_TESTS") == "1")
                     {
