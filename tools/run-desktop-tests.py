@@ -11,6 +11,7 @@ import argparse
 import json
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 import time
@@ -72,10 +73,31 @@ def execute(command: list[str], env: dict[str, str], log: Path, timeout: float) 
     # native windows belong to this process and the OS reclaims them on exit.
     with log.open("wb") as output:
         try:
-            return subprocess.run(command, env=env, stdout=output, stderr=subprocess.STDOUT, timeout=timeout, check=False).returncode
+            process = subprocess.Popen(command, env=env, stdout=output, stderr=subprocess.STDOUT)
+            try:
+                return process.wait(timeout=timeout)
+            except subprocess.TimeoutExpired:
+                output.flush()
+                dump_stacks(process.pid, output)
+                process.kill()
+                process.wait()
+                raise
         finally:
             output.flush()
             write_console(log.read_text(encoding="utf-8", errors="replace"))
+
+
+def dump_stacks(pid: int, output) -> None:
+    """Record the managed stacks of a timed-out host when dotnet-stack is installed."""
+    stack = shutil.which("dotnet-stack") or str(Path.home() / ".dotnet/tools/dotnet-stack")
+    if not Path(stack).exists():
+        return
+    output.write(b"\n=== Managed stacks at timeout ===\n")
+    output.flush()
+    try:
+        subprocess.run([stack, "report", "-p", str(pid)], stdout=output, stderr=subprocess.STDOUT, timeout=60, check=False)
+    except (OSError, subprocess.TimeoutExpired):
+        output.write(b"dotnet-stack did not complete.\n")
 
 
 def run(app: Path, output: Path, selector: str, dotnet: str, per_suite: float, total: float, excluded: list[str] | None = None) -> int:
