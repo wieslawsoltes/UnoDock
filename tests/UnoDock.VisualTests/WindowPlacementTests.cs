@@ -28,7 +28,7 @@ internal static class WindowPlacementTests
                 var area = areas[0];
                 var target = new Rect(area.X + 60, area.Y + 50, 700, 480);
                 DesktopWindowCoordinates.SetWindowBounds(f.Window, target, f.Manager.XamlRoot!.RasterizationScale);
-                await Wait(() => Near(f.ClientOrigin(), new(target.X, target.Y), 48) && Math.Abs(f.Manager.ActualWidth - 700) <= 2);
+                await Wait(() => Near(f.ClientOrigin(), new(target.X, target.Y), 48) && Math.Abs(f.Manager.ActualWidth - 700) <= 2, () => $"The window placement did not settle: client origin {f.ClientOrigin()} and width {f.Manager.ActualWidth} for target {target}.");
             });
             tests.Test("placement: floating a docked tool opens its window over the pane", async () =>
             {
@@ -314,6 +314,13 @@ internal static class WindowPlacementTests
     private static object? Invoke(object target, string name, params object?[] arguments) => target.GetType().GetMethod(name, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance)!.Invoke(target, arguments);
     private static object? Field(object target, string name) => target.GetType().GetField(name, BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(target);
     private static Task Wait(Func<bool> ready) => Wait(ready, "The window placement did not settle.");
+    private static async Task Wait(Func<bool> ready, Func<string> message)
+    {
+        for (var i = 0; i < 240 && !ready(); i++)
+            await Task.Delay(25);
+        Check.True(ready(), ready() ? null : message());
+    }
+
     private static async Task Wait(Func<bool> ready, string message)
     {
         // Native placement round-trips through the window manager; allow a
