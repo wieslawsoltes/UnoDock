@@ -92,6 +92,24 @@ public partial class NavigatorWindow
     }
 
     private void BindLabel(TextBlock target, string property) => target.SetBinding(TextBlock.TextProperty, new Binding { Source = this, Path = new PropertyPath(property) });
+    private bool _focusWithin;
+    private void TrackFocus()
+    {
+        var within = false;
+        if (XamlRoot != null)
+            for (var element = Microsoft.UI.Xaml.Input.FocusManager.GetFocusedElement(XamlRoot) as DependencyObject; element != null; element = VisualTreeHelper.GetParent(element))
+                if (ReferenceEquals(element, this))
+                {
+                    within = true;
+                    break;
+                }
+
+        if (within == _focusWithin)
+            return;
+        _focusWithin = within;
+        UpdateAppearance();
+    }
+
     internal void UpdateAppearance()
     {
         var palette = DockChrome.Palette(_manager);
@@ -101,7 +119,7 @@ public partial class NavigatorWindow
         Padding = new(fluent ? 8 : 5);
         _chrome.RowDefinitions[3].Height = new(fluent ? 8 : 42);
         _toolHeading.FontWeight = _documentHeading.FontWeight = fluent ? Microsoft.UI.Text.FontWeights.SemiBold : Microsoft.UI.Text.FontWeights.Bold;
-        _selectionTitle.FontWeight = fluent ? Microsoft.UI.Text.FontWeights.SemiBold : Microsoft.UI.Text.FontWeights.Normal;
+        _selectionTitle.FontWeight = fluent ? Microsoft.UI.Text.FontWeights.SemiBold : Microsoft.UI.Text.FontWeights.Bold;
         var dark = DockThemeResources.EffectiveTheme(_manager) == ElementTheme.Dark;
         // An explicit dictionary palette can disagree with RequestedTheme/OS mode.
         // Never combine its foreground with unrelated stock-light backgrounds.
@@ -127,10 +145,14 @@ public partial class NavigatorWindow
             text.FontSize = palette.FontSize;
         }
 
+        var inactiveSelection = Brush("NavigatorSelectionBrush", fluent ? palette.Hover : usePalette ? palette.Tab : LightSelection);
+        var inactiveBorder = Brush("NavigatorSelectionBorderBrush", usePalette ? palette.Border : LightSelectionBorder);
+        // Classic light chrome: a focused list shows the system's active selection.
+        var classicActive = _focusWithin && !fluent && !usePalette;
         var rowPalette = palette with
         {
-            Tab = Brush("NavigatorSelectionBrush", fluent ? palette.Hover : usePalette ? palette.Tab : LightSelection),
-            Border = Brush("NavigatorSelectionBorderBrush", usePalette ? palette.Border : LightSelectionBorder)
+            Tab = _focusWithin ? Brush("NavigatorActiveSelectionBrush", classicActive && Resource("NavigatorSelectionBrush") == null ? LightActiveSelection : inactiveSelection) : inactiveSelection,
+            Border = _focusWithin ? Brush("NavigatorActiveSelectionBorderBrush", classicActive && Resource("NavigatorSelectionBorderBrush") == null ? LightActiveSelectionBorder : inactiveBorder) : inactiveBorder
         };
         if (_defaultDocuments is NavigatorListBox documents)
             documents.Configure(rowPalette, Background);
@@ -148,7 +170,9 @@ public partial class NavigatorWindow
     }
 
     [ThreadStatic]
-    private static Brush? _lightSurface, _lightBorder, _lightSelection, _lightSelectionBorder;
+    private static Brush? _lightSurface, _lightBorder, _lightSelection, _lightSelectionBorder, _lightActiveSelection, _lightActiveSelectionBorder;
+    private static Brush LightActiveSelection => _lightActiveSelection ??= new SolidColorBrush(Windows.UI.Color.FromArgb(0x3d, 0x26, 0xa0, 0xda));
+    private static Brush LightActiveSelectionBorder => _lightActiveSelectionBorder ??= DockChrome.Color(0x26a0da);
     private static Brush LightSelection => _lightSelection ??= DockChrome.Color(0xeaeaea);
     private static Brush LightSelectionBorder => _lightSelectionBorder ??= DockChrome.Color(0xdadada);
     private static Brush LightSurface => _lightSurface ??= DockChrome.Color(0xf0f0f0);

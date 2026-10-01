@@ -155,8 +155,11 @@ public partial class LayoutCachePaneControl
         _documentsButton.ConfigureCaption(p, states.CaptionButtonForeground ?? states.DocumentTabForeground);
         _tabBar.BorderBrush = p.Border;
         _tabBar.BorderThickness = contentFramed ? new(0) : tool ? new(0, 1, 0, 0) : new(0, 0, 0, 1);
-        _titleRow.Background = Selector?.SelectedContent?.IsActive == true ? states.ActiveToolTitle : states.ToolTitle;
+        var activeTitle = Selector?.SelectedContent?.IsActive == true;
+        _titleRow.Background = activeTitle ? states.ActiveToolTitle : states.ToolTitle;
         _titleRow.CornerRadius = new(states.ToolTitleCornerRadius, states.ToolTitleCornerRadius, 0, 0);
+        _titleRow.BorderThickness = new(0, states.ActiveToolTitleIndicator != null ? states.ActiveToolTitleIndicatorThickness : 0, 0, 0);
+        _titleRow.BorderBrush = activeTitle ? states.ActiveToolTitleIndicator : DockChrome.Transparent;
     }
 
     /// <summary>The sole pane of a floating tool window shows its title, menu and

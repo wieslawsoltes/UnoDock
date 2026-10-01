@@ -8,6 +8,15 @@ public partial class DockingManager
     private Window? _hostWindow;
     private IDisposable? _hostWindowLease;
     private bool _hostWindowDiagnosed;
+    private nint _hostHandle;
+    private IDisposable? _hostIslandLease;
+#if WINDOWS
+    private Microsoft.UI.Windowing.AppWindow? _hostAppWindow;
+    private HostWindowSubclass? _hostSubclass;
+#endif
+    /// <summary>The top-level window handle of the host island on WinUI, where the
+        /// hosting Window object cannot be resolved; zero elsewhere.</summary>
+        internal nint HostHandle => _hostHandle;
     /// <summary>The native window hosting this manager, resolved whenever it loads.
         /// It owns the floating windows, which close together with it.</summary>
         internal Window? HostWindow => _hostWindow;
@@ -15,12 +24,14 @@ public partial class DockingManager
     private void AttachHostWindow()
     {
         var window = ResolveHostWindow();
-        if (ReferenceEquals(window, _hostWindow))
+        // Unchanged host: the same Window, or (without one) an attached island.
+        if (window != null ? ReferenceEquals(window, _hostWindow) : _hostWindow == null && _hostHandle != 0)
             return;
         DetachHostWindow();
         if (window == null)
         {
-            ReportUnresolvedHostWindow();
+            if (!AttachHostIsland())
+                ReportUnresolvedHostWindow();
             return;
         }
 
@@ -57,18 +68,77 @@ public partial class DockingManager
         return window != null && !WindowRegistry.IsClosed(window) ? window : null;
     }
 
+    /// <summary>WinUI: own floating windows through the island's top-level window
+        /// handle and close them when that AppWindow is destroyed.</summary>
+        private bool AttachHostIsland()
+    {
+#if WINDOWS
+        try
+        {
+            if (XamlRoot?.ContentIslandEnvironment?.AppWindowId is not { } id || id.Value == 0)
+                return false;
+            var handle = Microsoft.UI.Win32Interop.GetWindowFromWindowId(id);
+            if (handle == 0)
+                return false;
+            _hostHandle = handle;
+            _hostIslandLease = WindowRegistry.RegisterHost(XamlRoot, handle);
+            _hostSubclass = new(handle, OnHostHiding, OnHostShown);
+            _hostAppWindow = Microsoft.UI.Windowing.AppWindow.GetFromWindowId(id);
+            if (_hostAppWindow != null)
+                _hostAppWindow.Destroying += OnHostAppWindowDestroying;
+            return true;
+        }
+        catch (Exception error) when (error is InvalidOperationException or System.Runtime.InteropServices.COMException or ArgumentException)
+        {
+            return false;
+        }
+#else
+        return false;
+#endif
+    }
+
+#if WINDOWS
+    private void OnHostHiding()
+    {
+        foreach (var window in _floating.ToArray())
+            window.HideWithOwner();
+    }
+
+    private void OnHostShown()
+    {
+        foreach (var window in _floating.ToArray())
+            window.ShowWithOwner();
+    }
+
+    private void OnHostAppWindowDestroying(Microsoft.UI.Windowing.AppWindow sender, object args)
+    {
+        // WinUI faults when the system destroys its windows with their owner, and
+        // windows cannot be closed inside Destroying. Release ownership now (the
+        // owner still exists) and close the floating windows once it is gone.
+        if (!ReferenceEquals(sender, _hostAppWindow))
+            return;
+        foreach (var window in _floating.ToArray())
+            window.PrepareOwnerShutdown();
+        DispatcherQueue.TryEnqueue(CloseWithHost);
+    }
+
+#endif
     private void ReportUnresolvedHostWindow()
     {
         if (_hostWindowDiagnosed || OperatingSystem.IsBrowser() || OperatingSystem.IsAndroid() || OperatingSystem.IsIOS())
             return;
         _hostWindowDiagnosed = true;
-        Debug.WriteLine("UnoDock: the Window hosting this DockingManager could not be resolved. Native floating windows will have no owner and will not close with it. On WinUI register the window with SystemCommands.RegisterWindow(window).");
+        Debug.WriteLine("UnoDock: the Window hosting this DockingManager could not be resolved. Native floating windows will have no owner and will not close with it.");
     }
 
     private void OnHostWindowClosed(object sender, WindowEventArgs args)
     {
-        if (!ReferenceEquals(sender, _hostWindow))
-            return;
+        if (ReferenceEquals(sender, _hostWindow))
+            CloseWithHost();
+    }
+
+    private void CloseWithHost()
+    {
         DetachHostWindow();
         // Floating windows belong to their owner. A hidden WinUI host would
         // otherwise outlive the main window and keep the process running.
@@ -88,5 +158,16 @@ public partial class DockingManager
         var lease = _hostWindowLease;
         _hostWindowLease = null;
         lease?.Dispose();
+#if WINDOWS
+        if (_hostAppWindow is { } appWindow)
+            appWindow.Destroying -= OnHostAppWindowDestroying;
+        _hostAppWindow = null;
+        _hostSubclass?.Dispose();
+        _hostSubclass = null;
+#endif
+        _hostHandle = 0;
+        var island = _hostIslandLease;
+        _hostIslandLease = null;
+        island?.Dispose();
     }
 }

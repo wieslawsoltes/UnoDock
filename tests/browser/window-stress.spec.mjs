@@ -56,7 +56,11 @@ test('repeated native window returns retain edited payloads without runtime faul
         // This click closes its own window. Playwright's post-click hit-target round
         // trip into the closing page races the close (TargetClosedError); the close
         // event and the returned content are the evidence that the click landed.
-        await two.getByRole('button', { name: 'Dock all & close window', exact: true }).click({ noWaitAfter: true });
+        await two.getByRole('button', { name: 'Dock all & close window', exact: true }).click({ noWaitAfter: true }).catch(error => {
+            // The click itself can race the window it closes; only that is tolerated.
+            if (!/Target page, context or browser has been closed/.test(error.message))
+                throw error;
+        });
         await closing;
         await expect.poll(() => read(page)).toEqual({ state: 'ready', ids: expectedIds });
         await page.locator('[data-content="architecture"]').click();

@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using UnoDock.Core;
 
 namespace UnoDock;
 
@@ -25,10 +26,12 @@ public sealed partial class DesktopWindowCoordinates
             throw new ArgumentOutOfRangeException(nameof(bounds));
         var frameWidth = Math.Max(0, window.AppWindow.Size.Width - window.AppWindow.ClientSize.Width);
         var frameHeight = Math.Max(0, window.AppWindow.Size.Height - window.AppWindow.ClientSize.Height);
+        // On Windows the target monitor's own scale sizes and places the window.
+        var physical = DipToPhysical(new DockRect(bounds.X, bounds.Y, bounds.Width, bounds.Height), scale);
         window.AppWindow.Resize(new()
         {
-            Width = (int)Math.Round(bounds.Width * scale) + frameWidth,
-            Height = (int)Math.Round(bounds.Height * scale) + frameHeight
+            Width = (int)Math.Round(physical.Width) + frameWidth,
+            Height = (int)Math.Round(physical.Height) + frameHeight
         });
 #if !WINDOWS
         if (OperatingSystem.IsMacOS())
@@ -40,8 +43,8 @@ public sealed partial class DesktopWindowCoordinates
 #endif
         window.AppWindow.Move(new()
         {
-            X = (int)Math.Round(bounds.X * scale),
-            Y = (int)Math.Round(bounds.Y * scale)
+            X = (int)Math.Round(physical.X),
+            Y = (int)Math.Round(physical.Y)
         });
     }
 
@@ -54,8 +57,7 @@ public sealed partial class DesktopWindowCoordinates
         if (OperatingSystem.IsMacOS())
             return Internal.MacDesktopInterop.ToTopLeft(screen);
 #endif
-        var scale = Scale(source);
-        return new(screen.X / scale, screen.Y / scale);
+        return PhysicalToDip(screen, Scale(source));
     }
 
     /// <summary>Inverse of <see cref = "ToDesktopPoint"/>: maps a top-left desktop
@@ -66,18 +68,50 @@ public sealed partial class DesktopWindowCoordinates
         if (OperatingSystem.IsMacOS())
             return FromScreen(new(point.X, Internal.MacDesktopInterop.PrimaryScreenHeight() - point.Y), destination);
 #endif
-        var scale = Scale(destination);
-        return FromScreen(new(point.X * scale, point.Y * scale), destination);
+        return FromScreen(DipToPhysical(point, Scale(destination)), destination);
     }
 
+    /// <summary>Win32 monitors in physical pixels with their own scales (mixed
+        /// DPI); empty on other hosts, whose desktop space has one scale.</summary>
+        internal static IReadOnlyList<DesktopMonitor> Monitors()
+    {
+        try
+        {
+            if (OperatingSystem.IsWindows())
+                return ScreensWin32.Monitors();
+        }
+        catch (Exception error) when (error is DllNotFoundException or EntryPointNotFoundException)
+        {
+        }
+
+        return [];
+    }
+
+    /// <summary>Physical desktop point to top-left desktop DIPs: through its
+        /// monitor's own scale on Windows, by <paramref name = "scale"/> elsewhere.</summary>
+        internal static Point PhysicalToDip(Point physical, double scale)
+    {
+        var dip = DesktopDipSpace.ToDip(new DockPoint(physical.X, physical.Y), Monitors(), scale);
+        return new(dip.X, dip.Y);
+    }
+
+    internal static Point DipToPhysical(Point dip, double scale)
+    {
+        var physical = DesktopDipSpace.ToPhysical(new DockPoint(dip.X, dip.Y), Monitors(), scale);
+        return new(physical.X, physical.Y);
+    }
+
+    internal static DockRect PhysicalToDip(DockRect physical, double scale) => DesktopDipSpace.ToDip(physical, Monitors(), scale);
+    internal static DockRect DipToPhysical(DockRect dip, double scale) => DesktopDipSpace.ToPhysical(dip, Monitors(), scale);
     internal static IReadOnlyList<DockRect> WorkAreas(double scale)
     {
         if (!(scale > 0) || !double.IsFinite(scale))
             scale = 1;
         try
         {
+            // Each Windows monitor converts with its own scale (mixed DPI).
             if (OperatingSystem.IsWindows())
-                return [.. ScreensWin32.WorkAreas().Select(r => new DockRect(r.X / scale, r.Y / scale, r.Width / scale, r.Height / scale))];
+                return [.. ScreensWin32.Monitors().Select(DesktopDipSpace.WorkArea)];
 #if !WINDOWS
             if (OperatingSystem.IsMacOS())
                 return Internal.MacDesktopInterop.VisibleFrames();
@@ -94,9 +128,9 @@ public sealed partial class DesktopWindowCoordinates
 
     private static class ScreensWin32
     {
-        internal static List<DockRect> WorkAreas()
+        internal static List<DesktopMonitor> Monitors()
         {
-            var result = new List<DockRect>();
+            var result = new List<DesktopMonitor>();
             MonitorEnum callback = (monitor, _, _, _) =>
             {
                 var info = new MonitorInfo
@@ -104,7 +138,21 @@ public sealed partial class DesktopWindowCoordinates
                     Size = Marshal.SizeOf<MonitorInfo>()
                 };
                 if (GetMonitorInfoW(monitor, ref info))
-                    result.Add(new(info.Work.Left, info.Work.Top, info.Work.Right - info.Work.Left, info.Work.Bottom - info.Work.Top));
+                {
+                    var scale = 1d;
+                    try
+                    {
+                        // Effective DPI: the per-monitor scale the shell applies.
+                        if (GetDpiForMonitor(monitor, 0, out var dpiX, out _) == 0 && dpiX > 0)
+                            scale = dpiX / 96d;
+                    }
+                    catch (Exception error) when (error is DllNotFoundException or EntryPointNotFoundException)
+                    {
+                    }
+
+                    result.Add(new(Rect(info.Monitor), Rect(info.Work), scale));
+                }
+
                 return true;
             };
             EnumDisplayMonitors(0, 0, callback, 0);
@@ -112,6 +160,9 @@ public sealed partial class DesktopWindowCoordinates
             return result;
         }
 
+        private static DockRect Rect(Bounds bounds) => new(bounds.Left, bounds.Top, bounds.Right - bounds.Left, bounds.Bottom - bounds.Top);
+        [DllImport("shcore.dll", ExactSpelling = true)]
+        private static extern int GetDpiForMonitor(nint monitor, int type, out uint dpiX, out uint dpiY);
         [StructLayout(LayoutKind.Sequential)]
         private struct Bounds
         {

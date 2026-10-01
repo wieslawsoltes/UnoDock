@@ -6,7 +6,7 @@ namespace UnoDock;
 public sealed partial class DesktopWindowCoordinates
 {
     internal static Window? WindowFor(FrameworkElement element) => Microsoft.Windows.Shell.WindowRegistry.Find(element);
-    internal bool TryGetPointer(Window window, out DesktopPointerState state)
+    internal bool TryGetPointer(Window? window, out DesktopPointerState state)
     {
         Verify();
         state = default;
@@ -25,7 +25,7 @@ public sealed partial class DesktopWindowCoordinates
             return true;
         }
 
-        if (OperatingSystem.IsLinux() && Uno.UI.Xaml.WindowHelper.GetNativeWindow(window) is Uno.UI.NativeElementHosting.X11NativeWindow native)
+        if (OperatingSystem.IsLinux() && window != null && Uno.UI.Xaml.WindowHelper.GetNativeWindow(window) is Uno.UI.NativeElementHosting.X11NativeWindow native)
         {
             var connection = Connection;
             var reply = Xcb.PointerReply(connection, Xcb.Pointer(connection, Id(native.WindowId)), out var error);
@@ -134,6 +134,34 @@ public sealed partial class DesktopWindowCoordinates
 
 #endif
         return false;
+    }
+
+    /// <summary>Hides a native window with Win32 directly: safe while another
+        /// window is being destroyed, where WinUI Windowing calls fail fast.</summary>
+        internal static void HideWithoutActivation(Window window)
+    {
+        if (OperatingSystem.IsWindows())
+            W32.ShowWindow(WindowsHandle(window), 0);
+    }
+
+    internal static void ShowWithoutActivation(Window window)
+    {
+        if (OperatingSystem.IsWindows())
+            W32.ShowWindow(WindowsHandle(window), 4);
+    }
+
+    /// <summary>Brings a top-level window (a WinUI host island) to the foreground.</summary>
+    internal static void ActivateHandle(nint handle)
+    {
+        if (handle != 0 && OperatingSystem.IsWindows())
+            W32.SetForegroundWindow(handle);
+    }
+
+    /// <summary>Win32 ownership by the owner's top-level handle (WinUI host islands).</summary>
+    internal IDisposable? ConfigureOwner(Window window, nint owner, bool tool)
+    {
+        Verify();
+        return owner != 0 && OperatingSystem.IsWindows() ? W32.Own(WindowsHandle(window), owner, tool) : null;
     }
 
     internal IDisposable? ConfigureOwner(Window window, Window? owner, bool tool)
@@ -269,6 +297,12 @@ public sealed partial class DesktopWindowCoordinates
         [DllImport("user32.dll", ExactSpelling = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static extern bool IsWindowEnabled(nint window);
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static extern bool SetForegroundWindow(nint window);
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static extern bool ShowWindow(nint window, int command);
         [DllImport("user32.dll", ExactSpelling = true)]
         internal static extern nint GetTopWindow(nint parent);
         [DllImport("user32.dll", ExactSpelling = true)]

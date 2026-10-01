@@ -396,6 +396,22 @@ public static class NavigatorQualityTests
             Check.Same(row, List(nav, true).ContainerFromItem(source[0]));
             Check.False(ReferenceEquals(previous, nav.Background));
         });
+        tests.Test("classic navigator selection is active while the navigator holds focus", async () =>
+        {
+            using var f = new Fixture(host);
+            host.Theme = new UnoDock.Themes.GenericTheme();
+            host.RequestedTheme = ElementTheme.Light;
+            host.Refresh();
+            var nav = f.Show();
+            await Ready(nav);
+            var row = List(nav, true).FindVisualChildren<ListBoxItem>().Concat(List(nav, false).FindVisualChildren<ListBoxItem>()).First(r => r.IsSelected);
+            Check.True(row.Focus(FocusState.Keyboard));
+            await Tick();
+            await Tick();
+            // The system's focused selection: translucent blue fill, solid blue border.
+            Check.Equal(Windows.UI.Color.FromArgb(0x3d, 0x26, 0xa0, 0xda), ((SolidColorBrush)row.Background).Color);
+            Check.Equal(Windows.UI.Color.FromArgb(0xff, 0x26, 0xa0, 0xda), ((SolidColorBrush)row.BorderBrush).Color);
+        });
         tests.Test("navigator color override is applied without resetting ItemsSource", async () =>
         {
             using var f = new Fixture(host);

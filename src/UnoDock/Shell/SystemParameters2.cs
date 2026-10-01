@@ -13,9 +13,6 @@ public class SystemParameters2 : INotifyPropertyChanged
     private static SystemParameters2? _current;
     private readonly DispatcherQueue _dispatcher;
     private readonly UISettings _settings;
-#if WINDOWS
-    private readonly AccessibilitySettings _accessibility;
-#endif
     private Snapshot _value = new();
     private SolidColorBrush _brush = new();
     private bool _queued;
@@ -25,10 +22,9 @@ public class SystemParameters2 : INotifyPropertyChanged
     {
         _dispatcher = DispatcherQueue.GetForCurrentThread() ?? throw new InvalidOperationException("Shell metrics require a UI dispatcher.");
         _settings = new UISettings();
-#if WINDOWS
-        _accessibility = new AccessibilitySettings();
-        _accessibility.HighContrastChanged += (_, _) => QueueRefresh();
-#endif
+        // ColorValuesChanged also reports high-contrast changes. AccessibilitySettings
+        // events need a CoreWindow and throw in desktop WinUI apps, so the state is
+        // read through SPI_GETHIGHCONTRAST on every Windows host.
         _settings.ColorValuesChanged += (_, _) => QueueRefresh();
         Refresh();
     }
@@ -97,9 +93,6 @@ public class SystemParameters2 : INotifyPropertyChanged
 
     private Snapshot Read()
     {
-#if WINDOWS
-        var highContrast = _accessibility.HighContrast;
-#else
         var highContrast = false;
         if (OperatingSystem.IsWindows())
         {
@@ -110,7 +103,6 @@ public class SystemParameters2 : INotifyPropertyChanged
             highContrast = SystemParametersInfo(0x0042, info.Size, ref info, 0) && (info.Flags & 1) != 0;
         }
 
-#endif
         var color = _settings.GetColorValue(UIColorType.Accent);
         var background = _settings.GetColorValue(UIColorType.Background);
         var next = new Snapshot

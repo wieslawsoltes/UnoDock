@@ -98,6 +98,9 @@ painted the same surface, so existing dictionaries render unchanged.
 | `RailBrush`, `AnchorTabBrush`, `AnchorTabForegroundBrush` | Auto-hide rails and their tabs | `WorkspaceBrush`, transparent, text rule |
 | `FloatingBorderBrush`, `ActiveFloatingBorderBrush` | Floating window frames (inactive / active window) | `BorderBrush` |
 | `FloatingBorderThickness` | Floating window frame width | `0` (no frame) |
+| `FloatingCaptionBrush`, `ActiveFloatingCaptionBrush` | Floating window caption fill (inactive/active), for example Metro's filled active caption | tool title brushes |
+| `FloatingCaptionForegroundBrush`, `ActiveFloatingCaptionForegroundBrush` | Floating caption text and glyphs | tool title foregrounds |
+| `ActiveToolTitleIndicatorBrush`, `ActiveToolTitleIndicatorThickness` | Bar above the title of the tool pane owning the active content; the space is reserved on every title | none |
 
 Thickness keys (`PaneBorderThickness` excepted) accept a `Thickness`, a uniform
 `x:Double` or an `x:String` such as `0,3,0,4` (left, top, right, bottom).
@@ -133,7 +136,7 @@ show the window-position ▾ button; default `True`).
 |---|---|
 | `MenuBrush`, `MenuGutterBrush`, `MenuBorderBrush`, `MenuForegroundBrush`, `MenuDisabledBrush`, `MenuHoverBrush`, `MenuHoverBorderBrush`, `MenuPressedBrush`, `MenuRowHeight`, `MenuMinWidth` | Context menus, caption menus and the open-documents list |
 | `GuideBrush`, `GuideBorderBrush`, `GuideAccentBrush`, `GuideFillBrush`, `GuideWindowBrush`, `GuideTitleBrush`, `GuideSelectionBrush`, `GuideSize` | Docking guide compass and edge targets |
-| `NavigatorBrush`, `NavigatorBorderBrush`, `NavigatorSelectionBrush`, `NavigatorSelectionBorderBrush`, `NavigatorCornerRadius` (Fluent) | Ctrl+Tab navigator |
+| `NavigatorBrush`, `NavigatorBorderBrush`, `NavigatorSelectionBrush`, `NavigatorSelectionBorderBrush`, `NavigatorActiveSelectionBrush`, `NavigatorActiveSelectionBorderBrush` (selection while the navigator has keyboard focus), `NavigatorCornerRadius` (Fluent) | Ctrl+Tab navigator |
 | `AutoHideTitleBrush`, `AutoHideTitleHeight` | Inactive auto-hide flyout caption fill (overrides `ToolTitleBrush`) and caption height |
 
 #### Built-in Generic values

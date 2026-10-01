@@ -56,6 +56,50 @@ internal static class WindowRegistry
 #endif
     }
 
+    // WinUI can neither enumerate windows nor map a XamlRoot to its Window. A
+    // docking manager registers its host island instead: its XamlRoot and the
+    // top-level window handle resolved from the island's AppWindowId.
+    private static readonly List<HostIsland> Hosts = new();
+    internal static IDisposable RegisterHost(XamlRoot root, nint handle)
+    {
+        ArgumentNullException.ThrowIfNull(root);
+        var host = new HostIsland(new(root), handle);
+        lock (Hosts)
+            Hosts.Add(host);
+        return new HostLease(host);
+    }
+
+    internal static (XamlRoot Root, nint Handle)[] HostSnapshot()
+    {
+        var result = new List<(XamlRoot, nint)>();
+        lock (Hosts)
+            for (var i = Hosts.Count - 1; i >= 0; i--)
+            {
+                if (!Hosts[i].Root.TryGetTarget(out var root))
+                {
+                    Hosts.RemoveAt(i);
+                    continue;
+                }
+
+                result.Add((root, Hosts[i].Handle));
+            }
+
+        return [.. result];
+    }
+
+    private sealed record HostIsland(WeakReference<XamlRoot> Root, nint Handle);
+    private sealed class HostLease(HostIsland host) : IDisposable
+    {
+        private HostIsland? _host = host;
+        public void Dispose()
+        {
+            if (_host is { } value)
+                lock (Hosts)
+                    Hosts.Remove(value);
+            _host = null;
+        }
+    }
+
     internal static Window[] Snapshot()
     {
         var result = new HashSet<Window>(ReferenceEqualityComparer.Instance);

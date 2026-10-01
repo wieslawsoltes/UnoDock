@@ -18,6 +18,10 @@ public abstract partial class LayoutFloatingWindowControl
     private NativeDragClock? _dragClock;
     private IDisposable? _nativeOwnerLease;
     private Window? _nativeOwnerConfiguredWindow;
+#if WINDOWS
+    // Hidden by the host's own hiding, and shown again with it.
+    private bool _hiddenWithOwner;
+#endif
     private Point? _lastNativeOrigin;
     private bool _nativeMoveLoop, _movingFromCaption;
     private sealed class CaptionDrag(DockSurface surface, long generation, LayoutRoot root, Window? window, Point down, Point origin, DockRect bounds, uint? pointer, bool native)
@@ -435,12 +439,57 @@ public abstract partial class LayoutFloatingWindowControl
         if (ReferenceEquals(_nativeOwnerConfiguredWindow, window) || Model.Root?.Manager is not { } manager)
             return;
         var owner = manager.HostWindow ?? DesktopWindowCoordinates.WindowFor(manager);
-        if (owner == null)
+        if (owner != null)
+            _nativeOwnerLease = _dragCoordinates.ConfigureOwner(window, owner, Model is LayoutAnchorableFloatingWindow);
+        else if (manager.HostHandle != 0)
+            _nativeOwnerLease = _dragCoordinates.ConfigureOwner(window, manager.HostHandle, Model is LayoutAnchorableFloatingWindow);
+        else
             return;
-        _nativeOwnerLease = _dragCoordinates.ConfigureOwner(window, owner, Model is LayoutAnchorableFloatingWindow);
         _nativeOwnerConfiguredWindow = window;
     }
 
+    /// <summary>The owner is being destroyed: hide this window first (a visible
+        /// window released from its owner is activated and would call into the dying
+        /// owner's XAML), then release ownership so the system does not destroy this
+        /// WinUI window from outside. The host is closed afterwards.</summary>
+        internal void PrepareOwnerShutdown()
+    {
+        if (_window is { } window)
+        {
+            window.Activated -= OnNativeActivated;
+            DesktopWindowCoordinates.HideWithoutActivation(window);
+        }
+
+        _nativeOwnerLease?.Dispose();
+        _nativeOwnerLease = null;
+        _nativeOwnerConfiguredWindow = null;
+    }
+
+#if WINDOWS
+    /// <summary>The owner is hiding, possibly to be destroyed: hide this window and
+        /// release it, so the system cannot destroy it together with the owner.</summary>
+        internal void HideWithOwner()
+    {
+        if (_window is not { } window || !window.AppWindow.IsVisible)
+            return;
+        _hiddenWithOwner = true;
+        DesktopWindowCoordinates.HideWithoutActivation(window);
+        _nativeOwnerLease?.Dispose();
+        _nativeOwnerLease = null;
+        _nativeOwnerConfiguredWindow = null;
+    }
+
+    /// <summary>The owner is visible again: own and show the window it hid.</summary>
+    internal void ShowWithOwner()
+    {
+        if (!_hiddenWithOwner || _window is not { } window)
+            return;
+        _hiddenWithOwner = false;
+        ConfigureNativeDragHost();
+        DesktopWindowCoordinates.ShowWithoutActivation(window);
+    }
+
+#endif
     private void ReleaseNativeDragHost(bool terminal)
     {
         CancelCaptionDrag();
@@ -448,6 +497,9 @@ public abstract partial class LayoutFloatingWindowControl
         _dragClock = null;
         _nativeMoveLoop = false;
         _lastNativeOrigin = null;
+#if WINDOWS
+        _hiddenWithOwner = false;
+#endif
         _nativeOwnerConfiguredWindow = null;
         _nativeOwnerLease?.Dispose();
         _nativeOwnerLease = null;

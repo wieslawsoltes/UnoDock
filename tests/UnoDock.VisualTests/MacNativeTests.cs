@@ -81,8 +81,11 @@ internal static class MacNativeTests
             var clock = Clock(() => ticks++, _ =>
             {
             });
-            Track(.08);
-            Check.True(ticks > 0);
+            // A loaded runner can let a whole short tracking slice pass before the
+            // first timer fire, so wait (bounded) for the clock to start ticking.
+            for (var slice = 0; slice < 25 && ticks == 0; slice++)
+                Track(.04);
+            Check.True(ticks > 0, "The drag clock never ticked in the AppKit tracking loop.");
             clock.Dispose();
             var previous = ticks;
             Track(.08);
