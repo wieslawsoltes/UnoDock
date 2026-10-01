@@ -142,7 +142,7 @@ public partial class App : Application
             {
                 output.Dock();
                 await Task.Delay(800);
-                Note("INFO docked before closing; floating=" + manager.FloatingWindows.Count);
+                Note("INFO docked before closing; floating=" + manager.FloatingWindows.Count());
             }
         }
         catch (Exception error)
