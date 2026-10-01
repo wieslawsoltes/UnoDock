@@ -30,9 +30,11 @@ internal static class TearOffInputTests
             await input.Glide(start, new(start.X, start.Y + 90));
             await Wait(() => f.Second.IsFloating && f.Control(f.Second) is { IsDragging: true, NativeWindow: not null });
             var control = f.Control(f.Second)!;
-            var before = control.NativeWindow!.AppWindow.Position;
+            // Top-left desktop DIPs on every host (AppWindow.Position is Y-up on AppKit).
+            using var coordinates = new DesktopWindowCoordinates();
+            var before = coordinates.ToDesktopPoint(control, default);
             await input.Glide(new(start.X, start.Y + 90), new(start.X + 160, start.Y + 190));
-            await Wait(() => control.NativeWindow!.AppWindow.Position.X > before.X + 60 && control.NativeWindow!.AppWindow.Position.Y > before.Y + 40);
+            await Wait(() => coordinates.ToDesktopPoint(control, default) is var now && now.X > before.X + 60 && now.Y > before.Y + 40);
             input.Release();
             await Wait(() => !control.IsDragging);
             Check.True(f.Second.IsFloating, "Releasing over empty desktop keeps the torn-off document floating.");
