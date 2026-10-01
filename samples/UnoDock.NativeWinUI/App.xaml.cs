@@ -1,6 +1,7 @@
 using System.Runtime.InteropServices;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using UnoDock.Controls;
 using UnoDock.Layout;
 using UnoDock.Themes;
 
@@ -83,7 +84,7 @@ public partial class App : Application
                 var child = WinRT.Interop.WindowNative.GetWindowHandle(native);
                 var owner = GetWindow(child, 4);
                 Record("floating window is owned by the unregistered main window", owner == main, $"owner={owner} main={main}");
-                var view = manager.FindVisualChildren<UnoDock.Controls.LayoutDocumentPaneControl>().First(p => ReferenceEquals(p.Model, documents));
+                var view = manager.FindVisualChildren<LayoutDocumentPaneControl>().First(p => ReferenceEquals(p.Model, documents));
                 var center = view.TransformToVisual(manager).TransformPoint(new(view.ActualWidth / 2, view.ActualHeight / 2));
                 var plan = manager.GetDropPlan(output, center);
                 Record("drop targets resolve over the main window", plan != null, plan?.Type.ToString() ?? "no plan");
