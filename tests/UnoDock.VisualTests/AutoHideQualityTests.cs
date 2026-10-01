@@ -177,6 +177,7 @@ public static class AutoHideQualityTests
                 End();
                 await Settle();
                 Check.Near(tool.AutoHideMinWidth + 25, Requested());
+                Check.True((bool)typeof(DockingManager).Assembly.GetType("UnoDock.Internal.DockSurface", true)!.GetProperty("IsAutoHideOpen", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(surface)!, "The auto-hide flyout closed before the viewport-bound resize.");
                 Begin();
                 Move(100000);
                 End();
