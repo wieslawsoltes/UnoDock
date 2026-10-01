@@ -137,6 +137,13 @@ public partial class App : Application
 
             output.Float();
             await Until(() => manager.FloatingWindows.FirstOrDefault(w => w.NativeWindow != null && w.IsLoaded));
+            // Diagnostic variant: close the main window with nothing floating.
+            if (Environment.GetEnvironmentVariable("UNODOCK_SMOKE_DOCK_FIRST") == "1")
+            {
+                output.Dock();
+                await Task.Delay(800);
+                Note("INFO docked before closing; floating=" + manager.FloatingWindows.Count);
+            }
         }
         catch (Exception error)
         {

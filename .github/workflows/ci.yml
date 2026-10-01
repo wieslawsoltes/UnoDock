@@ -156,6 +156,18 @@ jobs:
       # The sample never registers its Window: owner, drop targeting and shutdown
       # must work from the host island alone. The process exits only when the
       # floating windows close together with the main window.
+      - name: Diagnose native WinUI shutdown without floating windows
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem samples/UnoDock.NativeWinUI/bin -Recurse -Filter UnoDock.NativeWinUI.exe | Select-Object -First 1
+          $result = Join-Path $env:RUNNER_TEMP 'native-winui-docked.txt'
+          $env:UNODOCK_SMOKE = $result
+          $env:UNODOCK_SMOKE_DOCK_FIRST = '1'
+          $process = Start-Process -FilePath $exe.FullName -PassThru
+          $null = $process.WaitForExit(120000)
+          Get-Content "$result.log" -ErrorAction SilentlyContinue
+          "docked-first exit code: $($process.ExitCode)"
       - name: Run the native WinUI host-island smoke test
         shell: pwsh
         run: |
