@@ -804,7 +804,8 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
         ReleaseNativeChrome();
         ReleaseNativeDragHost(true);
         Microsoft.Windows.Shell.WindowChrome.SetWindowChrome(this, null);
-        if (_window is { } window)
+        var closing = _window;
+        if (closing is { } window)
         {
             _messageHook?.Dispose();
             _messageHook = null;
@@ -814,7 +815,6 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
             window.Activated -= OnNativeActivated;
             DesktopWindowCoordinates.HideNativeClientBeforeClose(window);
             window.Content = null;
-            window.Close();
             _systemRegistration?.Dispose();
             _systemRegistration = null;
             _window = null;
@@ -824,6 +824,9 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
         _body.Content = null;
         VisualParenting.Detach(this);
         CompleteWindowClose();
+        // Close last: when this is the application's last window, WinUI begins
+        // shutting down inside Close and no XAML work may follow it.
+        closing?.Close();
     }
 
     internal void SetBounds(DockRect bounds)
