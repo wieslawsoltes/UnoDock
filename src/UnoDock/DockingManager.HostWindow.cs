@@ -12,6 +12,7 @@ public partial class DockingManager
     private IDisposable? _hostIslandLease;
 #if WINDOWS
     private Microsoft.UI.Windowing.AppWindow? _hostAppWindow;
+    private HostWindowSubclass? _hostSubclass;
 #endif
     /// <summary>The top-level window handle of the host island on WinUI, where the
         /// hosting Window object cannot be resolved; zero elsewhere.</summary>
@@ -81,6 +82,7 @@ public partial class DockingManager
                 return false;
             _hostHandle = handle;
             _hostIslandLease = WindowRegistry.RegisterHost(XamlRoot, handle);
+            _hostSubclass = new(handle, OnHostHiding, OnHostShown);
             _hostAppWindow = Microsoft.UI.Windowing.AppWindow.GetFromWindowId(id);
             if (_hostAppWindow != null)
                 _hostAppWindow.Destroying += OnHostAppWindowDestroying;
@@ -96,6 +98,18 @@ public partial class DockingManager
     }
 
 #if WINDOWS
+    private void OnHostHiding()
+    {
+        foreach (var window in _floating.ToArray())
+            window.HideWithOwner();
+    }
+
+    private void OnHostShown()
+    {
+        foreach (var window in _floating.ToArray())
+            window.ShowWithOwner();
+    }
+
     private void OnHostAppWindowDestroying(Microsoft.UI.Windowing.AppWindow sender, object args)
     {
         // WinUI faults when the system destroys its windows with their owner, and
@@ -148,6 +162,8 @@ public partial class DockingManager
         if (_hostAppWindow is { } appWindow)
             appWindow.Destroying -= OnHostAppWindowDestroying;
         _hostAppWindow = null;
+        _hostSubclass?.Dispose();
+        _hostSubclass = null;
 #endif
         _hostHandle = 0;
         var island = _hostIslandLease;

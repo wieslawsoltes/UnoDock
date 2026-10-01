@@ -144,6 +144,12 @@ public sealed partial class DesktopWindowCoordinates
             W32.ShowWindow(WindowsHandle(window), 0);
     }
 
+    internal static void ShowWithoutActivation(Window window)
+    {
+        if (OperatingSystem.IsWindows())
+            W32.ShowWindow(WindowsHandle(window), 4);
+    }
+
     /// <summary>Brings a top-level window (a WinUI host island) to the foreground.</summary>
     internal static void ActivateHandle(nint handle)
     {
