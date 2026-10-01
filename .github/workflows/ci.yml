@@ -156,11 +156,13 @@ jobs:
       # The sample never registers its Window: owner, drop targeting and shutdown
       # must work from the host island alone. The process exits only when the
       # floating windows close together with the main window.
-      - name: Diagnose native WinUI shutdown variants
-        continue-on-error: true
+      - name: Verify native WinUI shutdown variants
         shell: pwsh
         run: |
+          # Main window closes with nothing floating, after a floating window's
+          # close request, and with the floating tool hidden: each must exit 0.
           $exe = Get-ChildItem samples/UnoDock.NativeWinUI/bin -Recurse -Filter UnoDock.NativeWinUI.exe | Select-Object -First 1
+          $failed = @()
           foreach ($variant in 'docked', 'close-float', 'hidden') {
             $result = Join-Path $env:RUNNER_TEMP "native-winui-$variant.txt"
             $env:UNODOCK_SMOKE = $result
@@ -170,8 +172,10 @@ jobs:
             if (-not $exited) { $process.Kill($true) }
             Get-Content "$result.log" -ErrorAction SilentlyContinue | Where-Object { $_ -like 'INFO before*' -or $_ -like 'FAIL*' }
             "variant $variant exited=$exited exit code: $($process.ExitCode)"
+            if (-not $exited -or $process.ExitCode -ne 0) { $failed += $variant }
           }
           Remove-Item Env:UNODOCK_SMOKE_VARIANT
+          if ($failed) { throw "The native WinUI head did not shut down cleanly: $($failed -join ', ')." }
       - name: Run the native WinUI host-island smoke test
         shell: pwsh
         run: |

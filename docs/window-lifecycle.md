@@ -82,7 +82,9 @@ window messages are not sandboxed. This is not a general HwndHost replacement.
 Two Windows-only tests send a private WM_APP message to the real HWND: one verifies
 handled results and hide/reopen lifetime; one verifies exception containment and deferred
 error reporting. The Windows CI step runs these in the actual Uno Win32 host. The native
-WinUI target is also package-built, but that is not full native WinUI runtime acceptance.
+WinUI target is built and smoke-tested in CI (ownership, drop targeting and clean shutdown
+with docked, closed, hidden and visible floating windows), which is not full native WinUI
+runtime acceptance.
 No HWND filter is claimed for non-Windows hosts.
 
 ## Two-list navigator and focus
@@ -121,8 +123,10 @@ When it loads, a DockingManager resolves its host: a registered Window, a window
 application-window enumeration, or, on native WinUI (which cannot enumerate windows), the
 host island of its XamlRoot. The island's AppWindowId gives the top-level window handle
 that owns the native floating windows, is activated for the navigator and maps drop
-targets to the manager; the floating windows close when that AppWindow is destroyed. No
-registration is needed. `SystemCommands.RegisterWindow(window)` remains available for
+targets to the manager; the floating windows close when that AppWindow is destroyed.
+Because the system destroys owned windows before the owner raises Destroying, the floating
+windows are hidden and released as soon as the owner hides, and owned and shown again if
+it reappears. No registration is needed. `SystemCommands.RegisterWindow(window)` remains available for
 application code that wants explicit lookup of its own windows. The layout model is
 retained when the host closes.
 
