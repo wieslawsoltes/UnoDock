@@ -5,14 +5,16 @@ import shutil, subprocess, sys
 ROOT = Path(__file__).resolve().parents[2]
 WORK = ROOT / 'artifacts' / 'probes'
 PROBES = {
-    'manager-only': '',
-    'empty-root': '<layout:LayoutRoot/>',
-    'root-empty-panel': '<layout:LayoutRoot><layout:LayoutRoot.RootPanel><layout:LayoutPanel/></layout:LayoutRoot.RootPanel></layout:LayoutRoot>',
-    'panel-orientation': '<layout:LayoutRoot><layout:LayoutRoot.RootPanel><layout:LayoutPanel Orientation="Horizontal"/></layout:LayoutRoot.RootPanel></layout:LayoutRoot>',
-    'document-pane': '<layout:LayoutRoot><layout:LayoutRoot.RootPanel><layout:LayoutPanel><layout:LayoutDocumentPane/></layout:LayoutPanel></layout:LayoutRoot.RootPanel></layout:LayoutRoot>',
-    'document': '<layout:LayoutRoot><layout:LayoutRoot.RootPanel><layout:LayoutPanel><layout:LayoutDocumentPane><layout:LayoutDocument Title="D" ContentId="d"/></layout:LayoutDocumentPane></layout:LayoutPanel></layout:LayoutRoot.RootPanel></layout:LayoutRoot>',
-    'root-implicit-panel': '<layout:LayoutRoot><layout:LayoutPanel/></layout:LayoutRoot>',
-    'full-tools-and-documents': '<layout:LayoutRoot><layout:LayoutRoot.RootPanel><layout:LayoutPanel Orientation="Horizontal"><layout:LayoutAnchorablePaneGroup DockMinWidth="150"><layout:LayoutAnchorablePane DockWidth="210" CanRepositionItems="False"><layout:LayoutAnchorable Title="A" ContentId="a" AutoHideWidth="200" CanClose="False"/></layout:LayoutAnchorablePane></layout:LayoutAnchorablePaneGroup><layout:LayoutDocumentPaneGroup><layout:LayoutDocumentPane><layout:LayoutDocument Title="D" ContentId="d"/></layout:LayoutDocumentPane></layout:LayoutDocumentPaneGroup></layout:LayoutPanel></layout:LayoutRoot.RootPanel></layout:LayoutRoot>',
+    'docpane-child': '<layout:LayoutRoot><layout:LayoutRoot.RootPanel><layout:LayoutPanel><layout:LayoutDocumentPane/></layout:LayoutPanel></layout:LayoutRoot.RootPanel></layout:LayoutRoot>',
+    'docpane-child-noxbf': '<layout:LayoutRoot><layout:LayoutRoot.RootPanel><layout:LayoutPanel><layout:LayoutDocumentPane/></layout:LayoutPanel></layout:LayoutRoot.RootPanel></layout:LayoutRoot>',
+    'toolpane-child': '<layout:LayoutRoot><layout:LayoutRoot.RootPanel><layout:LayoutPanel><layout:LayoutAnchorablePane/></layout:LayoutPanel></layout:LayoutRoot.RootPanel></layout:LayoutRoot>',
+    'toolpane-with-tool': '<layout:LayoutRoot><layout:LayoutRoot.RootPanel><layout:LayoutPanel><layout:LayoutAnchorablePane><layout:LayoutAnchorable Title="A" ContentId="a"/></layout:LayoutAnchorablePane></layout:LayoutPanel></layout:LayoutRoot.RootPanel></layout:LayoutRoot>',
+    'docgroup-child': '<layout:LayoutRoot><layout:LayoutRoot.RootPanel><layout:LayoutPanel><layout:LayoutDocumentPaneGroup/></layout:LayoutPanel></layout:LayoutRoot.RootPanel></layout:LayoutRoot>',
+    'toolgroup-child': '<layout:LayoutRoot><layout:LayoutRoot.RootPanel><layout:LayoutPanel><layout:LayoutAnchorablePaneGroup/></layout:LayoutPanel></layout:LayoutRoot.RootPanel></layout:LayoutRoot>',
+    'toolgroup-dockwidth': '<layout:LayoutRoot><layout:LayoutRoot.RootPanel><layout:LayoutPanel><layout:LayoutAnchorablePaneGroup DockWidth="210"/></layout:LayoutPanel></layout:LayoutRoot.RootPanel></layout:LayoutRoot>',
+    'toolgroup-ismaximized': '<layout:LayoutRoot><layout:LayoutRoot.RootPanel><layout:LayoutPanel><layout:LayoutAnchorablePaneGroup IsMaximized="True"/></layout:LayoutPanel></layout:LayoutRoot.RootPanel></layout:LayoutRoot>',
+    'toolgroup-dockminwidth': '<layout:LayoutRoot><layout:LayoutRoot.RootPanel><layout:LayoutPanel><layout:LayoutAnchorablePaneGroup DockMinWidth="150"/></layout:LayoutPanel></layout:LayoutRoot.RootPanel></layout:LayoutRoot>',
+    'toolgroup-dockminwidth-noxbf': '<layout:LayoutRoot><layout:LayoutRoot.RootPanel><layout:LayoutPanel><layout:LayoutAnchorablePaneGroup DockMinWidth="150"/></layout:LayoutPanel></layout:LayoutRoot.RootPanel></layout:LayoutRoot>',
 }
 PROJECT = '''<Project Sdk="Uno.Sdk">
   <PropertyGroup>
@@ -37,7 +39,8 @@ for name, snippet in PROBES.items():
     (d / 'Probe.csproj').write_text(PROJECT.format(lib=ROOT / 'src/UnoDock/UnoDock.csproj'))
     (d / 'App.xaml').write_text(APP_XAML); (d / 'App.xaml.cs').write_text(APP_CS)
     (d / 'ProbePage.xaml').write_text(PAGE.format(snippet=snippet)); (d / 'ProbePage.xaml.cs').write_text(PAGE_CS)
-    r = subprocess.run(['msbuild', str(d / 'Probe.csproj'), '-restore', '-p:Configuration=Release', '-p:Platform=x64', '-p:UnoDockLibraryFrameworks=net10.0-windows10.0.26100.0', '-v:minimal', '-nologo'], capture_output=True, text=True)
+    extra = ['-p:DisableXbfGeneration=true'] if name.endswith('-noxbf') else []
+    r = subprocess.run(['msbuild', str(d / 'Probe.csproj'), '-restore', '-p:Configuration=Release', '-p:Platform=x64', '-p:UnoDockLibraryFrameworks=net10.0-windows10.0.26100.0', '-v:minimal', '-nologo', *extra], capture_output=True, text=True)
     errors = sorted({line.strip()[:160] for line in r.stdout.splitlines() if ' error ' in line and 'ProbePage' in line} or {line.strip()[-200:] for line in r.stdout.splitlines() if ' error ' in line})
     results.append((name, r.returncode, errors))
     print(f'{name}: {"OK" if r.returncode == 0 else "FAIL"} {errors[:2]}', flush=True)

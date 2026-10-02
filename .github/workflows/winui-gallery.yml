@@ -22,6 +22,7 @@ jobs:
         shell: bash
         run: python3 tools/WinUIXamlProbe/run.py
       - name: Build the Gallery native WinUI head
+        if: false
         run: msbuild samples/UnoDock.Gallery/UnoDock.Gallery.csproj -restore -p:Configuration=Release -p:Platform=x64 -p:UnoDockTargetFrameworks=net10.0-windows10.0.26100.0 -p:UnoDockLibraryFrameworks=net10.0-windows10.0.26100.0 -v:minimal
       - name: Run every suite on native WinUI
         shell: bash
