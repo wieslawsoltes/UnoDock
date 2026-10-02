@@ -245,6 +245,16 @@ jobs:
             Get-WinEvent -FilterHashtable @{ LogName = 'Application'; StartTime = (Get-Date).AddMinutes(-5) } -ErrorAction SilentlyContinue | Where-Object { $_.ProviderName -in '.NET Runtime', 'Application Error' } | Select-Object -First 3 | ForEach-Object { $_.Message }
             throw 'The native WinUI head did not shut down cleanly.'
           }
+      # Runnable native WinUI sample for x64 and ARM64 (self-contained, unpackaged).
+      - name: Build the native WinUI head for ARM64
+        run: msbuild samples/UnoDock.NativeWinUI/UnoDock.NativeWinUI.csproj -restore -p:Configuration=Release -p:Platform=ARM64 -v:minimal
+      - uses: actions/upload-artifact@v7
+        with:
+          name: native-winui-sample
+          path: |
+            samples/UnoDock.NativeWinUI/bin/x64/Release/
+            samples/UnoDock.NativeWinUI/bin/ARM64/Release/
+          if-no-files-found: error
   browser:
     name: Browser
     runs-on: ubuntu-latest
