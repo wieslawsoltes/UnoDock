@@ -492,10 +492,9 @@ public static class InputExtensionTests
             using var manager = new FactoryProbe
             {
                 Layout = root,
-                Template = host.Template,
                 Width = 360,
                 Height = 150
-            };
+            }.UsingTemplateOf(host);
             await InWindow(manager, async () =>
             {
                 manager.Refresh();
@@ -616,11 +615,10 @@ public static class InputExtensionTests
                 using var manager = new FactoryProbe
                 {
                     Layout = root,
-                    Template = host.Template,
                     Width = 360,
                     Height = 150,
                     FloatingWindowMode = FloatingWindowMode.InSurface
-                };
+                }.UsingTemplateOf(host);
                 await InWindow(manager, async () =>
                 {
                     manager.Refresh();

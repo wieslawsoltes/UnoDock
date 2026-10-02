@@ -31,7 +31,7 @@ jobs:
         shell: pwsh
         run: |
           Get-ChildItem artifacts/winui -Recurse -Filter crash.log | ForEach-Object { Get-Content $_ }
-          Get-WinEvent -FilterHashtable @{ LogName = 'Application'; StartTime = (Get-Date).AddMinutes(-60) } -ErrorAction SilentlyContinue | Where-Object { $_.ProviderName -in '.NET Runtime', 'Application Error' } | Select-Object -First 6 | ForEach-Object { "[$($_.ProviderName)] $($_.Message)" }
+          Get-WinEvent -FilterHashtable @{ LogName = 'Application'; StartTime = (Get-Date).AddMinutes(-60) } -ErrorAction SilentlyContinue | Where-Object { $_.ProviderName -in '.NET Runtime', 'Application Error' } | Select-Object -First 30 | ForEach-Object { "[$($_.ProviderName)] $($_.Message)" }
       - uses: actions/upload-artifact@v7
         if: always()
         with:

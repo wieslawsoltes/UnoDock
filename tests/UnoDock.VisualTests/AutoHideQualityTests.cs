@@ -63,11 +63,10 @@ public static class AutoHideQualityTests
         {
             Width = 1000,
             Height = 640,
-            Template = templateSource.Template,
             RequestedTheme = ElementTheme.Light,
             FloatingWindowMode = FloatingWindowMode.InSurface,
             AutoHideWindowClosingTimer = 120
-        };
+        }.UsingTemplateOf(templateSource);
         var scene = new Grid
         {
             Width = 1000,

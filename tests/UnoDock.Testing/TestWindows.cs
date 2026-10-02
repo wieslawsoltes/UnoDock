@@ -34,4 +34,16 @@ public static class TestWindows
         return WinRT.Interop.WindowNative.GetWindowHandle(window);
 #endif
     }
+
+    /// <summary>Gives a test-only DockingManager subclass the template of another manager. Native
+    /// WinUI knows a subclass created only in code as Control, so a template targeting
+    /// DockingManager cannot apply to it; there the subclass keeps the equivalent template
+    /// UnoDock gives such subclasses. See docs/native-winui.md.</summary>
+    public static T UsingTemplateOf<T>(this T manager, DockingManager source) where T : DockingManager
+    {
+#if HAS_UNO
+        manager.Template = source.Template;
+#endif
+        return manager;
+    }
 }

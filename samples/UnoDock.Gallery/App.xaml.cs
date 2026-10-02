@@ -12,6 +12,33 @@ public partial class App : Application
         UnhandledException += (_, e) => ReportCrash("XAML", e.Exception);
         AppDomain.CurrentDomain.UnhandledException += (_, e) => ReportCrash("AppDomain", e.ExceptionObject as Exception);
         TaskScheduler.UnobservedTaskException += (_, e) => ReportCrash("Task", e.Exception);
+#if WINDOWS
+        // WIP diagnostics: native WinUI fails fast on exceptions thrown in DispatcherQueue callbacks
+        // without raising UnhandledException, so record every first-chance exception.
+        if (Environment.GetEnvironmentVariable("UNODOCK_TEST_RESULTS") is { Length: > 0 } results && Environment.GetEnvironmentVariable("UNODOCK_TEST_SUITE") is { Length: > 0 } suite)
+        {
+            var path = Path.Combine(results, "exceptions-" + suite + ".log");
+            var count = 0;
+            var writing = false;
+            AppDomain.CurrentDomain.FirstChanceException += (_, e) =>
+            {
+                if (writing || ++count > 3000)
+                    return;
+                writing = true;
+                try
+                {
+                    File.AppendAllText(path, $"--- {e.Exception.GetType().FullName}: {e.Exception.Message}{Environment.NewLine}{new System.Diagnostics.StackTrace(1, true)}{Environment.NewLine}");
+                }
+                catch (IOException)
+                {
+                }
+                finally
+                {
+                    writing = false;
+                }
+            };
+        }
+#endif
     }
 
     private static void ReportCrash(string source, Exception? error)
