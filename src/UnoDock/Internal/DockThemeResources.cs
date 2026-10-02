@@ -52,9 +52,9 @@ internal static class DockThemeResources
     {
         if (ReferenceEquals(dictionary, skip) || !visited.Add(dictionary))
             return null;
-        if (dictionary.Count > 0 && dictionary.Keys.Contains(key))
+        if (dictionary.Count > 0 && dictionary.Owns(key))
             return dictionary[key];
-        if (alternate != null && dictionary.Count > 0 && dictionary.Keys.Contains(alternate))
+        if (alternate != null && dictionary.Count > 0 && dictionary.Owns(alternate))
             return dictionary[alternate];
         for (var i = dictionary.MergedDictionaries.Count - 1; i >= 0; i--)
             if (Find(dictionary.MergedDictionaries[i], key, themeName, skip, visited, alternate) is { } merged)

@@ -388,7 +388,12 @@ internal static class InspectorQualityTests
             LayoutDocument Document() => page.Dock.Layout.Descendents().OfType<LayoutDocument>().Single(d => d.ContentId == "document2");
             TextBox Editor() => (TextBox)Document().Content!;
             T Field<T>(string name)
-                where T : FrameworkElement => Inspector().FindVisualChildren<T>().Single(e => AutomationProperties.GetAutomationId(e) == "Property-" + name);
+                where T : FrameworkElement
+            {
+                // Native WinUI realizes rearranged rows during layout, Uno when they change.
+                Inspector().UpdateLayout();
+                return Inspector().FindVisualChildren<T>().Single(e => AutomationProperties.GetAutomationId(e) == "Property-" + name);
+            }
             TextBox Search() => Inspector().FindVisualChildren<TextBox>().Single(e => AutomationProperties.GetAutomationId(e) == "PropertySearch");
             void Add(string name, Action action) => AddAsync(name, () =>
             {

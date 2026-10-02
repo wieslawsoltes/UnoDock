@@ -658,6 +658,9 @@ public static class SplitterQualityTests
             await Settle();
             splitter = dock.FindVisualChildren<LayoutGridResizerControl>().Single();
             grid = dock.FindVisualChildren<LayoutPanelControl>().Single(v => ReferenceEquals(v.Model, panel));
+            // Native WinUI raises Loaded after the layout pass, on a later dispatcher turn.
+            for (var i = 0; i < 40 && !splitter.IsLoaded; i++)
+                await Task.Delay(25);
             Check.True(splitter.IsLoaded && splitter.ActualWidth > 0 && splitter.ActualHeight > 0);
         }
 

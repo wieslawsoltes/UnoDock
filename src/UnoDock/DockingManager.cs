@@ -307,6 +307,12 @@ public partial class DockingManager : Control, IDisposable, UnoDock.Compatibilit
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         RenderNow();
+#if WINDOWS
+        // Native WinUI expands a changed ContentTemplate during the next layout pass, Uno when it
+        // is set: run that pass so Refresh() leaves the same visuals on both.
+        if (IsLoaded)
+            UpdateLayout();
+#endif
     }
 
     internal void RenderNow()
@@ -388,7 +394,13 @@ public partial class DockingManager : Control, IDisposable, UnoDock.Compatibilit
     {
         ArgumentNullException.ThrowIfNull(content);
         if (_items.TryGetValue(content, out var existing))
-            return existing;
+        {
+            if (!existing.IsDisposed)
+                return existing;
+            // The application disposed the item: the content gets a new one.
+            _items.Remove(content);
+        }
+
         LayoutItem item = content is LayoutAnchorable ? new LayoutAnchorableItem() : new LayoutDocumentItem();
         _items.Add(content, item);
         item.Attach(content, this);

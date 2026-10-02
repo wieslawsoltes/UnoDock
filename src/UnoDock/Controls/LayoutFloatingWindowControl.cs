@@ -429,6 +429,7 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
             {
                 VisualParenting.Detach(body);
                 _body.Content = body;
+                VisualParenting.Hosted(_body, body);
             }
         }
 

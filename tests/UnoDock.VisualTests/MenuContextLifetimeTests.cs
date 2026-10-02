@@ -186,6 +186,9 @@ public static class MenuContextLifetimeTests
             Check.Same(application, second.DataContext);
             Clear(menu);
         });
+#if HAS_UNO
+        // Native WinUI does not return an exception thrown by a DataContextChanged handler to the
+        // code that set DataContext, so these failures cannot reach UnoDock there.
         tests.Test("menu context operation releases partial assignments after a callback exception", () =>
         {
             var (menu, first, second) = Menu();
@@ -205,6 +208,7 @@ public static class MenuContextLifetimeTests
             Check.Same(next, first.DataContext);
             Clear(menu);
         });
+#endif
         tests.Test("ContextMenuEx context replacement during old-scope cleanup agrees with its final property", () =>
         {
             var menu = new ContextMenuEx();
@@ -258,6 +262,9 @@ public static class MenuContextLifetimeTests
             Check.Same(b, second.DataContext);
             Clear(menu);
         });
+#if HAS_UNO
+        // Native WinUI does not return an exception thrown by a DataContextChanged handler to the
+        // code that set DataContext, so these failures cannot reach UnoDock there.
         tests.Test("menu assignment and cleanup exceptions retain both causes while releasing other rows", () =>
         {
             var (menu, first, second) = Menu();
@@ -286,6 +293,7 @@ public static class MenuContextLifetimeTests
             assigned = false;
             Clear(menu);
         });
+#endif
     }
 
     private static (MenuFlyout menu, MenuFlyoutItem first, MenuFlyoutItem second) Menu()

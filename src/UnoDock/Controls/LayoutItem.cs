@@ -16,6 +16,7 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
     private readonly Dictionary<DependencyProperty, ICommand> _commands = [];
     private DockingManager? _manager;
     private bool _disposed, _attaching;
+    internal bool IsDisposed => _disposed;
     private readonly long _visibilityToken;
     protected LayoutItem() => _visibilityToken = RegisterPropertyChangedCallback(VisibilityProperty, (_, _) => OnVisibilityChanged());
     public LayoutContent LayoutElement
@@ -62,6 +63,11 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
     {
         if (_disposed || _view?.XamlRoot == null || !LayoutElement.IsEnabled)
             return false;
+#if WINDOWS
+        // Native WinUI focuses only elements that took part in a layout pass, and content that
+        // was just selected has not yet.
+        _view.UpdateLayout();
+#endif
         if (_lastFocused?.TryGetTarget(out var previous) == true && IsInView(previous) && previous is Control control && control.IsEnabled && control.Visibility == Visibility.Visible && control.Focus(FocusState.Programmatic))
             return true;
         return Microsoft.UI.Xaml.Input.FocusManager.FindFirstFocusableElement(_view) is Control first && first.Focus(FocusState.Programmatic);
@@ -315,6 +321,7 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
             if (LayoutElement.Content is UIElement element)
                 VisualParenting.Detach(element);
             View.Content = LayoutElement.Content;
+            VisualParenting.Hosted(View, LayoutElement.Content);
         }
 
         var template = _manager.ContentTemplate(LayoutElement, View);

@@ -31,6 +31,7 @@ public class LayoutDocumentControl : DockInputControl
             SetLayoutItem(item);
             VisualParenting.Detach(item.View);
             Content = item.View;
+            VisualParenting.Hosted(this, item.View);
         }
         else
         {

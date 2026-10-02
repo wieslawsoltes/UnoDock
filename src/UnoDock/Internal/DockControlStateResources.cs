@@ -48,10 +48,10 @@ internal sealed class DockControlStateResources
 
             if (overridden)
             {
-                if (dictionary.Keys.Contains(key))
+                if (dictionary.Owns(key))
                     dictionary.Remove(key);
             }
-            else if (!dictionary.Keys.Contains(key) || !ReferenceEquals(dictionary[key], brush))
+            else if (!dictionary.Owns(key) || !ReferenceEquals(dictionary[key], brush))
                 dictionary[key] = brush;
         }
     }
@@ -61,7 +61,7 @@ internal sealed class DockControlStateResources
         value = null;
         if (ReferenceEquals(dictionary, _resources) || !visited.Add(dictionary))
             return false;
-        if (dictionary.Keys.Contains(key))
+        if (dictionary.Owns(key))
         {
             value = dictionary[key];
             return true;

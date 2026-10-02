@@ -80,6 +80,11 @@ internal static class FloatingDragCleanupTests
                                 Check.Same(expected[0], error);
 #endif
                             f.AssertIdle();
+#if !HAS_UNO
+                            // Only guide observers failed, and native WinUI kept that from UnoDock:
+                            // the release is an ordinary drop there.
+                            if (!(commit && fault == "guides"))
+#endif
                             Check.True(f.Source.All(c => ReferenceEquals(c.FindParent<LayoutFloatingWindow>(), f.Floating)), "Teardown failure authorized a drop.");
                             for (var i = 0; i < editors.Length; i++)
                                 Check.Same(editors[i], f.Source[i].Content);
@@ -119,7 +124,12 @@ internal static class FloatingDragCleanupTests
                 delivered = true;
                 throw marker;
             });
+#if HAS_UNO
             Check.Same(marker, Observe(f.Overlay.Hide));
+#else
+            // Native WinUI does not return a property-changed callback's exception to the caller.
+            Check.Same(null, Observe(f.Overlay.Hide));
+#endif
             AssertHidden(f.Overlay);
             Check.Equal(2, Get<Canvas>(f.Overlay, "_canvas").Children.Count);
         });

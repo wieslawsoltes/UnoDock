@@ -4,8 +4,32 @@ namespace UnoDock.Internal;
 
 internal static class VisualParenting
 {
+#if WINDOWS
+    // Native WinUI connects a ContentPresenter's or ContentControl's element content (and a
+    // TabViewItem's header) during layout, so until then the element has no visual parent but
+    // cannot be given to another host. Hosts are recorded so that Detach can still release it.
+    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<UIElement, WeakReference<DependencyObject>> Hosts = new();
+#endif
+
+    /// <summary>Records the content host that was just given <paramref name="content"/>.</summary>
+    internal static void Hosted(DependencyObject host, object? content)
+    {
+#if WINDOWS
+        if (content is UIElement element)
+            Hosts.AddOrUpdate(element, new(host));
+#endif
+    }
+
     internal static void Detach(UIElement element)
     {
+#if WINDOWS
+        if (Hosts.TryGetValue(element, out var recorded))
+        {
+            Hosts.Remove(element);
+            if (recorded.TryGetTarget(out var host))
+                Release(host, element);
+        }
+#endif
         var parent = VisualTreeHelper.GetParent(element);
         switch (parent)
         {
@@ -24,6 +48,24 @@ internal static class VisualParenting
         }
     }
 
+#if WINDOWS
+    private static void Release(DependencyObject host, UIElement element)
+    {
+        switch (host)
+        {
+            case ContentPresenter presenter when ReferenceEquals(presenter.Content, element):
+                presenter.Content = null;
+                break;
+            case ContentControl control when ReferenceEquals(control.Content, element):
+                control.Content = null;
+                break;
+            case TabViewItem item when ReferenceEquals(item.Header, element):
+                item.Header = null;
+                break;
+        }
+    }
+
+#endif
     internal static void ReconcilePanel(Panel panel, IReadOnlyList<UIElement> wanted)
     {
         var keep = new HashSet<UIElement>(wanted, ReferenceEqualityComparer.Instance);
