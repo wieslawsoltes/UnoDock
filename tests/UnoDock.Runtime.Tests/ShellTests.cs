@@ -71,7 +71,8 @@ public static partial class ShellTests
         {
             tests.Test("caption rejects " + value, () => Check.Throws<ArgumentOutOfRangeException>(() => new WindowChrome().CaptionHeight = value));
             tests.Test("resize border rejects " + value, () => Check.Throws<ArgumentOutOfRangeException>(() => new WindowChrome().ResizeBorderThickness = new(value)));
-            tests.Test("corner radius rejects " + value, () => Check.Throws<ArgumentOutOfRangeException>(() => new WindowChrome().CornerRadius = new(value)));
+            // Native WinUI's CornerRadius already rejects the value in its constructor (ArgumentException).
+            tests.Test("corner radius rejects " + value, () => Check.Throws<ArgumentException>(() => new WindowChrome().CornerRadius = new(value)));
         }
 
         tests.Test("negative glass side canonicalizes all sides", () =>

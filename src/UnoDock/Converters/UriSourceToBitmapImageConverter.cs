@@ -14,6 +14,11 @@ public class UriSourceToBitmapImageConverter : IValueConverter
         if (value == null)
             return BindingValue.DoNothing;
         var uri = (Uri)value;
+#if WINDOWS
+        // WinRT URIs are absolute: a relative one names a file in the application package.
+        if (!uri.IsAbsoluteUri)
+            uri = new Uri("ms-appx:///" + uri.OriginalString.TrimStart('/'));
+#endif
         // The original public converter returns an Image CONTROL, despite its name.
         // Image-source identity passthrough and string-to-URI coercion are not its contract.
         return new Image

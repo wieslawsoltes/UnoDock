@@ -35,4 +35,9 @@
   <Style x:Key="UnoDock.Metadata.LayoutDocumentItem" TargetType="controls:LayoutDocumentItem"/>
   <Style x:Key="UnoDock.Metadata.LayoutGridResizerControl" TargetType="controls:LayoutGridResizerControl"/>
   <Style x:Key="UnoDock.Metadata.NavigatorWindow" TargetType="controls:NavigatorWindow"/>
+  <Style x:Key="UnoDock.Metadata.AnchorablePaneTabPanel" TargetType="controls:AnchorablePaneTabPanel"/>
+  <Style x:Key="UnoDock.Metadata.MenuItemEx" TargetType="controls:MenuItemEx"/>
+  <Style x:Key="UnoDock.Metadata.NavigatorListBox" TargetType="controls:NavigatorListBox"/>
+  <!-- A flyout cannot be a style target; an unused resource names it instead. -->
+  <controls:ContextMenuEx x:Key="UnoDock.Metadata.ContextMenuEx"/>
 </ResourceDictionary>

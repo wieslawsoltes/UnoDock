@@ -23,7 +23,10 @@ public partial class DockingManager
         /// Control instead. See docs/native-winui.md.</summary>
         private bool UseSubclassStyle()
     {
-        if (GetType() == typeof(DockingManager))
+        // DockingManager itself, and subclasses the application's XAML metadata describes (named
+        // in its markup), use the default style: an application style without a template then
+        // keeps the default template.
+        if (GetType() == typeof(DockingManager) || IsDescribedByXamlMetadata(GetType()))
             return false;
         Style = _subclassStyle ??= new(typeof(Control))
         {
@@ -35,6 +38,18 @@ public partial class DockingManager
             }
         };
         return true;
+    }
+
+    private static bool IsDescribedByXamlMetadata(Type type)
+    {
+        try
+        {
+            return Application.Current is IXamlMetadataProvider provider && provider.GetXamlType(type) is { UnderlyingType: var described } && described == type;
+        }
+        catch (Exception error) when (error is System.Runtime.InteropServices.COMException or InvalidOperationException)
+        {
+            return false;
+        }
     }
 }
 #endif
