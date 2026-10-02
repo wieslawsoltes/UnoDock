@@ -92,7 +92,7 @@ and callback setter cases, so original event-order equivalence is not asserted.
 This is not external screen-reader/UIA transport certification or new original
 pixel-equivalence evidence. No original implementation bodies, templates, artwork or
 fonts were imported. Public contract guidance:
-https://xceed.com/documentation/xceed-toolkit-plus-for-wpf/ (reference-library `Reference.Controls.NavigatorWindow`)
+The reference library's public vendor documentation (reference-library `Reference.Controls.NavigatorWindow`)
 https://learn.microsoft.com/en-us/windows/windows-app-sdk/api/winrt/microsoft.ui.xaml.dependencyobject.registerpropertychangedcallback
 
 ## Bounded native test-host lifetime

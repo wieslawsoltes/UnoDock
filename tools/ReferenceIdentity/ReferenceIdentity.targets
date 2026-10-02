@@ -10,6 +10,8 @@
     <ReferenceManifest Condition="'$(ReferenceManifest)' == ''">$(MSBuildThisFileDirectory)../../contracts/reference.json</ReferenceManifest>
     <ReferenceNamespace Condition="'$(ReferenceNamespace)' == ''">$([System.Text.RegularExpressions.Regex]::Replace($([System.IO.File]::ReadAllText('$(ReferenceManifest)')), '(?s)^.*"referenceNamespace"\s*:\s*"([^"]+)".*$', '$1'))</ReferenceNamespace>
     <NeutralNamespace Condition="'$(NeutralNamespace)' == ''">$([System.Text.RegularExpressions.Regex]::Replace($([System.IO.File]::ReadAllText('$(ReferenceManifest)')), '(?s)^.*"neutralNamespace"\s*:\s*"([^"]+)".*$', '$1'))</NeutralNamespace>
+    <!-- The reference's companion assembly (also its root namespace), for probes that use its types. -->
+    <CompanionNamespace Condition="'$(CompanionNamespace)' == ''">$([System.Text.RegularExpressions.Regex]::Replace($([System.IO.File]::ReadAllText('$(ReferenceManifest)')), '(?s)^.*"companionNamespace"\s*:\s*"([^"]+)".*$', '$1'))</CompanionNamespace>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="$(ReferenceNamespace)"><HintPath>$(ReferenceAssembly)</HintPath><Private>true</Private></Reference>
@@ -28,6 +30,8 @@
       <_ReferenceIdentityLine Include="global using ReferenceApi = $(ReferenceNamespace)%3B" />
       <_ReferenceIdentityLine Include="global using $(ReferenceNamespace)%3B" />
       <_ReferenceIdentityLine Include="@(ReferenceUsing->'global using $(ReferenceNamespace).%(Identity)%3B')" />
+      <_ReferenceIdentityLine Include="global using $(CompanionNamespace)%3B" Condition="'@(CompanionAlias)' != ''" />
+      <_ReferenceIdentityLine Include="@(CompanionAlias->'global using %(Identity) = $(CompanionNamespace).%(Type)%3B')" />
       <_ReferenceIdentityLine Include="internal static partial class ReferenceIdentity { internal const string Namespace = &quot;$(ReferenceNamespace)&quot;%3B internal const string Neutral = &quot;$(NeutralNamespace)&quot;%3B }" />
     </ItemGroup>
     <WriteLinesToFile File="$(ReferenceIdentityFile)" Lines="@(_ReferenceIdentityLine)" Overwrite="true" WriteOnlyWhenDifferent="true" />

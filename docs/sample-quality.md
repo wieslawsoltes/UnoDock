@@ -6,7 +6,7 @@ The public reference-library documentation describes two documents, a left Prope
 right Alarms/Journal tools, and left Agenda/Contacts auto-hide tools:
 
 - The pinned reference repository wiki (contracts/reference.json `repository`)
-- https://xceed.com/documentation/xceed-toolkit-plus-for-wpf/ (reference-library `Reference.DockingManager`)
+- The reference library's public vendor documentation (reference-library `Reference.DockingManager`)
 
 Preview 14 independently recreates that public arrangement using UnoDock models and
 native Uno controls. It does not copy LiveExplorer implementation, XAML templates,
@@ -35,7 +35,7 @@ explicitly registered public properties: title/capabilities and selected editor 
 font, brush and text-editability settings. ContentId/type are read-only. Enter commits,
 Escape cancels, category/alphabetical views and search retain editors, and invalid or
 nonfinite numbers are rejected. Subscriptions detach on unload, selection replacement
-and disposal. It is a useful sample inspector, **not full Xceed PropertyGrid parity**.
+and disposal. It is a useful sample inspector, **not full parity with the reference library's property grid**.
 
 Theme and density changes retain the layout and editors. Large fonts expand the chrome
 rather than clipping text into the default row heights. The original 12-point geometry

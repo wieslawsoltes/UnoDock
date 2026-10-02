@@ -22,7 +22,7 @@ jobs:
           $revision = $pin.revision
           $stage = Join-Path $env:RUNNER_TEMP 'visual-reference'
           New-Item -ItemType Directory -Force $stage | Out-Null
-          Invoke-WebRequest "https://codeload.github.com/xceedsoftware/wpftoolkit/tar.gz/$revision" -OutFile "$stage/reference.tar.gz"
+          Invoke-WebRequest "$($pin.repository -replace '^https://github.com/', 'https://codeload.github.com/')/tar.gz/$revision" -OutFile "$stage/reference.tar.gz"
           tar -xzf "$stage/reference.tar.gz" --strip-components=1 -C $stage
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           Invoke-WebRequest 'https://api.nuget.org/v3-flatcontainer/microsoft.netframework.referenceassemblies.net40/1.0.3/microsoft.netframework.referenceassemblies.net40.1.0.3.nupkg' -OutFile "$stage/framework.zip"
@@ -32,7 +32,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           dotnet build tools/ReferenceVisualProbe -c Release -p:ReferenceAssembly="$stage/bin/$($pin.referenceNamespace).dll"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          Copy-Item "$stage/bin/Xceed.Wpf.Toolkit.dll" tools/ReferenceVisualProbe/bin/Release/net48/
+          $pin = Get-Content contracts/reference.json -Raw | ConvertFrom-Json
+          Copy-Item "$stage/bin/$($pin.companionNamespace).dll" tools/ReferenceVisualProbe/bin/Release/net48/
       - name: Capture public rendering and explicitly labeled native-message guide states twice
         shell: pwsh
         env:

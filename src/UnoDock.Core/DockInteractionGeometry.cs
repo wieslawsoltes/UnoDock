@@ -2,8 +2,13 @@ namespace UnoDock.Core;
 /// <summary>Pure geometry shared by native client-coordinate translation and tab dragging.</summary>
 public static class DockInteractionGeometry
 {
-    /// <param name = "clientOffsetPixels">Source client origin relative to the destination client origin, in physical pixels.</param>
-    public static DockPoint TranslateClientPoint(DockPoint point, DockPoint clientOffsetPixels, double sourceScale, double destinationScale)
+    /// <summary>Translates a point from one client area into another that may use a different scale.</summary>
+        /// <param name = "point">The point in the source client area, in DIPs.</param>
+        /// <param name = "clientOffsetPixels">Source client origin relative to the destination client origin, in physical pixels.</param>
+        /// <param name = "sourceScale">Rasterization scale of the source client area.</param>
+        /// <param name = "destinationScale">Rasterization scale of the destination client area.</param>
+        /// <returns>The point in the destination client area, in DIPs.</returns>
+        public static DockPoint TranslateClientPoint(DockPoint point, DockPoint clientOffsetPixels, double sourceScale, double destinationScale)
     {
         if (!double.IsFinite(point.X) || !double.IsFinite(point.Y))
             throw new ArgumentOutOfRangeException(nameof(point));

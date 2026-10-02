@@ -104,7 +104,7 @@ and visual parity remains unverified. NuGet publishing is a separate release act
 
 ## Public contract references
 
-- https://xceed.com/documentation/xceed-toolkit-plus-for-wpf/ (reference-library `Reference.Controls.DropDownButton.DropDownContextMenu`
+- The reference library's public vendor documentation (reference-library `Reference.Controls.DropDownButton.DropDownContextMenu`
   and `Reference.Controls.DropDownControlArea.OnPreviewMouseRightButtonUp`)
 - https://learn.microsoft.com/en-us/windows/windows-app-sdk/api/winrt/microsoft.ui.xaml.controls.primitives.flyoutbase.showat
 - https://learn.microsoft.com/en-us/windows/windows-app-sdk/api/winrt/microsoft.ui.xaml.uielement.contextrequested

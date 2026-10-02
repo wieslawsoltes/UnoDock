@@ -35,4 +35,4 @@ well-known WPF docking library through an independent implementation (see
 [Parity status](parity.md) and the [clean-room process](clean-room.md)). It is
 not WPF binary compatibility, a WPF XAML parser or a reproduction of any
 commercial theme; native Uno/WinUI XAML is the supported markup model. UnoDock
-is MIT-licensed and not affiliated with Xceed or Uno Platform.
+is MIT-licensed and not affiliated with the reference library's vendor or with Uno Platform.

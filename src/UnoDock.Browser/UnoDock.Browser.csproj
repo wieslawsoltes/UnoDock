@@ -3,7 +3,8 @@
     <TargetFramework>net10.0</TargetFramework>
     <PackageId>UnoDock.Browser</PackageId>
     <Description>Lease-checked browser window hosting for UnoDock with application-owned content factories.</Description>
-    <IsPackable>true</IsPackable>
+    <!-- Not published yet: hosting the shell modules needs an application host template. -->
+    <IsPackable>false</IsPackable>
     <NoWarn>$(NoWarn);CS1591</NoWarn>
   </PropertyGroup>
   <ItemGroup>

@@ -71,12 +71,13 @@ internal static class SampleQualityTests
         {
             await Wait(() => page.IsLoaded && page.Dock.ActualWidth > 0);
             var tests = new TestRunner();
-            tests.Test("namespace: exported product types no longer use Xceed namespaces", () =>
+            tests.Test("namespace: exported product types use only the UnoDock, shell compatibility and Uno-generated namespaces", () =>
             {
                 Check.Equal("UnoDock.DockingManager", typeof(DockingManager).FullName);
                 Check.Equal("UnoDock.Layout.LayoutDocument", typeof(LayoutDocument).FullName);
                 Check.Equal("UnoDock.Controls.DropDownButton", typeof(UnoDock.Controls.DropDownButton).FullName);
-                Check.False(typeof(DockingManager).Assembly.GetExportedTypes().Any(type => type.FullName!.StartsWith("Xceed.", StringComparison.Ordinal)));
+                var foreign = typeof(DockingManager).Assembly.GetExportedTypes().Select(type => type.Namespace ?? "").Where(ns => ns != "UnoDock" && !ns.StartsWith("UnoDock.", StringComparison.Ordinal) && ns != "Microsoft.Windows.Shell" && !ns.StartsWith("Uno.", StringComparison.Ordinal)).Distinct().ToArray();
+                Check.True(foreign.Length == 0, "Exported types outside the product namespaces: " + string.Join(", ", foreign));
             });
             tests.Test("namespace: runtime XAML resolves the renamed manager and model", () =>
             {

@@ -2,7 +2,7 @@
 
 This implementation uses only the pinned public/protected PE contract and public platform
 documentation. It is an independent Uno/WinUI implementation, not copied WPF window code.
-The reference is wpftoolkit revision 2c71faba5eecc1b6ae6cd3d269408e0df37715d8.
+The reference is the pinned revision 2c71faba5eecc1b6ae6cd3d269408e0df37715d8 recorded in `contracts/reference.json`.
 
 ## Composed lifecycle
 

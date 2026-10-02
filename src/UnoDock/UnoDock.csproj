@@ -2,7 +2,7 @@
   <PropertyGroup>
     <TargetFrameworks Condition="'$(UnoDockLibraryFrameworks)' == ''">net10.0;net10.0-windows10.0.26100.0</TargetFrameworks>
     <TargetFrameworks Condition="'$(UnoDockLibraryFrameworks)' != ''">$(UnoDockLibraryFrameworks)</TargetFrameworks>
-    <EnableWindowsTargeting>true</EnableWindowsTargeting><IsPackable>true</IsPackable>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting><IsPackable>true</IsPackable><GenerateDocumentationFile>true</GenerateDocumentationFile>
     <PackageId>UnoDock</PackageId><RootNamespace>UnoDock</RootNamespace><AssemblyName>UnoDock</AssemblyName>
     <Description>Independent docking controls and layout models for Uno Platform and WinUI, following the public API of a classic WPF docking library.</Description>
     <GenerateLibraryLayout>true</GenerateLibraryLayout>

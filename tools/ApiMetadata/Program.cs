@@ -10,7 +10,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
 if (args.Length < 2)
-    throw new ArgumentException("Usage: ApiMetadata <assembly.dll> <output-prefix> [--ref-dir <directory>]... [--profile <name>] [--namespace-alias <original>=<neutral>]");
+    throw new ArgumentException("Usage: ApiMetadata <assembly.dll> <output-prefix> [--ref-dir <directory>]... [--profile <name>] [--namespace-alias <original>=<neutral>]...");
 var assemblyPath = Path.GetFullPath(args[0]);
 var output = Path.GetFullPath(args[1]);
 var directories = new List<string>
@@ -18,7 +18,7 @@ var directories = new List<string>
     Path.GetDirectoryName(assemblyPath)!
 };
 var profile = "default";
-NamespaceAlias? alias = null;
+var aliases = new List<NamespaceAlias>();
 for (var i = 2; i < args.Length; i++)
 {
     if (i + 1 == args.Length)
@@ -32,7 +32,7 @@ for (var i = 2; i < args.Length; i++)
             profile = args[i];
             break;
         case "--namespace-alias":
-            alias = NamespaceAlias.Parse(args[i]);
+            aliases.Add(NamespaceAlias.Parse(args[i]));
             break;
         default:
             throw new ArgumentException("Unknown option: " + args[i - 1]);
@@ -131,7 +131,7 @@ var indented = new JsonSerializerOptions
     WriteIndented = true
 };
 string json;
-if (alias == null)
+if (aliases.Count == 0)
     json = JsonSerializer.Serialize(inventory, indented);
 else
 {
@@ -139,13 +139,13 @@ else
     // property name after extraction. Record and member order stays that of the original
     // metadata; only the hashed declaration list is re-sorted so its digest covers the
     // neutral text. Re-running with the same alias is byte-for-byte reproducible.
-    var neutral = (JsonObject)alias.Apply(JsonSerializer.SerializeToNode(inventory))!;
+    var neutral = (JsonObject)aliases.Aggregate(JsonSerializer.SerializeToNode(inventory), (node, alias) => alias.Apply(node))!;
     var sorted = neutral["declarations"]!.AsArray().Select(n => n!.GetValue<string>()).Order(StringComparer.Ordinal).ToArray();
     canonical = string.Join("\n", sorted) + "\n";
     neutral["sha256"] = Hash(Encoding.UTF8.GetBytes(canonical));
     neutral["declarations"] = new JsonArray(sorted.Select(s => (JsonNode?)JsonValue.Create(s)).ToArray());
     json = neutral.ToJsonString(indented);
-    if (json.Contains(alias.Original, StringComparison.OrdinalIgnoreCase) || json.Contains(alias.OriginalMangled, StringComparison.OrdinalIgnoreCase))
+    if (aliases.Any(alias => json.Contains(alias.Original, StringComparison.OrdinalIgnoreCase) || json.Contains(alias.OriginalMangled, StringComparison.OrdinalIgnoreCase)))
         throw new InvalidDataException("Namespace alias left an original root namespace token in the inventory.");
 }
 

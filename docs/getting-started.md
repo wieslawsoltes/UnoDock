@@ -16,9 +16,34 @@ dotnet run --project samples/UnoDock.Gallery \
 
 The desktop gallery demonstrates documents, tool windows, auto-hide, layout persistence, MVVM sources, XAML templates, typed property inspection, and a Fluent Ctrl+Tab navigator. The `Samples` menu exposes additional compiled workspaces.
 
+## Add the packages
+
+Add UnoDock to an Uno Platform application (.NET 10, Uno.Sdk 6.7) from nuget.org. Previews need `--prerelease`:
+
+```sh
+dotnet add package UnoDock --prerelease
+```
+
+Add a theme package to use a classic theme; Generic and Fluent are in `UnoDock` itself:
+
+```sh
+dotnet add package UnoDock.Themes.VS2010 --prerelease
+```
+
+The equivalent `PackageReference` items:
+
+```xml
+<ItemGroup>
+  <PackageReference Include="UnoDock" Version="0.1.0-preview.1" />
+  <PackageReference Include="UnoDock.Themes.VS2010" Version="0.1.0-preview.1" />
+</ItemGroup>
+```
+
+`UnoDock.Themes.Aero` and `UnoDock.Themes.Metro` work the same way. Keep the UnoDock packages on one version.
+
 ## Add the library from source
 
-Reference `src/UnoDock/UnoDock.csproj` from an Uno application. Keep the UI package versions consistent across the solution. The repository version does not imply the corresponding package has already been published.
+To work against the repository instead, reference `src/UnoDock/UnoDock.csproj` from an Uno application and keep the UI package versions consistent across the solution.
 
 ```xml
 <ItemGroup>

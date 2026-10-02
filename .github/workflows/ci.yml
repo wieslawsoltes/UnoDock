@@ -49,6 +49,7 @@ jobs:
           python3 tests/metadata/test_desktop_runner.py
           python3 tests/metadata/test_native_acceptance.py
           python3 tests/metadata/test_native_inspector_gate.py
+          python3 tests/metadata/test_release_notes.py
           python3 tools/test-floating-chrome-gate.py
       - name: Portable regression and randomized tests
         run: dotnet run --project tests/UnoDock.Core.Tests -c Release -- artifacts/test-results

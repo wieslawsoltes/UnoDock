@@ -11,7 +11,7 @@ without replacing the existing docking/activation engine. See the
 XAML MVVM sample now includes source-backed tools, document movement and tool
 hide/auto-hide/tabbed-document policies. Explicit TwoWay item bindings synchronize
 model-side changes without replacing their binding expressions. See the
-[XAML usage and compatibility contract](docs/xaml-workbench.md). This source change
+[XAML usage and compatibility contract](../xaml-workbench.md). This source change
 does not publish a new package version or claim WPF XAML equivalence.
 
 ## Preview 20: direct navigator selection
@@ -21,7 +21,7 @@ than just highlighting a row. The observed document path hides without Closing/C
 the tool path uses cancellable Closing followed by Closed. Command vetoes keep the
 navigator visible. For programmatic preview without activation, use the additive
 `PreviewDocument(item)` / `PreviewAnchorable(item)` methods. Keyboard preview is unchanged.
-See [exact behavior, independent observations and safety differences](docs/navigator-selection.md).
+See [exact behavior, independent observations and safety differences](../navigator-selection.md).
 
 
 [![Build and test](https://github.com/wieslawsoltes/UnoDock/actions/workflows/ci.yml/badge.svg)](https://github.com/wieslawsoltes/UnoDock/actions/workflows/ci.yml)
@@ -34,7 +34,7 @@ namespaces and Uno/WinUI controls.
 The target is the pinned public reference repository and stock presentation, not
 separately licensed commercial themes. This is not WPF binary compatibility. The
 independently authored implementation is MIT-licensed and is not affiliated with or
-endorsed by Xceed or Uno Platform.
+endorsed by the reference library's vendor or by Uno Platform.
 
 ## Preview 19: navigator activation and focus ownership
 
@@ -45,7 +45,7 @@ callbacks cannot steal a newer session's focus, and initialization failures rele
 their own host reservations. The Navigator laboratory has compact themed buttons,
 live activation status and a real command-veto policy. Existing preview semantics,
 reference data and API diagnostics remain unchanged. See
-[navigator activation contracts and remaining setter difference](docs/navigator-activation.md).
+[navigator activation contracts and remaining setter difference](../navigator-activation.md).
 
 ## Preview 18
 
@@ -54,7 +54,7 @@ Home/End and PageUp/PageDown keys, and a visible keyboard-focus cue that does no
 change layout dimensions. The Splitter quality laboratory has live numeric range
 inspection and real provider-driven resize controls. Tab providers respect current
 activation commands, single-selection rules, current ownership, labels and focus.
-See [automation and keyboard contracts](docs/accessibility-quality.md). The earlier
+See [automation and keyboard contracts](../accessibility-quality.md). The earlier
 source-ownership and compact MVVM improvements remain included.
 
 ## Preview 17: source ownership and compact MVVM chrome
@@ -71,7 +71,7 @@ The MVVM editor now uses compact themed command buttons in a 31-DIP command bar 
 23-DIP status bar. Commands, bindings, editors and drafts survive theme changes. Native
 Save/Revert input acceptance and new generic/light/dark/RTL geometry captures accompany
 source callback regressions. The classic sample and original observations are unchanged.
-See [source ownership and sample acceptance](docs/source-ownership.md). Full original
+See [source ownership and sample acceptance](../source-ownership.md). Full original
 callback ordering, concurrent collection safety and pixel equivalence are not asserted.
 
 ## Preview 16: MVVM workspace and guarded layout restoration
@@ -88,7 +88,7 @@ from user readers and callbacks, detects replaced/disposed workspaces, and prese
 both primary and cleanup errors. It does not overwrite a callback's replacement root.
 Public/protected API mappings and original reference inventories are not relaxed.
 
-See [MVVM workspace and restore boundaries](docs/mvvm-workspace.md). This is not a
+See [MVVM workspace and restore boundaries](../mvvm-workspace.md). This is not a
 pixel-identical recreation of a commercial sample, an arbitrary file editor, or a fix
 for every platform's binding-valued style setter behavior. The new sample uses explicit
 public adapter bindings and ordinary compiled Uno content templates.
@@ -109,10 +109,10 @@ not run setters, preserving round-trip numeric precision and brush identity. Flo
 transactions retain the inspector rows after reparenting settles. Programmatic theme
 changes synchronize the visible selector; redundant padding no longer clips combo values.
 
-The inspector is sample-owned, not a full Xceed PropertyGrid implementation. No original
+The inspector is sample-owned, not a full implementation of the reference library's property grid. No original
 PropertyGrid templates, bodies, artwork or fonts were imported. This increment changes
 sample presentation and editing behavior, **not the normalized reference API match count**.
-See [inspector implementation, tests and limits](docs/inspector-quality.md).
+See [inspector implementation, tests and limits](../inspector-quality.md).
 
 ## UnoDock namespaces and classic samples
 
@@ -121,7 +121,7 @@ See [inspector implementation, tests and limits](docs/inspector-quality.md).
 are no old-namespace aliases or forwarding assemblies. Update imports and XAML `using:`
 declarations and recompile. Assembly/package names remain `UnoDock` and `UnoDock.Core`.
 Stable layout XML element names and application ContentId values do not change. See
-[namespace migration](docs/namespace-migration.md).
+[namespace migration](../namespace-migration.md).
 
 The default **Docking** sample independently recreates the documented public arrangement:
 Properties on the left, two documents in the center, Alarms/Journal on the right, and
@@ -133,7 +133,7 @@ Commands invoke actual document, docking, source-collection and serialization op
 The Properties inspector follows the last-focused document, supports Enter/blur commit
 and Escape cancellation, and validates values; it does not execute arbitrary reflected
 properties. Large-text density expands docking captions, tabs and rails. Theme changes
-retain the model and editor content. See [sample fidelity and acceptance](docs/sample-quality.md).
+retain the model and editor content. See [sample fidelity and acceptance](../sample-quality.md).
 
 ## Run the gallery
 
@@ -270,12 +270,12 @@ navigator setter semantics, framework inheritance, complete event ordering, cust
 serialization, accessibility, mobile/touch/pen, IME, multi-monitor DPI and workload-level
 performance equivalence remain open.
 
-See [architecture](docs/architecture.md), [provenance](docs/clean-room.md),
-[compatibility](docs/compatibility.md), [input extensions](docs/input-extensions.md),
-[window lifecycle](docs/window-lifecycle.md), [window shell](docs/window-shell.md),
-[navigator](docs/navigator-quality.md), [guides](docs/docking-guides.md),
-[splitters](docs/splitter-quality.md), [auto-hide](docs/auto-hide-quality.md),
-[menus](docs/menu-quality.md), and [dropdowns](docs/dropdown-quality.md).
+See [architecture](../architecture.md), [provenance](../clean-room.md),
+[compatibility](../compatibility.md), [input extensions](../input-extensions.md),
+[window lifecycle](../window-lifecycle.md), [window shell](../window-shell.md),
+[navigator](../navigator-quality.md), [guides](../docking-guides.md),
+[splitters](../splitter-quality.md), [auto-hide](../auto-hide-quality.md),
+[menus](../menu-quality.md), and [dropdowns](../dropdown-quality.md).
 
 ## Validation and packaging
 
@@ -315,4 +315,4 @@ Publish NuGet accepts a release tag or manual version, validates/tests, builds p
 and symbols, then uses NUGET_API_KEY or trusted publishing. Credentials, account policies
 and approvals are separate configuration. Built packages do not imply NuGet.org publication.
 Stable 1.0+ requires a reviewed full-compatibility attestation bound to the source tree;
-none is supplied. See [publishing](docs/publishing.md).
+none is supplied. See [publishing](../publishing.md).

@@ -22,7 +22,7 @@ rail. It has native File/Layout/Samples/Diagnostics/View menus, a compact toolba
 real sample/theme selection, persistent editors, a live opt-in property inspector,
 and retained access to all existing quality laboratories.
 
-The inspector is not a full Xceed PropertyGrid implementation. Classic, workspace,
+The inspector is not a full implementation of the reference library's property grid. Classic, workspace,
 MVVM, narrow, dark, RTL and large-text scenarios are exercised separately. The sample
 reference workflow uses the pinned original public controls to reproduce the same
 application-owned classic scene. Original sample code/templates/artwork/fonts are
