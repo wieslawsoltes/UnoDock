@@ -14,6 +14,13 @@ public abstract class LayoutGroup<T> : LayoutGroupBase, ILayoutGroup, IXmlSerial
     }
 
     IEnumerable<ILayoutElement> ILayoutContainer.Children => Children;
+
+#if WINDOWS
+    private XamlChildList<T>? _xamlChildren;
+    /// <summary>Markup content for native WinUI: the children as objects, see <c>XamlChildList</c>.</summary>
+    [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+    public IList<object> XamlChildren => _xamlChildren ??= new(Children);
+#endif
     public int ChildrenCount => Children.Count;
 
     public bool IsVisible

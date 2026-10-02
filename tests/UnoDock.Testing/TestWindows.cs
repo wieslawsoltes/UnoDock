@@ -1,7 +1,6 @@
 using System.Reflection;
 
 namespace UnoDock.Testing;
-
 /// <summary>Finds the native window hosting test content on every host. Uno enumerates its
 /// application windows; native WinUI cannot, so it searches the windows registered with
 /// UnoDock (the Gallery and test fixtures register theirs, floating windows are registered
@@ -9,7 +8,6 @@ namespace UnoDock.Testing;
 public static class TestWindows
 {
     public static Window For(XamlRoot? root) => Find(root) ?? throw new InvalidOperationException("No window hosts this XamlRoot.");
-
     public static Window? Find(XamlRoot? root)
     {
         if (root == null)

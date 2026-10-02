@@ -12,6 +12,7 @@ PROBES = {
     'document-pane': '<layout:LayoutRoot><layout:LayoutRoot.RootPanel><layout:LayoutPanel><layout:LayoutDocumentPane/></layout:LayoutPanel></layout:LayoutRoot.RootPanel></layout:LayoutRoot>',
     'document': '<layout:LayoutRoot><layout:LayoutRoot.RootPanel><layout:LayoutPanel><layout:LayoutDocumentPane><layout:LayoutDocument Title="D" ContentId="d"/></layout:LayoutDocumentPane></layout:LayoutPanel></layout:LayoutRoot.RootPanel></layout:LayoutRoot>',
     'root-implicit-panel': '<layout:LayoutRoot><layout:LayoutPanel/></layout:LayoutRoot>',
+    'full-tools-and-documents': '<layout:LayoutRoot><layout:LayoutRoot.RootPanel><layout:LayoutPanel Orientation="Horizontal"><layout:LayoutAnchorablePaneGroup DockMinWidth="150"><layout:LayoutAnchorablePane DockWidth="210" CanRepositionItems="False"><layout:LayoutAnchorable Title="A" ContentId="a" AutoHideWidth="200" CanClose="False"/></layout:LayoutAnchorablePane></layout:LayoutAnchorablePaneGroup><layout:LayoutDocumentPaneGroup><layout:LayoutDocumentPane><layout:LayoutDocument Title="D" ContentId="d"/></layout:LayoutDocumentPane></layout:LayoutDocumentPaneGroup></layout:LayoutPanel></layout:LayoutRoot.RootPanel></layout:LayoutRoot>',
 }
 PROJECT = '''<Project Sdk="Uno.Sdk">
   <PropertyGroup>

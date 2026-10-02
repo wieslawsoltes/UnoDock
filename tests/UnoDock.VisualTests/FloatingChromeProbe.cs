@@ -127,7 +127,6 @@ internal static class FloatingChromeProbe
     private static nint X11Handle(Window window) => throw new PlatformNotSupportedException();
     private static nint MacHandle(Window window) => throw new PlatformNotSupportedException();
 #endif
-
     private sealed class X11 : IDisposable
     {
         internal nint Display { get; } = OpenDisplay(0);
