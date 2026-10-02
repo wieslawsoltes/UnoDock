@@ -1,8 +1,6 @@
 name: Reference API inventory
 on:
   workflow_dispatch:
-  push:
-    paths: ['tools/ApiScan/**', 'tools/resolve-versions.py', 'contracts/reference.json', '.github/workflows/inventory.yml']
 permissions:
   contents: write
 concurrency:
@@ -13,6 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '10.0.x'
@@ -24,7 +24,8 @@ jobs:
           set -euo pipefail
           revision=$(python3 -c "import json; print(json.load(open('contracts/reference.json'))['revision'])")
           mkdir -p "$RUNNER_TEMP/reference"
-          curl --fail --location --retry 3 "https://codeload.github.com/xceedsoftware/wpftoolkit/tar.gz/$revision" | tar -xz -C "$RUNNER_TEMP/reference" --strip-components=1
+          archive=$(python3 -c "import json; print(json.load(open('contracts/reference.json'))['repository'].replace('https://github.com/', 'https://codeload.github.com/'))")
+          curl --fail --location --retry 3 "$archive/tar.gz/$revision" | tar -xz -C "$RUNNER_TEMP/reference" --strip-components=1
       - name: Extract declarations only, twice
         shell: bash
         run: |
@@ -37,11 +38,15 @@ jobs:
           cmp contracts/reference-declarations.json "$RUNNER_TEMP/repeat.json"
           rm -rf "$RUNNER_TEMP/reference"
       - name: Record verified inventory and pins
+        # Recorded contracts land on main only from a run on main.
+        if: github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add contracts/reference-declarations.json contracts/reference-declarations.txt contracts/versions.json global.json
-          git diff --cached --quiet || (git commit -m 'build: record deterministic reference API inventory and stable Uno pins' && git pull --rebase origin main && git push origin HEAD:main)
+          git diff --cached --quiet || (git commit -m 'build: record deterministic reference API inventory and stable Uno pins' && git pull --rebase origin main && git push "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:main)
       - uses: actions/upload-artifact@v7
         with:
           name: reference-contract

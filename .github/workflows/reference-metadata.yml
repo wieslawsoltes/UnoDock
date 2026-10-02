@@ -26,7 +26,7 @@ jobs:
           $revision = $pin.revision
           $stage = Join-Path $env:RUNNER_TEMP 'metadata-reference'
           New-Item -ItemType Directory -Force $stage | Out-Null
-          Invoke-WebRequest "https://codeload.github.com/xceedsoftware/wpftoolkit/tar.gz/$revision" -OutFile "$stage/reference.tar.gz"
+          Invoke-WebRequest "$($pin.repository -replace '^https://github.com/', 'https://codeload.github.com/')/tar.gz/$revision" -OutFile "$stage/reference.tar.gz"
           tar -xzf "$stage/reference.tar.gz" --strip-components=1 -C $stage
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           Invoke-WebRequest 'https://api.nuget.org/v3-flatcontainer/microsoft.netframework.referenceassemblies.net40/1.0.3/microsoft.netframework.referenceassemblies.net40.1.0.3.nupkg' -OutFile "$stage/framework.zip"
@@ -49,9 +49,9 @@ jobs:
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
             $profile = "net40-client-$($configuration.ToLowerInvariant())"
             $prefix = "artifacts/reference-public-metadata/reference-metadata-$($configuration.ToLowerInvariant())"
-            dotnet run --no-build --project tools/ApiMetadata -c Release -- "$output/$($pin.referenceNamespace).dll" $prefix --ref-dir $refs --profile $profile --namespace-alias "$($pin.referenceNamespace)=$($pin.neutralNamespace)"
+            dotnet run --no-build --project tools/ApiMetadata -c Release -- "$output/$($pin.referenceNamespace).dll" $prefix --ref-dir $refs --profile $profile --namespace-alias "$($pin.referenceNamespace)=$($pin.neutralNamespace)" --namespace-alias "$($pin.companionNamespace)=$($pin.neutralCompanion)"
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-            dotnet run --no-build --project tools/ApiMetadata -c Release -- "$output/$($pin.referenceNamespace).dll" "$stage/repeat" --ref-dir $refs --profile $profile --namespace-alias "$($pin.referenceNamespace)=$($pin.neutralNamespace)"
+            dotnet run --no-build --project tools/ApiMetadata -c Release -- "$output/$($pin.referenceNamespace).dll" "$stage/repeat" --ref-dir $refs --profile $profile --namespace-alias "$($pin.referenceNamespace)=$($pin.neutralNamespace)" --namespace-alias "$($pin.companionNamespace)=$($pin.neutralCompanion)"
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
             if ((Get-FileHash "$prefix.json").Hash -ne (Get-FileHash "$stage/repeat.json").Hash) { throw 'Non-deterministic metadata inventory' }
           }
@@ -62,7 +62,7 @@ jobs:
           $stage = Join-Path $env:RUNNER_TEMP 'metadata-reference'
           dotnet build tools/ReferenceProbe -c Release -p:ReferenceAssembly="$stage/bin/Release/$($pin.referenceNamespace).dll"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          Copy-Item "$stage/bin/Release/Xceed.Wpf.Toolkit.dll" 'tools/ReferenceProbe/bin/Release/net48/'
+          Copy-Item "$stage/bin/Release/$($pin.companionNamespace).dll" 'tools/ReferenceProbe/bin/Release/net48/'
           & tools/ReferenceProbe/bin/Release/net48/ReferenceProbe.exe artifacts/reference-public-metadata/reference-fixtures
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           & tools/ReferenceProbe/bin/Release/net48/ReferenceProbe.exe "$stage/repeat-fixtures"
@@ -82,7 +82,8 @@ jobs:
           # Neutral inventories and fixtures must regenerate exactly (line endings aside);
           # only hashes of the assemblies compiled in this job are build-environment specific.
           built="$(python3 -c "import json; print(json.load(open('contracts/reference.json'))['neutralNamespace'])").dll"
-          python3 tools/check-reference-regeneration.py artifacts/reference-public-metadata "$built" Xceed.Wpf.Toolkit.dll
+          companion="$(python3 -c "import json; print(json.load(open('contracts/reference.json'))['neutralCompanion'])").dll"
+          python3 tools/check-reference-regeneration.py artifacts/reference-public-metadata "$built" "$companion"
       - uses: actions/upload-artifact@v7
         if: always()
         with:
