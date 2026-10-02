@@ -18,9 +18,6 @@ jobs:
         with:
           dotnet-version: '10.0.x'
       - uses: microsoft/setup-msbuild@v3
-      - name: Compile XAML probes
-        shell: bash
-        run: python3 tools/WinUIXamlProbe/run.py
       - name: Build the Gallery native WinUI head
         run: msbuild samples/UnoDock.Gallery/UnoDock.Gallery.csproj -restore -p:Configuration=Release -p:Platform=x64 -p:UnoDockTargetFrameworks=net10.0-windows10.0.26100.0 -p:UnoDockLibraryFrameworks=net10.0-windows10.0.26100.0 -v:minimal
       - name: Run every suite on native WinUI
@@ -29,6 +26,12 @@ jobs:
           exe=$(find samples/UnoDock.Gallery/bin -name UnoDock.Gallery.exe | head -1)
           echo "app: $exe"
           python3 tools/run-desktop-tests.py --app "$exe" --output artifacts/winui --selector all --suite-timeout 300 --total-timeout 3000
+      - name: Report application crashes
+        if: failure()
+        shell: pwsh
+        run: |
+          Get-ChildItem artifacts/winui -Recurse -Filter crash.log | ForEach-Object { Get-Content $_ }
+          Get-WinEvent -FilterHashtable @{ LogName = 'Application'; StartTime = (Get-Date).AddMinutes(-60) } -ErrorAction SilentlyContinue | Where-Object { $_.ProviderName -in '.NET Runtime', 'Application Error' } | Select-Object -First 6 | ForEach-Object { "[$($_.ProviderName)] $($_.Message)" }
       - uses: actions/upload-artifact@v7
         if: always()
         with:

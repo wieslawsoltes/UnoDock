@@ -4,7 +4,33 @@ public partial class App : Application
 {
     private Window? _window;
     private bool _selfTestStarted;
-    public App() => InitializeComponent();
+    public App()
+    {
+        InitializeComponent();
+        // Self-test runs record unhandled exceptions: a native WinUI crash otherwise leaves
+        // only an exit code behind.
+        UnhandledException += (_, e) => ReportCrash("XAML", e.Exception);
+        AppDomain.CurrentDomain.UnhandledException += (_, e) => ReportCrash("AppDomain", e.ExceptionObject as Exception);
+        TaskScheduler.UnobservedTaskException += (_, e) => ReportCrash("Task", e.Exception);
+    }
+
+    private static void ReportCrash(string source, Exception? error)
+    {
+        var text = $"UNHANDLED {source}: {error}";
+        Console.Error.WriteLine(text);
+        if (Environment.GetEnvironmentVariable("UNODOCK_TEST_RESULTS") is { Length: > 0 } directory)
+        {
+            try
+            {
+                Directory.CreateDirectory(directory);
+                File.AppendAllText(Path.Combine(directory, "crash.log"), text + Environment.NewLine);
+            }
+            catch (IOException)
+            {
+            }
+        }
+    }
+
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
 #if HAS_UNO
