@@ -675,7 +675,7 @@ public static class MenuQualityTests
             opened?.Hide();
             dock.Dispose();
             window.Close();
-            var owner = Uno.UI.ApplicationHelper.Windows.FirstOrDefault(w => ReferenceEquals(w.Content?.XamlRoot, templateSource.XamlRoot));
+            var owner = TestWindows.Find(templateSource.XamlRoot);
             owner?.Activate();
             await Task.Delay(60);
         }

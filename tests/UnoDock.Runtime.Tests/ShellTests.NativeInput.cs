@@ -52,7 +52,7 @@ public static partial class ShellTests
 #if !WINDOWS
                     // Previous lifecycle tests deliberately closed the active native
                     // window. Restore focus before injecting a border gesture.
-                    Uno.UI.ApplicationHelper.Windows.Single(w => ReferenceEquals(w.Content?.XamlRoot, host.XamlRoot)).Activate();
+                    TestWindows.For(host.XamlRoot).Activate();
 #endif
                     WindowChrome.SetWindowChrome(floating, new()
                     {

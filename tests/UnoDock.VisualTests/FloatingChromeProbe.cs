@@ -114,13 +114,19 @@ internal static class FloatingChromeProbe
         }
     }
 
-    private static nint WinHandle(Window window) => Uno.UI.Xaml.WindowHelper.GetNativeWindow(window) is Uno.UI.NativeElementHosting.Win32NativeWindow native ? native.Hwnd : throw new InvalidOperationException("Expected a Win32 host.");
+    private static nint WinHandle(Window window) => TestWindows.Handle(window) is var handle && handle != 0 ? handle : throw new InvalidOperationException("Expected a Win32 host.");
+#if HAS_UNO
     private static nint X11Handle(Window window) => Uno.UI.Xaml.WindowHelper.GetNativeWindow(window) is Uno.UI.NativeElementHosting.X11NativeWindow native ? native.WindowId : throw new InvalidOperationException("Expected an X11 host.");
     private static nint MacHandle(Window window)
     {
         var native = Uno.UI.Xaml.WindowHelper.GetNativeWindow(window) ?? throw new InvalidOperationException("Expected AppKit host.");
         return (nint)(native.GetType().GetProperty("Handle", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)?.GetValue(native) ?? throw new InvalidOperationException("Expected native NSWindow handle."));
     }
+#else
+    // Native WinUI runs on Windows only.
+    private static nint X11Handle(Window window) => throw new PlatformNotSupportedException();
+    private static nint MacHandle(Window window) => throw new PlatformNotSupportedException();
+#endif
 
     private sealed class X11 : IDisposable
     {

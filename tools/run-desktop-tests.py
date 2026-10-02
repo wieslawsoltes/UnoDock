@@ -109,7 +109,8 @@ def run(app: Path, output: Path, selector: str, dotnet: str, per_suite: float, t
         raise ValueError(f"Use an empty results directory: {output}")
     env = os.environ.copy()
     env.update(UNODOCK_SELFTEST="1", UNODOCK_TEST_RESULTS=str(output), UNODOCK_TEST_SUITE=selector, UNODOCK_LIST_TESTS="1")
-    command = [dotnet, str(app)]
+    # A framework-dependent host runs through dotnet; a native WinUI head is its own executable.
+    command = [str(app)] if app.suffix.lower() == ".exe" else [dotnet, str(app)]
     started = time.monotonic()
     code = execute(command, env, output / "suite-discovery.log", min(per_suite, total))
     if code:

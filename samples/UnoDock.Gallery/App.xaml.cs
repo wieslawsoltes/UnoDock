@@ -7,8 +7,10 @@ public partial class App : Application
     public App() => InitializeComponent();
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
+#if HAS_UNO
         if (TryLaunchBrowserWorkspace())
             return;
+#endif
         if (ReferenceScenario.Mode is { } scenario)
         {
             // Side-by-side review scene (see ReferenceScenario).

@@ -191,7 +191,7 @@ internal static partial class FloatingChromeTests
             // Presenter state can precede both WM configure and XAML arrange.
             // Wait for an actual full-size custom client and stable button screen
             // geometry BEFORE injecting exactly one click. Never retry input.
-            var window = Uno.UI.ApplicationHelper.Windows.Single(w => ReferenceEquals(w.Content?.XamlRoot, e.XamlRoot));
+            var window = TestWindows.For(e.XamlRoot);
             var client = (FrameworkElement)window.Content!;
             Point? previous = null;
             DockRect? previousBounds = null;

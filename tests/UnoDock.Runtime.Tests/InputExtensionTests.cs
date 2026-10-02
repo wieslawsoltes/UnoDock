@@ -680,7 +680,7 @@ public static class InputExtensionTests
                 {
                     // Closing the temporary specimen windows does not reactivate the main X11
                     // window on a WM-less display. Do not spend the tested press on activation.
-                    Uno.UI.ApplicationHelper.Windows.Single(w => ReferenceEquals(w.Content?.XamlRoot, host.XamlRoot)).Activate();
+                    TestWindows.For(host.XamlRoot).Activate();
                     await Task.Delay(80);
                     using var input = new X11TestInput();
                     await input.Begin(probe, new(30, 12));

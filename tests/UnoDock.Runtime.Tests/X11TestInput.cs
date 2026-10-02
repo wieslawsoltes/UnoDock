@@ -28,11 +28,16 @@ internal sealed class X11TestInput : IDisposable
     {
         ObjectDisposedException.ThrowIf(_display == 0, this);
         var root = element.XamlRoot ?? throw new InvalidOperationException("Target element is detached.");
-        var window = Uno.UI.ApplicationHelper.Windows.Single(w => ReferenceEquals(w.Content?.XamlRoot, root));
+        var window = TestWindows.For(root);
+#if HAS_UNO
         if (Uno.UI.Xaml.WindowHelper.GetNativeWindow(window) is not Uno.UI.NativeElementHosting.X11NativeWindow native)
             throw new InvalidOperationException("Input test requires an X11 native window.");
+        var id = native.WindowId;
+#else
+        nint id = TestWindows.Handle(window) == 0 ? 0 : throw new PlatformNotSupportedException("XTEST input requires an X11 host.");
+#endif
         // The independent oracle uses Xlib; production geometry uses checked XCB.
-        if (TranslateCoordinates(_display, native.WindowId, DefaultRootWindow(_display), 0, 0, out var x, out var y, out _) == 0)
+        if (TranslateCoordinates(_display, id, DefaultRootWindow(_display), 0, 0, out var x, out var y, out _) == 0)
             throw new InvalidOperationException("The native window is on another screen.");
         var client = element.TransformToVisual(null).TransformPoint(point);
         return new(x + client.X * root.RasterizationScale, y + client.Y * root.RasterizationScale);

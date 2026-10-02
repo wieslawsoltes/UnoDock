@@ -562,7 +562,7 @@ public static class WindowLifecycleTests
                 f.B.IsActive = true;
                 host.Refresh();
                 await Tick();
-                var native = Uno.UI.ApplicationHelper.Windows.Single(w => ReferenceEquals(w.Content?.XamlRoot, host.XamlRoot));
+                var native = TestWindows.For(host.XamlRoot);
                 native.Activate();
                 Check.True(f.EditorB.Focus(FocusState.Programmatic));
                 await Tick();
@@ -739,7 +739,7 @@ public static class WindowLifecycleTests
 #if WINDOWS
         return WinRT.Interop.WindowNative.GetWindowHandle(window);
 #else
-        return Uno.UI.Xaml.WindowHelper.GetNativeWindow(window) is Uno.UI.NativeElementHosting.Win32NativeWindow native ? native.Hwnd : 0;
+        return TestWindows.Handle(window);
 #endif
     }
 

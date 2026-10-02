@@ -652,7 +652,7 @@ public static class NavigatorQualityTests
                 c.LastActivationTimeStamp = time.AddSeconds(i++);
             host.Refresh();
             host.UpdateLayout();
-            var owner = Uno.UI.ApplicationHelper.Windows.FirstOrDefault(w => ReferenceEquals(w.Content?.XamlRoot, host.XamlRoot));
+            var owner = TestWindows.Find(host.XamlRoot);
             owner?.Activate();
         }
 
