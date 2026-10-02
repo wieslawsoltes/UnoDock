@@ -13,11 +13,11 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '10.0.x'
-      - uses: microsoft/setup-msbuild@v2
+      - uses: microsoft/setup-msbuild@v3
       - name: Build pinned reference in isolated temporary storage
         shell: pwsh
         run: |
@@ -61,7 +61,7 @@ jobs:
         if: always()
         shell: pwsh
         run: Remove-Item -Recurse -Force -ErrorAction SilentlyContinue (Join-Path $env:RUNNER_TEMP 'sample-reference')
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: public-sample-reference

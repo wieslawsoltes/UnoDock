@@ -34,10 +34,10 @@ jobs:
       prerelease: ${{ steps.version.outputs.prerelease }}
       publish: ${{ steps.version.outputs.publish }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '10.0.x'
       - name: Resolve version, verify tag commit and stable-release attestation
@@ -103,7 +103,7 @@ jobs:
         run: python3 tools/generate-property-adapters.py && git diff --exit-code -- src/
       - name: Resolved API metadata gate
         run: bash tools/check-metadata.sh
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: release-validation
@@ -118,11 +118,11 @@ jobs:
     env:
       PACKAGE_VERSION: ${{ needs.validate.outputs.version }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '10.0.x'
-      - uses: microsoft/setup-msbuild@v2
+      - uses: microsoft/setup-msbuild@v3
       - name: Pack every packable project (portable, Uno and native WinUI targets, symbols)
         shell: pwsh
         run: |
@@ -133,7 +133,7 @@ jobs:
         run: |
           python tools/nuget-packages.py verify --output artifacts/packages --version $env:PACKAGE_VERSION --commit $env:GITHUB_SHA
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: nuget-packages
           path: |
@@ -152,7 +152,7 @@ jobs:
       id-token: write
       attestations: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: nuget-packages
           path: artifacts/packages
@@ -173,11 +173,11 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: nuget-packages
           path: artifacts/packages
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '10.0.x'
       - name: Require the nuget.org account variable
@@ -212,7 +212,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: nuget-packages
           path: artifacts/packages

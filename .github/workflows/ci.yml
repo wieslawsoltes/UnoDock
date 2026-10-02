@@ -25,11 +25,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '10.0.x'
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: ~/.nuget/packages
           key: nuget-checks-${{ hashFiles('global.json', '**/Directory.*.props', '**/*.csproj') }}
@@ -66,7 +66,7 @@ jobs:
           git archive --format=zip -o artifacts/UnoDock-source.zip HEAD
           git rev-parse HEAD > artifacts/source-revision.txt
           sha256sum artifacts/UnoDock-source.zip > artifacts/source-sha256.txt
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: core-and-api-results
@@ -84,11 +84,11 @@ jobs:
       UNODOCK_NATIVE_INPUT_TESTS: '1'
       PYTHONUTF8: '1'
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '10.0.x'
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: ~/.nuget/packages
           key: nuget-desktop-${{ runner.os }}-${{ hashFiles('global.json', '**/Directory.*.props', '**/*.csproj') }}
@@ -118,7 +118,7 @@ jobs:
         if: always()
         shell: bash
         run: python3 tools/report-test-results.py artifacts/desktop --output artifacts/desktop/execution-summary.json
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: desktop-${{ runner.os }}
@@ -133,16 +133,16 @@ jobs:
       PACKAGE_VERSION: 0.0.0-ci.${{ github.run_number }}
       PYTHONUTF8: '1'
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '10.0.x'
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: ~/.nuget/packages
           key: nuget-packages-${{ hashFiles('global.json', '**/Directory.*.props', '**/*.csproj') }}
           restore-keys: nuget-packages-
-      - uses: microsoft/setup-msbuild@v2
+      - uses: microsoft/setup-msbuild@v3
       - name: Pack every packable project (portable, Uno and native WinUI targets, symbols)
         shell: pwsh
         run: |
@@ -153,7 +153,7 @@ jobs:
         run: |
           python tools/nuget-packages.py verify --output artifacts/packages --version $env:PACKAGE_VERSION --commit (git rev-parse HEAD)
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: nuget-packages-ci
           path: |
@@ -210,11 +210,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '10.0.x'
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
           cache: npm
@@ -224,7 +224,7 @@ jobs:
           node --test tests/browser/*.test.mjs
           python3 tests/metadata/test_browser_site.py
           python3 tests/metadata/test_browser_results.py
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: ~/.nuget/packages
           key: nuget-browser-${{ hashFiles('global.json', '**/Directory.*.props', '**/*.csproj') }}
@@ -266,7 +266,7 @@ jobs:
       - name: Preserve failure context without a second browser attempt
         if: always()
         run: find artifacts/browser-tests -name error-context.md -exec cat {} \; 2>/dev/null || true
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: browser-runtime-evidence
@@ -274,13 +274,13 @@ jobs:
             artifacts/browser-tests/
             artifacts/http.log
           if-no-files-found: error
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: browser-documentation-site
           path: artifacts/site/
           if-no-files-found: error
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         if: success() && github.event_name == 'push' && github.ref == 'refs/heads/main'
         with:
           path: artifacts/site
@@ -300,10 +300,10 @@ jobs:
     outputs:
       page_url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/configure-pages@v5
+      - uses: actions/configure-pages@v6
       - name: Deploy the tested artifact
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
   verify-live:
     name: Verify Pages
     needs: pages
@@ -311,8 +311,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
           cache: npm
@@ -349,7 +349,7 @@ jobs:
       - name: Require complete public native browser results
         if: always()
         run: python3 tools/verify-browser-results.py ${{ !inputs.full && '--minimal' || '' }} artifacts/browser-tests
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: public-browser-runtime-evidence

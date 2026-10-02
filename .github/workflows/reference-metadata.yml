@@ -14,11 +14,11 @@ jobs:
     env:
       PYTHONUTF8: '1'
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '10.0.x'
-      - uses: microsoft/setup-msbuild@v2
+      - uses: microsoft/setup-msbuild@v3
       - name: Prepare isolated pinned reference and framework metadata
         shell: pwsh
         run: |
@@ -83,7 +83,7 @@ jobs:
           # only hashes of the assemblies compiled in this job are build-environment specific.
           built="$(python3 -c "import json; print(json.load(open('contracts/reference.json'))['neutralNamespace'])").dll"
           python3 tools/check-reference-regeneration.py artifacts/reference-public-metadata "$built" Xceed.Wpf.Toolkit.dll
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: reference-public-metadata
