@@ -9,6 +9,8 @@
     <NoWarn>$(NoWarn);CS1591</NoWarn>
   </PropertyGroup>
   <ItemGroup><ProjectReference Include="../UnoDock.Core/UnoDock.Core.csproj" /></ItemGroup>
+  <!-- Type metadata for native WinUI markup only (see Themes/XamlTypeMetadata.xaml). -->
+  <ItemGroup Condition="!$(TargetFramework.Contains('-windows'))"><Page Remove="Themes/XamlTypeMetadata.xaml" /></ItemGroup>
   <Target Name="ExportApiReferences" DependsOnTargets="ResolveReferences" Condition="'$(ApiReferenceOutput)' != ''">
     <MakeDir Directories="$(ApiReferenceOutput)" />
     <Copy SourceFiles="@(ReferencePath)" DestinationFolder="$(ApiReferenceOutput)" SkipUnchangedFiles="true" />

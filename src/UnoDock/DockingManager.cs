@@ -35,7 +35,12 @@ public partial class DockingManager : Control, IDisposable, UnoDock.Compatibilit
 
     public DockingManager()
     {
+#if WINDOWS
+        if (!UseSubclassStyle())
+            DefaultStyleKey = typeof(DockingManager);
+#else
         DefaultStyleKey = typeof(DockingManager);
+#endif
         IsTabStop = false;
         _updates = new(ScheduleRender);
         ActualThemeChanged += (_, _) => InvalidateView();
