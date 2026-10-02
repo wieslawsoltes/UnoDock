@@ -3,7 +3,9 @@
   <ItemGroup>
     <ReferenceUsing Include="Controls" />
     <ReferenceUsing Include="Layout" />
-    <Reference Include="Xceed.Wpf.Toolkit"><HintPath>$(ToolkitAssembly)</HintPath><Private>true</Private></Reference>
+    <!-- The companion assembly is named only in contracts/reference.json. -->
+    <Reference Include="$(CompanionNamespace)"><HintPath>$(ToolkitAssembly)</HintPath><Private>true</Private></Reference>
+    <CompanionAlias Include="PropertyGrid" Type="PropertyGrid.PropertyGrid" />
   </ItemGroup>
   <Import Project="../ReferenceIdentity/ReferenceIdentity.targets" />
 </Project>

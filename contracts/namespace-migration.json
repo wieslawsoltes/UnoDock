@@ -4,8 +4,8 @@
   "from": "Reference",
   "to": "UnoDock",
   "originalFiles": {
-    "contracts/reference-metadata-release.json": "efd0196adfa36303d38f9a1474963d93b2b297cfb08c76da7c04dfd6ded76b27",
-    "contracts/reference.json": "3d1db9ff1abfb3bbe6ba947bacecd741e88a0fecf3106004562a9ef8b9458523",
+    "contracts/reference-metadata-release.json": "1460d58ae964f611088698b2ed30cff8051571da54da310801d924ce4711e689",
+    "contracts/reference.json": "d50a8a7b42e2e129a86e319a3cf8a28839c7dd532b9947e88cf6f2dfb375311c",
     "tools/compare-metadata.py": "a3380d5d0cb011a74ce5ad18bbbc2ac7e41bf468f433ccbf78da4dd0ddcfc5e3"
   },
   "diagnosticsSha256": "be14dc1fd5a68412db197128f4fc6c9c3e536d99dc086540e53159b7eca109df"

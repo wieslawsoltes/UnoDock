@@ -1,7 +1,7 @@
 <Project>
   <PropertyGroup>
-    <Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><LangVersion>preview</LangVersion>
-    <Version>0.1.0-preview.20</Version>
+    <Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><LangVersion>latest</LangVersion>
+    <Version>0.1.0-preview.1</Version>
     <DebugType>portable</DebugType><Deterministic>true</Deterministic>
     <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
   </PropertyGroup>
@@ -23,7 +23,8 @@
     <EnablePackageValidation Condition="'$(UsingUnoSdk)' != 'true'">true</EnablePackageValidation>
   </PropertyGroup>
   <ItemGroup Condition="'$(IsPackable)' != 'false'">
-    <None Include="$(MSBuildThisFileDirectory)README.md" Pack="true" PackagePath="/" Visible="false" />
+    <!-- nuget.org renders the package readme without the repository's relative links. -->
+    <None Include="$(MSBuildThisFileDirectory)build/nuget-readme.md" Pack="true" PackagePath="/README.md" Visible="false" />
     <None Include="$(MSBuildThisFileDirectory)build/icon.png" Pack="true" PackagePath="/" Visible="false" />
   </ItemGroup>
 </Project>

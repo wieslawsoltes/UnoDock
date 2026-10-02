@@ -22,11 +22,10 @@ and multiline input. Thickness accepts one, two or four finite components. Negat
 padding, out-of-range numbers and numeric/undefined enum casts are rejected. All fields
 are explicitly registered; there is no private reflection or unrestricted property
 execution in the inspector. This does not implement arbitrary custom type descriptors,
-collection/object editors, multiple selection or full Xceed PropertyGrid compatibility.
+collection/object editors, multiple selection or full compatibility with the reference library's property grid.
 
 Public feature guidance:
-- https://xceed.com/documentation/xceed-toolkit-plus-for-wpf/
-- https://xceed.com/documentation/xceed-toolkit-plus-for-wpf/PropertyGrid%20class.html
+- The reference library's public vendor documentation, including its property grid (identified in `contracts/reference.json`).
 
 No original PropertyGrid templates, implementation bodies, artwork or font resources
 were read or copied for these changes. The original isolated observer is not part of

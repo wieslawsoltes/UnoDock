@@ -71,9 +71,9 @@ hashes, metadata and public behavior observations are exported as reference arti
 
 ## Primary public documentation
 
-* Vendor documentation for the reference library's DockingManager, layout model and
-  XML layout serializer (entries under the root namespace pinned in contracts/reference.json):
-  https://xceed.com/documentation/xceed-toolkit-plus-for-wpf/
+* The reference library's public vendor documentation for its DockingManager, layout model
+  and XML layout serializer (the library and its root namespace are identified in
+  contracts/reference.json).
 * Uno windowing:
   https://platform.uno/docs/articles/features/windows-ui-xaml-window.html
 * Uno SDK:

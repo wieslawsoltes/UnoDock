@@ -56,7 +56,7 @@ all previous suites and their Windows selection. Counts come from executed JSON/
 reports, not this document or source registration. No assertions, original fixtures,
 API mappings or tolerances were weakened.
 
-Public feature basis: vendor documentation for the pinned reference library, https://xceed.com/documentation/xceed-toolkit-plus-for-wpf/
+Public feature basis: the pinned reference library's public vendor documentation (identified in `contracts/reference.json`).
 No original implementation, templates, assets or fonts were imported.
 Full API/behavior/visual parity, arbitrary framework callbacks, mobile input, accessibility,
 performance equivalence and native WinUI/browser runtime acceptance remain separate work.

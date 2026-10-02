@@ -28,7 +28,7 @@ using UnoDock.Themes;
 ```
 
 Assembly/package names and the `UnoDock.Core` namespace do not change. The separate
-`Microsoft.Windows.Shell` compatibility surface does not contain an Xceed namespace and
+`Microsoft.Windows.Shell` compatibility surface does not contain a reference-library namespace and
 is retained. Stable layout XML element names and application ContentId values are not
 renamed. Application strings containing assembly-qualified CLR names need explicit
 migration by the application; arbitrary CLR object serialization is not supported.

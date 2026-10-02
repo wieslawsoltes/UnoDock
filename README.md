@@ -38,12 +38,13 @@ Documents, tool windows, auto-hide, floating windows and themes for Windows, mac
 | [`UnoDock.Themes.Aero`](https://www.nuget.org/packages/UnoDock.Themes.Aero) | Aero theme |
 | [`UnoDock.Themes.Metro`](https://www.nuget.org/packages/UnoDock.Themes.Metro) | Metro theme |
 | [`UnoDock.Themes.VS2010`](https://www.nuget.org/packages/UnoDock.Themes.VS2010) | VS2010 theme |
-| [`UnoDock.Browser`](https://www.nuget.org/packages/UnoDock.Browser) | Multi-window browser workspaces for WebAssembly |
 
 ```sh
 dotnet add package UnoDock --prerelease
 dotnet add package UnoDock.Themes.VS2010 --prerelease
 ```
+
+Multi-window browser workspaces (`UnoDock.Browser`) are available from source and in the [browser workbench](https://wieslawsoltes.github.io/UnoDock/playground/); they will be packaged once an application hosting template is ready.
 
 UnoDock targets .NET 10 with Uno Platform 6.7 (Skia desktop and WebAssembly) and native WinUI 3 on Windows. Releases are published from CI with nuget.org Trusted Publishing and signed build provenance ([publishing](docs/publishing.md)).
 

@@ -71,5 +71,5 @@ mixed-DPI hardware and general large-data-table behavior remain separate coverag
 No packages are published by these changes.
 
 Public contract references:
-- Vendor documentation for the pinned reference library: https://xceed.com/documentation/xceed-toolkit-plus-for-wpf/
+- The pinned reference library's public vendor documentation (identified in `contracts/reference.json`).
 - Recorded `Reference.Layout.LayoutPositionableGroup`1` DockMinWidth/DockMinHeight contracts in contracts/reference-metadata-release.json
