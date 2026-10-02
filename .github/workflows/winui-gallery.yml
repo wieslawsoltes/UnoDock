@@ -18,6 +18,9 @@ jobs:
         with:
           dotnet-version: '10.0.x'
       - uses: microsoft/setup-msbuild@v3
+      - name: Compile XAML probes
+        shell: bash
+        run: python3 tools/WinUIXamlProbe/run.py
       - name: Build the Gallery's native WinUI head
         run: msbuild samples/UnoDock.Gallery/UnoDock.Gallery.csproj -restore -p:Configuration=Release -p:Platform=x64 -p:UnoDockTargetFrameworks=net10.0-windows10.0.26100.0 -p:UnoDockLibraryFrameworks=net10.0-windows10.0.26100.0 -v:minimal
       - name: Run every suite on native WinUI
@@ -31,3 +34,16 @@ jobs:
         with:
           name: winui-gallery
           path: artifacts/winui/
+      - name: Collect XAML compiler output
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p artifacts/xaml
+          find samples/UnoDock.Gallery/obj src/UnoDock/obj -name 'XamlTypeInfo*.cs' -exec cp {} artifacts/xaml/ \; 2>/dev/null || true
+          ls -la artifacts/xaml
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: xaml-compiler-output
+          path: artifacts/xaml/
+          if-no-files-found: ignore
