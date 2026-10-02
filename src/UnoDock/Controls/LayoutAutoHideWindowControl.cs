@@ -7,7 +7,7 @@ namespace UnoDock.Controls;
 public partial class LayoutAutoHideWindowControl : ContentControl, ILayoutControl
 {
     public new static readonly DependencyProperty BackgroundProperty = Control.BackgroundProperty;
-    public static readonly DependencyProperty AnchorableStyleProperty = DependencyProperty.Register(nameof(AnchorableStyle), typeof(Style), typeof(LayoutAutoHideWindowControl), new PropertyMetadata(null, (d, _) => ((LayoutAutoHideWindowControl)d).ApplyAnchorableStyle()));
+    public static readonly DependencyProperty AnchorableStyleProperty = DependencyProperty.Register(nameof(AnchorableStyle), typeof(Style), typeof(LayoutAutoHideWindowControl), new PropertyMetadata(null, (d, e) => ((LayoutAutoHideWindowControl)d).OnAnchorableStyleChanged(e.OldValue as Style)));
     private readonly Grid _root = new(), _layout = new(), _titleBar = new();
     private readonly ContentPresenter _presenter = new()
     {
@@ -236,12 +236,17 @@ public partial class LayoutAutoHideWindowControl : ContentControl, ILayoutContro
     private void ModelChanged(object? sender, PropertyChangedEventArgs e) => ValidateResize();
     private void ApplyAnchorableStyle()
     {
-        if (_model == null || _manager == null)
-            return;
-        if (AnchorableStyle != null)
+        if (_model != null && _manager != null && AnchorableStyle != null)
             _manager.GetLayoutItemFromModel(_model).ApplyContainerStyle(AnchorableStyle);
-        else
+    }
+
+    private void OnAnchorableStyleChanged(Style? old)
+    {
+        // Clearing the style while the flyout presents an item restores its regular style.
+        if (AnchorableStyle == null && old != null && _model != null && _manager != null)
             _manager.RestoreItemStyle(_model);
+        else
+            ApplyAnchorableStyle();
     }
 
     private bool IsCurrent(LayoutAnchorable model, DockingManager manager, long version) => version == _openVersion && ReferenceEquals(model, _model) && ReferenceEquals(manager, _manager) && model.IsEnabled && model.IsAutoHidden && ReferenceEquals(model.Root, manager.Layout);
