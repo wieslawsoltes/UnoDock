@@ -130,9 +130,19 @@ jobs:
       - name: Report the macOS display
         if: runner.os == 'macOS'
         run: system_profiler SPDisplaysDataType | grep -E "Resolution|Display Type|UI Looks" || true
+      # Openbox brings about 30 MB of dependencies; cached packages avoid slow mirrors.
+      - uses: actions/cache@v6
+        if: runner.os == 'Linux'
+        with:
+          path: ~/apt-archives
+          key: apt-x11-${{ runner.os }}-v1
       - name: Install X11, Openbox and XTEST
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends xvfb openbox x11-utils libx11-6 libxi6 libxrandr2 libxcursor1 libfontconfig1 libgl1 libice6 libsm6 libxcb1 libxtst6
+        run: |
+          mkdir -p ~/apt-archives/partial
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends -o Dir::Cache::Archives="$HOME/apt-archives" xvfb openbox x11-utils libx11-6 libxi6 libxrandr2 libxcursor1 libfontconfig1 libgl1 libice6 libsm6 libxcb1 libxtst6
+          sudo chown -R "$USER" ~/apt-archives
       # Every suite once across the parts: focused groups with their own evidence gates,
       # and all remaining registered suites (see tools/run-ci-desktop.py).
       - name: Run desktop acceptance suites (X11)
