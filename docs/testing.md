@@ -73,7 +73,8 @@ A single workflow, `.github/workflows/ci.yml`, runs on every pull request and on
 | Job | Runner | Contents |
 |---|---|---|
 | Checks | Linux | Source organization and formatting, generated adapters, evidence-gate unit tests, portable core tests, API scan and metadata comparison |
-| Desktop | Linux, Windows, macOS | One Gallery build per OS; focused suite groups with their evidence gates; Linux then runs every remaining registered suite and Windows its acceptance set (Linux: Xvfb, XTEST, Openbox for floating chrome). Hosted macOS runners have a small virtual display, so macOS runs the focused groups. A suite that times out records its managed stacks when `dotnet-stack` is installed |
+| Changes | Linux | For pull requests, detects documentation-only changes; those skip the desktop and package jobs |
+| Desktop | Linux, Windows, macOS | One Gallery build per job. Linux and Windows run their focused suite groups (with evidence gates) and their remaining suites as two parallel jobs; Linux runs every remaining registered suite, Windows its acceptance set (Linux: Xvfb, XTEST, Openbox for floating chrome). Hosted macOS runners have a small virtual display, so macOS runs the focused groups. A suite that times out records its managed stacks when `dotnet-stack` is installed |
 | NuGet packages | Windows | Uno and native WinUI package targets with symbols |
 | Browser | Linux | WebAssembly publish, documentation site and a minimal Playwright smoke set (`rendering`, `local-edit`; `UNODOCK_BROWSER_MINIMAL=1`). Pull requests publish without AOT; main publishes the AOT build it deploys. Run `npx playwright test` locally for every browser spec |
 | Deploy/Verify Pages | Linux | `main` only: deploys the tested site and re-runs the browser smoke set against it |
@@ -82,6 +83,6 @@ Run the CI workflow manually with **full** set (`gh workflow run CI -f full=true
 to execute every desktop suite on Windows (with a 1920x1080 display), macOS and
 Linux, and every browser spec. Do this before a release.
 
-Each desktop job uploads one `desktop-<OS>` artifact with per-group JUnit XML,
+Each desktop job uploads one `desktop-<OS>-<part>` artifact with per-group JUnit XML,
 logs, captures, the runner's execution records and `ci-desktop-summary.json`.
 Reference-observation workflows run only when their probes change or on demand.

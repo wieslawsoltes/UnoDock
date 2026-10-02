@@ -72,12 +72,39 @@ jobs:
         with:
           name: core-and-api-results
           path: artifacts/
+  changes:
+    name: Changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      code: ${{ steps.diff.outputs.code }}
+    steps:
+      # A pull request that only edits documentation skips the desktop and package jobs.
+      - id: diff
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          code=true
+          if [ "$EVENT" = pull_request ]; then
+            files=$(gh api --paginate "repos/${GITHUB_REPOSITORY}/pulls/${PR}/files" --jq '.[].filename')
+            if [ -n "$files" ] && ! printf '%s\n' "$files" | grep -qvE '^docs/|\.md$'; then code=false; fi
+          fi
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          echo "Code changes: $code"
   desktop:
-    name: Desktop (${{ matrix.os }})
+    name: Desktop (${{ matrix.os }}, ${{ matrix.part }})
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     strategy:
       fail-fast: false
+      # Linux and Windows run their focused groups and the remaining suites as parallel jobs.
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        include: ${{ fromJSON(inputs.full && '[{"os":"ubuntu-latest","part":"groups"},{"os":"ubuntu-latest","part":"remaining"},{"os":"windows-latest","part":"groups"},{"os":"windows-latest","part":"remaining"},{"os":"macos-latest","part":"groups"},{"os":"macos-latest","part":"remaining"}]' || '[{"os":"ubuntu-latest","part":"groups"},{"os":"ubuntu-latest","part":"remaining"},{"os":"windows-latest","part":"groups"},{"os":"windows-latest","part":"remaining"},{"os":"macos-latest","part":"groups"}]') }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
     env:
@@ -103,18 +130,28 @@ jobs:
       - name: Report the macOS display
         if: runner.os == 'macOS'
         run: system_profiler SPDisplaysDataType | grep -E "Resolution|Display Type|UI Looks" || true
+      # Openbox brings about 30 MB of dependencies; cached packages avoid slow mirrors.
+      - uses: actions/cache@v6
+        if: runner.os == 'Linux'
+        with:
+          path: ~/apt-archives
+          key: apt-x11-${{ runner.os }}-v1
       - name: Install X11, Openbox and XTEST
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends xvfb openbox x11-utils libx11-6 libxi6 libxrandr2 libxcursor1 libfontconfig1 libgl1 libice6 libsm6 libxcb1 libxtst6
-      # One build, every suite once: focused groups with their own evidence
-      # gates, then all remaining registered suites (see tools/run-ci-desktop.py).
+        run: |
+          mkdir -p ~/apt-archives/partial
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends -o Dir::Cache::Archives="$HOME/apt-archives" xvfb openbox x11-utils libx11-6 libxi6 libxrandr2 libxcursor1 libfontconfig1 libgl1 libice6 libsm6 libxcb1 libxtst6
+          sudo chown -R "$USER" ~/apt-archives
+      # Every suite once across the parts: focused groups with their own evidence gates,
+      # and all remaining registered suites (see tools/run-ci-desktop.py).
       - name: Run desktop acceptance suites (X11)
         if: runner.os == 'Linux'
-        run: xvfb-run -a -s "-screen 0 2560x1440x24" python3 tools/run-ci-desktop.py --app samples/UnoDock.Gallery/bin/Release/net10.0-desktop/UnoDock.Gallery.dll --output artifacts/desktop
+        run: xvfb-run -a -s "-screen 0 2560x1440x24" python3 tools/run-ci-desktop.py --app samples/UnoDock.Gallery/bin/Release/net10.0-desktop/UnoDock.Gallery.dll --output artifacts/desktop --part ${{ matrix.part }}
       - name: Run desktop acceptance suites (Win32, AppKit)
         if: runner.os != 'Linux'
         shell: bash
-        run: python3 tools/run-ci-desktop.py --app samples/UnoDock.Gallery/bin/Release/net10.0-desktop/UnoDock.Gallery.dll --output artifacts/desktop ${{ inputs.full && '--remaining-selector all' || '' }}
+        run: python3 tools/run-ci-desktop.py --app samples/UnoDock.Gallery/bin/Release/net10.0-desktop/UnoDock.Gallery.dll --output artifacts/desktop --part ${{ matrix.part }} ${{ inputs.full && '--remaining-selector all' || '' }}
       - name: Summarize executed cases and failing assertions
         if: always()
         shell: bash
@@ -122,11 +159,13 @@ jobs:
       - uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: desktop-${{ runner.os }}
+          name: desktop-${{ runner.os }}-${{ matrix.part }}
           path: artifacts/desktop/
           if-no-files-found: error
   packages:
     name: NuGet packages
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: windows-latest
     timeout-minutes: 45
     env:
