@@ -420,6 +420,85 @@ public static class RuntimeTests
             Check.True(host.LayoutRootPanel != null);
             Check.Equal(2, host.Layout.Descendents().OfType<LayoutDocumentPane>().Count());
         });
+        tests.Test("active content moved into another pane is selected there", () =>
+        {
+            var d = new LayoutDocument
+            {
+                Title = "D"
+            };
+            var other = new LayoutDocument
+            {
+                Title = "other"
+            };
+            var x = new LayoutDocument
+            {
+                Title = "X"
+            };
+            var a = new LayoutDocumentPane(d);
+            a.Children.Add(other);
+            var b = new LayoutDocumentPane(x);
+            var root = Root(a, b);
+            d.IsActive = true;
+            Check.Same(d, root.ActiveContent);
+            DockOperations.Dock(d, b, DockPosition.Inside);
+            Check.Same(b, d.Parent);
+            Check.Same(d, b.SelectedContent);
+            Check.True(d.IsSelected && !x.IsSelected);
+            AssertTree(root);
+        });
+        tests.Test("content that arrives selected takes the pane's single selection", () =>
+        {
+            var x = new LayoutDocument();
+            var y = new LayoutDocument
+            {
+                IsSelected = true
+            };
+            var pane = new LayoutDocumentPane(x);
+            Check.Same(x, pane.SelectedContent);
+            pane.Children.Add(y);
+            Check.Same(y, pane.SelectedContent);
+            Check.True(y.IsSelected && !x.IsSelected);
+        });
+        tests.Test("auto-hide dock-back keeps a group that hidden content remembers", () =>
+        {
+            var toolA = new LayoutAnchorable
+            {
+                Title = "A",
+                ContentId = "a"
+            };
+            var toolB = new LayoutAnchorable
+            {
+                Title = "B",
+                ContentId = "b"
+            };
+            var root = Root(new LayoutDocumentPane(new LayoutDocument()));
+            // Two tools in one auto-hide group, as a restored layout can have them.
+            var group = new LayoutAnchorGroup();
+            group.Children.Add(toolA);
+            group.Children.Add(toolB);
+            root.LeftSide.Children.Add(group);
+            toolA.Hide();
+            DockOperations.ToggleAutoHide(toolB);
+            Check.True(toolB.Parent is LayoutAnchorablePane, "The other tool docked back.");
+            Check.Same(root, ((ILayoutElement)group).Root);
+            toolA.Show();
+            Check.Same(group, toolA.Parent);
+            AssertTree(root);
+        });
+        tests.Test("a layout file with an invalid structure reports XmlException", () =>
+        {
+            host.Layout = Root(new LayoutDocumentPane(new LayoutDocument { ContentId = "d" }));
+            var serializer = new XmlLayoutSerializer(host);
+            using var writer = new StringWriter();
+            serializer.Serialize(writer);
+            var xml = writer.ToString();
+            Check.True(xml.Contains("<LayoutDocumentPane", StringComparison.Ordinal), "The layout has a document pane element.");
+            // A tool directly inside a panel is well-formed XML but not a valid layout.
+            var invalid = xml.Replace("<LayoutDocumentPane", "<LayoutAnchorable ContentId=\"misplaced\" /><LayoutDocumentPane", StringComparison.Ordinal);
+            var before = host.Layout;
+            Check.Throws<XmlException>(() => serializer.Deserialize(new StringReader(invalid)));
+            Check.Same(before, host.Layout);
+        });
         var original = host.Layout;
         try
         {

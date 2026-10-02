@@ -59,7 +59,9 @@ public abstract partial class LayoutGridControl<T> : Grid, ILayoutControl, IRefr
         ValidateResize();
         var models = _group.Children.OfType<ILayoutPanelElement>().Where(c => c.IsVisible).ToArray();
         var horizontal = Orientation == Orientation.Horizontal;
-        var thickness = Math.Clamp(horizontal ? surface.Manager.GridSplitterWidth : surface.Manager.GridSplitterHeight, 1, 64);
+        var requested = horizontal ? surface.Manager.GridSplitterWidth : surface.Manager.GridSplitterHeight;
+        // Math.Clamp passes NaN through, which GridLength rejects; use the default instead.
+        var thickness = double.IsFinite(requested) ? Math.Clamp(requested, 1, 64) : 6;
         if (!_displayed.SequenceEqual(models, ReferenceEqualityComparer.Instance) || _lastOrientation != Orientation || thickness != _lastThickness)
         {
             CancelResize();

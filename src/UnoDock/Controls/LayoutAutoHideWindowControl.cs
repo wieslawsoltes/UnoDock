@@ -236,8 +236,12 @@ public partial class LayoutAutoHideWindowControl : ContentControl, ILayoutContro
     private void ModelChanged(object? sender, PropertyChangedEventArgs e) => ValidateResize();
     private void ApplyAnchorableStyle()
     {
-        if (_model != null && _manager != null && AnchorableStyle != null)
+        if (_model == null || _manager == null)
+            return;
+        if (AnchorableStyle != null)
             _manager.GetLayoutItemFromModel(_model).ApplyContainerStyle(AnchorableStyle);
+        else
+            _manager.RestoreItemStyle(_model);
     }
 
     private bool IsCurrent(LayoutAnchorable model, DockingManager manager, long version) => version == _openVersion && ReferenceEquals(model, _model) && ReferenceEquals(manager, _manager) && model.IsEnabled && model.IsAutoHidden && ReferenceEquals(model.Root, manager.Layout);
@@ -426,6 +430,9 @@ public partial class LayoutAutoHideWindowControl : ContentControl, ILayoutContro
         _pointerInside = false;
         if (model != null)
             model.PropertyChanged -= ModelChanged;
+        // AnchorableStyle applies only while the flyout presents the item.
+        if (model != null && manager != null && AnchorableStyle != null)
+            manager.RestoreItemStyle(model);
         MenuContext.SetTarget(this, null);
         CancelResize();
         if (version != _openVersion)

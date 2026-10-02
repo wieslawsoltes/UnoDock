@@ -151,6 +151,10 @@ public abstract partial class LayoutContent : LayoutElement, IComparable<LayoutC
                     if (this is LayoutAnchorable { IsHidden: true } a)
                         a.Show();
                     root.ActiveContent = this;
+                    // Already-active content moved into another pane is not selected
+                    // there yet; activating it again brings it to the front.
+                    if (ReferenceEquals(root.ActiveContent, this) && !IsSelected)
+                        IsSelected = true;
                 }
                 else if (ReferenceEquals(root.ActiveContent, this))
                     root.ActiveContent = null;
