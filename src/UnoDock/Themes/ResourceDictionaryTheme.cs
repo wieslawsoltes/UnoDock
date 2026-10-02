@@ -38,7 +38,9 @@ public sealed partial class ResourceDictionaryTheme : Theme
         }
     }
 
-    public override Uri GetResourceUri() => Resources.Source!;
+    /// <summary>The dictionary's source URI.</summary>
+        /// <exception cref = "InvalidOperationException">The dictionary was created in code and has no source; use <see cref = "GetResourceDictionary"/>.</exception>
+        public override Uri GetResourceUri() => Resources.Source ?? throw new InvalidOperationException("This theme's dictionary was created in code and has no source URI; use GetResourceDictionary().");
     public override ResourceDictionary GetResourceDictionary() => Resources;
     /// <summary>Refresh attached managers after editing entries in an existing dictionary.</summary>
     public void Refresh() => InvalidateTheme();

@@ -36,7 +36,8 @@ internal static class DockIcon
             case Uri uri:
                 return existing is Image { Source: BitmapImage { UriSource: { } current } } reused && current == uri ? reused : CreateDefault(new BitmapImage(uri), existing);
             case string address when !string.IsNullOrWhiteSpace(address):
-                return CreateDefault(address.Contains("://", StringComparison.Ordinal) ? new Uri(address) : new Uri("ms-appx:///" + address.TrimStart('/')), existing);
+                // An unparsable address shows no icon rather than failing the chrome refresh.
+                return Uri.TryCreate(address.Contains("://", StringComparison.Ordinal) ? address : "ms-appx:///" + address.TrimStart('/'), UriKind.Absolute, out var parsed) ? CreateDefault(parsed, existing) : null;
             case IconSource source:
                 var element = existing as IconSourceElement ?? new IconSourceElement
                 {

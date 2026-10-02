@@ -50,8 +50,10 @@ internal sealed class HostWindowSubclass : IDisposable
             else if (message == NonClientDestroy)
                 Dispose();
         }
-        catch (Exception error) when (error is InvalidOperationException or COMException)
+        catch (Exception error)
         {
+            // An exception must never unwind into comctl32: that terminates the process.
+            global::System.Diagnostics.Debug.WriteLine("UnoDock: host window observer failed: " + error);
         }
 
         return DefSubclassProc(window, message, wParam, lParam);

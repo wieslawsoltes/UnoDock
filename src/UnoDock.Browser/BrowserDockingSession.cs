@@ -33,7 +33,17 @@ public sealed class BrowserDockingSession : IDisposable
         _factory = factory;
         _manager.FloatingWindowMode = FloatingWindowMode.InSurface;
         _manager.Layout.Updated += LayoutUpdated;
-        Apply(Read("ready"));
+        try
+        {
+            Apply(Read("ready"));
+        }
+        catch
+        {
+            // The caller receives no session to dispose: remove the items added so far
+            // and the layout subscription before reporting the failure.
+            Dispose();
+            throw;
+        }
     }
 
     /// <summary>Call on the owning UI thread; background windows may be timer-throttled.</summary>

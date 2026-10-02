@@ -98,7 +98,8 @@ internal sealed partial class DockSurface
             pointer = MacDesktopInterop.ToTopLeft(pointerNative);
         else
 #endif
-        pointer = new(pointerNative.X / scale, pointerNative.Y / scale);
+        // Through the pointer's own monitor, as model bounds and placement are (mixed DPI).
+        pointer = DesktopWindowCoordinates.PhysicalToDip(pointerNative, scale);
         double offset;
         try
         {
@@ -118,6 +119,7 @@ internal sealed partial class DockSurface
         if (OperatingSystem.IsMacOS())
             return new(bounds.X, MacDesktopInterop.PrimaryScreenHeight() - bounds.Y - bounds.Height);
 #endif
-        return new(Math.Round(bounds.X * scale), Math.Round(bounds.Y * scale));
+        var origin = DesktopWindowCoordinates.DipToPhysical(new Point(bounds.X, bounds.Y), scale);
+        return new(Math.Round(origin.X), Math.Round(origin.Y));
     }
 }

@@ -13,6 +13,8 @@ public abstract class DictionaryTheme : Theme
         private set;
     }
 
-    public override Uri GetResourceUri() => ThemeResourceDictionary.Source!;
+    /// <summary>The dictionary's source URI.</summary>
+        /// <exception cref = "InvalidOperationException">The dictionary was created in code and has no source; use <see cref = "GetResourceDictionary"/>.</exception>
+        public override Uri GetResourceUri() => ThemeResourceDictionary.Source ?? throw new InvalidOperationException("This theme's dictionary was created in code and has no source URI; use GetResourceDictionary().");
     public override ResourceDictionary GetResourceDictionary() => ThemeResourceDictionary;
 }

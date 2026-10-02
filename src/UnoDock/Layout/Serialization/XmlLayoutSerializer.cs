@@ -68,6 +68,21 @@ public class XmlLayoutSerializer : LayoutSerializer
         Deserialize(stream);
     }
 
+    /// <summary>Builds the detached tree. A well-formed file that does not describe a valid
+        /// layout (wrong nesting, out-of-range sizes) is reported as an <see cref = "XmlException"/>
+        /// like any other invalid layout file.</summary>
+        private static LayoutRoot ReadDetached(LayoutSnapshotNode snapshot)
+    {
+        try
+        {
+            return LayoutXml.ReadRoot(snapshot);
+        }
+        catch (ArgumentException error)
+        {
+            throw new XmlException("The layout file does not describe a valid layout: " + error.Message, error);
+        }
+    }
+
     private void Restore(Func<LayoutSnapshotNode> read)
     {
         // Acquire before calling a user-supplied reader, which can itself invoke
@@ -76,7 +91,7 @@ public class XmlLayoutSerializer : LayoutSerializer
         Exception? failure = null;
         try
         {
-            var detached = LayoutXml.ReadRoot(read());
+            var detached = ReadDetached(read());
             EnsureCurrentRestore();
             FixupLayout(detached);
             EnsureCurrentRestore();

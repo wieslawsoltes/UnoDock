@@ -506,6 +506,8 @@ internal sealed partial class DockSurface : Grid, IDisposable
         _drag.Move(args.Pointer.PointerId, new(point.X, point.Y), []);
         var plan = GetDropPlan(content, point);
         var overDockingClient = FindDropArea(point) != null;
+        // A tool pane dragged by its caption floats as a whole, as with continuous tear-off.
+        var wholePane = _dragWholePane ? content.Parent as LayoutAnchorablePane : null;
         var committed = _drag.Commit(args.Pointer.PointerId);
         DetachDrag();
         if (!committed)
@@ -529,9 +531,14 @@ internal sealed partial class DockSurface : Grid, IDisposable
                 }
             }
 
-            content.FloatingLeft = at.X - 40;
-            content.FloatingTop = at.Y - 10;
-            content.Float();
+            if (wholePane is { ChildrenCount: > 1 } && ReferenceEquals(content.Parent, wholePane))
+                DockOperations.FloatPane(wholePane, new DockRect(at.X - 40, at.Y - 10, content.FloatingWidth, content.FloatingHeight));
+            else
+            {
+                content.FloatingLeft = at.X - 40;
+                content.FloatingTop = at.Y - 10;
+                content.Float();
+            }
         }
 
         args.Handled = true;

@@ -182,7 +182,18 @@ public partial class DockingManager : Control, IDisposable, UnoDock.Compatibilit
         {
             // In particular, direct SetValue must not bypass CLR ownership checks.
             // Revert only the DP value; an already attached root keeps its owner.
-            SetValue(LayoutProperty, _attachedLayout ?? oldLayout ?? new LayoutRoot());
+            var restore = _attachedLayout ?? oldLayout ?? new LayoutRoot();
+            if (_attachedLayout == null && restore.Manager == null)
+            {
+                // A callback threw after the previous root was detached: attach the
+                // restored root again so that it keeps rendering and raising events.
+                _attachedLayout = restore;
+                restore.Manager = this;
+                restore.Updated += OnLayoutModelUpdated;
+                InvalidateView();
+            }
+
+            SetValue(LayoutProperty, restore);
             throw;
         }
         finally
@@ -361,6 +372,11 @@ public partial class DockingManager : Control, IDisposable, UnoDock.Compatibilit
         _surface?.CancelDrag();
         foreach (var window in _floating)
             window.HideHost();
+        // Without floating windows nothing has to close with the host, so release it:
+        // a manager discarded with its page is then not retained by the host window.
+        // Hidden floating windows keep the subscription so that they close with it.
+        if (_floating.Count == 0)
+            DetachHostWindow();
     }
 
     public LayoutItem GetLayoutItemFromModel(LayoutContent content)
@@ -376,6 +392,13 @@ public partial class DockingManager : Control, IDisposable, UnoDock.Compatibilit
     }
 
     private void ApplyItemStyle(LayoutItem item) => item.ApplyContainerStyle(LayoutItemContainerStyleSelector?.SelectStyle(item.Model, item) ?? LayoutItemContainerStyle);
+    /// <summary>Restores an item's regular container style after a presentation-specific one.</summary>
+    internal void RestoreItemStyle(LayoutContent content)
+    {
+        if (_items.TryGetValue(content, out var item))
+            ApplyItemStyle(item);
+    }
+
     internal DataTemplate? ContentTemplate(LayoutContent model, DependencyObject container) => LayoutItemTemplateSelector?.SelectTemplate(model.Content, container) ?? LayoutItemTemplate;
     internal DataTemplate? HeaderTemplate(LayoutContent model, DependencyObject container, bool title = false)
     {
@@ -460,6 +483,7 @@ public partial class DockingManager : Control, IDisposable, UnoDock.Compatibilit
 
     public void AddHandler(DockRoutedEvent routedEvent, RoutedEventHandler handler, bool handledEventsToo = false)
     {
+        ArgumentNullException.ThrowIfNull(handler);
         if (!_handlers.TryGetValue(routedEvent, out var list))
             _handlers[routedEvent] = list = [];
         list.Add(handler);
@@ -473,6 +497,9 @@ public partial class DockingManager : Control, IDisposable, UnoDock.Compatibilit
 
     public LayoutFloatingWindowControl CreateFloatingWindow(LayoutContent contentModel, bool isContentImmutable)
     {
+        ArgumentNullException.ThrowIfNull(contentModel);
+        if (!ReferenceEquals(contentModel.Root, Layout))
+            throw new ArgumentException("The content does not belong to this manager's layout.", nameof(contentModel));
         contentModel.Float();
         var model = contentModel.FindParent<LayoutFloatingWindow>() ?? throw new InvalidOperationException("Content cannot float in its current state.");
         return EnsureFloatingWindow(model, isContentImmutable);

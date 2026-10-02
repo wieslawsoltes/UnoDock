@@ -74,6 +74,14 @@ internal sealed class PaneSelection(ILayoutGroup pane, Action<string> notify)
 
     public void CollectionChanged()
     {
+        // A child that arrives selected takes the selection: a pane has one
+        // selected item, and the arriving one is the item the caller asked for.
+        if (pane.Children.OfType<LayoutContent>().LastOrDefault(c => c.IsSelected && c.IsEnabled && !ReferenceEquals(c, _selected)) is { } arriving)
+        {
+            Select(arriving);
+            return;
+        }
+
         if (_selected != null && pane.IndexOfChild(_selected) >= 0)
         {
             notify(nameof(ILayoutContentSelector.SelectedContentIndex));

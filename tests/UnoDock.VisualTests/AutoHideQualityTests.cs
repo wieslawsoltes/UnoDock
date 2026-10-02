@@ -196,6 +196,32 @@ public static class AutoHideQualityTests
                     dock.AutoHideWindowClosingTimer = closing;
                 }
             });
+            tests.Test("AnchorableStyle applies only while the flyout shows the tool", async () =>
+            {
+                await Reset();
+                var item = dock.GetLayoutItemFromModel(tool);
+                var regular = item.Style;
+                var style = new Style(typeof(LayoutAnchorableItem));
+                try
+                {
+                    flyout.AnchorableStyle = style;
+                    await Settle();
+                    Check.Same(style, item.Style);
+                    Call(dock, "CloseAutoHide");
+                    await Settle();
+                    Check.Same(regular, item.Style);
+                    Open();
+                    await Settle();
+                    Check.Same(style, item.Style);
+                    flyout.AnchorableStyle = null;
+                    await Settle();
+                    Check.Same(regular, item.Style);
+                }
+                finally
+                {
+                    flyout.AnchorableStyle = null;
+                }
+            });
             tests.Test("tiny viewport clips presentation without rewriting saved sizes", async () =>
             {
                 await Reset();

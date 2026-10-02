@@ -194,6 +194,10 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
         InitializeResizeChrome();
         GotFocus += (_, _) =>
         {
+            // Focus inside a pane has already activated that pane's content; only a
+            // window with no active content activates its first selection.
+            if (Contents.Any(c => c.IsActive))
+                return;
             if ((Contents.FirstOrDefault(c => c.IsSelected) ?? Contents.FirstOrDefault()) is { } selected)
                 selected.IsActive = true;
         };
@@ -542,6 +546,21 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
             catch (Exception error)
             {
                 ReportFilterFailure(error);
+            }
+
+            // Own the window and set its tool-window style before it is first shown:
+            // Windows creates the taskbar button and X11 window managers read the
+            // window type and state when the window maps. The call after showing
+            // below remains the fallback when the native window is not ready yet.
+            if (OperatingSystem.IsWindows() || OperatingSystem.IsLinux())
+            {
+                try
+                {
+                    ConfigureNativeDragHost();
+                }
+                catch (Exception error) when (DockCoordinates.IsUnavailable(error) || error is System.Runtime.InteropServices.ExternalException)
+                {
+                }
             }
 
             _window.Activate();

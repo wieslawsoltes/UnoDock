@@ -209,8 +209,9 @@ public static class DockOperations
             }
 
             destination.Children.Add(content);
-            if (group.Children.Count == 0)
-                group.Parent?.RemoveChild(group);
+            // Garbage collection keeps an emptied group that hidden content still
+            // remembers as its previous container.
+            root.CollectGarbage();
             content.IsActive = true;
         }
         else if (content.Parent is LayoutAnchorablePane pane)
@@ -414,7 +415,8 @@ public static class DockOperations
     private static bool AcceptsPanel(ILayoutGroup parent, ILayoutPanelElement item) => parent is LayoutPanel || parent is LayoutDocumentPaneGroup && item is ILayoutDocumentPane || parent is LayoutAnchorablePaneGroup && item is ILayoutAnchorablePane;
     public static void DockToRoot(LayoutContent content, DockPosition position)
     {
-        if (!CanMove(content) || content.Root is not LayoutRoot root || position is not (DockPosition.Left or DockPosition.Right or DockPosition.Top or DockPosition.Bottom))
+        // Only documents and tools have a pane type; other LayoutContent subclasses do not dock to the root.
+        if (content is not (LayoutDocument or LayoutAnchorable) || !CanMove(content) || content.Root is not LayoutRoot root || position is not (DockPosition.Left or DockPosition.Right or DockPosition.Top or DockPosition.Bottom))
             return;
         var manager = root.Manager;
         using var transition = manager?.BeginTransition(content, false);

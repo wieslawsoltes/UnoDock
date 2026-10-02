@@ -321,13 +321,13 @@ internal static class LayoutXml
         {
             if (node.Children.Count > 1)
                 throw new XmlException("A document floating window has one document.");
-            df.RootDocument = node.Children.Count == 0 ? null : Build<LayoutDocument>(node.Children[0]);
+            df.RootDocument = node.Children.Count == 0 ? null : Build<LayoutDocument>(Expect(node.Children[0], nameof(LayoutDocument)));
         }
         else if (element is LayoutAnchorableFloatingWindow af)
         {
             if (node.Children.Count > 1)
                 throw new XmlException("An anchorable floating window has one root group.");
-            af.RootPanel = node.Children.Count == 0 ? null : Build<LayoutAnchorablePaneGroup>(node.Children[0]);
+            af.RootPanel = node.Children.Count == 0 ? null : Build<LayoutAnchorablePaneGroup>(Expect(node.Children[0], nameof(LayoutAnchorablePaneGroup)));
         }
         else if (element is ILayoutGroup group)
         {
@@ -354,6 +354,7 @@ internal static class LayoutXml
         (element as ILayoutElementWithVisibility)?.ComputeVisibility();
     }
 
+    private static LayoutSnapshotNode Expect(LayoutSnapshotNode node, string name) => node.Name == name ? node : throw new XmlException($"Expected {name}, found {node.Name}.");
     private static T Build<T>(LayoutSnapshotNode node)
         where T : LayoutElement, new()
     {
