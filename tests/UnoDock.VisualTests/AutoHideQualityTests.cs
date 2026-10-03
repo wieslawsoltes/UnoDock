@@ -435,6 +435,14 @@ public static class AutoHideQualityTests
             tests.Test("hover path preserves active document while activation path selects tool", async () =>
             {
                 await Reset();
+                // Activating the window can move focus into the open flyout, which activates its
+                // tool; start from the active document.
+                if (!ReferenceEquals(dock.Layout.ActiveContent, doc))
+                {
+                    doc.IsActive = true;
+                    await Settle();
+                }
+
                 Check.Same(doc, dock.Layout.ActiveContent);
                 Call(dock, "OpenAutoHide", tool, true);
                 await Settle();

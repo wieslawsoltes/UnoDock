@@ -179,7 +179,14 @@ internal static class InspectorQualityTests
                 Inspector().Filter("FontSize");
                 await Settle();
                 var input = Field<TextBox>("FontSize");
-                input.Focus(FocusState.Programmatic);
+                // Native WinUI focuses only laid-out elements; the draft must be in focus.
+                for (var i = 0; i < 20 && input.FocusState == FocusState.Unfocused; i++)
+                {
+                    input.Focus(FocusState.Programmatic);
+                    if (input.FocusState == FocusState.Unfocused)
+                        await Task.Delay(20);
+                }
+
                 input.Text = "27.75";
                 Editor().FontSize = 21.5;
                 Check.Equal("27.75", input.Text);
