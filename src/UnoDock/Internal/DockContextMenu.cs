@@ -81,9 +81,15 @@ internal sealed class DockContextMenu : MenuFlyout, IDisposable
                 if (_palette != palette)
                 {
                     _palette = palette;
-                    MenuFlyoutPresenterStyle = DockMenuRow.PresenterStyle(palette);
 #if WINDOWS
+                    // Replacing the presenter style of an open menu faults inside WinUI on ARM64:
+                    // an open menu is repainted and gets the style when it next opens.
+                    _presenterStylePending = IsOpen;
+                    if (!IsOpen)
+                        MenuFlyoutPresenterStyle = DockMenuRow.PresenterStyle(palette);
                     RepaintExistingPresenter(palette);
+#else
+                    MenuFlyoutPresenterStyle = DockMenuRow.PresenterStyle(palette);
 #endif
                 }
 
@@ -117,6 +123,7 @@ internal sealed class DockContextMenu : MenuFlyout, IDisposable
     // Native WinUI applies MenuFlyoutPresenterStyle when it creates the presenter and keeps that
     // presenter for later openings, so a changed palette must reach the existing one. Its Style
     // is not replaced (that faults while the menu is open); the palette values are set on it.
+    private bool _presenterStylePending;
     private void RepaintExistingPresenter(DockMenuPalette palette)
     {
         if (_entries.Count == 0)
@@ -146,6 +153,14 @@ internal sealed class DockContextMenu : MenuFlyout, IDisposable
             return;
         }
 
+#if WINDOWS
+        if (_presenterStylePending && _palette is { } pending)
+        {
+            _presenterStylePending = false;
+            MenuFlyoutPresenterStyle = DockMenuRow.PresenterStyle(pending);
+        }
+
+#endif
         _open = true;
         _root!.Updated += Updated;
         _manager!.LayoutChanging += LayoutChanging;
