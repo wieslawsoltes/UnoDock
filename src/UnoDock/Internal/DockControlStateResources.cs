@@ -104,14 +104,8 @@ internal sealed class DockControlStateResources
         if (!_dirty || _refreshing || !control.IsLoaded)
             return;
         _dirty = false;
-        try
-        {
-            ReplayState(control);
-        }
-        finally
-        {
-            ReapplyTheme(control);
-        }
+        ReapplyTheme(control);
+        ReplayState(control);
     }
 
     // ThemeResource on a native state setter is resolved when that state is
