@@ -51,7 +51,7 @@ internal sealed class DockControlStateResources
                 if (dictionary.Owns(key))
                     dictionary.Remove(key);
             }
-            else if (!dictionary.Owns(key) || !ReferenceEquals(dictionary[key], brush))
+            else if (!(dictionary.TryGetValue(key, out var current) && ReferenceEquals(current, brush)))
                 dictionary[key] = brush;
         }
     }

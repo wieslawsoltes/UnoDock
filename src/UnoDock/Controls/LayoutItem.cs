@@ -44,9 +44,10 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
     private WeakReference<DependencyObject>? _lastFocused;
     private void RememberFocus(object sender, RoutedEventArgs e)
     {
-        var focused = e.OriginalSource as DependencyObject;
-        if (focused == null && _view?.XamlRoot != null)
-            focused = Microsoft.UI.Xaml.Input.FocusManager.GetFocusedElement(_view.XamlRoot) as DependencyObject;
+        // The focused element itself: native WinUI may report a part of its template as the
+        // event's original source.
+        var focused = _view?.XamlRoot != null ? Microsoft.UI.Xaml.Input.FocusManager.GetFocusedElement(_view.XamlRoot) as DependencyObject : null;
+        focused ??= e.OriginalSource as DependencyObject;
         if (focused != null && IsInView(focused))
             _lastFocused = new(focused);
     }
