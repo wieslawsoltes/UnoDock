@@ -80,6 +80,9 @@ internal static class FluentResourceRefreshTests
                             menu.Opened += Opened;
                             try
                             {
+                                // Native WinUI ignores ShowAt while the same flyout is still closing.
+                                for (var i = 0; i < 50 && menu.IsOpen; i++)
+                                    await Task.Delay(20);
                                 menu.ShowAt(tab);
                                 await Wait(() => opened && menu.Items.OfType<MenuFlyoutItem>().Any(item => item.IsEnabled && item.ActualHeight > 0));
                                 // Let the native flyout complete its initial focus/state

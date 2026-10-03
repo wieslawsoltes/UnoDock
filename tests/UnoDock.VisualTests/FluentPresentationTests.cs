@@ -143,11 +143,14 @@ internal static class FluentPresentationTests
                     await Settle();
                     var menu = Tab(docs[0]).ContextFlyout as MenuFlyout;
                     Check.True(menu != null);
+                    // Native WinUI ignores ShowAt while the same flyout is still closing.
+                    for (var i = 0; i < 50 && menu!.IsOpen; i++)
+                        await Task.Delay(20);
                     menu!.ShowAt(Tab(docs[0]));
                     try
                     {
                         await Wait(() => VisualTreeHelper.GetOpenPopupsForXamlRoot(page.XamlRoot).Any());
-                        await Task.Delay(60);
+                        await Wait(() => menu.Items.OfType<MenuFlyoutItem>().Any(i => i.IsEnabled && i.Visibility == Visibility.Visible && i.ActualHeight > 0));
                         var row = menu.Items.OfType<MenuFlyoutItem>().First(i => i.IsEnabled && i.Visibility == Visibility.Visible);
                         Check.True(row.Template != null);
                         Check.False(row.FindVisualChildren<Border>().Any(b => b.Name == "PART_MenuGutter"));

@@ -354,6 +354,11 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
         if (!ReferenceEquals(View.ContentTemplate, template))
             View.ContentTemplate = template;
         View.DataContext = Model;
+#if WINDOWS
+        // An editor that already had focus when this item was created raises no focus event.
+        if (_lastFocused == null && View.XamlRoot is { } root && Microsoft.UI.Xaml.Input.FocusManager.GetFocusedElement(root) is DependencyObject focused && IsInView(focused))
+            Remember(focused);
+#endif
     }
 
     private IEnumerable<LayoutDocument> Documents() => (LayoutElement.Root as LayoutRoot)?.Descendents().OfType<LayoutDocument>() ?? [];

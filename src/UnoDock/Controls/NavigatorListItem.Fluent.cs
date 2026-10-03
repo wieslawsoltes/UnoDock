@@ -15,7 +15,27 @@ internal sealed partial class NavigatorListItem
             return;
         _fluent = _palette.UsesFluentControls;
         ReleaseNativeAction();
-        Template = _fluent ? DockChrome.Resource<ControlTemplate>("UnoDock.FluentNavigatorRowTemplate") : DockChrome.ButtonTemplate;
+        var template = _fluent ? DockChrome.Resource<ControlTemplate>("UnoDock.FluentNavigatorRowTemplate") : DockChrome.ButtonTemplate;
+#if WINDOWS
+        try
+        {
+            Template = template;
+        }
+        catch (System.Runtime.InteropServices.COMException)
+        {
+            // Native WinUI can refuse to replace the template while the old one is still being
+            // torn down (0x80004005); switch on the next turn instead.
+            _fluent = !_fluent;
+            DispatcherQueue.TryEnqueue(() =>
+            {
+                if (_surface != null)
+                    Configure(_palette, _surface);
+            });
+            return;
+        }
+#else
+        Template = template;
+#endif
         CornerRadius = new(_fluent ? _palette.TabCornerRadius : 0);
         BorderThickness = new(_fluent ? 0 : 1);
         UseSystemFocusVisuals = _fluent;

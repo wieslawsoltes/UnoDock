@@ -69,6 +69,9 @@ internal sealed partial class DockSurface : Grid, IDisposable
         Children.Add(_overlay);
         Children.Add(_flyouts);
         _autoHideTimer.Tick += (_, _) => ExpireAutoHide();
+#if WINDOWS
+        _docked.LayoutUpdated += (_, _) => RepairDockedTheme();
+#endif
         SizeChanged += (_, _) =>
         {
             PositionAutoHide();
@@ -86,6 +89,29 @@ internal sealed partial class DockSurface : Grid, IDisposable
         }), true);
     }
 
+#if WINDOWS
+    // Native WinUI can leave the docked panes on their old theme after a runtime theme change,
+    // or return them to the manager's theme when its resources change; another change of the
+    // docked grid's theme propagates again.
+    private void RepairDockedTheme()
+    {
+        if (_disposed || _repairingTheme || !_docked.Children.OfType<FrameworkElement>().Any(child => child.RequestedTheme == ElementTheme.Default && child.ActualTheme != _docked.ActualTheme))
+            return;
+        _repairingTheme = true;
+        try
+        {
+            var theme = _docked.RequestedTheme;
+            _docked.RequestedTheme = _docked.ActualTheme == ElementTheme.Dark ? ElementTheme.Light : ElementTheme.Dark;
+            _docked.RequestedTheme = theme;
+        }
+        finally
+        {
+            _repairingTheme = false;
+        }
+    }
+
+    private bool _repairingTheme;
+#endif
     internal FrameworkElement? ExistingView(ILayoutElement model) => _views.GetValueOrDefault(model);
     internal FrameworkElement GetView(ILayoutElement model)
     {
@@ -121,16 +147,9 @@ internal sealed partial class DockSurface : Grid, IDisposable
         _navigator?.UpdateAppearance();
         // ContentControl does not necessarily paint Background on every host.
         // Paint the full docking grid so side rails never depend on Window pixels.
-        var theme = DockThemeResources.EffectiveTheme(Manager);
-        _docked.RequestedTheme = theme;
+        _docked.RequestedTheme = DockThemeResources.EffectiveTheme(Manager);
 #if WINDOWS
-        // Native WinUI can leave existing children on their old theme after a runtime change;
-        // a further change propagates.
-        if (_docked.Children.OfType<FrameworkElement>().Any(child => child.RequestedTheme == ElementTheme.Default && child.ActualTheme != _docked.ActualTheme))
-        {
-            _docked.RequestedTheme = _docked.ActualTheme == ElementTheme.Dark ? ElementTheme.Light : ElementTheme.Dark;
-            _docked.RequestedTheme = theme;
-        }
+        RepairDockedTheme();
 #endif
         _docked.Background = DockChrome.Palette(Manager).States.Workspace;
         var root = Manager.Layout;
