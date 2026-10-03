@@ -117,6 +117,9 @@ public partial class DockingManager
         // owner still exists) and close the floating windows once it is gone.
         if (!ReferenceEquals(sender, _hostAppWindow))
             return;
+        // Native WinUI makes the closing window's elements unusable: a render already queued
+        // must not run against them.
+        _loaded = false;
         foreach (var window in _floating.ToArray())
             window.PrepareOwnerShutdown();
         DispatcherQueue.TryEnqueue(CloseWithHost);

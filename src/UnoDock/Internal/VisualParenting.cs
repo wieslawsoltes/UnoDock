@@ -77,7 +77,32 @@ internal static class VisualParenting
             if (i < panel.Children.Count && ReferenceEquals(panel.Children[i], wanted[i]))
                 continue;
             Detach(wanted[i]);
+#if WINDOWS
+            try
+            {
+                panel.Children.Insert(i, wanted[i]);
+            }
+            catch (System.Runtime.InteropServices.COMException error)
+            {
+                // WIP diagnostics.
+                string probe;
+                try
+                {
+                    var grid = new Grid();
+                    grid.Children.Add(wanted[i]);
+                    grid.Children.Remove(wanted[i]);
+                    probe = "accepted by a new panel";
+                }
+                catch (Exception failure)
+                {
+                    probe = "rejected by a new panel " + failure.HResult.ToString("X8");
+                }
+
+                throw new InvalidOperationException($"Insert of {wanted[i].GetType().Name} into {panel.GetType().Name} failed ({probe}); visual parent {VisualTreeHelper.GetParent(wanted[i])?.GetType().Name ?? "none"}; element root {(wanted[i].XamlRoot == null ? "none" : "set")}; panel root {(panel.XamlRoot == null ? "none" : "set")}; panel loaded {panel.IsLoaded}; element loaded {(wanted[i] as FrameworkElement)?.IsLoaded}", error);
+            }
+#else
             panel.Children.Insert(i, wanted[i]);
+#endif
         }
     }
 }
