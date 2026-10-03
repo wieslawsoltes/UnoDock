@@ -104,7 +104,6 @@ internal sealed class DockControlStateResources
         if (!_dirty || _refreshing || !control.IsLoaded)
             return;
         _dirty = false;
-        ReapplyTheme(control);
         ReplayState(control);
     }
 
@@ -117,6 +116,7 @@ internal sealed class DockControlStateResources
         var group = control.FindVisualChildren<FrameworkElement>().SelectMany(VisualStateManager.GetVisualStateGroups).FirstOrDefault(candidate => candidate.Name == "CommonStates");
         if (group?.CurrentState is not { Name: "PointerOver" or "Pressed" or "Disabled" } state)
             return;
+        ReapplyTheme(control);
         var template = control.Template;
         var version = _version;
         var interrupted = false;
@@ -150,12 +150,11 @@ internal sealed class DockControlStateResources
 
     // Native WinUI resolves ThemeResource references, state setters included, when the template
     // loads and when the element's theme changes; replacing a dictionary entry or entering a
-    // state again does not. Re-applying the theme resolves them again. Menu rows are left alone:
-    // they live in an open popup, where changing the theme faults on ARM64.
+    // state again does not. Re-applying the theme resolves them again.
     private static void ReapplyTheme(Control control)
     {
 #if WINDOWS
-        if (control is MenuFlyoutItemBase || !control.IsLoaded)
+        if (!control.IsLoaded)
             return;
         var requested = control.RequestedTheme;
         control.RequestedTheme = control.ActualTheme == ElementTheme.Dark ? ElementTheme.Light : ElementTheme.Dark;

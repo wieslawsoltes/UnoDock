@@ -151,7 +151,7 @@ internal static class FluentPresentationTests
                         var row = menu.Items.OfType<MenuFlyoutItem>().First(i => i.IsEnabled && i.Visibility == Visibility.Visible);
                         Check.True(row.Template != null);
                         Check.False(row.FindVisualChildren<Border>().Any(b => b.Name == "PART_MenuGutter"));
-                        Check.True(row.ActualHeight >= 28 && row.UseSystemFocusVisuals);
+                        Check.True(row.ActualHeight >= 28 && row.UseSystemFocusVisuals, $"Menu row height {row.ActualHeight}, system focus visuals {row.UseSystemFocusVisuals}.");
                         var template = row.Template;
                         page.SetSampleTheme(mode == SampleTheme.Dark ? SampleTheme.Light : SampleTheme.Dark);
                         await Settle();

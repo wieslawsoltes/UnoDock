@@ -1,3 +1,4 @@
+using UnoDock.Internal;
 using UnoDock.Layout;
 
 namespace UnoDock.Controls;
@@ -6,7 +7,7 @@ public abstract partial class LayoutGridControl<T>
 {
     private DockResizeRange ReadResizeRange(LayoutGridResizerControl splitter, int index)
     {
-        if (!IsLoaded || !splitter.IsLoaded || index < 0 || index + 1 >= _displayed.Length || !Children.Contains(splitter) || _group.Root is not LayoutRoot { Manager: { } manager } root || !ReferenceEquals(root, manager.Layout) || !_group.Children.OfType<ILayoutPanelElement>().Where(c => c.IsVisible).SequenceEqual(_displayed, ReferenceEqualityComparer.Instance) || Orientation != _lastOrientation || _displayed[index] is not ILayoutPositionableElement before || _displayed[index + 1] is not ILayoutPositionableElement after)
+        if (!LiveTree.IsLive(this) || !LiveTree.IsLive(splitter) || index < 0 || index + 1 >= _displayed.Length || !Children.Contains(splitter) || _group.Root is not LayoutRoot { Manager: { } manager } root || !ReferenceEquals(root, manager.Layout) || !_group.Children.OfType<ILayoutPanelElement>().Where(c => c.IsVisible).SequenceEqual(_displayed, ReferenceEqualityComparer.Instance) || Orientation != _lastOrientation || _displayed[index] is not ILayoutPositionableElement before || _displayed[index + 1] is not ILayoutPositionableElement after)
             return DockResizeRange.Unavailable;
         var horizontal = Orientation == Orientation.Horizontal;
         var a = horizontal ? ColumnDefinitions[index * 2].ActualWidth : RowDefinitions[index * 2].ActualHeight;

@@ -67,7 +67,7 @@ public partial class LayoutGridResizerControl
             var range = ReadAutomationRange?.Invoke() ?? DockResizeRange.Unavailable;
             return range with
             {
-                IsReadOnly = range.IsReadOnly || !IsEnabled || !IsLoaded || _dragging || _ending || _pendingCompletion != null
+                IsReadOnly = range.IsReadOnly || !IsEnabled || !LiveTree.IsLive(this) || _dragging || _ending || _pendingCompletion != null
             };
         }
     }
