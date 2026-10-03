@@ -83,7 +83,7 @@ internal sealed class DockContextMenu : MenuFlyout, IDisposable
                     _palette = palette;
                     MenuFlyoutPresenterStyle = DockMenuRow.PresenterStyle(palette);
 #if WINDOWS
-                    RestyleExistingPresenter();
+                    RepaintExistingPresenter(palette);
 #endif
                 }
 
@@ -115,15 +115,18 @@ internal sealed class DockContextMenu : MenuFlyout, IDisposable
 
 #if WINDOWS
     // Native WinUI applies MenuFlyoutPresenterStyle when it creates the presenter and keeps that
-    // presenter for later openings, so a changed palette must reach the existing one.
-    private void RestyleExistingPresenter()
+    // presenter for later openings, so a changed palette must reach the existing one. Its Style
+    // is not replaced (that faults while the menu is open); the palette values are set on it.
+    private void RepaintExistingPresenter(DockMenuPalette palette)
     {
         if (_entries.Count == 0)
             return;
         for (DependencyObject? node = _entries[0].Row; node != null; node = VisualTreeHelper.GetParent(node))
             if (node is MenuFlyoutPresenter presenter)
             {
-                presenter.Style = MenuFlyoutPresenterStyle;
+                presenter.RequestedTheme = palette.Theme;
+                presenter.Background = palette.Surface;
+                presenter.BorderBrush = palette.Border;
                 return;
             }
     }

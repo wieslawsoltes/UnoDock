@@ -211,7 +211,11 @@ internal static class WindowPlacementTests
                 try
                 {
                     await f.Show();
+#if HAS_UNO
                     Check.Same(f.Window, typeof(DockingManager).GetProperty("HostWindow", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(f.Manager));
+#endif
+                    // Native WinUI cannot map an unregistered host back to its Window object; the
+                    // manager tracks it through the island's window handle instead.
                     var control = await f.FloatTool(200, 160);
                     var floater = control.NativeWindow!;
                     var closed = false;

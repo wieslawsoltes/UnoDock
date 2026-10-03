@@ -312,7 +312,12 @@ internal static class FluentStateResourceTests
             await Task.Delay(20);
             Check.True(VisualStateManager.GoToState(Control, name, false), "Missing platform state " + name);
             if (expected != null)
-                await Wait(() => Control.FindVisualChildren<FrameworkElement>().Any(element => ReferenceEquals(Background(element), expected)));
+            {
+                for (var i = 0; i < 100 && !Control.FindVisualChildren<FrameworkElement>().Any(element => ReferenceEquals(Background(element), expected)); i++)
+                    await Task.Delay(20);
+                var found = Control.FindVisualChildren<FrameworkElement>().Any(element => ReferenceEquals(Background(element), expected));
+                Check.True(found, $"The actual Fluent template did not resolve the expected consumer resource in {name}: expected {(expected as SolidColorBrush)?.Color}; backgrounds [{string.Join(", ", Control.FindVisualChildren<FrameworkElement>().Select(Background).OfType<SolidColorBrush>().Select(b => b.Color.ToString()).Distinct())}]; merged {Control.Resources.MergedDictionaries.Count}; themes [{string.Join(",", Control.Resources.ThemeDictionaries.Keys)}].");
+            }
         }
 
         public void Dispose()

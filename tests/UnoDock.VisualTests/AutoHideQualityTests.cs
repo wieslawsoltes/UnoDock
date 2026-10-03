@@ -31,8 +31,10 @@ public static class AutoHideQualityTests
             set;
         }
 
+        public int Calls;
         protected override DataTemplate SelectTemplateCore(object item, DependencyObject container)
         {
+            Calls++;
             var callback = Callback;
             Callback = null;
             callback?.Invoke();
@@ -635,6 +637,7 @@ public static class AutoHideQualityTests
                 Check.Equal(0, Ghosts().Length);
                 Open();
                 await Settle();
+                Check.True(dock.AutoHideWindow != null, $"No auto-hide host after reopening: flyout model {(flyout.Model as LayoutAnchorable)?.Title ?? "none"}, flyout visible {flyout.Visibility}, in layer {VisualTreeHelper.GetParent(flyout) != null}.");
                 Check.Same(tool, dock.AutoHideWindow!.Model);
             });
             tests.Test("title selector replacing the root cannot leave a stale host", async () =>
@@ -680,6 +683,7 @@ public static class AutoHideQualityTests
                 {
                     Open();
                     await Settle();
+                    Check.True(dock.AutoHideWindow != null, $"No auto-hide host after a redirecting title selector: flyout model {(flyout.Model as LayoutAnchorable)?.Title ?? "none"}, flyout visible {flyout.Visibility}, selector calls {selector.Calls}.");
                     Check.Same(next, dock.AutoHideWindow!.Model);
                     Check.Near(251, dock.AutoHideWindow.ActualWidth, .2);
                     Check.True(dock.AutoHideWindow.FindVisualChildren<TextBlock>().Any(t => t.Text == next.Title));
@@ -912,6 +916,9 @@ public static class AutoHideQualityTests
             splitter = flyout.FindVisualChildren<LayoutGridResizerControl>().Single();
             splitter.IsEnabled = true;
             surface = typeof(DockingManager).GetProperty("Surface", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(dock)!;
+            // Native WinUI raises Loaded after the layout pass, on a later dispatcher turn.
+            for (var i = 0; i < 40 && !splitter.IsLoaded; i++)
+                await Task.Delay(25);
             Check.True(splitter.IsLoaded && splitter.ActualWidth > 0 && splitter.ActualHeight > 0);
         }
 
