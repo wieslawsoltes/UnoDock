@@ -326,6 +326,12 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
         // Unsubscription does not revoke an already captured multicast delivery.
         if (_disposed)
             return;
+#if WINDOWS
+        // Native WinUI raises no focus events for some programmatic focus moves; the editor
+        // is recorded when this content stops being active.
+        if (args.PropertyName == nameof(LayoutContent.IsActive) && !LayoutElement.IsActive)
+            RememberCurrentFocus();
+#endif
         if (args.PropertyName == nameof(LayoutContent.Content))
         {
             Model = LayoutElement.Content;
