@@ -136,6 +136,9 @@ public static class VisualParityTests
                     Content = new TextBox()
                 });
                 await Settle();
+                // A newly realized tab is Loaded on a later turn on native WinUI.
+                for (var i = 0; i < 40 && !Visible(Tab(tool)); i++)
+                    await Task.Delay(25);
                 Check.True(Visible(Tab(tool)));
                 Check.Same(presenter, dock.GetLayoutItemFromModel(tool).View);
                 pane.Children.RemoveAt(1);

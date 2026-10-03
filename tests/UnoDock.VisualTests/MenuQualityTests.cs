@@ -511,7 +511,7 @@ public static class MenuQualityTests
                         var foreground = ((SolidColorBrush)Row(menu, "CloseCommand").Foreground).Color;
                         var background = ((SolidColorBrush)Presenter().Background).Color;
                         var isDark = explicitTheme ? !dark : dark;
-                        Check.True(isDark ? background.R < 100 && foreground.R > 180 : background.R > 180 && foreground.R < 100);
+                        Check.True(isDark ? background.R < 100 && foreground.R > 180 : background.R > 180 && foreground.R < 100, $"Menu colors background {background}, foreground {foreground}, presenter style is the menu's {ReferenceEquals(Presenter().Style, menu.MenuFlyoutPresenterStyle)}.");
                     });
             Add("open theme change updates the existing presenter and row contrast", async () =>
             {
@@ -521,8 +521,8 @@ public static class MenuQualityTests
                 dock.Theme = new FluentTheme(ElementTheme.Dark);
                 await Settle();
                 Check.Same(presenter, Presenter());
-                Check.True(((SolidColorBrush)presenter.Background).Color.R < 100);
-                Check.True(((SolidColorBrush)row.Foreground).Color.R > 180);
+                Check.True(((SolidColorBrush)presenter.Background).Color.R < 100, $"Presenter background {((SolidColorBrush)presenter.Background).Color}, style is the menu's {ReferenceEquals(presenter.Style, menu.MenuFlyoutPresenterStyle)}.");
+                Check.True(((SolidColorBrush)row.Foreground).Color.R > 180, $"Row foreground {((SolidColorBrush)row.Foreground).Color}.");
             });
             Add("collapsing the focused command leaves focus on an enabled visible row", async () =>
             {
