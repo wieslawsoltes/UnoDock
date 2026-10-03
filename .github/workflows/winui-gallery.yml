@@ -20,6 +20,14 @@ jobs:
       - uses: microsoft/setup-msbuild@v3
       - name: Build the Gallery native WinUI head
         run: msbuild samples/UnoDock.Gallery/UnoDock.Gallery.csproj -restore -p:Configuration=Release -p:Platform=x64 -p:UnoDockTargetFrameworks=net10.0-windows10.0.26100.0 -p:UnoDockLibraryFrameworks=net10.0-windows10.0.26100.0 -v:minimal
+      - name: Probe test discovery for hangs
+        shell: pwsh
+        run: |
+          dotnet tool install -g dotnet-stack | Out-Null
+          $exe = (Get-ChildItem samples/UnoDock.Gallery/bin -Recurse -Filter UnoDock.Gallery.exe | Select-Object -First 1).FullName
+          $env:UNODOCK_LIST_TESTS = '1'; $env:UNODOCK_TEST_SUITE = 'all'; $env:UNODOCK_TEST_RESULTS = "$pwd\artifacts\probe"
+          $p = Start-Process -FilePath $exe -PassThru
+          if ($p.WaitForExit(90000)) { "discovery exited with $($p.ExitCode)" } else { "discovery hung"; dotnet-stack report -p $p.Id; Stop-Process $p -Force }
       - name: Run every suite on native WinUI
         shell: bash
         run: |

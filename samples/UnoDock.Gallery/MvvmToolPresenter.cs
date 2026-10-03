@@ -5,6 +5,10 @@ namespace UnoDock.Gallery;
 
 public sealed class MvvmToolPresenter : ContentControl
 {
+    // The presenter that currently shows each tool view. Native WinUI connects a
+    // ContentControl's element content during layout, so a presenter that has not been laid
+    // out yet is not the view's visual parent but still owns it.
+    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<UIElement, WeakReference<MvvmToolPresenter>> Owners = new();
     public MvvmToolPresenter()
     {
         HorizontalContentAlignment = HorizontalAlignment.Stretch;
@@ -20,6 +24,8 @@ public sealed class MvvmToolPresenter : ContentControl
             return;
         if (view != null)
         {
+            if (Owners.TryGetValue(view, out var recorded) && recorded.TryGetTarget(out var owner) && !ReferenceEquals(owner, this) && ReferenceEquals(owner.Content, view))
+                owner.Content = null;
             switch (VisualTreeHelper.GetParent(view))
             {
                 case ContentPresenter parent when ReferenceEquals(parent.Content, view):
@@ -38,5 +44,7 @@ public sealed class MvvmToolPresenter : ContentControl
         }
 
         Content = view;
+        if (view != null)
+            Owners.AddOrUpdate(view, new(this));
     }
 }
