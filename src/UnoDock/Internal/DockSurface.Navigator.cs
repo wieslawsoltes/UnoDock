@@ -194,8 +194,15 @@ internal sealed partial class DockSurface
         // then focuses the first element of the view itself; that focus returns to the editor.
         if (item.RememberedEditor is { } editor)
             Manager.GuardEditorFocus(item, editor);
+        if (Environment.GetEnvironmentVariable("UNODOCK_TRACE") == "1")
+            Console.Error.WriteLine($"TRACE navigator restore {item.LayoutElement?.Title}: remembered {(item.RememberedEditor as TextBox)?.Text ?? item.RememberedEditor?.GetType().Name ?? "none"}");
 #endif
-        if (item.RestoreEditorFocus(deferred: false))
+        var restored = item.RestoreEditorFocus(deferred: false);
+#if WINDOWS
+        if (Environment.GetEnvironmentVariable("UNODOCK_TRACE") == "1")
+            Console.Error.WriteLine($"TRACE navigator restored {restored}: focused {(Microsoft.UI.Xaml.Input.FocusManager.GetFocusedElement(XamlRoot!) as TextBox)?.Text ?? Microsoft.UI.Xaml.Input.FocusManager.GetFocusedElement(XamlRoot!)?.GetType().Name}");
+#endif
+        if (restored)
             return;
         DispatcherQueue.TryEnqueue(() =>
         {

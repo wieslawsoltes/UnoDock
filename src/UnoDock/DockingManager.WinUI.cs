@@ -72,6 +72,8 @@ public partial class DockingManager
     {
         if (_disposed || e.NewFocusedElement is not DependencyObject focused || !DispatcherQueue.HasThreadAccess)
             return;
+        if (Environment.GetEnvironmentVariable("UNODOCK_TRACE") == "1")
+            Console.Error.WriteLine($"TRACE focus {(focused as TextBox)?.Text ?? focused.GetType().Name}; guard {(_guardedEditor as TextBox)?.Text ?? "none"}");
         if (_guardedEditor is { } guarded && _guardedItem is { } owner)
         {
             if (Environment.TickCount64 > _guardUntil || ReferenceEquals(focused, guarded))
