@@ -83,7 +83,15 @@ internal static class FluentResourceRefreshTests
                                 // Native WinUI ignores ShowAt while the same flyout is still closing.
                                 for (var i = 0; i < 50 && menu.IsOpen; i++)
                                     await Task.Delay(20);
-                                menu.ShowAt(tab);
+                                // Native WinUI ignores ShowAt while a theme change is still being
+                                // applied to the target; ask again until the menu opens.
+                                for (var attempt = 0; attempt < 4 && !opened; attempt++)
+                                {
+                                    menu.ShowAt(tab);
+                                    for (var i = 0; i < 25 && !opened; i++)
+                                        await Task.Delay(20);
+                                }
+
                                 for (var i = 0; i < 100 && !(opened && menu.Items.OfType<MenuFlyoutItem>().Any(item => item.IsEnabled && item.ActualHeight > 0)); i++)
                                     await Task.Delay(20);
                                 Check.True(opened && menu.Items.OfType<MenuFlyoutItem>().Any(item => item.IsEnabled && item.ActualHeight > 0), $"The menu did not open: opened {opened}, open {menu.IsOpen}, rows [{string.Join(",", menu.Items.OfType<MenuFlyoutItem>().Select(item => $"{item.IsEnabled}/{item.Visibility}/{item.ActualHeight}"))}], popups {VisualTreeHelper.GetOpenPopupsForXamlRoot(page.XamlRoot).Count}.");

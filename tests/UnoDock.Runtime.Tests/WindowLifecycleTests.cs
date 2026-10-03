@@ -520,7 +520,8 @@ public static class WindowLifecycleTests
                 ancestor |= ReferenceEquals(node, view);
             // Move focus so focusing the second editor is a real change: native WinUI raises no
             // focus events for an element that already has focus.
-            Check.True(f.EditorB.Focus(FocusState.Programmatic));
+            var first = view.FindVisualChildren<TextBox>().First(editor => !ReferenceEquals(editor, f.EditorA2));
+            Check.True(first.Focus(FocusState.Programmatic));
             await Tick();
             Check.True(f.EditorA2.Focus(FocusState.Programmatic));
             await Tick();

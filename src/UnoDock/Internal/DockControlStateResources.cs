@@ -101,7 +101,7 @@ internal sealed class DockControlStateResources
 
     internal void Refresh(Control control)
     {
-        if (!_dirty || _refreshing || !control.IsLoaded)
+        if (!_dirty || _refreshing || !LiveTree.IsLive(control))
             return;
         _dirty = false;
         // ThemeResource on a native state setter is resolved when that state is
@@ -131,7 +131,7 @@ internal sealed class DockControlStateResources
             if (!VisualStateManager.GoToState(control, "Normal", false))
                 return;
             group.CurrentStateChanged -= Changed;
-            if (!interrupted && version == _version && ReferenceEquals(control.Template, template) && control.IsLoaded && group.CurrentState?.Name == "Normal")
+            if (!interrupted && version == _version && ReferenceEquals(control.Template, template) && LiveTree.IsLive(control) && group.CurrentState?.Name == "Normal")
             {
                 ReapplyTheme(control);
                 VisualStateManager.GoToState(control, state.Name, false);
@@ -155,7 +155,7 @@ internal sealed class DockControlStateResources
     private static void ReapplyTheme(Control control)
     {
 #if WINDOWS
-        if (!control.IsLoaded)
+        if (!LiveTree.IsLive(control))
             return;
         var requested = control.RequestedTheme;
         control.RequestedTheme = control.ActualTheme == ElementTheme.Dark ? ElementTheme.Light : ElementTheme.Dark;

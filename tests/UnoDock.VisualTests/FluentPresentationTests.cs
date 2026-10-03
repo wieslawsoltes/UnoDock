@@ -146,7 +146,15 @@ internal static class FluentPresentationTests
                     // Native WinUI ignores ShowAt while the same flyout is still closing.
                     for (var i = 0; i < 50 && menu!.IsOpen; i++)
                         await Task.Delay(20);
-                    menu!.ShowAt(Tab(docs[0]));
+                    // Native WinUI ignores ShowAt while a theme change is still being applied to
+                    // the target; ask again until the menu opens.
+                    for (var attempt = 0; attempt < 4 && !menu!.IsOpen; attempt++)
+                    {
+                        menu!.ShowAt(Tab(docs[0]));
+                        for (var i = 0; i < 25 && !menu.IsOpen; i++)
+                            await Task.Delay(20);
+                    }
+
                     try
                     {
                         await Wait(() => VisualTreeHelper.GetOpenPopupsForXamlRoot(page.XamlRoot).Any());
