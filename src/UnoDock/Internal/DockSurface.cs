@@ -95,9 +95,10 @@ internal sealed partial class DockSurface : Grid, IDisposable
     // docked grid's theme propagates again.
     private void RepairDockedTheme()
     {
-        if (_disposed || _repairingTheme || !_docked.Children.OfType<FrameworkElement>().Any(child => child.RequestedTheme == ElementTheme.Default && child.ActualTheme != _docked.ActualTheme))
+        if (_disposed || _repairingTheme || _themeRepairs >= 2 || !_docked.Children.OfType<FrameworkElement>().Any(child => child.RequestedTheme == ElementTheme.Default && child.ActualTheme != _docked.ActualTheme))
             return;
         _repairingTheme = true;
+        _themeRepairs++;
         try
         {
             var theme = _docked.RequestedTheme;
@@ -111,6 +112,8 @@ internal sealed partial class DockSurface : Grid, IDisposable
     }
 
     private bool _repairingTheme;
+    // Bounded per render, so a subtree WinUI keeps on another theme cannot loop layout.
+    private int _themeRepairs;
 #endif
     internal FrameworkElement? ExistingView(ILayoutElement model) => _views.GetValueOrDefault(model);
     internal FrameworkElement GetView(ILayoutElement model)
@@ -149,6 +152,7 @@ internal sealed partial class DockSurface : Grid, IDisposable
         // Paint the full docking grid so side rails never depend on Window pixels.
         _docked.RequestedTheme = DockThemeResources.EffectiveTheme(Manager);
 #if WINDOWS
+        _themeRepairs = 0;
         RepairDockedTheme();
 #endif
         _docked.Background = DockChrome.Palette(Manager).States.Workspace;
