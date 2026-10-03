@@ -111,6 +111,7 @@ not called on a window that is being destroyed.
 | `ResourceDictionary.ContainsKey` and `Keys.Contains` | the dictionary's own entries | also merged and theme dictionaries |
 | One `ResourceDictionary` instance under several theme keys | allowed | rejected: a dictionary has one parent |
 | `Focus` on an element that has not been laid out | succeeds | fails |
+| Elements of a window's content tree after the window closes | reusable | unusable anywhere (`0x800F1000`), even when the window's `Content` was cleared first; only elements removed from that tree before `Close()` survive |
 | `CornerRadius` with negative or non-finite values | accepted | the constructor throws `ArgumentException` |
 | Relative URIs | accepted | WinRT URIs are absolute |
 | Automation pattern of `ToggleMenuFlyoutItem` | Invoke | Toggle |
@@ -124,6 +125,10 @@ UnoDock keeps its behavior the same on both platforms where it can:
   If an application handler throws during that render (a template selector, a style selector,
   a content factory), it reaches `DockingManager.RenderingFailed` first. On native WinUI, the
   process then ends; handle errors in those callbacks.
+* **Closing floating windows.** A native floating window hosts its control in a disposable
+  root element, and the control leaves that root before the window closes, so its panes and
+  your content can be docked or floated again. Do the same in your own windows: remove
+  content you will show again from the window's tree before calling `Close()`.
 * **Re-hosting views.** UnoDock moves content between panes, auto-hide flyouts, floating
   windows and tab strips. It records each content host, so it can release content that WinUI
   has not connected yet. Do not give the same `UIElement` content to another host while

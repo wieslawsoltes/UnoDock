@@ -192,11 +192,7 @@ public partial class LayoutAutoHideWindowControl : ContentControl, ILayoutContro
             if (!IsCurrent(model, manager, openingVersion))
                 return;
             item.View.Visibility = Visibility.Visible;
-#if WINDOWS
-            VisualParenting.Rehost(item.View, _presenter, () => _presenter.Content = item.View);
-#else
             _presenter.Content = item.View;
-#endif
             VisualParenting.Hosted(_presenter, item.View);
             ApplyAnchorableStyle();
             if (!IsCurrent(model, manager, openingVersion))

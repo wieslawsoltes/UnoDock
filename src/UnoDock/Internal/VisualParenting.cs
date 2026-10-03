@@ -49,61 +49,6 @@ internal static class VisualParenting
     }
 
 #if WINDOWS
-    // WIP diagnostics for native WinUI re-parenting failures.
-
-    /// <summary>Runs <paramref name="host"/>, which gives a detached element a new parent. WIP:
-    /// records whether native WinUI accepts the element on a later turn.</summary>
-    internal static void Rehost(UIElement element, FrameworkElement target, Action host)
-    {
-        try
-        {
-            host();
-        }
-        catch (Exception error) when (error is System.Runtime.InteropServices.COMException or ArgumentException)
-        {
-            var before = Describe(element, target);
-            Probe(element, target, before);
-            throw new InvalidOperationException("Re-host failed: " + before, error);
-        }
-    }
-
-    private static async void Probe(UIElement element, FrameworkElement target, string before)
-    {
-        for (var attempt = 1; attempt <= 6; attempt++)
-        {
-            await Task.Delay(40 * attempt);
-            var parent = VisualTreeHelper.GetParent(element);
-            if (parent != null)
-            {
-                Console.Error.WriteLine($"UNODOCK-REHOST attempt {attempt}: now parented by {parent.GetType().FullName} | {before}");
-                return;
-            }
-
-            var probe = new Grid();
-            try
-            {
-                probe.Children.Add(element);
-                probe.Children.Remove(element);
-                Console.Error.WriteLine($"UNODOCK-REHOST attempt {attempt}: accepted by a new panel | {before}");
-                return;
-            }
-            catch (Exception error)
-            {
-                Console.Error.WriteLine($"UNODOCK-REHOST attempt {attempt}: still rejected {error.HResult:X8} | {before}");
-            }
-        }
-    }
-
-    internal static string Describe(UIElement element, FrameworkElement target)
-    {
-        var parent = VisualTreeHelper.GetParent(element);
-        var host = Hosts.TryGetValue(element, out var recorded) && recorded.TryGetTarget(out var h) ? h : null;
-        var text = $"{element.GetType().Name}; visual parent {parent?.GetType().FullName ?? "none"}; logical parent {(element as FrameworkElement)?.Parent?.GetType().FullName ?? "none"}; same XamlRoot {ReferenceEquals(element.XamlRoot, target.XamlRoot)} (element root {(element.XamlRoot == null ? "none" : "set")}, target root {(target.XamlRoot == null ? "none" : "set")}); loaded {(element as FrameworkElement)?.IsLoaded}; recorded host {host?.GetType().FullName ?? "none"}; transitions {(target as Panel)?.ChildrenTransitions?.Count}";
-        if (element is ContentPresenter { Content: UIElement content })
-            text += $"; content {content.GetType().Name} parent {VisualTreeHelper.GetParent(content)?.GetType().FullName ?? "none"} logical {(content as FrameworkElement)?.Parent?.GetType().FullName ?? "none"} host {(Hosts.TryGetValue(content, out var c) && c.TryGetTarget(out var ch) ? ch.GetType().FullName + (ReferenceEquals(ch, element) ? " (this)" : " (other)") : "none")}";
-        return text;
-    }
-
     private static void Release(DependencyObject host, UIElement element)
     {
         switch (host)
@@ -132,13 +77,7 @@ internal static class VisualParenting
             if (i < panel.Children.Count && ReferenceEquals(panel.Children[i], wanted[i]))
                 continue;
             Detach(wanted[i]);
-#if WINDOWS
-            var element = wanted[i];
-            var index = i;
-            Rehost(element, panel, () => panel.Children.Insert(index, element));
-#else
             panel.Children.Insert(i, wanted[i]);
-#endif
         }
     }
 }
