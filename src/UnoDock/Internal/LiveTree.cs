@@ -11,13 +11,22 @@ internal static class LiveTree
     /// stays false after a stale Unloaded and until Loaded is raised a turn after layout.</summary>
     internal static bool IsLive(FrameworkElement element) => element.IsLoaded || IsConnected(element);
 
+    // Under the window's content, or inside one of its open popups (menus, flyouts).
     private static bool IsConnected(FrameworkElement element)
     {
 #if WINDOWS
-        if (element.XamlRoot?.Content is not { } root)
+        if (element.XamlRoot is not { Content: { } root } xamlRoot)
             return false;
+        var path = new List<DependencyObject>();
         for (DependencyObject? node = element; node != null; node = VisualTreeHelper.GetParent(node))
+        {
             if (ReferenceEquals(node, root))
+                return true;
+            path.Add(node);
+        }
+
+        foreach (var popup in VisualTreeHelper.GetOpenPopupsForXamlRoot(xamlRoot))
+            if (path.Any(node => ReferenceEquals(node, popup) || ReferenceEquals(node, popup.Child)))
                 return true;
 #endif
         return false;

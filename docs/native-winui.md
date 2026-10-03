@@ -113,6 +113,9 @@ not called on a window that is being destroyed.
 | `MenuFlyoutPresenterStyle` | applied whenever the menu opens | applied when the presenter is created; the presenter is reused |
 | One `ResourceDictionary` instance under several theme keys | allowed | rejected: a dictionary has one parent |
 | `Focus` on an element that has not been laid out | succeeds | fails |
+| `VisualStateGroup.CurrentStateChanged` for `GoToState(..., false)` | raised during the call | raised on a later turn |
+| `Focus()` on an element that already has focus | raises focus events again | raises none |
+| `MenuFlyout.ShowAt` while the target is applying a theme change | opens | can be ignored |
 | `{ThemeResource}` in a `Style` setter | resolved from the styled element's resources | resolved from the dictionary that defines the style |
 | `ControlTemplate` without `TargetType` that uses `{TemplateBinding}` on a member `Control` does not declare (such as `Content`) | binds | layout fails with `0x80004005` |
 | Elements of a window's content tree after the window closes | reusable | unusable anywhere (`0x800F1000`), even when the window's `Content` was cleared first; only elements removed from that tree before `Close()` survive |

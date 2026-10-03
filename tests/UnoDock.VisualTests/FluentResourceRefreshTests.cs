@@ -238,6 +238,9 @@ internal static class FluentResourceRefreshTests
                 label.Resources.MergedDictionaries.Remove(marker);
             }
         });
+#if HAS_UNO
+        // Native WinUI raises CurrentStateChanged for GoToState without transitions on a later
+        // turn, so an application callback cannot take part in the replay there.
         tests.Test("Fluent resources: native state callbacks may supersede palette replay", async () =>
         {
             page.SetSampleTheme(SampleTheme.Light);
@@ -271,6 +274,7 @@ internal static class FluentResourceRefreshTests
                 await Settle(page);
             }
         });
+#endif
         if (OperatingSystem.IsLinux() && Environment.GetEnvironmentVariable("UNODOCK_NATIVE_INPUT_TESTS") == "1")
         {
             tests.Test("XTEST Fluent: live palette repaint preserves held input and activates only on release", async () =>

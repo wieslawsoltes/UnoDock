@@ -512,22 +512,13 @@ public static class WindowLifecycleTests
             f.A.IsActive = true;
             host.Refresh();
             await Tick();
-            var view = host.GetLayoutItemFromModel(f.A).View;
-            var gotFocus = 0;
-            view.GotFocus += (_, _) => gotFocus++;
-            var ancestor = false;
-            for (DependencyObject? node = f.EditorA2; node != null; node = VisualTreeHelper.GetParent(node))
-                ancestor |= ReferenceEquals(node, view);
             // Move focus so focusing the second editor is a real change: native WinUI raises no
             // focus events for an element that already has focus.
-            var first = view.FindVisualChildren<TextBox>().First(editor => !ReferenceEquals(editor, f.EditorA2));
-            Check.True(first.Focus(FocusState.Programmatic));
+            var view = host.GetLayoutItemFromModel(f.A).View;
+            Check.True(view.FindVisualChildren<TextBox>().First(editor => !ReferenceEquals(editor, f.EditorA2)).Focus(FocusState.Programmatic));
             await Tick();
             Check.True(f.EditorA2.Focus(FocusState.Programmatic));
             await Tick();
-            var viewDiag = $"view is ancestor {ancestor}, view GotFocus {gotFocus}";
-            var afterFocus = (typeof(LayoutItem).GetProperty("RememberedEditor", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(host.GetLayoutItemFromModel(f.A)) as TextBox)?.Text ?? "none";
-            var focusedNow = (FocusManager.GetFocusedElement(host.XamlRoot!) as TextBox)?.Text ?? FocusManager.GetFocusedElement(host.XamlRoot!)?.GetType().Name ?? "none";
             f.B.IsActive = true;
             host.Refresh();
             await Tick();
@@ -535,12 +526,10 @@ public static class WindowLifecycleTests
             var nav = f.Navigator();
             await Tick();
             nav.PreviewDocument(nav.Documents.Single(d => ReferenceEquals(d.LayoutElement, f.A)));
-            string Remembered() => (typeof(LayoutItem).GetProperty("RememberedEditor", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(host.GetLayoutItemFromModel(f.A)) as TextBox)?.Text ?? "none";
-            var before = Remembered();
             CallSurface(host, "CloseNavigator", true);
             await Tick();
             Check.Same(f.A, host.Layout.ActiveContent);
-            Check.True(ReferenceEquals(f.EditorA2, FocusManager.GetFocusedElement(host.XamlRoot!)), "Expected retained second editor, focused: " + (FocusManager.GetFocusedElement(host.XamlRoot!) as TextBox)?.Text + "; remembered before commit: " + before + ", now: " + Remembered() + ", after focusing A2: " + afterFocus + " (focused " + focusedNow + "); " + viewDiag);
+            Check.True(ReferenceEquals(f.EditorA2, FocusManager.GetFocusedElement(host.XamlRoot!)), "Expected retained second editor, focused: " + (FocusManager.GetFocusedElement(host.XamlRoot!) as TextBox)?.Text);
         });
         Live("navigator respects activation command CanExecute", async f =>
         {

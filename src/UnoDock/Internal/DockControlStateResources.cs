@@ -101,10 +101,6 @@ internal sealed class DockControlStateResources
 
     internal void Refresh(Control control)
     {
-#if WINDOWS
-        if (Environment.GetEnvironmentVariable("UNODOCK_TRACE") == "1")
-            Console.Error.WriteLine($"TRACE refresh {control.GetType().Name}: dirty {_dirty}, refreshing {_refreshing}, live {LiveTree.IsLive(control)}, state {control.FindVisualChildren<FrameworkElement>().SelectMany(VisualStateManager.GetVisualStateGroups).FirstOrDefault(candidate => candidate.Name == "CommonStates")?.CurrentState?.Name ?? "none"}");
-#endif
         if (!_dirty || _refreshing || !LiveTree.IsLive(control))
             return;
         _dirty = false;
