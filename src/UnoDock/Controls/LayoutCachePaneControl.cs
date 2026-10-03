@@ -113,6 +113,12 @@ public partial class LayoutCachePaneControl : DockSelectionControl
             var presenter = ReferenceEquals(model, selected) ? item.View : item.ExistingView;
             if (presenter != null)
             {
+#if WINDOWS
+                // Native WinUI raises no focus events for some programmatic focus moves; the
+                // editor is recorded as its view is hidden.
+                if (!ReferenceEquals(model, selected) && presenter.Visibility == Visibility.Visible)
+                    item.RememberCurrentFocus();
+#endif
                 presenter.Visibility = ReferenceEquals(model, selected) ? Visibility.Visible : Visibility.Collapsed;
                 contentViews.Add(presenter);
             }

@@ -53,6 +53,12 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
     // Native WinUI raises no GotFocus for an element that already has focus, so the editor is
     // also recorded when focus leaves it.
     private void RememberLeavingFocus(object sender, RoutedEventArgs e) => Remember(e.OriginalSource as DependencyObject);
+    internal void RememberCurrentFocus()
+    {
+        if (_view?.XamlRoot is { } root && Microsoft.UI.Xaml.Input.FocusManager.GetFocusedElement(root) is DependencyObject focused && IsInView(focused))
+            Remember(focused);
+    }
+
     internal void Remember(DependencyObject? element)
     {
         for (var node = element; node != null && !ReferenceEquals(node, _view); node = VisualTreeHelper.GetParent(node))
