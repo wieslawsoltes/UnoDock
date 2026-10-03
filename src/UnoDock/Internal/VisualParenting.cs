@@ -5,10 +5,11 @@ namespace UnoDock.Internal;
 internal static class VisualParenting
 {
 #if WINDOWS
-    // Native WinUI connects a ContentPresenter's or ContentControl's element content (and a
-    // TabViewItem's header) during layout, so until then the element has no visual parent but
-    // cannot be given to another host. Hosts are recorded so that Detach can still release it.
-    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<UIElement, WeakReference<DependencyObject>> Hosts = new();
+    // The content host (ContentPresenter, ContentControl or TabViewItem header) last given each
+    // element, held for as long as the element lives. On native WinUI a discarded host can still
+    // own the element natively after its managed wrapper is unreachable, so it must stay
+    // reachable for Detach to release the element.
+    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<UIElement, DependencyObject> Hosts = new();
 #endif
 
     /// <summary>Records the content host that was just given <paramref name="content"/>.</summary>
@@ -16,18 +17,17 @@ internal static class VisualParenting
     {
 #if WINDOWS
         if (content is UIElement element)
-            Hosts.AddOrUpdate(element, new(host));
+            Hosts.AddOrUpdate(element, host);
 #endif
     }
 
     internal static void Detach(UIElement element)
     {
 #if WINDOWS
-        if (Hosts.TryGetValue(element, out var recorded))
+        if (Hosts.TryGetValue(element, out var host))
         {
             Hosts.Remove(element);
-            if (recorded.TryGetTarget(out var host))
-                Release(host, element);
+            Release(host, element);
         }
 #endif
         var parent = VisualTreeHelper.GetParent(element);

@@ -5,10 +5,10 @@ namespace UnoDock.Gallery;
 
 public sealed class MvvmToolPresenter : ContentControl
 {
-    // The presenter that currently shows each tool view. Native WinUI connects a
-    // ContentControl's element content during layout, so a presenter that has not been laid
-    // out yet is not the view's visual parent but still owns it.
-    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<UIElement, WeakReference<MvvmToolPresenter>> Owners = new();
+    // The presenter that currently shows each tool view, held for as long as the view lives.
+    // On native WinUI a discarded presenter can still own the view natively after its managed
+    // wrapper is unreachable, so the owner must stay reachable to release it.
+    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<UIElement, MvvmToolPresenter> Owners = new();
     public MvvmToolPresenter()
     {
         HorizontalContentAlignment = HorizontalAlignment.Stretch;
@@ -24,7 +24,7 @@ public sealed class MvvmToolPresenter : ContentControl
             return;
         if (view != null)
         {
-            if (Owners.TryGetValue(view, out var recorded) && recorded.TryGetTarget(out var owner) && !ReferenceEquals(owner, this) && ReferenceEquals(owner.Content, view))
+            if (Owners.TryGetValue(view, out var owner) && !ReferenceEquals(owner, this) && ReferenceEquals(owner.Content, view))
                 owner.Content = null;
             switch (VisualTreeHelper.GetParent(view))
             {
@@ -43,21 +43,8 @@ public sealed class MvvmToolPresenter : ContentControl
             }
         }
 
-        try
-        {
-            Content = view;
-        }
-        catch (Exception error) when (view != null && error is System.Runtime.InteropServices.COMException)
-        {
-            // WIP diagnostics.
-            var chain = new List<string>();
-            for (DependencyObject? node = VisualTreeHelper.GetParent(view); node != null && chain.Count < 8; node = VisualTreeHelper.GetParent(node))
-                chain.Add(node.GetType().Name + (node is ContentPresenter p ? "(content " + (ReferenceEquals(p.Content, view) ? "view" : p.Content?.GetType().Name) + ")" : node is ContentControl c ? "(content " + (ReferenceEquals(c.Content, view) ? "view" : c.Content?.GetType().Name) + ")" : ""));
-            var owner = Owners.TryGetValue(view, out var recorded) && recorded.TryGetTarget(out var o) ? o : null;
-            throw new InvalidOperationException($"Tool view hosting failed: chain [{string.Join(" < ", chain)}]; logical parent {view.Parent?.GetType().Name ?? "none"}; owner {(owner == null ? "none" : ReferenceEquals(owner, this) ? "this" : "other, content is view: " + ReferenceEquals(owner.Content, view) + ", loaded " + owner.IsLoaded)}; view loaded {view.IsLoaded}", error);
-        }
-
+        Content = view;
         if (view != null)
-            Owners.AddOrUpdate(view, new(this));
+            Owners.AddOrUpdate(view, this);
     }
 }
