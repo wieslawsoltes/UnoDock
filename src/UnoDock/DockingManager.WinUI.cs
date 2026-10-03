@@ -6,16 +6,6 @@ namespace UnoDock;
 
 public partial class DockingManager
 {
-    // Generic.xaml's template for DockingManager, targeting Control so that it applies to any subclass.
-    private const string SubclassTemplate = """
-        <ControlTemplate xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" TargetType="Control">
-          <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}" Padding="{TemplateBinding Padding}">
-            <Grid x:Name="PART_AutoHideArea">
-              <ContentPresenter x:Name="PART_LayoutHost" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" />
-            </Grid>
-          </Border>
-        </ControlTemplate>
-        """;
     [ThreadStatic]
     private static Style? _subclassStyle;
     /// <summary>Native WinUI resolves a default style's TargetType through XAML metadata, which
@@ -35,7 +25,7 @@ public partial class DockingManager
             {
                 new Setter(HorizontalContentAlignmentProperty, HorizontalAlignment.Stretch),
                 new Setter(VerticalContentAlignmentProperty, VerticalAlignment.Stretch),
-                new Setter(TemplateProperty, (ControlTemplate)XamlReader.Load(SubclassTemplate))
+                new Setter(TemplateProperty, Internal.DockChrome.Resource<ControlTemplate>("UnoDock.UndescribedManagerTemplate"))
             }
         };
         return true;

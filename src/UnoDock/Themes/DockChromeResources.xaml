@@ -19,6 +19,15 @@
             <ContentPresenter x:Name="ContentPresenter" Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}" Foreground="{TemplateBinding Foreground}" Padding="{TemplateBinding Padding}" HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"/>
         </Border>
     </ControlTemplate>
+    <!-- The DockingManager template for subclasses native WinUI's type metadata does not
+         describe: it targets Control so that it applies to them (docs/native-winui.md). -->
+    <ControlTemplate x:Key="UnoDock.UndescribedManagerTemplate" TargetType="Control">
+        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}" Padding="{TemplateBinding Padding}">
+            <Grid x:Name="PART_AutoHideArea">
+                <ContentPresenter x:Name="PART_LayoutHost" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"/>
+            </Grid>
+        </Border>
+    </ControlTemplate>
     <ControlTemplate x:Key="UnoDock.ChromeThumbTemplate" TargetType="Thumb">
         <Border Background="{TemplateBinding Background}"/>
     </ControlTemplate>

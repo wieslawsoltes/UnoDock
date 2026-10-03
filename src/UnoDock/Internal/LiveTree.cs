@@ -9,6 +9,24 @@ internal static class LiveTree
     /// <summary>Loaded, or on native WinUI connected under its window's content: there IsLoaded
         /// stays false after a stale Unloaded and until Loaded is raised a turn after layout.</summary>
         internal static bool IsLive(FrameworkElement element) => element.IsLoaded || IsConnected(element);
+    /// <summary>Raises queued automation notifications. On native WinUI a peer whose element
+        /// has left its window (or whose window has closed) fails to raise them, and an exception in
+        /// the dispatcher callback that delivers them would end the process.</summary>
+        internal static void Announce(Action raise)
+    {
+#if WINDOWS
+        try
+        {
+            raise();
+        }
+        catch (System.Runtime.InteropServices.COMException)
+        {
+        }
+#else
+        raise();
+#endif
+    }
+
     // Under the window's content, or inside one of its open popups (menus, flyouts).
     private static bool IsConnected(FrameworkElement element)
     {

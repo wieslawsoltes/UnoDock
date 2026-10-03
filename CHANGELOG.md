@@ -22,6 +22,15 @@ Native WinUI 3 is now verified end to end: every Gallery sample and self-test su
 - A layout item disposed by the application is replaced the next time its content is shown.
 - Relative image URIs resolve to the application package on WinUI.
 
+### Known limitations
+
+- Native WinUI is verified on x64. On Windows ARM64, changing the theme while a docking context menu is open can end the process with an access violation inside WinUI; this is not yet resolved.
+- On native WinUI, an exception thrown by an application callback during a deferred render ends the process (WinUI does not report dispatcher-callback exceptions). Handle errors in template and style selectors and content factories; see [Uno and WinUI differences](docs/native-winui.md).
+- Linux supports X11; Wayland sessions run through XWayland.
+- Mixed-DPI placement on Windows is tested with a simulated second monitor, not yet on physical mixed-DPI hardware.
+- Multi-window browser workspaces (`UnoDock.Browser`) are available from source and in the browser workbench, but are not packaged in this preview.
+- As a 0.x preview, the public API may still change between previews.
+
 ## 0.1.0-preview.1
 
 First public preview of IDE-style docking for Uno Platform applications on Windows, macOS, Linux and WebAssembly.

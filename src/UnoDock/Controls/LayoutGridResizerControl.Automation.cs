@@ -109,7 +109,7 @@ public partial class LayoutGridResizerControl
     {
         // No peer creation, global subscriptions or model enumeration when unused.
         if (FrameworkElementAutomationPeer.FromElement(this) is LayoutGridResizerAutomationPeer peer)
-            peer.Synchronize();
+            LiveTree.Announce(peer.Synchronize);
     }
 
     protected override AutomationPeer OnCreateAutomationPeer() => new LayoutGridResizerAutomationPeer(this);

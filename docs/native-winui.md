@@ -142,6 +142,8 @@ UnoDock keeps its behavior the same on both platforms where it can:
   UnoDock shows it.
 * **`Refresh()`** applies template changes; on native WinUI their visuals appear after the
   next layout pass (call `UpdateLayout()` to force it).
+* **Automation after a window closes.** Automation notifications queued for a tab, pane or
+  splitter are dropped when its window has closed in the meantime; WinUI fails to raise them.
 * **Stale `Unloaded`.** UnoDock ignores an `Unloaded` event that arrives while the element
   is back in its window's tree, so a flyout or manager that is removed and re-added in one
   turn is not torn down afterwards.
@@ -173,6 +175,12 @@ UnoDock keeps its behavior the same on both platforms where it can:
   WinUI's does not. Code that declares its own `Dispose()` on an element with `new` builds on
   both; on WinUI the compiler reports that `new` is not needed (`CS0109`).
 * **Browser workspaces.** `UnoDock.Browser` runs only on Uno's WebAssembly host.
+
+## Known issues
+
+* **Windows ARM64.** Changing the theme while a docking context menu is open can end the
+  process with an access violation inside WinUI. This has been seen only on ARM64; the same
+  tests pass on x64, where CI runs. It is not resolved yet.
 
 ## Testing
 
