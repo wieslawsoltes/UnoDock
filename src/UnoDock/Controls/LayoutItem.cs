@@ -47,13 +47,21 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
         // The focused element itself: native WinUI may report a part of its template as the
         // event's original source.
         var focused = _view?.XamlRoot != null ? Microsoft.UI.Xaml.Input.FocusManager.GetFocusedElement(_view.XamlRoot) as DependencyObject : null;
-        focused ??= e.OriginalSource as DependencyObject;
-#if WINDOWS
-        if (Environment.GetEnvironmentVariable("UNODOCK_TRACE") == "1")
-            Console.Error.WriteLine($"TRACE remember {LayoutElement?.Title}: focused {(focused as TextBox)?.Text ?? focused?.GetType().Name}, original {(e.OriginalSource as TextBox)?.Text ?? e.OriginalSource?.GetType().Name}, in view {(focused != null && IsInView(focused))}");
-#endif
-        if (focused != null && IsInView(focused))
-            _lastFocused = new(focused);
+        Remember(focused ?? e.OriginalSource as DependencyObject);
+    }
+
+    // Native WinUI raises no GotFocus for an element that already has focus, so the editor is
+    // also recorded when focus leaves it.
+    private void RememberLeavingFocus(object sender, RoutedEventArgs e) => Remember(e.OriginalSource as DependencyObject);
+    private void Remember(DependencyObject? element)
+    {
+        for (var node = element; node != null && !ReferenceEquals(node, _view); node = VisualTreeHelper.GetParent(node))
+            if (node is Control { IsTabStop: true })
+            {
+                if (IsInView(node))
+                    _lastFocused = new(node);
+                return;
+            }
     }
 
     private bool IsInView(DependencyObject element)
@@ -106,6 +114,7 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
                     VerticalContentAlignment = VerticalAlignment.Stretch
                 };
                 _view.GotFocus += RememberFocus;
+                _view.LostFocus += RememberLeavingFocus;
                 UpdateView();
             }
 

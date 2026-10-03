@@ -104,19 +104,17 @@ internal sealed class DockControlStateResources
         if (!_dirty || _refreshing || !control.IsLoaded)
             return;
         _dirty = false;
-        ReplayState(control);
-    }
-
-    // ThemeResource on a native state setter is resolved when that state is
-    // entered. Dictionary replacement alone does not refresh an already-hot
-    // state. Replay its native CommonStates transition, not pointer/keyboard
-    // events, and retain the same template and focus-state group.
-    private void ReplayState(Control control)
-    {
+        // ThemeResource on a native state setter is resolved when that state is
+        // entered. Dictionary replacement alone does not refresh an already-hot
+        // state. Replay its native CommonStates transition, not pointer/keyboard
+        // events, and retain the same template and focus-state group.
         var group = control.FindVisualChildren<FrameworkElement>().SelectMany(VisualStateManager.GetVisualStateGroups).FirstOrDefault(candidate => candidate.Name == "CommonStates");
         if (group?.CurrentState is not { Name: "PointerOver" or "Pressed" or "Disabled" } state)
+        {
+            ReapplyTheme(control);
             return;
-        ReapplyTheme(control);
+        }
+
         var template = control.Template;
         var version = _version;
         var interrupted = false;
@@ -134,7 +132,10 @@ internal sealed class DockControlStateResources
                 return;
             group.CurrentStateChanged -= Changed;
             if (!interrupted && version == _version && ReferenceEquals(control.Template, template) && control.IsLoaded && group.CurrentState?.Name == "Normal")
+            {
+                ReapplyTheme(control);
                 VisualStateManager.GoToState(control, state.Name, false);
+            }
         }
         catch
         {

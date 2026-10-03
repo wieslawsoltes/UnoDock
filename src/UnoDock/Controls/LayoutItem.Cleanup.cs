@@ -78,6 +78,7 @@ public abstract partial class LayoutItem
         if (view != null)
         {
             cleanup.Attempt(() => view.GotFocus -= RememberFocus);
+            cleanup.Attempt(() => view.LostFocus -= RememberLeavingFocus);
             cleanup.Attempt(() => VisualParenting.Detach(view));
             cleanup.Attempt(() => view.Content = null);
             cleanup.Attempt(() => view.ContentTemplate = null);

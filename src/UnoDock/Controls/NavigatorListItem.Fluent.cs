@@ -44,7 +44,11 @@ internal sealed partial class NavigatorListItem
         _selectionIndicator = null;
         if (action != null)
             action.Click -= ActionClicked;
+#if !WINDOWS
         _states?.Detach();
+#endif
+        // On native WinUI the action leaves with its template; detaching its state dictionary
+        // first makes replacing a Dark template fail (0x80004005).
         _states = null;
     }
 
