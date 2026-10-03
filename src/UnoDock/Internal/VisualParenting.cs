@@ -57,6 +57,64 @@ internal static class VisualParenting
         return $"{element.GetType().Name}; visual parent {parent?.GetType().FullName ?? "none"}; logical parent {(element as FrameworkElement)?.Parent?.GetType().FullName ?? "none"}; same XamlRoot {ReferenceEquals(element.XamlRoot, target.XamlRoot)} (element root {(element.XamlRoot == null ? "none" : "set")}, target root {(target.XamlRoot == null ? "none" : "set")}); loaded {(element as FrameworkElement)?.IsLoaded}; recorded host {host?.GetType().FullName ?? "none"}; content {(element as ContentPresenter)?.Content?.GetType().FullName}";
     }
 
+    /// <summary>Runs <paramref name="host"/>, which gives a detached element a new parent. WIP:
+    /// native WinUI rejects an element that still carries the XamlRoot of the tree it left;
+    /// this records which re-basing lets the host succeed.</summary>
+    internal static void Rehost(UIElement element, FrameworkElement target, Action host)
+    {
+        try
+        {
+            host();
+            return;
+        }
+        catch (Exception error) when (error is System.Runtime.InteropServices.COMException or ArgumentException)
+        {
+            var before = Describe(element, target);
+            var attempts = new List<string>();
+            foreach (var root in new[] { target.XamlRoot, null })
+            {
+                if (root == null && attempts.Count > 0 && target.XamlRoot == null)
+                    continue;
+                var failures = SetRoot(element, root);
+                try
+                {
+                    host();
+                    System.Diagnostics.Trace.WriteLine("UnoDock re-host succeeded after setting XamlRoot " + (root == null ? "null" : "to the target") + ": " + before);
+                    Console.Error.WriteLine("UNODOCK-REHOST OK root=" + (root == null ? "null" : "target") + " setter-failures=" + failures + " | " + before);
+                    return;
+                }
+                catch (Exception retry) when (retry is System.Runtime.InteropServices.COMException or ArgumentException)
+                {
+                    attempts.Add((root == null ? "null" : "target") + " setter-failures=" + failures + " -> " + retry.HResult.ToString("X8"));
+                }
+            }
+
+            throw new InvalidOperationException("Re-host failed: " + before + "; attempts: " + string.Join(", ", attempts), error);
+        }
+    }
+
+    private static int SetRoot(DependencyObject node, XamlRoot? root)
+    {
+        var failures = 0;
+        if (node is UIElement element && !ReferenceEquals(element.XamlRoot, root))
+        {
+            try
+            {
+                element.XamlRoot = root;
+            }
+            catch (Exception)
+            {
+                failures++;
+            }
+        }
+
+        for (var i = 0; i < VisualTreeHelper.GetChildrenCount(node); i++)
+            failures += SetRoot(VisualTreeHelper.GetChild(node, i), root);
+        if (node is ContentPresenter { Content: UIElement content } && VisualTreeHelper.GetParent(content) == null)
+            failures += SetRoot(content, root);
+        return failures;
+    }
+
     private static void Release(DependencyObject host, UIElement element)
     {
         switch (host)
@@ -86,15 +144,9 @@ internal static class VisualParenting
                 continue;
             Detach(wanted[i]);
 #if WINDOWS
-            try
-            {
-                panel.Children.Insert(i, wanted[i]);
-            }
-            catch (System.Runtime.InteropServices.COMException error)
-            {
-                // WIP diagnostics for native WinUI re-parenting failures.
-                throw new InvalidOperationException("Insert into " + panel.GetType().Name + " failed: " + Describe(wanted[i], panel), error);
-            }
+            var element = wanted[i];
+            var index = i;
+            Rehost(element, panel, () => panel.Children.Insert(index, element));
 #else
             panel.Children.Insert(i, wanted[i]);
 #endif

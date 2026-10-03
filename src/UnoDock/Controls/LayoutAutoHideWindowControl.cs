@@ -193,15 +193,7 @@ public partial class LayoutAutoHideWindowControl : ContentControl, ILayoutContro
                 return;
             item.View.Visibility = Visibility.Visible;
 #if WINDOWS
-            try
-            {
-                _presenter.Content = item.View;
-            }
-            catch (ArgumentException error)
-            {
-                // WIP diagnostics for native WinUI re-parenting failures.
-                throw new InvalidOperationException("Auto-hide host failed: " + VisualParenting.Describe(item.View, _presenter), error);
-            }
+            VisualParenting.Rehost(item.View, _presenter, () => _presenter.Content = item.View);
 #else
             _presenter.Content = item.View;
 #endif
