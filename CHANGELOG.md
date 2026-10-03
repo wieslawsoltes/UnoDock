@@ -2,6 +2,26 @@
 
 All notable changes to UnoDock are recorded here. Versions follow [Semantic Versioning](https://semver.org/); 0.x previews may still change public API.
 
+## 0.1.0-preview.2
+
+Native WinUI 3 is now verified end to end: every Gallery sample and self-test suite runs on the Windows App SDK in CI, alongside the Uno Platform hosts.
+
+### Native WinUI
+
+- Layouts declared in XAML compile with the WinUI XAML compiler. Layout groups expose their positioning members and an object-typed content property in the WinUI build, so markup is the same on both platforms.
+- Styles and templates apply to UnoDock controls and to `DockingManager` subclasses created only in code.
+- Floating windows can be docked, floated and closed repeatedly. A native window's control is hosted in a disposable root, because WinUI makes the elements of a closed window's tree unusable.
+- Views, tabs and flyouts move reliably between panes, floating windows, auto-hide flyouts and `TabView` strips.
+- Theme and palette changes reach open menus, hot visual states and controls with application theme dictionaries. Lookups ignore framework theme resources and theme values that `XamlControlsResources` cannot supply.
+- Stale `Unloaded` events, a `Loaded` raised after layout, and focus restored after the navigator closes are handled.
+- A manager stops rendering when its host window is destroyed.
+- See [Uno and WinUI differences](docs/native-winui.md) for everything that differs between the platforms and what UnoDock does about it.
+
+### Fixes on all platforms
+
+- A layout item disposed by the application is replaced the next time its content is shown.
+- Relative image URIs resolve to the application package on WinUI.
+
 ## 0.1.0-preview.1
 
 First public preview of IDE-style docking for Uno Platform applications on Windows, macOS, Linux and WebAssembly.

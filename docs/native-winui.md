@@ -147,8 +147,16 @@ UnoDock keeps its behavior the same on both platforms where it can:
   turn is not torn down afterwards.
 * **Coordinates.** `DesktopWindowCoordinates` accepts an element that is already connected
   under its window content but whose `Loaded` event has not been raised yet.
-* **Focus.** Restoring a document's last focused editor, and `SetFocus` on a splitter's
+* **Focus.** WinUI raises no focus events for some programmatic focus moves, and it moves
+  focus to the first element of a view once the navigator has left the tree. UnoDock records a
+  document's editor when focus moves within it, when its content stops being active and when
+  its view is hidden. After the navigator commits, it returns focus that WinUI moved elsewhere
+  in the same view to that editor. Restoring an editor, and `SetFocus` on a splitter's
   automation peer, lay out newly shown content first.
+* **Theme changes.** WinUI can leave existing panes on their old theme after a runtime theme
+  change, so UnoDock re-applies the docked area's theme when a pane disagrees with it. Palette
+  changes reach controls in a pointer-over, pressed or disabled state by re-applying the
+  control's theme and re-entering the state.
 * **Theme resources.** UnoDock looks up density and palette overrides in each dictionary's own
   entries first, then in its merged dictionaries, on both platforms.
 * **Menus.** A docking menu whose palette changes while it exists repaints its existing
