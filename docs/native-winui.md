@@ -162,7 +162,9 @@ UnoDock keeps its behavior the same on both platforms where it can:
 * **Theme resources.** UnoDock looks up density and palette overrides in each dictionary's own
   entries first, then in its merged dictionaries, on both platforms.
 * **Menus.** A docking menu whose palette changes while it exists repaints its existing
-  presenter.
+  presenter. While the menu is open its `MenuFlyoutPresenterStyle` is left alone and replaced
+  when the menu next opens: replacing the style of an open menu ends the process with an
+  access violation inside WinUI on Windows ARM64.
 * **Images.** `UriSourceToBitmapImageConverter` resolves a relative URI as `ms-appx:///` (a
   file in the application package) on native WinUI.
 
@@ -175,12 +177,6 @@ UnoDock keeps its behavior the same on both platforms where it can:
   WinUI's does not. Code that declares its own `Dispose()` on an element with `new` builds on
   both; on WinUI the compiler reports that `new` is not needed (`CS0109`).
 * **Browser workspaces.** `UnoDock.Browser` runs only on Uno's WebAssembly host.
-
-## Known issues
-
-* **Windows ARM64.** Changing the theme while a docking context menu is open can end the
-  process with an access violation inside WinUI. This has been seen only on ARM64; the same
-  tests pass on x64, where CI runs. It is not resolved yet.
 
 ## Testing
 
@@ -200,7 +196,8 @@ Some tests are platform-specific:
   instances where WinUI resolves a style's theme resource elsewhere, the package URI of a
   relative image, and one dictionary per theme key.
 
-CI runs the native WinUI Gallery in two shards on every pull request (see
+CI runs the native WinUI Gallery on x64, in two shards, on every pull request (see
 [build and verification](testing.md)). Each suite writes the first-chance exceptions it raised
 to `exceptions-<suite>.log`, because native WinUI ends the process on an exception in a
-dispatcher callback without reporting it.
+dispatcher callback without reporting it. Windows ARM64 is checked by hand on a
+virtual machine, not in CI.

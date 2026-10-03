@@ -15,6 +15,7 @@ Native WinUI 3 is now verified end to end: every Gallery sample and self-test su
 - Theme and palette changes reach open menus, hot visual states and controls with application theme dictionaries. Lookups ignore framework theme resources and theme values that `XamlControlsResources` cannot supply.
 - Stale `Unloaded` events, a `Loaded` raised after layout, and focus restored after the navigator closes are handled.
 - A manager stops rendering when its host window is destroyed.
+- Changing the theme while a docking context menu is open no longer ends the process on Windows ARM64.
 - See [Uno and WinUI differences](docs/native-winui.md) for everything that differs between the platforms and what UnoDock does about it.
 
 ### Fixes on all platforms
@@ -24,7 +25,7 @@ Native WinUI 3 is now verified end to end: every Gallery sample and self-test su
 
 ### Known limitations
 
-- Native WinUI is verified on x64. On Windows ARM64, changing the theme while a docking context menu is open can end the process with an access violation inside WinUI; this is not yet resolved.
+- Native WinUI is verified in CI on x64. Windows ARM64 is checked by hand, not in CI.
 - On native WinUI, an exception thrown by an application callback during a deferred render ends the process (WinUI does not report dispatcher-callback exceptions). Handle errors in template and style selectors and content factories; see [Uno and WinUI differences](docs/native-winui.md).
 - Linux supports X11; Wayland sessions run through XWayland.
 - Mixed-DPI placement on Windows is tested with a simulated second monitor, not yet on physical mixed-DPI hardware.
