@@ -18,6 +18,8 @@ public partial class App : Application
         if (Environment.GetEnvironmentVariable("UNODOCK_TEST_RESULTS") is { Length: > 0 } results && Environment.GetEnvironmentVariable("UNODOCK_TEST_SUITE") is { Length: > 0 } suite)
         {
             var path = Path.Combine(results, "exceptions-" + suite + ".log");
+            DebugSettings.XamlResourceReferenceFailed += (_, e) => File.AppendAllText(path, "--- XamlResourceReferenceFailed: " + e.Message + Environment.NewLine);
+            DebugSettings.LayoutCycleTracingLevel = LayoutCycleTracingLevel.High;
             var count = 0;
             var writing = false;
             AppDomain.CurrentDomain.FirstChanceException += (_, e) =>

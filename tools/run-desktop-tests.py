@@ -100,7 +100,15 @@ def dump_stacks(pid: int, output) -> None:
         output.write(b"dotnet-stack did not complete.\n")
 
 
-def run(app: Path, output: Path, selector: str, dotnet: str, per_suite: float, total: float, excluded: list[str] | None = None) -> int:
+def shard_suites(suites: list[str], shard: str) -> list[str]:
+    """Every N-th suite of the registry order, starting at K (K/N, 1-based)."""
+    index, count = (int(part) for part in shard.split("/"))
+    if not 1 <= index <= count:
+        raise ValueError(f"Invalid shard {shard}")
+    return suites[index - 1::count]
+
+
+def run(app: Path, output: Path, selector: str, dotnet: str, per_suite: float, total: float, excluded: list[str] | None = None, shard: str = "") -> int:
     app = app.resolve(strict=True)
     output.mkdir(parents=True, exist_ok=True)
     output = output.resolve()
@@ -118,7 +126,9 @@ def run(app: Path, output: Path, selector: str, dotnet: str, per_suite: float, t
     suites = read_manifest(output / "selected-suites.json")
     if excluded:
         suites = exclude_suites(suites, excluded)
-    (output / "execution-plan.json").write_text(json.dumps({"schema": 1, "selector": selector, "excluded": excluded or [], "suites": suites}, indent=2) + "\n", encoding="utf-8")
+    if shard:
+        suites = shard_suites(suites, shard)
+    (output / "execution-plan.json").write_text(json.dumps({"schema": 1, "selector": selector, "excluded": excluded or [], "shard": shard, "suites": suites}, indent=2) + "\n", encoding="utf-8")
     env.pop("UNODOCK_LIST_TESTS")
     results = []
     for name in suites:
@@ -153,12 +163,13 @@ def main() -> int:
     parser.add_argument("--suite-timeout", type=float, default=120)
     parser.add_argument("--total-timeout", type=float, default=900)
     parser.add_argument("--exclude", default="", help="Comma-separated suites to leave out of the selection.")
+    parser.add_argument("--shard", default="", help="K/N: run every N-th selected suite starting at the K-th.")
     args = parser.parse_args()
     if not 0 < args.suite_timeout <= args.total_timeout < float("inf"):
         parser.error("Timeouts must be finite and 0 < suite-timeout <= total-timeout.")
     try:
         excluded = [name for name in args.exclude.split(",") if name]
-        return run(args.app, args.output, args.selector, args.dotnet, args.suite_timeout, args.total_timeout, excluded)
+        return run(args.app, args.output, args.selector, args.dotnet, args.suite_timeout, args.total_timeout, excluded, args.shard)
     except (OSError, ValueError, ET.ParseError, subprocess.TimeoutExpired, RuntimeError) as error:
         write_console(f"Desktop acceptance incomplete: {error}", error=True)
         return 1

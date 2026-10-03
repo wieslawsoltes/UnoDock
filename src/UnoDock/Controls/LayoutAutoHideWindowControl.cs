@@ -192,7 +192,20 @@ public partial class LayoutAutoHideWindowControl : ContentControl, ILayoutContro
             if (!IsCurrent(model, manager, openingVersion))
                 return;
             item.View.Visibility = Visibility.Visible;
+#if WINDOWS
+            try
+            {
+                _presenter.Content = item.View;
+            }
+            catch (ArgumentException error)
+            {
+                // WIP diagnostics for native WinUI re-parenting failures.
+                var parent = VisualTreeHelper.GetParent(item.View);
+                throw new InvalidOperationException($"Auto-hide host of {item.View.GetType().Name} failed; parent {parent?.GetType().FullName ?? "none"}; grandparent {(parent == null ? "none" : VisualTreeHelper.GetParent(parent)?.GetType().FullName)}; view content {item.View.Content?.GetType().FullName}", error);
+            }
+#else
             _presenter.Content = item.View;
+#endif
             VisualParenting.Hosted(_presenter, item.View);
             ApplyAnchorableStyle();
             if (!IsCurrent(model, manager, openingVersion))

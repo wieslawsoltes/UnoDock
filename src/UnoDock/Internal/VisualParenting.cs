@@ -77,7 +77,20 @@ internal static class VisualParenting
             if (i < panel.Children.Count && ReferenceEquals(panel.Children[i], wanted[i]))
                 continue;
             Detach(wanted[i]);
+#if WINDOWS
+            try
+            {
+                panel.Children.Insert(i, wanted[i]);
+            }
+            catch (System.Runtime.InteropServices.COMException error)
+            {
+                // WIP diagnostics for native WinUI re-parenting failures.
+                var parent = VisualTreeHelper.GetParent(wanted[i]);
+                throw new InvalidOperationException($"Insert of {wanted[i].GetType().Name} into {panel.GetType().Name} failed; parent {parent?.GetType().FullName ?? "none"}; parent content is element: {(parent as ContentPresenter)?.Content == (object)wanted[i]}; grandparent {(parent == null ? "none" : VisualTreeHelper.GetParent(parent)?.GetType().FullName)}", error);
+            }
+#else
             panel.Children.Insert(i, wanted[i]);
+#endif
         }
     }
 }
