@@ -518,6 +518,10 @@ public static class WindowLifecycleTests
             var ancestor = false;
             for (DependencyObject? node = f.EditorA2; node != null; node = VisualTreeHelper.GetParent(node))
                 ancestor |= ReferenceEquals(node, view);
+            // Move focus so focusing the second editor is a real change: native WinUI raises no
+            // focus events for an element that already has focus.
+            Check.True(f.EditorB.Focus(FocusState.Programmatic));
+            await Tick();
             Check.True(f.EditorA2.Focus(FocusState.Programmatic));
             await Tick();
             var viewDiag = $"view is ancestor {ancestor}, view GotFocus {gotFocus}";

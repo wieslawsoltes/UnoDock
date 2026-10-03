@@ -84,7 +84,9 @@ internal static class FluentResourceRefreshTests
                                 for (var i = 0; i < 50 && menu.IsOpen; i++)
                                     await Task.Delay(20);
                                 menu.ShowAt(tab);
-                                await Wait(() => opened && menu.Items.OfType<MenuFlyoutItem>().Any(item => item.IsEnabled && item.ActualHeight > 0));
+                                for (var i = 0; i < 100 && !(opened && menu.Items.OfType<MenuFlyoutItem>().Any(item => item.IsEnabled && item.ActualHeight > 0)); i++)
+                                    await Task.Delay(20);
+                                Check.True(opened && menu.Items.OfType<MenuFlyoutItem>().Any(item => item.IsEnabled && item.ActualHeight > 0), $"The menu did not open: opened {opened}, open {menu.IsOpen}, rows [{string.Join(",", menu.Items.OfType<MenuFlyoutItem>().Select(item => $"{item.IsEnabled}/{item.Visibility}/{item.ActualHeight}"))}], popups {VisualTreeHelper.GetOpenPopupsForXamlRoot(page.XamlRoot).Count}.");
                                 // Let the native flyout complete its initial focus/state
                                 // projection before explicitly testing a retained state.
                                 await Task.Delay(80);
@@ -250,7 +252,7 @@ internal static class FluentResourceRefreshTests
             {
                 page.Dock.Resources["UnoDock.HoverBrush"] = new SolidColorBrush(Microsoft.UI.Colors.SlateGray);
                 await Settle(page);
-                Check.Equal(1, redirects);
+                Check.True(redirects == 1, $"Expected one redirect, got {redirects}; current state {group.CurrentState?.Name}; same label {ReferenceEquals(label, Label(page))}; same template {ReferenceEquals(group, label.FindVisualChildren<FrameworkElement>().SelectMany(VisualStateManager.GetVisualStateGroups).First(item => item.Name == "CommonStates"))}.");
                 Check.Equal("Disabled", group.CurrentState?.Name);
             }
             finally

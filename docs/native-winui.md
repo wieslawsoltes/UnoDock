@@ -177,3 +177,11 @@ Some tests are platform-specific:
   handler to run during a change, are compiled only for Uno.
 * Tests that give a test-only `DockingManager` subclass another manager's template use
   `UsingTemplateOf`, which keeps the subclass template on native WinUI.
+* A few assertions compare what each platform can guarantee: brush colors instead of
+  instances where WinUI resolves a style's theme resource elsewhere, the package URI of a
+  relative image, and one dictionary per theme key.
+
+CI runs the native WinUI Gallery in two shards on every pull request (see
+[build and verification](testing.md)). Each suite writes the first-chance exceptions it raised
+to `exceptions-<suite>.log`, because native WinUI ends the process on an exception in a
+dispatcher callback without reporting it.
