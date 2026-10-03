@@ -65,7 +65,7 @@ public partial class DockingManager
     {
         _guardedItem = item;
         _guardedEditor = editor;
-        _guardUntil = Environment.TickCount64 + 500;
+        _guardUntil = Environment.TickCount64 + 1000;
     }
 
     private void OnFocusManagerGotFocus(object? sender, Microsoft.UI.Xaml.Input.FocusManagerGotFocusEventArgs e)

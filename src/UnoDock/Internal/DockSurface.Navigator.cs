@@ -189,17 +189,14 @@ internal sealed partial class DockSurface
         floating?.Activate();
         if (!CurrentFocus())
             return;
-        var editor = item.RememberedEditor;
-        if (item.RestoreEditorFocus(deferred: false))
-        {
 #if WINDOWS
-            // Native WinUI moves focus once more when the navigator leaves the tree, after this
-            // turn; return it to the editor this commit restored.
-            if (editor != null)
-                Manager.GuardEditorFocus(item, editor);
+        // Native WinUI keeps focus from moving until the navigator has fully left the tree, and
+        // then focuses the first element of the view itself; that focus returns to the editor.
+        if (item.RememberedEditor is { } editor)
+            Manager.GuardEditorFocus(item, editor);
 #endif
+        if (item.RestoreEditorFocus(deferred: false))
             return;
-        }
         DispatcherQueue.TryEnqueue(() =>
         {
             if (CurrentFocus())

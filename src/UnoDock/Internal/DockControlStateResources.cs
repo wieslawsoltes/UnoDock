@@ -140,6 +140,14 @@ internal sealed class DockControlStateResources
             {
                 ReapplyTheme(control);
                 VisualStateManager.GoToState(control, state.Name, false);
+#if WINDOWS
+                // A menu row re-evaluates its state on a later turn after a theme change.
+                control.DispatcherQueue.TryEnqueue(() =>
+                {
+                    if (version == _version && ReferenceEquals(control.Template, template) && LiveTree.IsLive(control) && group.CurrentState?.Name == "Normal")
+                        VisualStateManager.GoToState(control, state.Name, false);
+                });
+#endif
             }
         }
         catch
