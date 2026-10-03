@@ -150,7 +150,11 @@ internal static partial class XamlWorkspaceTests
                 await host.Show();
                 var theme = (FluentTheme)host.Manager.Theme!;
                 theme.RequestedTheme = mode;
-                await Wait(() => host.Manager.FindVisualChildren<LayoutDocumentPaneControl>().First().ActualTheme == mode);
+                for (var i = 0; i < 100 && host.Manager.FindVisualChildren<LayoutDocumentPaneControl>().First().ActualTheme != mode; i++)
+                    await Task.Delay(20);
+                var surface = typeof(DockingManager).GetProperty("Surface", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(host.Manager) as FrameworkElement;
+                var docked = surface?.GetType().GetField("_docked", BindingFlags.Instance | BindingFlags.NonPublic)?.GetValue(surface) as FrameworkElement;
+                Check.True(host.Manager.FindVisualChildren<LayoutDocumentPaneControl>().First().ActualTheme == mode, $"Pane theme {host.Manager.FindVisualChildren<LayoutDocumentPaneControl>().First().ActualTheme}; same theme instance {ReferenceEquals(theme, host.Manager.Theme)}; docked requested {docked?.RequestedTheme} actual {docked?.ActualTheme}; manager actual {host.Manager.ActualTheme}; chrome theme {theme.RequestedTheme}.");
                 Check.Same(theme, host.Manager.Theme);
                 Check.Equal(mode, (ElementTheme)theme.GetValue(FluentTheme.RequestedThemeProperty));
             });

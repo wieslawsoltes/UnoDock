@@ -520,10 +520,12 @@ public static class WindowLifecycleTests
             var nav = f.Navigator();
             await Tick();
             nav.PreviewDocument(nav.Documents.Single(d => ReferenceEquals(d.LayoutElement, f.A)));
+            string Remembered() => (typeof(LayoutItem).GetProperty("RememberedEditor", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(host.GetLayoutItemFromModel(f.A)) as TextBox)?.Text ?? "none";
+            var before = Remembered();
             CallSurface(host, "CloseNavigator", true);
             await Tick();
             Check.Same(f.A, host.Layout.ActiveContent);
-            Check.True(ReferenceEquals(f.EditorA2, FocusManager.GetFocusedElement(host.XamlRoot!)), "Expected retained second editor, focused: " + (FocusManager.GetFocusedElement(host.XamlRoot!) as TextBox)?.Text);
+            Check.True(ReferenceEquals(f.EditorA2, FocusManager.GetFocusedElement(host.XamlRoot!)), "Expected retained second editor, focused: " + (FocusManager.GetFocusedElement(host.XamlRoot!) as TextBox)?.Text + "; remembered before commit: " + before + ", now: " + Remembered());
         });
         Live("navigator respects activation command CanExecute", async f =>
         {
