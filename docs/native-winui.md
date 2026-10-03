@@ -111,6 +111,7 @@ not called on a window that is being destroyed.
 | `ResourceDictionary.ContainsKey` and `Keys.Contains` | the dictionary's own entries | also merged and theme dictionaries |
 | One `ResourceDictionary` instance under several theme keys | allowed | rejected: a dictionary has one parent |
 | `Focus` on an element that has not been laid out | succeeds | fails |
+| `ControlTemplate` without `TargetType` that uses `{TemplateBinding}` on a member `Control` does not declare (such as `Content`) | binds | layout fails with `0x80004005` |
 | Elements of a window's content tree after the window closes | reusable | unusable anywhere (`0x800F1000`), even when the window's `Content` was cleared first; only elements removed from that tree before `Close()` survive |
 | `CornerRadius` with negative or non-finite values | accepted | the constructor throws `ArgumentException` |
 | Relative URIs | accepted | WinRT URIs are absolute |
