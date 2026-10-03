@@ -40,6 +40,35 @@ public partial class DockingManager
         return true;
     }
 
+    // Native WinUI raises no routed GotFocus or LostFocus for some focus moves (an element that
+    // keeps focus while its view is hidden and shown again); the application-wide focus event
+    // still reports them, so the item remembers its editor from it.
+    private bool _trackingFocus;
+    private void TrackFocus(bool track)
+    {
+        if (track == _trackingFocus)
+            return;
+        _trackingFocus = track;
+        if (track)
+            Microsoft.UI.Xaml.Input.FocusManager.GotFocus += OnFocusManagerGotFocus;
+        else
+            Microsoft.UI.Xaml.Input.FocusManager.GotFocus -= OnFocusManagerGotFocus;
+    }
+
+    private void OnFocusManagerGotFocus(object? sender, Microsoft.UI.Xaml.Input.FocusManagerGotFocusEventArgs e)
+    {
+        if (_disposed || e.NewFocusedElement is not DependencyObject focused || !DispatcherQueue.HasThreadAccess)
+            return;
+        for (var node = focused; node != null; node = VisualTreeHelper.GetParent(node))
+            if (node is ContentPresenter view)
+                foreach (var item in _items.Values)
+                    if (ReferenceEquals(item.ExistingView, view))
+                    {
+                        item.Remember(focused);
+                        return;
+                    }
+    }
+
     private static bool IsDescribedByXamlMetadata(Type type)
     {
         try

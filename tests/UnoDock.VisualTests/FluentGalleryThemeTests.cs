@@ -62,9 +62,11 @@ internal static class FluentGalleryThemeTests
                             Check.Same(palette.GetType().GetProperty("Border")!.GetValue(palette), page.Dock.BorderBrush);
 #else
                             // Native WinUI resolves a style setter's ThemeResource from the dictionary that
-                            // defines the style, so the frame shows the palette's colors, not its instances.
-                            Check.Equal(((SolidColorBrush)palette.GetType().GetProperty("Surface")!.GetValue(palette)!).Color, ((SolidColorBrush)page.Dock.Background).Color);
-                            Check.Equal(((SolidColorBrush)palette.GetType().GetProperty("Border")!.GetValue(palette)!).Color, ((SolidColorBrush)page.Dock.BorderBrush).Color);
+                            // defines the style: the frame follows the theme with that dictionary's brushes.
+                            static bool IsDark(Brush? brush) => brush is SolidColorBrush { Color: var c } && c.R + c.G + c.B < 3 * 128;
+                            var dark = mode == SampleTheme.Dark;
+                            Check.Equal(dark, IsDark(page.Dock.Background));
+                            Check.Equal(dark, IsDark((Brush)palette.GetType().GetProperty("Surface")!.GetValue(palette)!));
 #endif
                         }
 

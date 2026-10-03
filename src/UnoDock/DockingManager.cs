@@ -355,6 +355,9 @@ public partial class DockingManager : Control, IDisposable, UnoDock.Compatibilit
             return;
         _loaded = true;
         ObserveThemeParameters();
+#if WINDOWS
+        TrackFocus(true);
+#endif
         AttachHostWindow();
         if (!_initialized)
         {
@@ -376,6 +379,9 @@ public partial class DockingManager : Control, IDisposable, UnoDock.Compatibilit
             return;
         _loaded = false;
         ReleaseThemeParameters();
+#if WINDOWS
+        TrackFocus(false);
+#endif
         _surface?.CancelDrag();
         foreach (var window in _floating)
             window.HideHost();
@@ -666,6 +672,9 @@ public partial class DockingManager : Control, IDisposable, UnoDock.Compatibilit
         _disposed = true;
         ObserveXamlTheme(null);
         ReleaseThemeParameters();
+#if WINDOWS
+        TrackFocus(false);
+#endif
         Loaded -= OnLoaded;
         Unloaded -= OnUnloaded;
         _documentObserver?.Dispose();

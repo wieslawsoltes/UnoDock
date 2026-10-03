@@ -121,10 +121,16 @@ internal sealed partial class DockSurface : Grid, IDisposable
         _navigator?.UpdateAppearance();
         // ContentControl does not necessarily paint Background on every host.
         // Paint the full docking grid so side rails never depend on Window pixels.
-        _docked.RequestedTheme = DockThemeResources.EffectiveTheme(Manager);
+        var theme = DockThemeResources.EffectiveTheme(Manager);
+        _docked.RequestedTheme = theme;
 #if WINDOWS
-        if (Environment.GetEnvironmentVariable("UNODOCK_TRACE") == "1")
-            Console.Error.WriteLine($"TRACE theme docked {_docked.RequestedTheme}/{_docked.ActualTheme} children [{string.Join(", ", _docked.Children.OfType<FrameworkElement>().Select(c => c.GetType().Name + ":" + c.RequestedTheme + "/" + c.ActualTheme))}]");
+        // Native WinUI can leave existing children on their old theme after a runtime change;
+        // a further change propagates.
+        if (_docked.Children.OfType<FrameworkElement>().Any(child => child.RequestedTheme == ElementTheme.Default && child.ActualTheme != _docked.ActualTheme))
+        {
+            _docked.RequestedTheme = _docked.ActualTheme == ElementTheme.Dark ? ElementTheme.Light : ElementTheme.Dark;
+            _docked.RequestedTheme = theme;
+        }
 #endif
         _docked.Background = DockChrome.Palette(Manager).States.Workspace;
         var root = Manager.Layout;
