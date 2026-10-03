@@ -83,6 +83,8 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
         return Microsoft.UI.Xaml.Input.FocusManager.FindFirstFocusableElement(_view) is Control first && first.Focus(FocusState.Programmatic);
     }
 
+    /// <summary>The editor that last had focus in this item's view, if it is still there.</summary>
+    internal Control? RememberedEditor => _lastFocused?.TryGetTarget(out var previous) == true && IsInView(previous) ? previous as Control : null;
     public bool IsViewCreated => _view != null;
     internal ContentPresenter? ExistingView => _view;
 

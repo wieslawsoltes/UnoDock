@@ -19,7 +19,9 @@ public sealed class LayoutGridResizerAutomationPeer(LayoutGridResizerControl own
     protected override bool IsKeyboardFocusableCore() => !IsReadOnly && owner.IsTabStop;
     protected override void SetFocusCore()
     {
-        if (IsReadOnly || !TryFocus())
+        if (IsReadOnly)
+            throw new InvalidOperationException("The splitter is read-only and cannot receive keyboard focus.");
+        if (!TryFocus())
             throw new InvalidOperationException("The splitter cannot receive keyboard focus.");
     }
 
