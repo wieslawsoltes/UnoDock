@@ -328,7 +328,13 @@ internal static class FluentStateResourceTests
             for (var i = 0; i < Control.Resources.MergedDictionaries.Count; i++)
             {
                 var merged = Control.Resources.MergedDictionaries[i];
-                foreach (var theme in new[] { "Light", "Dark" })
+                foreach (var theme in new[]
+                {
+                    "Light",
+                    "Dark"
+                }
+
+                )
                     if (merged.ThemeDictionaries.TryGetValue(theme, out var t) && t is ResourceDictionary d)
                         parts.Add($"merged[{i}].{theme} " + (d.TryGetValue(key, out var v) ? (ReferenceEquals(v, expected) ? "expected" : (v as SolidColorBrush)?.Color.ToString()) : "none"));
             }

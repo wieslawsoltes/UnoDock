@@ -169,6 +169,7 @@ internal static partial class XamlWorkspaceTests
 
                     return string.Join(" < ", parts);
                 }
+
                 Check.Same(theme, host.Manager.Theme);
                 Check.Equal(mode, (ElementTheme)theme.GetValue(FluentTheme.RequestedThemeProperty));
             });

@@ -33,6 +33,7 @@ internal sealed partial class NavigatorListItem
             });
             return;
         }
+
 #else
         Template = template;
 #endif

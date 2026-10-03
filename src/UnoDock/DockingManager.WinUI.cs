@@ -60,8 +60,8 @@ public partial class DockingManager
     private Control? _guardedEditor;
     private long _guardUntil;
     /// <summary>For a moment after the navigator restores an editor, focus that WinUI moves to
-    /// another element of the same view returns to that editor.</summary>
-    internal void GuardEditorFocus(LayoutItem item, Control editor)
+        /// another element of the same view returns to that editor.</summary>
+        internal void GuardEditorFocus(LayoutItem item, Control editor)
     {
         _guardedItem = item;
         _guardedEditor = editor;

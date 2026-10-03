@@ -17,6 +17,7 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
     private DockingManager? _manager;
     private bool _disposed, _attaching;
     internal bool IsDisposed => _disposed;
+
     private readonly long _visibilityToken;
     protected LayoutItem() => _visibilityToken = RegisterPropertyChangedCallback(VisibilityProperty, (_, _) => OnVisibilityChanged());
     public LayoutContent LayoutElement
@@ -78,9 +79,9 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
         return false;
     }
 
-    /// <param name="deferred">False on the first attempt: on native WinUI, a remembered editor
-    /// that cannot take focus yet is then retried on a later turn instead of falling back.</param>
-    internal bool RestoreEditorFocus(bool deferred = true)
+    /// <param name = "deferred">False on the first attempt: on native WinUI, a remembered editor
+        /// that cannot take focus yet is then retried on a later turn instead of falling back.</param>
+        internal bool RestoreEditorFocus(bool deferred = true)
     {
         if (_disposed || _view?.XamlRoot == null || !LayoutElement.IsEnabled)
             return false;

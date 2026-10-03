@@ -63,6 +63,7 @@ internal static class FluentResourceRefreshTests
                                 VisualStateManager.GoToState(control, state, false);
                                 await Task.Delay(40);
                             }
+
 #endif
                             var brush = themeChange ? PaletteBrush(page.Dock, member) : replacement;
                             Check.True(HasBackground(control, brush), $"The active native state retained an obsolete palette brush: expected {(brush as SolidColorBrush)?.Color}; backgrounds [{string.Join(",", control.FindVisualChildren<FrameworkElement>().Select(e => e switch { Border b => b.Background, Panel p => p.Background, ContentPresenter c => c.Background, Control c => c.Background, _ => null }).OfType<SolidColorBrush>().Select(b => b.Color.ToString()).Distinct())}]; lookup {(control.Resources.TryGetValue(menuRow ? (state == "PointerOver" ? "MenuFlyoutItemBackgroundPointerOver" : "MenuFlyoutItemBackgroundPressed") : (state == "PointerOver" ? "ButtonBackgroundPointerOver" : "ButtonBackgroundPressed"), out var resolved) ? (ReferenceEquals(resolved, brush) ? "expected" : (resolved as SolidColorBrush)?.Color.ToString()) : "none")}; theme {control.RequestedTheme}/{control.ActualTheme}; state {control.FindVisualChildren<FrameworkElement>().SelectMany(VisualStateManager.GetVisualStateGroups).FirstOrDefault(g => g.Name == "CommonStates")?.CurrentState?.Name}.");

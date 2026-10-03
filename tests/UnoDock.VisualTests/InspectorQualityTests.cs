@@ -401,6 +401,7 @@ internal static class InspectorQualityTests
                 Inspector().UpdateLayout();
                 return Inspector().FindVisualChildren<T>().Single(e => AutomationProperties.GetAutomationId(e) == "Property-" + name);
             }
+
             TextBox Search() => Inspector().FindVisualChildren<TextBox>().Single(e => AutomationProperties.GetAutomationId(e) == "PropertySearch");
             void Add(string name, Action action) => AddAsync(name, () =>
             {

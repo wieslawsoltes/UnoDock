@@ -760,13 +760,14 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
         _windowRoot?.Children.Remove(this);
         _windowRoot = null;
     }
+
 #else
     private UIElement WindowRoot() => this;
     private void LeaveWindowRoot()
     {
     }
-#endif
 
+#endif
     /// <summary>Closes the native window, retaining this control, its content and
         /// its model so the same control can be shown again natively or in-surface.</summary>
         private void ReleaseNativeWindow()

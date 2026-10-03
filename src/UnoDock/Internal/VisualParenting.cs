@@ -11,8 +11,7 @@ internal static class VisualParenting
     // refuses that element to another host; Detach releases it from the recorded host.
     private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<UIElement, DependencyObject> Hosts = new();
 #endif
-
-    /// <summary>Records the host that was just given <paramref name="content"/>.</summary>
+    /// <summary>Records the host that was just given <paramref name = "content"/>.</summary>
     internal static void Hosted(DependencyObject host, object? content)
     {
 #if WINDOWS
@@ -29,6 +28,7 @@ internal static class VisualParenting
             Hosts.Remove(element);
             Release(host, element);
         }
+
 #endif
         var parent = VisualTreeHelper.GetParent(element);
         switch (parent)
