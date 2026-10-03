@@ -78,7 +78,11 @@ internal static class NavigatorRevocationTests
             foreach (var duringUnload in new[]
             {
                 false,
+#if HAS_UNO
+                // Native WinUI raises Unloaded on a later turn, after the commit: a handler
+                // cannot race it there.
                 true
+#endif
             }
 
             )

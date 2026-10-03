@@ -79,7 +79,11 @@ internal static class FluentStateResourceTests
                     "direct",
                     "theme",
                     "merged-theme",
+#if HAS_UNO
+                    // Native WinUI gives a ResourceDictionary one parent, so one instance
+                    // cannot serve two theme keys.
                     "shared-theme",
+#endif
                     "default"
                 }
 

@@ -46,7 +46,7 @@ dotnet add package UnoDock.Themes.VS2010 --prerelease
 
 Multi-window browser workspaces (`UnoDock.Browser`) are available from source and in the [browser workbench](https://wieslawsoltes.github.io/UnoDock/playground/); they will be packaged once an application hosting template is ready.
 
-UnoDock targets .NET 10 with Uno Platform 6.7 (Skia desktop and WebAssembly) and native WinUI 3 on Windows. Releases are published from CI with nuget.org Trusted Publishing and signed build provenance ([publishing](docs/publishing.md)).
+UnoDock targets .NET 10 with Uno Platform 6.7 (Skia desktop and WebAssembly) and native WinUI 3 on Windows ([Uno and WinUI differences](docs/native-winui.md)). Releases are published from CI with nuget.org Trusted Publishing and signed build provenance ([publishing](docs/publishing.md)).
 
 ## Quick start
 

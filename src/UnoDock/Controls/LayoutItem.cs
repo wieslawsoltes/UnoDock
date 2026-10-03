@@ -63,13 +63,19 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
     {
         if (_disposed || _view?.XamlRoot == null || !LayoutElement.IsEnabled)
             return false;
+        if (_lastFocused?.TryGetTarget(out var previous) == true && IsInView(previous) && previous is Control control && control.IsEnabled && control.Visibility == Visibility.Visible)
+        {
+            if (control.Focus(FocusState.Programmatic))
+                return true;
 #if WINDOWS
-        // Native WinUI focuses only elements that took part in a layout pass, and content that
-        // was just selected has not yet.
-        _view.UpdateLayout();
+            // Native WinUI focuses only elements that took part in a layout pass, and content
+            // that was just selected has not yet.
+            _view.UpdateLayout();
+            if (control.Focus(FocusState.Programmatic))
+                return true;
 #endif
-        if (_lastFocused?.TryGetTarget(out var previous) == true && IsInView(previous) && previous is Control control && control.IsEnabled && control.Visibility == Visibility.Visible && control.Focus(FocusState.Programmatic))
-            return true;
+        }
+
         return Microsoft.UI.Xaml.Input.FocusManager.FindFirstFocusableElement(_view) is Control first && first.Focus(FocusState.Programmatic);
     }
 

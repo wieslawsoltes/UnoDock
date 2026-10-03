@@ -335,6 +335,10 @@ internal static class TemplateIconTests
             var editor = f.Document.Content;
             f.Manager.DocumentHeaderTemplate = BoundMarker("live-header");
             f.Manager.Refresh();
+#if !HAS_UNO
+            // Native WinUI expands a changed ContentTemplate during the next layout pass.
+            tab.UpdateLayout();
+#endif
             Check.True(ShowsText(tab, "live-header"), "Refresh() must apply a changed header template synchronously.");
             f.Manager.DocumentHeaderTemplate = null;
             await f.Settle();

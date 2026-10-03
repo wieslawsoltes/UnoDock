@@ -10,6 +10,7 @@ Build an application workspace from explicit layout models and native Uno/WinUI 
 | [Browser workspaces](browser-workspaces.md) | Open real windows, transfer documents/tools, and recover content. |
 | [Architecture](architecture.md) | Understand model ownership, presentation, and host responsibilities. |
 | [Platform support](platform-support.md) | Distinguish implementation, runtime verification, and remaining boundaries. |
+| [Native WinUI](native-winui.md) | Build for the Windows App SDK and what differs from Uno Platform. |
 
 ## Application integration
 

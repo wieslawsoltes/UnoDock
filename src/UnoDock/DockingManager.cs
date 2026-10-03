@@ -307,12 +307,6 @@ public partial class DockingManager : Control, IDisposable, UnoDock.Compatibilit
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         RenderNow();
-#if WINDOWS
-        // Native WinUI expands a changed ContentTemplate during the next layout pass, Uno when it
-        // is set: run that pass so Refresh() leaves the same visuals on both.
-        if (IsLoaded)
-            UpdateLayout();
-#endif
     }
 
     internal void RenderNow()
