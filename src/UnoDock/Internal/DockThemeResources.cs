@@ -52,6 +52,12 @@ internal static class DockThemeResources
     {
         if (ReferenceEquals(dictionary, skip) || !visited.Add(dictionary))
             return null;
+#if WINDOWS
+        // Native WinUI's ContainsKey covers merged and theme dictionaries: a dictionary without
+        // either key has nothing to offer at any depth, which keeps the walk cheap.
+        if (!dictionary.ContainsKey(key) && (alternate == null || !dictionary.ContainsKey(alternate)))
+            return null;
+#endif
         if (dictionary.Count > 0 && dictionary.Owns(key))
             return dictionary[key];
         if (alternate != null && dictionary.Count > 0 && dictionary.Owns(alternate))

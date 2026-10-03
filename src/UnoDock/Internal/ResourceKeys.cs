@@ -2,6 +2,9 @@ namespace UnoDock.Internal;
 
 internal static class ResourceKeys
 {
+#if WINDOWS
+    private static readonly string[] ThemeNames = ["Default", "Light", "Dark", "HighContrast"];
+#endif
     /// <summary>Whether the dictionary itself defines the key. Native WinUI's ContainsKey (and
     /// Keys.Contains) also search merged and theme dictionaries; Uno's Keys holds only the
     /// dictionary's own entries. See docs/native-winui.md.</summary>
@@ -17,9 +20,11 @@ internal static class ResourceKeys
         foreach (var merged in dictionary.MergedDictionaries)
             if (merged.ContainsKey(key) && Equals(merged[key], value))
                 return false;
-        foreach (var theme in dictionary.ThemeDictionaries.Values)
-            if (theme is ResourceDictionary themed && themed.ContainsKey(key) && Equals(themed[key], value))
-                return false;
+        var themes = dictionary.ThemeDictionaries;
+        if (themes.Count > 0)
+            foreach (var name in ThemeNames)
+                if (themes.TryGetValue(name, out var theme) && theme is ResourceDictionary themed && themed.ContainsKey(key) && Equals(themed[key], value))
+                    return false;
         return true;
 #else
         return dictionary.Keys.Contains(key);
