@@ -136,9 +136,6 @@ public static class VisualParityTests
                     Content = new TextBox()
                 });
                 await Settle();
-                // A newly realized tab is Loaded on a later turn on native WinUI.
-                for (var i = 0; i < 40 && !Visible(Tab(tool)); i++)
-                    await Task.Delay(25);
                 Check.True(Visible(Tab(tool)));
                 Check.Same(presenter, dock.GetLayoutItemFromModel(tool).View);
                 pane.Children.RemoveAt(1);
@@ -475,7 +472,8 @@ public static class VisualParityTests
         for (DependencyObject? p = element; p != null; p = VisualTreeHelper.GetParent(p))
             if (p is UIElement { Visibility: Visibility.Collapsed })
                 return false;
-        return element.IsLoaded && element.ActualWidth > 0 && element.ActualHeight > 0;
+        // Native WinUI raises Loaded a turn after layout: a laid-out element in a live root counts.
+        return (element.IsLoaded || element.XamlRoot != null) && element.ActualWidth > 0 && element.ActualHeight > 0;
     }
 
     private static Button NamedButton(FrameworkElement parent, string name) => parent.FindVisualChildren<Button>().Single(b => AutomationProperties.GetName(b) == name);

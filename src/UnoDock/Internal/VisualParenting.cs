@@ -13,6 +13,9 @@ internal static class VisualParenting
 #endif
 
     /// <summary>Records the content host that was just given <paramref name="content"/>.</summary>
+#if WINDOWS
+    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<UIElement, Panel> LastPanels = new();
+#endif
     internal static void Hosted(DependencyObject host, object? content)
     {
 #if WINDOWS
@@ -81,10 +84,12 @@ internal static class VisualParenting
             try
             {
                 panel.Children.Insert(i, wanted[i]);
+                LastPanels.AddOrUpdate(wanted[i], panel);
             }
             catch (System.Runtime.InteropServices.COMException error)
             {
                 // WIP diagnostics.
+                _ = error;
                 string probe;
                 try
                 {
@@ -98,6 +103,9 @@ internal static class VisualParenting
                     probe = "rejected by a new panel " + failure.HResult.ToString("X8");
                 }
 
+                var last = LastPanels.TryGetValue(wanted[i], out var previous) ? previous : null;
+                var hosted = Hosts.TryGetValue(wanted[i], out var tracked) ? tracked : null;
+                probe += $"; last panel {(last == null ? "none" : (ReferenceEquals(last, panel) ? "same" : "other") + " contains " + last.Children.Contains(wanted[i]) + " loaded " + last.IsLoaded + " root " + (last.XamlRoot != null) + " parent " + (VisualTreeHelper.GetParent(last)?.GetType().Name ?? "none"))}; tracked host {(hosted == null ? "none" : hosted.GetType().Name)}";
                 throw new InvalidOperationException($"Insert of {wanted[i].GetType().Name} into {panel.GetType().Name} failed ({probe}); visual parent {VisualTreeHelper.GetParent(wanted[i])?.GetType().Name ?? "none"}; element root {(wanted[i].XamlRoot == null ? "none" : "set")}; panel root {(panel.XamlRoot == null ? "none" : "set")}; panel loaded {panel.IsLoaded}; element loaded {(wanted[i] as FrameworkElement)?.IsLoaded}", error);
             }
 #else

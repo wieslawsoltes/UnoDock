@@ -47,12 +47,19 @@ internal static class DockThemeResources
         return alternate != null && app.Resources.TryGetValue(alternate, out system) ? system : null;
     }
 
+#if WINDOWS
+    private static string ApplicationThemeName() => Microsoft.Windows.Shell.SystemParameters2.Current.HighContrast ? "HighContrast" : Application.Current?.RequestedTheme == ApplicationTheme.Dark ? "Dark" : "Light";
+#endif
     private static object? Find(ResourceDictionary dictionary, string key, string themeName, ResourceDictionary? skip, HashSet<ResourceDictionary> visited) => Find(dictionary, key, themeName, skip, visited, null);
     private static object? Find(ResourceDictionary dictionary, string key, string themeName, ResourceDictionary? skip, HashSet<ResourceDictionary> visited, string? alternate)
     {
         if (ReferenceEquals(dictionary, skip) || !visited.Add(dictionary))
             return null;
 #if WINDOWS
+        // XamlControlsResources resolves its theme dictionaries internally, for the application's
+        // theme only, so it cannot supply another theme's values; never borrow them.
+        if (dictionary is XamlControlsResources && themeName != ApplicationThemeName())
+            return null;
         // Native WinUI's ContainsKey covers merged and theme dictionaries: a dictionary without
         // either key has nothing to offer at any depth, which keeps the walk cheap.
         if (!dictionary.ContainsKey(key) && (alternate == null || !dictionary.ContainsKey(alternate)))

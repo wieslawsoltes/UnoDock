@@ -657,14 +657,14 @@ public static class WindowLifecycleTests
                     await Tick();
                     var native = window.NativeWindow;
                     Check.True(native != null);
-                    Check.Same(window, native!.Content);
+                    Check.Same(window, NativeClient(native!));
                     Call(window, "HideHost");
                     await Tick();
                     Check.Equal(0, window.Closures);
                     Call(window, "ShowNative");
                     await Tick();
                     Check.Equal(1, window.Initializations);
-                    Check.Same(window, window.NativeWindow!.Content);
+                    Check.Same(window, NativeClient(window.NativeWindow!));
                     Check.Same(editor, window.Content);
                 }
                 finally
@@ -945,4 +945,6 @@ public static class WindowLifecycleTests
     }
 
     private static async Task Tick() => await Task.Delay(70);
+    // On native WinUI a floating window's control sits in a disposable root (docs/native-winui.md).
+    private static object? NativeClient(Window native) => native.Content is Panel { Children: [var only] } ? only : native.Content;
 }
