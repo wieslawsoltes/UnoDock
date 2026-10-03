@@ -41,7 +41,11 @@ public class OverlayWindow : DockWindowControl
         _canvas.Children.Add(_fill);
         _canvas.Children.Add(_preview);
         Content = _defaultCanvas;
-        Unloaded += (_, _) => Hide();
+        Unloaded += (_, _) =>
+        {
+            if (!LiveTree.IsStaleUnload(this))
+                Hide();
+        };
     }
 
     protected override void OnApplyTemplate()

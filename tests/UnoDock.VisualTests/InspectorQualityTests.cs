@@ -179,7 +179,14 @@ internal static class InspectorQualityTests
                 Inspector().Filter("FontSize");
                 await Settle();
                 var input = Field<TextBox>("FontSize");
-                input.Focus(FocusState.Programmatic);
+                // Native WinUI focuses only laid-out elements; the draft must be in focus.
+                for (var i = 0; i < 20 && input.FocusState == FocusState.Unfocused; i++)
+                {
+                    input.Focus(FocusState.Programmatic);
+                    if (input.FocusState == FocusState.Unfocused)
+                        await Task.Delay(20);
+                }
+
                 input.Text = "27.75";
                 Editor().FontSize = 21.5;
                 Check.Equal("27.75", input.Text);
@@ -388,7 +395,13 @@ internal static class InspectorQualityTests
             LayoutDocument Document() => page.Dock.Layout.Descendents().OfType<LayoutDocument>().Single(d => d.ContentId == "document2");
             TextBox Editor() => (TextBox)Document().Content!;
             T Field<T>(string name)
-                where T : FrameworkElement => Inspector().FindVisualChildren<T>().Single(e => AutomationProperties.GetAutomationId(e) == "Property-" + name);
+                where T : FrameworkElement
+            {
+                // Native WinUI realizes rearranged rows during layout, Uno when they change.
+                Inspector().UpdateLayout();
+                return Inspector().FindVisualChildren<T>().Single(e => AutomationProperties.GetAutomationId(e) == "Property-" + name);
+            }
+
             TextBox Search() => Inspector().FindVisualChildren<TextBox>().Single(e => AutomationProperties.GetAutomationId(e) == "PropertySearch");
             void Add(string name, Action action) => AddAsync(name, () =>
             {

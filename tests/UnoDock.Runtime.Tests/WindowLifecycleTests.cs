@@ -512,7 +512,13 @@ public static class WindowLifecycleTests
             f.A.IsActive = true;
             host.Refresh();
             await Tick();
+            // Move focus so focusing the second editor is a real change: native WinUI raises no
+            // focus events for an element that already has focus.
+            var view = host.GetLayoutItemFromModel(f.A).View;
+            Check.True(view.FindVisualChildren<TextBox>().First(editor => !ReferenceEquals(editor, f.EditorA2)).Focus(FocusState.Programmatic));
+            await Tick();
             Check.True(f.EditorA2.Focus(FocusState.Programmatic));
+            await Tick();
             f.B.IsActive = true;
             host.Refresh();
             await Tick();
@@ -562,7 +568,7 @@ public static class WindowLifecycleTests
                 f.B.IsActive = true;
                 host.Refresh();
                 await Tick();
-                var native = Uno.UI.ApplicationHelper.Windows.Single(w => ReferenceEquals(w.Content?.XamlRoot, host.XamlRoot));
+                var native = TestWindows.For(host.XamlRoot);
                 native.Activate();
                 Check.True(f.EditorB.Focus(FocusState.Programmatic));
                 await Tick();
@@ -657,14 +663,14 @@ public static class WindowLifecycleTests
                     await Tick();
                     var native = window.NativeWindow;
                     Check.True(native != null);
-                    Check.Same(window, native!.Content);
+                    Check.Same(window, NativeClient(native!));
                     Call(window, "HideHost");
                     await Tick();
                     Check.Equal(0, window.Closures);
                     Call(window, "ShowNative");
                     await Tick();
                     Check.Equal(1, window.Initializations);
-                    Check.Same(window, window.NativeWindow!.Content);
+                    Check.Same(window, NativeClient(window.NativeWindow!));
                     Check.Same(editor, window.Content);
                 }
                 finally
@@ -739,7 +745,7 @@ public static class WindowLifecycleTests
 #if WINDOWS
         return WinRT.Interop.WindowNative.GetWindowHandle(window);
 #else
-        return Uno.UI.Xaml.WindowHelper.GetNativeWindow(window) is Uno.UI.NativeElementHosting.Win32NativeWindow native ? native.Hwnd : 0;
+        return TestWindows.Handle(window);
 #endif
     }
 
@@ -945,4 +951,6 @@ public static class WindowLifecycleTests
     }
 
     private static async Task Tick() => await Task.Delay(70);
+    // On native WinUI a floating window's control sits in a disposable root (docs/native-winui.md).
+    private static object? NativeClient(Window native) => native.Content is Panel { Children: [var only] } ? only : native.Content;
 }

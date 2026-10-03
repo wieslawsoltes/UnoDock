@@ -335,6 +335,10 @@ internal static class TemplateIconTests
             var editor = f.Document.Content;
             f.Manager.DocumentHeaderTemplate = BoundMarker("live-header");
             f.Manager.Refresh();
+#if !HAS_UNO
+            // Native WinUI expands a changed ContentTemplate during the next layout pass.
+            tab.UpdateLayout();
+#endif
             Check.True(ShowsText(tab, "live-header"), "Refresh() must apply a changed header template synchronously.");
             f.Manager.DocumentHeaderTemplate = null;
             await f.Settle();
@@ -488,6 +492,15 @@ internal static class TemplateIconTests
             return;
         }
 
+#if !HAS_UNO
+        // Native WinUI exposes a toggle menu item through the Toggle pattern, which clicks it.
+        if (peer.GetPattern(PatternInterface.Toggle) is IToggleProvider toggle)
+        {
+            toggle.Toggle();
+            return;
+        }
+
+#endif
         var method = typeof(MenuFlyoutItem).GetMethod("Invoke", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public, Type.EmptyTypes) ?? throw new MissingMethodException(nameof(MenuFlyoutItem), "Invoke");
         method.Invoke(row, null);
     }

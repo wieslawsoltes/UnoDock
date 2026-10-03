@@ -1,0 +1,43 @@
+<!--
+  Native WinUI checks a Style's TargetType, and an item's type against a collection,
+  through XAML type metadata that only describes types named in markup. This dictionary
+  is never loaded: naming every public control and item type here (and the manager)
+  gives WinUI their metadata and base classes, so styles such as a LayoutItem container
+  style apply to LayoutAnchorableItem and LayoutDocumentItem. See docs/native-winui.md.
+-->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:dock="using:UnoDock" xmlns:controls="using:UnoDock.Controls">
+  <Style x:Key="UnoDock.Metadata.DockingManager" TargetType="dock:DockingManager"/>
+  <Style x:Key="UnoDock.Metadata.DockInputControl" TargetType="controls:DockInputControl"/>
+  <Style x:Key="UnoDock.Metadata.DockSelectionControl" TargetType="controls:DockSelectionControl"/>
+  <Style x:Key="UnoDock.Metadata.DockWindowControl" TargetType="controls:DockWindowControl"/>
+  <Style x:Key="UnoDock.Metadata.LayoutFloatingWindowControl" TargetType="controls:LayoutFloatingWindowControl"/>
+  <Style x:Key="UnoDock.Metadata.LayoutItem" TargetType="controls:LayoutItem"/>
+  <Style x:Key="UnoDock.Metadata.LayoutTabItemBase" TargetType="controls:LayoutTabItemBase"/>
+  <Style x:Key="UnoDock.Metadata.AnchorablePaneTitle" TargetType="controls:AnchorablePaneTitle"/>
+  <Style x:Key="UnoDock.Metadata.DocumentPaneTabPanel" TargetType="controls:DocumentPaneTabPanel"/>
+  <Style x:Key="UnoDock.Metadata.DropDownButton" TargetType="controls:DropDownButton"/>
+  <Style x:Key="UnoDock.Metadata.DropDownControlArea" TargetType="controls:DropDownControlArea"/>
+  <Style x:Key="UnoDock.Metadata.LayoutAnchorControl" TargetType="controls:LayoutAnchorControl"/>
+  <Style x:Key="UnoDock.Metadata.LayoutAnchorGroupControl" TargetType="controls:LayoutAnchorGroupControl"/>
+  <Style x:Key="UnoDock.Metadata.LayoutAnchorSideControl" TargetType="controls:LayoutAnchorSideControl"/>
+  <Style x:Key="UnoDock.Metadata.LayoutAnchorableControl" TargetType="controls:LayoutAnchorableControl"/>
+  <Style x:Key="UnoDock.Metadata.LayoutAnchorableFloatingWindowControl" TargetType="controls:LayoutAnchorableFloatingWindowControl"/>
+  <Style x:Key="UnoDock.Metadata.LayoutAnchorablePaneControl" TargetType="controls:LayoutAnchorablePaneControl"/>
+  <Style x:Key="UnoDock.Metadata.LayoutAnchorableTabItem" TargetType="controls:LayoutAnchorableTabItem"/>
+  <Style x:Key="UnoDock.Metadata.LayoutDocumentControl" TargetType="controls:LayoutDocumentControl"/>
+  <Style x:Key="UnoDock.Metadata.LayoutDocumentFloatingWindowControl" TargetType="controls:LayoutDocumentFloatingWindowControl"/>
+  <Style x:Key="UnoDock.Metadata.LayoutDocumentPaneControl" TargetType="controls:LayoutDocumentPaneControl"/>
+  <Style x:Key="UnoDock.Metadata.LayoutDocumentTabItem" TargetType="controls:LayoutDocumentTabItem"/>
+  <Style x:Key="UnoDock.Metadata.OverlayWindow" TargetType="controls:OverlayWindow"/>
+  <Style x:Key="UnoDock.Metadata.LayoutAnchorableItem" TargetType="controls:LayoutAnchorableItem"/>
+  <Style x:Key="UnoDock.Metadata.LayoutAutoHideWindowControl" TargetType="controls:LayoutAutoHideWindowControl"/>
+  <Style x:Key="UnoDock.Metadata.LayoutCachePaneControl" TargetType="controls:LayoutCachePaneControl"/>
+  <Style x:Key="UnoDock.Metadata.LayoutDocumentItem" TargetType="controls:LayoutDocumentItem"/>
+  <Style x:Key="UnoDock.Metadata.LayoutGridResizerControl" TargetType="controls:LayoutGridResizerControl"/>
+  <Style x:Key="UnoDock.Metadata.NavigatorWindow" TargetType="controls:NavigatorWindow"/>
+  <Style x:Key="UnoDock.Metadata.AnchorablePaneTabPanel" TargetType="controls:AnchorablePaneTabPanel"/>
+  <Style x:Key="UnoDock.Metadata.MenuItemEx" TargetType="controls:MenuItemEx"/>
+  <Style x:Key="UnoDock.Metadata.NavigatorListBox" TargetType="controls:NavigatorListBox"/>
+  <!-- A flyout cannot be a style target; an unused resource names it instead. -->
+  <controls:ContextMenuEx x:Key="UnoDock.Metadata.ContextMenuEx"/>
+</ResourceDictionary>

@@ -62,22 +62,30 @@ internal static class FloatingDragCleanupTests
                             if (fault is "caption" or "both")
                                 Watch(f.Control, LayoutFloatingWindowControl.IsDraggingProperty, () => !f.Control.IsDragging, "caption state");
                             var error = Observe(() => f.End(generation, commit));
+                            Check.Equal(expected.Count, observed.Count);
+                            for (var i = 0; i < expected.Count; i++)
+                                Check.Same(expected[i], observed[i]);
+#if HAS_UNO
+                            // Native WinUI does not return an exception thrown by a property-changed
+                            // callback to the code that changed the property; on Uno it propagates.
                             Check.True(error != null, "A throwing application observer was silently swallowed.");
                             var leaves = error is AggregateException aggregate ? aggregate.Flatten().InnerExceptions.ToArray() : new[]
                             {
                                 error!
                             };
-                            Check.Equal(expected.Count, observed.Count);
                             Check.Equal(expected.Count, leaves.Length);
                             for (var i = 0; i < expected.Count; i++)
-                            {
-                                Check.Same(expected[i], observed[i]);
                                 Check.Same(expected[i], leaves[i]);
-                            }
-
                             if (expected.Count == 1)
                                 Check.Same(expected[0], error);
+#endif
                             f.AssertIdle();
+#if !HAS_UNO
+                            // Only guide observers failed, and native WinUI kept that from UnoDock:
+                            // the release is an ordinary drop there, and the window has docked.
+                            if (commit && fault == "guides")
+                                return;
+#endif
                             Check.True(f.Source.All(c => ReferenceEquals(c.FindParent<LayoutFloatingWindow>(), f.Floating)), "Teardown failure authorized a drop.");
                             for (var i = 0; i < editors.Length; i++)
                                 Check.Same(editors[i], f.Source[i].Content);
@@ -117,7 +125,12 @@ internal static class FloatingDragCleanupTests
                 delivered = true;
                 throw marker;
             });
+#if HAS_UNO
             Check.Same(marker, Observe(f.Overlay.Hide));
+#else
+            // Native WinUI does not return a property-changed callback's exception to the caller.
+            Check.Same(null, Observe(f.Overlay.Hide));
+#endif
             AssertHidden(f.Overlay);
             Check.Equal(2, Get<Canvas>(f.Overlay, "_canvas").Children.Count);
         });

@@ -427,7 +427,12 @@ public static class LifecycleTests
             )
             {
                 var attribute = (Microsoft.UI.Xaml.Markup.ContentPropertyAttribute?)Attribute.GetCustomAttribute(type, typeof(Microsoft.UI.Xaml.Markup.ContentPropertyAttribute), false);
+#if HAS_UNO
                 Check.Equal("Children", attribute!.Name);
+#else
+                // Native WinUI markup uses an object-typed view of Children (docs/native-winui.md).
+                Check.Equal("XamlChildren", attribute!.Name);
+#endif
             }
         });
         var original = host.Layout;

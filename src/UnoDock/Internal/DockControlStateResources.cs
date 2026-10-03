@@ -48,10 +48,10 @@ internal sealed class DockControlStateResources
 
             if (overridden)
             {
-                if (dictionary.Keys.Contains(key))
+                if (dictionary.Owns(key))
                     dictionary.Remove(key);
             }
-            else if (!dictionary.Keys.Contains(key) || !ReferenceEquals(dictionary[key], brush))
+            else if (!(dictionary.TryGetValue(key, out var current) && ReferenceEquals(current, brush)))
                 dictionary[key] = brush;
         }
     }
@@ -61,7 +61,7 @@ internal sealed class DockControlStateResources
         value = null;
         if (ReferenceEquals(dictionary, _resources) || !visited.Add(dictionary))
             return false;
-        if (dictionary.Keys.Contains(key))
+        if (dictionary.Owns(key))
         {
             value = dictionary[key];
             return true;
@@ -101,7 +101,7 @@ internal sealed class DockControlStateResources
 
     internal void Refresh(Control control)
     {
-        if (!_dirty || _refreshing || !control.IsLoaded)
+        if (!_dirty || _refreshing || !LiveTree.IsLive(control))
             return;
         _dirty = false;
         // ThemeResource on a native state setter is resolved when that state is
@@ -110,7 +110,11 @@ internal sealed class DockControlStateResources
         // events, and retain the same template and focus-state group.
         var group = control.FindVisualChildren<FrameworkElement>().SelectMany(VisualStateManager.GetVisualStateGroups).FirstOrDefault(candidate => candidate.Name == "CommonStates");
         if (group?.CurrentState is not { Name: "PointerOver" or "Pressed" or "Disabled" } state)
+        {
+            ReapplyTheme(control);
             return;
+        }
+
         var template = control.Template;
         var version = _version;
         var interrupted = false;
@@ -127,8 +131,24 @@ internal sealed class DockControlStateResources
             if (!VisualStateManager.GoToState(control, "Normal", false))
                 return;
             group.CurrentStateChanged -= Changed;
-            if (!interrupted && version == _version && ReferenceEquals(control.Template, template) && control.IsLoaded && group.CurrentState?.Name == "Normal")
+#if WINDOWS
+            // Native WinUI raises CurrentStateChanged on a later turn: an event arriving now
+            // belongs to an earlier transition, and no callback can redirect this one.
+            interrupted = false;
+#endif
+            if (!interrupted && version == _version && ReferenceEquals(control.Template, template) && LiveTree.IsLive(control) && group.CurrentState?.Name == "Normal")
+            {
+                ReapplyTheme(control);
                 VisualStateManager.GoToState(control, state.Name, false);
+#if WINDOWS
+                // A menu row re-evaluates its state on a later turn after a theme change.
+                control.DispatcherQueue.TryEnqueue(() =>
+                {
+                    if (version == _version && ReferenceEquals(control.Template, template) && LiveTree.IsLive(control) && group.CurrentState?.Name == "Normal")
+                        VisualStateManager.GoToState(control, state.Name, false);
+                });
+#endif
+            }
         }
         catch
         {
@@ -140,5 +160,19 @@ internal sealed class DockControlStateResources
             group.CurrentStateChanged -= Changed;
             _refreshing = false;
         }
+    }
+
+    // Native WinUI resolves ThemeResource references, state setters included, when the template
+    // loads and when the element's theme changes; replacing a dictionary entry or entering a
+    // state again does not. Re-applying the theme resolves them again.
+    private static void ReapplyTheme(Control control)
+    {
+#if WINDOWS
+        if (!LiveTree.IsLive(control))
+            return;
+        var requested = control.RequestedTheme;
+        control.RequestedTheme = control.ActualTheme == ElementTheme.Dark ? ElementTheme.Light : ElementTheme.Dark;
+        control.RequestedTheme = requested;
+#endif
     }
 }

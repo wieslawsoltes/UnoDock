@@ -79,7 +79,11 @@ internal static class FluentStateResourceTests
                     "direct",
                     "theme",
                     "merged-theme",
+#if HAS_UNO
+                    // Native WinUI gives a ResourceDictionary one parent, so one instance
+                    // cannot serve two theme keys.
                     "shared-theme",
+#endif
                     "default"
                 }
 
@@ -308,7 +312,34 @@ internal static class FluentStateResourceTests
             await Task.Delay(20);
             Check.True(VisualStateManager.GoToState(Control, name, false), "Missing platform state " + name);
             if (expected != null)
-                await Wait(() => Control.FindVisualChildren<FrameworkElement>().Any(element => ReferenceEquals(Background(element), expected)));
+            {
+                for (var i = 0; i < 100 && !Control.FindVisualChildren<FrameworkElement>().Any(element => ReferenceEquals(Background(element), expected)); i++)
+                    await Task.Delay(20);
+                var found = Control.FindVisualChildren<FrameworkElement>().Any(element => ReferenceEquals(Background(element), expected));
+                Check.True(found, $"The actual Fluent template did not resolve the expected consumer resource in {name}: expected {(expected as SolidColorBrush)?.Color}; backgrounds [{string.Join(", ", Control.FindVisualChildren<FrameworkElement>().Select(Background).OfType<SolidColorBrush>().Select(b => b.Color.ToString()).Distinct())}]; merged {Control.Resources.MergedDictionaries.Count}; themes [{string.Join(",", Control.Resources.ThemeDictionaries.Keys)}]; {Published(expected)}.");
+            }
+        }
+
+        private string Published(Brush expected)
+        {
+            var parts = new List<string>();
+            var key = ReferenceEquals(expected, Pressed) ? PressedKey : HoverKey;
+            parts.Add("lookup " + (Control.Resources.TryGetValue(key, out var found) ? (ReferenceEquals(found, expected) ? "expected" : (found as SolidColorBrush)?.Color.ToString()) : "none"));
+            for (var i = 0; i < Control.Resources.MergedDictionaries.Count; i++)
+            {
+                var merged = Control.Resources.MergedDictionaries[i];
+                foreach (var theme in new[]
+                {
+                    "Light",
+                    "Dark"
+                }
+
+                )
+                    if (merged.ThemeDictionaries.TryGetValue(theme, out var t) && t is ResourceDictionary d)
+                        parts.Add($"merged[{i}].{theme} " + (d.TryGetValue(key, out var v) ? (ReferenceEquals(v, expected) ? "expected" : (v as SolidColorBrush)?.Color.ToString()) : "none"));
+            }
+
+            return string.Join("; ", parts);
         }
 
         public void Dispose()

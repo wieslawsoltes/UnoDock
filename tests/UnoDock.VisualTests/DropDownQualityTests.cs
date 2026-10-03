@@ -375,6 +375,9 @@ public static class DropDownQualityTests
                 await Wait(() => !menu.IsOpen && ReferenceEquals(row.ReadLocalValue(FrameworkElement.DataContextProperty), DependencyProperty.UnsetValue));
                 t.CheckClosed();
             });
+#if HAS_UNO
+            // Native WinUI does not return an exception thrown by a DataContextChanged handler to the
+            // code that set DataContext, so these failures cannot reach UnoDock there.
             Add("failed context assignment cleans up and can be retried", async t =>
             {
                 var menu = NewMenu(out var row);
@@ -398,6 +401,7 @@ public static class DropDownQualityTests
                 await Wait(() => menu.IsOpen);
                 Check.Same(context, row.DataContext);
             });
+#endif
             Add("shared menu transfers ownership between two triggers", async t =>
             {
                 var next = new Trigger(!area);

@@ -7,7 +7,7 @@ actually executed.
 | Platform | Hosting | Validation |
 |---|---|---|
 | Windows 10/11 (Uno Skia, Win32) | Native main and floating windows, custom caption, Snap-aware drop targeting, per-monitor DPI for floating bounds | Hosted desktop suites; physical-input suites (`windows-floating-input`, `tear-off`) on a 200% DPI Windows 11 desktop |
-| Windows (native WinUI 3) | Native floating windows owned by the host island, closing with it; no window registration needed | Package validation and a native WinUI smoke test in CI |
+| Windows (native WinUI 3) | Native floating windows owned by the host island, closing with it; no window registration needed | Package validation, a native WinUI smoke test, and every Gallery sample and self-test suite on the Windows App SDK in CI; see [Uno and WinUI differences](native-winui.md) |
 | macOS (Uno Skia, AppKit) | Native child floating windows, Retina-aware sizing, top-left persisted bounds | Hosted desktop suites on Retina displays |
 | Linux (Uno Skia, X11/XWayland) | Native floating windows with Motif, EWMH and ICCCM hints | Hosted desktop suites; XTEST physical input under Xvfb and Openbox |
 | WebAssembly | Real Uno browser gallery; optional multi-window browser workspace | Playwright: startup, editing, ownership transfer and recovery |

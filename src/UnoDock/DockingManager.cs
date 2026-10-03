@@ -35,7 +35,12 @@ public partial class DockingManager : Control, IDisposable, UnoDock.Compatibilit
 
     public DockingManager()
     {
+#if WINDOWS
+        if (!UseSubclassStyle())
+            DefaultStyleKey = typeof(DockingManager);
+#else
         DefaultStyleKey = typeof(DockingManager);
+#endif
         IsTabStop = false;
         _updates = new(ScheduleRender);
         ActualThemeChanged += (_, _) => InvalidateView();
@@ -350,6 +355,9 @@ public partial class DockingManager : Control, IDisposable, UnoDock.Compatibilit
             return;
         _loaded = true;
         ObserveThemeParameters();
+#if WINDOWS
+        TrackFocus(true);
+#endif
         AttachHostWindow();
         if (!_initialized)
         {
@@ -367,8 +375,13 @@ public partial class DockingManager : Control, IDisposable, UnoDock.Compatibilit
 
     private void OnUnloaded(object sender, RoutedEventArgs args)
     {
+        if (LiveTree.IsStaleUnload(this))
+            return;
         _loaded = false;
         ReleaseThemeParameters();
+#if WINDOWS
+        TrackFocus(false);
+#endif
         _surface?.CancelDrag();
         foreach (var window in _floating)
             window.HideHost();
@@ -383,7 +396,13 @@ public partial class DockingManager : Control, IDisposable, UnoDock.Compatibilit
     {
         ArgumentNullException.ThrowIfNull(content);
         if (_items.TryGetValue(content, out var existing))
-            return existing;
+        {
+            if (!existing.IsDisposed)
+                return existing;
+            // The application disposed the item: the content gets a new one.
+            _items.Remove(content);
+        }
+
         LayoutItem item = content is LayoutAnchorable ? new LayoutAnchorableItem() : new LayoutDocumentItem();
         _items.Add(content, item);
         item.Attach(content, this);
@@ -653,6 +672,9 @@ public partial class DockingManager : Control, IDisposable, UnoDock.Compatibilit
         _disposed = true;
         ObserveXamlTheme(null);
         ReleaseThemeParameters();
+#if WINDOWS
+        TrackFocus(false);
+#endif
         Loaded -= OnLoaded;
         Unloaded -= OnUnloaded;
         _documentObserver?.Dispose();

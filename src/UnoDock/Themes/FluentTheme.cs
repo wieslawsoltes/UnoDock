@@ -59,7 +59,7 @@ public sealed class FluentTheme : DictionaryTheme
         _published.Clear();
         if (RequestedTheme != ElementTheme.Default)
             foreach (var slot in Internal.DockThemeResources.Slots(Internal.DockChrome.Default(RequestedTheme == ElementTheme.Dark)))
-                if (!ThemeResourceDictionary.Keys.Contains("UnoDock." + slot.Dock))
+                if (!Internal.ResourceKeys.Owns(ThemeResourceDictionary, "UnoDock." + slot.Dock))
                     Publish(slot.Dock, slot.Fallback);
         InvalidateTheme();
     }

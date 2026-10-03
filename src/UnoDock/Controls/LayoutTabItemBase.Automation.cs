@@ -1,4 +1,5 @@
 using Microsoft.UI.Xaml.Automation.Peers;
+using UnoDock.Internal;
 using UnoDock.Layout;
 
 namespace UnoDock.Controls;
@@ -43,7 +44,7 @@ public abstract partial class LayoutTabItemBase
         if (!DispatcherQueue.TryEnqueue(() =>
         {
             _automationQueued = false;
-            peer.Synchronize();
+            LiveTree.Announce(peer.Synchronize);
         }))
             _automationQueued = false;
     }

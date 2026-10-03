@@ -429,6 +429,7 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
             {
                 VisualParenting.Detach(body);
                 _body.Content = body;
+                VisualParenting.Hosted(_body, body);
             }
         }
 
@@ -481,7 +482,7 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
             _window = new Window
             {
                 Title = _caption.Text,
-                Content = this
+                Content = WindowRoot()
             };
             _systemRegistration = Microsoft.Windows.Shell.SystemCommands.RegisterWindow(_window);
             _window.AppWindow.Closing += OnNativeClosing;
@@ -636,6 +637,7 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
             window.AppWindow.Changed -= OnNativeChanged;
             window.Closed -= OnNativeClosed;
             window.Activated -= OnNativeActivated;
+            LeaveWindowRoot();
             window.Content = null;
         }
 
@@ -741,6 +743,31 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
         Visibility = Visibility.Collapsed;
     }
 
+#if WINDOWS
+    // Native WinUI makes every element of a closed window's content tree unusable, even after
+    // the window's Content is cleared. This control sits in a disposable root and leaves it
+    // before the window closes, so it and its content can be shown again elsewhere.
+    private Grid? _windowRoot;
+    private UIElement WindowRoot()
+    {
+        _windowRoot = new Grid();
+        _windowRoot.Children.Add(this);
+        return _windowRoot;
+    }
+
+    private void LeaveWindowRoot()
+    {
+        _windowRoot?.Children.Remove(this);
+        _windowRoot = null;
+    }
+
+#else
+    private UIElement WindowRoot() => this;
+    private void LeaveWindowRoot()
+    {
+    }
+
+#endif
     /// <summary>Closes the native window, retaining this control, its content and
         /// its model so the same control can be shown again natively or in-surface.</summary>
         private void ReleaseNativeWindow()
@@ -760,6 +787,7 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
             window.Closed -= OnNativeClosed;
             window.Activated -= OnNativeActivated;
             DesktopWindowCoordinates.HideNativeClientBeforeClose(window);
+            LeaveWindowRoot();
             window.Content = null;
             window.Close();
             _systemRegistration?.Dispose();
@@ -833,6 +861,7 @@ public abstract partial class LayoutFloatingWindowControl : DockWindowControl, I
             window.Closed -= OnNativeClosed;
             window.Activated -= OnNativeActivated;
             DesktopWindowCoordinates.HideNativeClientBeforeClose(window);
+            LeaveWindowRoot();
             window.Content = null;
             _systemRegistration?.Dispose();
             _systemRegistration = null;

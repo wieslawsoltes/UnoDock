@@ -270,7 +270,7 @@ internal static class WindowsFloatingInputTests
         internal Point ScreenPoint(FrameworkElement element, Point point)
         {
             var root = element.XamlRoot ?? throw new InvalidOperationException("Detached test target.");
-            var window = Uno.UI.ApplicationHelper.Windows.Single(w => ReferenceEquals(w.Content?.XamlRoot, root));
+            var window = TestWindows.For(root);
             var origin = new POINT();
             if (!ClientToScreen(Handle(window), ref origin))
                 throw new Win32Exception(Marshal.GetLastPInvokeError());
@@ -391,7 +391,7 @@ internal static class WindowsFloatingInputTests
                 throw new Win32Exception(Marshal.GetLastPInvokeError(), "Dedicated SendInput injection failed.");
         }
 
-        private static nint Handle(Window window) => Uno.UI.Xaml.WindowHelper.GetNativeWindow(window) is Uno.UI.NativeElementHosting.Win32NativeWindow native ? native.Hwnd : throw new InvalidOperationException("A real Win32 Uno host is required.");
+        private static nint Handle(Window window) => TestWindows.Handle(window) is var handle && handle != 0 ? handle : throw new InvalidOperationException("A real Win32 host is required.");
         public void Dispose()
         {
             try

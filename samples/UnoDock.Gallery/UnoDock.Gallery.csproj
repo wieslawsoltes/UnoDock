@@ -13,6 +13,19 @@
     <ApplicationDescription>Classic WPF-style docking on Uno Platform</ApplicationDescription>
     <UnoFeatures>SkiaRenderer;</UnoFeatures>
   </PropertyGroup>
+  <!-- Native WinUI 3 head, requested explicitly with
+       -p:UnoDockTargetFrameworks=net10.0-windows10.0.26100.0 and built with Visual Studio MSBuild:
+       an unpackaged, self-contained Windows App SDK app that runs every sample and suite. -->
+  <PropertyGroup Condition="$(TargetFramework.Contains('-windows'))">
+    <OutputType>WinExe</OutputType>
+    <WindowsPackageType>None</WindowsPackageType>
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+  </PropertyGroup>
+  <ItemGroup Condition="$(TargetFramework.Contains('-windows'))">
+    <!-- Browser workspaces exist only on WebAssembly; their library targets Uno alone. -->
+    <Compile Remove="App.Browser.cs;BrowserWorkspacePage.xaml.cs;BrowserTextView.xaml.cs;BrowserTextViewFactory.cs" />
+    <Page Remove="BrowserWorkspacePage.xaml;BrowserTextView.xaml" />
+  </ItemGroup>
   <PropertyGroup Condition="'$(TargetFramework)' == 'net10.0-browserwasm' and '$(Configuration)' == 'Release'">
     <!-- Use the execution mode exercised by the native startup/recovery tests.
          AOT does not waive the separate multi-window lifecycle acceptance gate. -->
@@ -25,13 +38,14 @@
     <EmbeddedResource Include="../../contracts/visual-fixtures/*.xml" LogicalName="VisualFixtures.%(Filename)%(Extension)" />
     <Compile Include="../../tests/UnoDock.Runtime.Tests/InputExtensionTests.cs" Link="Testing/InputExtensionTests.cs" />
     <ProjectReference Include="../../src/UnoDock/UnoDock.csproj" />
-    <ProjectReference Include="../../src/UnoDock.Browser/UnoDock.Browser.csproj" />
+    <ProjectReference Include="../../src/UnoDock.Browser/UnoDock.Browser.csproj" Condition="!$(TargetFramework.Contains('-windows'))" />
     <ProjectReference Include="../../src/UnoDock.Themes.Aero/UnoDock.Themes.Aero.csproj" />
     <ProjectReference Include="../../src/UnoDock.Themes.Metro/UnoDock.Themes.Metro.csproj" />
     <ProjectReference Include="../../src/UnoDock.Themes.VS2010/UnoDock.Themes.VS2010.csproj" />
     <Compile Include="../../tests/UnoDock.Runtime.Tests/ShellTests*.cs" Link="Testing/%(Filename)%(Extension)" />
     <Compile Include="../../tests/UnoDock.Testing/Check.cs" Link="Testing/Check.cs" />
     <Compile Include="../../tests/UnoDock.Testing/TestRunner.cs" Link="Testing/TestRunner.cs" />
+    <Compile Include="../../tests/UnoDock.Testing/TestWindows.cs" Link="Testing/TestWindows.cs" />
     <Compile Include="../../tests/UnoDock.Runtime.Tests/WindowLifecycleTests.cs" Link="Testing/WindowLifecycleTests.cs" />
     <Compile Include="../../tests/UnoDock.Runtime.Tests/RuntimeTests.cs" Link="Testing/RuntimeTests.cs" />
     <Compile Include="../../tests/UnoDock.Runtime.Tests/InteropTests.cs" Link="Testing/InteropTests.cs" />

@@ -19,8 +19,23 @@ public sealed class LayoutGridResizerAutomationPeer(LayoutGridResizerControl own
     protected override bool IsKeyboardFocusableCore() => !IsReadOnly && owner.IsTabStop;
     protected override void SetFocusCore()
     {
-        if (IsReadOnly || !owner.Focus(FocusState.Keyboard))
+        if (IsReadOnly)
+            throw new InvalidOperationException("The splitter is read-only and cannot receive keyboard focus.");
+        if (!TryFocus())
             throw new InvalidOperationException("The splitter cannot receive keyboard focus.");
+    }
+
+    private bool TryFocus()
+    {
+        if (owner.Focus(FocusState.Keyboard))
+            return true;
+#if WINDOWS
+        // Native WinUI focuses only elements that took part in a layout pass.
+        owner.UpdateLayout();
+        return owner.Focus(FocusState.Keyboard);
+#else
+        return false;
+#endif
     }
 
     public bool IsReadOnly => owner.AutomationRange.IsReadOnly;

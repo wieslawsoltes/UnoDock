@@ -37,6 +37,7 @@ class XamlSources(unittest.TestCase):
                      for child in root if child.tag != UI + 'Style'}
         self.assertEqual(templates, {
             'UnoDock.ChromeButtonTemplate': ('ControlTemplate', 'ContentControl'),
+            'UnoDock.UndescribedManagerTemplate': ('ControlTemplate', 'Control'),
             'UnoDock.ChromeThumbTemplate': ('ControlTemplate', 'Thumb'),
             'UnoDock.NavigatorListTemplate': ('ControlTemplate', 'ListBox'),
             'UnoDock.FluentNavigatorRowTemplate': ('ControlTemplate', 'ListBoxItem'),
@@ -46,7 +47,7 @@ class XamlSources(unittest.TestCase):
             'UnoDock.DocumentMenuRowTemplate': ('ControlTemplate', 'MenuFlyoutItem'),
             'UnoDock.MenuPresenterTemplate': ('ControlTemplate', 'MenuFlyoutPresenter'),
         })
-        self.assertEqual(len(keys), 12)
+        self.assertEqual(len(keys), 13)
 
     def test_fluent_navigator_composes_a_native_button_without_copying_its_template(self):
         root = ET.parse(ROOT / 'src/UnoDock/Themes/DockChromeResources.xaml').getroot()

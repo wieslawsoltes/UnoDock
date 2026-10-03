@@ -292,10 +292,9 @@ internal static class SampleQualityTests
             {
                 using var manager = new InitializedManager
                 {
-                    Template = source.Dock.Template,
                     Width = 300,
                     Height = 180
-                };
+                }.UsingTemplateOf(source.Dock);
                 Check.Equal(0, manager.Calls);
                 var original = page.Content;
                 var host = new Grid();
@@ -321,10 +320,9 @@ internal static class SampleQualityTests
             {
                 using var manager = new InitializedManager
                 {
-                    Template = source.Dock.Template,
                     Width = 300,
                     Height = 180
-                };
+                }.UsingTemplateOf(source.Dock);
                 var replacement = new LayoutRoot
                 {
                     RootPanel = new LayoutPanel(new LayoutDocumentPane(new LayoutDocument { Title = "Replacement", ContentId = "replacement" }))

@@ -180,8 +180,22 @@ public sealed partial class DesktopWindowCoordinates : IScreenWindowCoordinates,
             throw new ArgumentOutOfRangeException(nameof(point));
         if (!element.DispatcherQueue.HasThreadAccess)
             throw new InvalidOperationException("Coordinate conversion requires the UI thread.");
-        if (element.XamlRoot?.Content == null || !element.IsLoaded)
+        if (element.XamlRoot?.Content is not { } content || !IsLive(element, content))
             throw new InvalidOperationException("The coordinate visual must be loaded into a live XamlRoot.");
+    }
+
+    private static bool IsLive(FrameworkElement element, UIElement content)
+    {
+        if (element.IsLoaded)
+            return true;
+#if WINDOWS
+        // Native WinUI raises Loaded on a later dispatcher turn than the layout pass that
+        // connects the element: accept an element already under its root's content.
+        for (DependencyObject? node = element; node != null; node = VisualTreeHelper.GetParent(node))
+            if (ReferenceEquals(node, content))
+                return true;
+#endif
+        return false;
     }
 
     private void Verify()

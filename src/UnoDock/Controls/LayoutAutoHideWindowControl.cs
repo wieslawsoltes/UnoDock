@@ -148,7 +148,11 @@ public partial class LayoutAutoHideWindowControl : ContentControl, ILayoutContro
                     _manager?.Surface?.StartAutoHideTimer();
             });
         };
-        Unloaded += (_, _) => CloseView();
+        Unloaded += (_, _) =>
+        {
+            if (!LiveTree.IsStaleUnload(this))
+                CloseView();
+        };
         IsEnabledChanged += (_, _) =>
         {
             if (!IsEnabled)
@@ -193,6 +197,7 @@ public partial class LayoutAutoHideWindowControl : ContentControl, ILayoutContro
                 return;
             item.View.Visibility = Visibility.Visible;
             _presenter.Content = item.View;
+            VisualParenting.Hosted(_presenter, item.View);
             ApplyAnchorableStyle();
             if (!IsCurrent(model, manager, openingVersion))
                 return;

@@ -222,17 +222,27 @@ public static partial class ConverterTests
                 break;
             case "Object" when (string?)expected.Attribute("Type") == "System.Windows.Controls.Image":
                 Check.True(result is Image { Source: BitmapImage });
-                Check.Equal(input, ((BitmapImage)((Image)result!).Source).UriSource);
+                Check.Equal(PackageUri(input), ((BitmapImage)((Image)result!).Source).UriSource);
                 break;
             case "Image":
                 Check.True(result is Image { Source: BitmapImage });
                 var image = (Image)result!;
-                Check.Equal((bool)expected.Attribute("SameUri")!, Equals(input, ((BitmapImage)image.Source).UriSource));
+                Check.Equal((bool)expected.Attribute("SameUri")!, Equals(PackageUri(input), ((BitmapImage)image.Source).UriSource));
                 Check.Equal((string?)expected.Attribute("Stretch"), image.Stretch.ToString());
                 break;
             default:
                 throw new InvalidOperationException("Unrecognized reference result: " + expected);
         }
+    }
+
+    // Native WinUI URIs are absolute: the converter resolves a relative URI in the package.
+    private static object? PackageUri(object? input)
+    {
+#if HAS_UNO
+        return input;
+#else
+        return input is Uri { IsAbsoluteUri: false } relative ? new Uri("ms-appx:///" + relative.OriginalString.TrimStart('/')) : input;
+#endif
     }
 
     private static void BindingTests(TestRunner tests)

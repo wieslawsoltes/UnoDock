@@ -5,6 +5,10 @@ namespace UnoDock.Gallery;
 
 public sealed class MvvmToolPresenter : ContentControl
 {
+    // The presenter that currently shows each tool view, held for as long as the view lives.
+    // On native WinUI a discarded presenter can still own the view natively after its managed
+    // wrapper is unreachable, so the owner must stay reachable to release it.
+    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<UIElement, MvvmToolPresenter> Owners = new();
     public MvvmToolPresenter()
     {
         HorizontalContentAlignment = HorizontalAlignment.Stretch;
@@ -20,6 +24,8 @@ public sealed class MvvmToolPresenter : ContentControl
             return;
         if (view != null)
         {
+            if (Owners.TryGetValue(view, out var owner) && !ReferenceEquals(owner, this) && ReferenceEquals(owner.Content, view))
+                owner.Content = null;
             switch (VisualTreeHelper.GetParent(view))
             {
                 case ContentPresenter parent when ReferenceEquals(parent.Content, view):
@@ -38,5 +44,7 @@ public sealed class MvvmToolPresenter : ContentControl
         }
 
         Content = view;
+        if (view != null)
+            Owners.AddOrUpdate(view, this);
     }
 }

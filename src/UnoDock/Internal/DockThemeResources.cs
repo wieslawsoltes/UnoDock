@@ -47,14 +47,27 @@ internal static class DockThemeResources
         return alternate != null && app.Resources.TryGetValue(alternate, out system) ? system : null;
     }
 
+#if WINDOWS
+    private static string ApplicationThemeName() => Microsoft.Windows.Shell.SystemParameters2.Current.HighContrast ? "HighContrast" : Application.Current?.RequestedTheme == ApplicationTheme.Dark ? "Dark" : "Light";
+#endif
     private static object? Find(ResourceDictionary dictionary, string key, string themeName, ResourceDictionary? skip, HashSet<ResourceDictionary> visited) => Find(dictionary, key, themeName, skip, visited, null);
     private static object? Find(ResourceDictionary dictionary, string key, string themeName, ResourceDictionary? skip, HashSet<ResourceDictionary> visited, string? alternate)
     {
         if (ReferenceEquals(dictionary, skip) || !visited.Add(dictionary))
             return null;
-        if (dictionary.Count > 0 && dictionary.Keys.Contains(key))
+#if WINDOWS
+        // XamlControlsResources resolves its theme dictionaries internally, for the application's
+        // theme only, so it cannot supply another theme's values; never borrow them.
+        if (dictionary is XamlControlsResources && themeName != ApplicationThemeName())
+            return null;
+        // Native WinUI's ContainsKey covers merged and theme dictionaries: a dictionary without
+        // either key has nothing to offer at any depth, which keeps the walk cheap.
+        if (!dictionary.ContainsKey(key) && (alternate == null || !dictionary.ContainsKey(alternate)))
+            return null;
+#endif
+        if (dictionary.Count > 0 && dictionary.Owns(key))
             return dictionary[key];
-        if (alternate != null && dictionary.Count > 0 && dictionary.Keys.Contains(alternate))
+        if (alternate != null && dictionary.Count > 0 && dictionary.Owns(alternate))
             return dictionary[alternate];
         for (var i = dictionary.MergedDictionaries.Count - 1; i >= 0; i--)
             if (Find(dictionary.MergedDictionaries[i], key, themeName, skip, visited, alternate) is { } merged)

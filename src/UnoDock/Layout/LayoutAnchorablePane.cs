@@ -1,8 +1,12 @@
 using System.Xml;
 
 namespace UnoDock.Layout;
-
+#if WINDOWS
+// Native WinUI markup adds children through XamlChildren (see the .WinUI.cs part).
+[ContentProperty(Name = "XamlChildren")]
+#else
 [ContentProperty(Name = "Children")]
+#endif
 public partial class LayoutAnchorablePane : LayoutPositionableGroup<LayoutAnchorable>, ILayoutAnchorablePane, ILayoutContentSelector
 {
     public override void ConsoleDump(int tab) => base.ConsoleDump(tab);

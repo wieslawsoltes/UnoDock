@@ -71,6 +71,7 @@ public partial class LayoutCachePaneControl
                 {
                     VisualParenting.Detach(tab);
                     item.Header = tab;
+                    VisualParenting.Hosted(item, tab);
                 }
 
                 tab.IsEmbeddedInTabView = true;

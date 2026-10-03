@@ -15,10 +15,40 @@ internal sealed partial class NavigatorListItem
             return;
         _fluent = _palette.UsesFluentControls;
         ReleaseNativeAction();
-        Template = _fluent ? DockChrome.Resource<ControlTemplate>("UnoDock.FluentNavigatorRowTemplate") : DockChrome.ButtonTemplate;
+        var template = _fluent ? DockChrome.Resource<ControlTemplate>("UnoDock.FluentNavigatorRowTemplate") : DockChrome.ButtonTemplate;
+#if WINDOWS
+        try
+        {
+            ApplyTemplateKind(template);
+            _templateRetries = 0;
+        }
+        catch (System.Runtime.InteropServices.COMException) when (_templateRetries < 3)
+        {
+            // Native WinUI can refuse changes to a row whose previous template is still being
+            // torn down (0x80004005); switch on a later turn instead, a bounded number of times.
+            _templateRetries++;
+            _fluent = !_fluent;
+            DispatcherQueue.TryEnqueue(() =>
+            {
+                if (_surface != null)
+                    Configure(_palette, _surface);
+            });
+        }
+#else
+        ApplyTemplateKind(template);
+#endif
+    }
+
+#if WINDOWS
+    private int _templateRetries;
+#endif
+    private void ApplyTemplateKind(ControlTemplate template)
+    {
+        // Template-bound properties first: they then reach the new template when it is applied.
         CornerRadius = new(_fluent ? _palette.TabCornerRadius : 0);
         BorderThickness = new(_fluent ? 0 : 1);
         UseSystemFocusVisuals = _fluent;
+        Template = template;
     }
 
     protected override void OnApplyTemplate()
@@ -44,7 +74,11 @@ internal sealed partial class NavigatorListItem
         _selectionIndicator = null;
         if (action != null)
             action.Click -= ActionClicked;
+#if !WINDOWS
         _states?.Detach();
+#endif
+        // On native WinUI the action leaves with its template; detaching its state dictionary
+        // first makes replacing a Dark template fail (0x80004005).
         _states = null;
     }
 

@@ -4,11 +4,68 @@ public partial class App : Application
 {
     private Window? _window;
     private bool _selfTestStarted;
-    public App() => InitializeComponent();
+    public App()
+    {
+        InitializeComponent();
+        // Self-test runs record unhandled exceptions: a native WinUI crash otherwise leaves
+        // only an exit code behind.
+        UnhandledException += (_, e) => ReportCrash("XAML", e.Exception);
+        AppDomain.CurrentDomain.UnhandledException += (_, e) => ReportCrash("AppDomain", e.ExceptionObject as Exception);
+        TaskScheduler.UnobservedTaskException += (_, e) => ReportCrash("Task", e.Exception);
+#if WINDOWS
+        // Native WinUI ends the process on an exception thrown in a DispatcherQueue callback
+        // without raising UnhandledException: self-test runs record first-chance exceptions so
+        // that such a failure leaves its cause behind.
+        if (Environment.GetEnvironmentVariable("UNODOCK_TEST_RESULTS") is { Length: > 0 } results && Environment.GetEnvironmentVariable("UNODOCK_TEST_SUITE") is { Length: > 0 } suite)
+        {
+            var path = Path.Combine(results, "exceptions-" + suite + ".log");
+            DebugSettings.XamlResourceReferenceFailed += (_, e) => File.AppendAllText(path, "--- XamlResourceReferenceFailed: " + e.Message + Environment.NewLine);
+            var count = 0;
+            var writing = false;
+            AppDomain.CurrentDomain.FirstChanceException += (_, e) =>
+            {
+                if (writing || ++count > 3000)
+                    return;
+                writing = true;
+                try
+                {
+                    File.AppendAllText(path, $"--- {e.Exception.GetType().FullName}: {e.Exception.Message}{Environment.NewLine}{new System.Diagnostics.StackTrace(1, true)}{Environment.NewLine}");
+                }
+                catch (IOException)
+                {
+                }
+                finally
+                {
+                    writing = false;
+                }
+            };
+        }
+#endif
+    }
+
+    private static void ReportCrash(string source, Exception? error)
+    {
+        var text = $"UNHANDLED {source}: {error}";
+        Console.Error.WriteLine(text);
+        if (Environment.GetEnvironmentVariable("UNODOCK_TEST_RESULTS") is { Length: > 0 } directory)
+        {
+            try
+            {
+                Directory.CreateDirectory(directory);
+                File.AppendAllText(Path.Combine(directory, "crash.log"), text + Environment.NewLine);
+            }
+            catch (IOException)
+            {
+            }
+        }
+    }
+
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
+#if HAS_UNO
         if (TryLaunchBrowserWorkspace())
             return;
+#endif
         if (ReferenceScenario.Mode is { } scenario)
         {
             // Side-by-side review scene (see ReferenceScenario).

@@ -339,7 +339,7 @@ public static class InteractionTests
                 var before = host.GetDropPlan(source, point);
                 Check.True(before != null);
                 Check.Same(target.Parent, before!.Target);
-                var mainWindow = Uno.UI.ApplicationHelper.Windows.Single(w => ReferenceEquals(w.Content?.XamlRoot, host.XamlRoot));
+                var mainWindow = TestWindows.For(host.XamlRoot);
                 mainWindow.Activate();
                 await Task.Delay(100);
                 var after = host.GetDropPlan(source, point);

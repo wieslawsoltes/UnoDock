@@ -70,7 +70,8 @@ def discover(app: Path, selector: str, scratch: Path) -> list[str]:
     scratch.mkdir(parents=True, exist_ok=True)
     env = os.environ.copy()
     env.update(UNODOCK_SELFTEST="1", UNODOCK_TEST_RESULTS=str(scratch), UNODOCK_TEST_SUITE=selector, UNODOCK_LIST_TESTS="1")
-    subprocess.run(["dotnet", str(app)], env=env, check=True, timeout=300, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
+    command = [str(app)] if app.suffix.lower() == ".exe" else ["dotnet", str(app)]
+    subprocess.run(command, env=env, check=True, timeout=300, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
     suites = json.loads((scratch / "selected-suites.json").read_text(encoding="utf-8"))
     shutil.rmtree(scratch, ignore_errors=True)
     return suites

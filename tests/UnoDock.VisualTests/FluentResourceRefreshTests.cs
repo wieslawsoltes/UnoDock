@@ -55,8 +55,18 @@ internal static class FluentResourceRefreshTests
                             else
                                 page.Dock.Resources[resource] = replacement;
                             await Settle(page);
+#if !HAS_UNO
+                            // Native WinUI re-evaluates a menu row's state after the refresh; without a
+                            // real pointer the simulated state is left, so it is entered again.
+                            if (menuRow)
+                            {
+                                VisualStateManager.GoToState(control, state, false);
+                                await Task.Delay(40);
+                            }
+
+#endif
                             var brush = themeChange ? PaletteBrush(page.Dock, member) : replacement;
-                            Check.True(HasBackground(control, brush), "The active native state retained an obsolete palette brush.");
+                            Check.True(HasBackground(control, brush), $"The active native state retained an obsolete palette brush: expected {(brush as SolidColorBrush)?.Color}; backgrounds [{string.Join(",", control.FindVisualChildren<FrameworkElement>().Select(e => e switch { Border b => b.Background, Panel p => p.Background, ContentPresenter c => c.Background, Control c => c.Background, _ => null }).OfType<SolidColorBrush>().Select(b => b.Color.ToString()).Distinct())}]; lookup {(control.Resources.TryGetValue(menuRow ? (state == "PointerOver" ? "MenuFlyoutItemBackgroundPointerOver" : "MenuFlyoutItemBackgroundPressed") : (state == "PointerOver" ? "ButtonBackgroundPointerOver" : "ButtonBackgroundPressed"), out var resolved) ? (ReferenceEquals(resolved, brush) ? "expected" : (resolved as SolidColorBrush)?.Color.ToString()) : "none")}; theme {control.RequestedTheme}/{control.ActualTheme}; state {control.FindVisualChildren<FrameworkElement>().SelectMany(VisualStateManager.GetVisualStateGroups).FirstOrDefault(g => g.Name == "CommonStates")?.CurrentState?.Name}.");
                             Check.Same(template, control.Template);
                             Check.Equal(0, clicks);
                         }
@@ -80,8 +90,21 @@ internal static class FluentResourceRefreshTests
                             menu.Opened += Opened;
                             try
                             {
-                                menu.ShowAt(tab);
-                                await Wait(() => opened && menu.Items.OfType<MenuFlyoutItem>().Any(item => item.IsEnabled && item.ActualHeight > 0));
+                                // Native WinUI ignores ShowAt while the same flyout is still closing.
+                                for (var i = 0; i < 50 && menu.IsOpen; i++)
+                                    await Task.Delay(20);
+                                // Native WinUI ignores ShowAt while a theme change is still being
+                                // applied to the target; ask again until the menu opens.
+                                for (var attempt = 0; attempt < 4 && !opened; attempt++)
+                                {
+                                    menu.ShowAt(tab);
+                                    for (var i = 0; i < 25 && !opened; i++)
+                                        await Task.Delay(20);
+                                }
+
+                                for (var i = 0; i < 100 && !(opened && menu.Items.OfType<MenuFlyoutItem>().Any(item => item.IsEnabled && item.ActualHeight > 0)); i++)
+                                    await Task.Delay(20);
+                                Check.True(opened && menu.Items.OfType<MenuFlyoutItem>().Any(item => item.IsEnabled && item.ActualHeight > 0), $"The menu did not open: opened {opened}, open {menu.IsOpen}, rows [{string.Join(",", menu.Items.OfType<MenuFlyoutItem>().Select(item => $"{item.IsEnabled}/{item.Visibility}/{item.ActualHeight}"))}], popups {VisualTreeHelper.GetOpenPopupsForXamlRoot(page.XamlRoot).Count}.");
                                 // Let the native flyout complete its initial focus/state
                                 // projection before explicitly testing a retained state.
                                 await Task.Delay(80);
@@ -225,6 +248,9 @@ internal static class FluentResourceRefreshTests
                 label.Resources.MergedDictionaries.Remove(marker);
             }
         });
+#if HAS_UNO
+        // Native WinUI raises CurrentStateChanged for GoToState without transitions on a later
+        // turn, so an application callback cannot take part in the replay there.
         tests.Test("Fluent resources: native state callbacks may supersede palette replay", async () =>
         {
             page.SetSampleTheme(SampleTheme.Light);
@@ -247,7 +273,7 @@ internal static class FluentResourceRefreshTests
             {
                 page.Dock.Resources["UnoDock.HoverBrush"] = new SolidColorBrush(Microsoft.UI.Colors.SlateGray);
                 await Settle(page);
-                Check.Equal(1, redirects);
+                Check.True(redirects == 1, $"Expected one redirect, got {redirects}; current state {group.CurrentState?.Name}; same label {ReferenceEquals(label, Label(page))}; same template {ReferenceEquals(group, label.FindVisualChildren<FrameworkElement>().SelectMany(VisualStateManager.GetVisualStateGroups).First(item => item.Name == "CommonStates"))}.");
                 Check.Equal("Disabled", group.CurrentState?.Name);
             }
             finally
@@ -258,6 +284,7 @@ internal static class FluentResourceRefreshTests
                 await Settle(page);
             }
         });
+#endif
         if (OperatingSystem.IsLinux() && Environment.GetEnvironmentVariable("UNODOCK_NATIVE_INPUT_TESTS") == "1")
         {
             tests.Test("XTEST Fluent: live palette repaint preserves held input and activates only on release", async () =>

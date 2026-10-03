@@ -16,6 +16,8 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
     private readonly Dictionary<DependencyProperty, ICommand> _commands = [];
     private DockingManager? _manager;
     private bool _disposed, _attaching;
+    internal bool IsDisposed => _disposed;
+
     private readonly long _visibilityToken;
     protected LayoutItem() => _visibilityToken = RegisterPropertyChangedCallback(VisibilityProperty, (_, _) => OnVisibilityChanged());
     public LayoutContent LayoutElement
@@ -43,11 +45,30 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
     private WeakReference<DependencyObject>? _lastFocused;
     private void RememberFocus(object sender, RoutedEventArgs e)
     {
-        var focused = e.OriginalSource as DependencyObject;
-        if (focused == null && _view?.XamlRoot != null)
-            focused = Microsoft.UI.Xaml.Input.FocusManager.GetFocusedElement(_view.XamlRoot) as DependencyObject;
-        if (focused != null && IsInView(focused))
-            _lastFocused = new(focused);
+        // The focused element itself: native WinUI may report a part of its template as the
+        // event's original source.
+        var focused = _view?.XamlRoot != null ? Microsoft.UI.Xaml.Input.FocusManager.GetFocusedElement(_view.XamlRoot) as DependencyObject : null;
+        Remember(focused ?? e.OriginalSource as DependencyObject);
+    }
+
+    // Native WinUI raises no GotFocus for an element that already has focus, so the editor is
+    // also recorded when focus leaves it.
+    private void RememberLeavingFocus(object sender, RoutedEventArgs e) => Remember(e.OriginalSource as DependencyObject);
+    internal void RememberCurrentFocus()
+    {
+        if (_view?.XamlRoot is { } root && Microsoft.UI.Xaml.Input.FocusManager.GetFocusedElement(root) is DependencyObject focused && IsInView(focused))
+            Remember(focused);
+    }
+
+    internal void Remember(DependencyObject? element)
+    {
+        for (var node = element; node != null && !ReferenceEquals(node, _view); node = VisualTreeHelper.GetParent(node))
+            if (node is Control { IsTabStop: true })
+            {
+                if (IsInView(node))
+                    _lastFocused = new(node);
+                return;
+            }
     }
 
     private bool IsInView(DependencyObject element)
@@ -58,15 +79,32 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
         return false;
     }
 
-    internal bool RestoreEditorFocus()
+    /// <param name = "deferred">False on the first attempt: on native WinUI, a remembered editor
+        /// that cannot take focus yet is then retried on a later turn instead of falling back.</param>
+        internal bool RestoreEditorFocus(bool deferred = true)
     {
         if (_disposed || _view?.XamlRoot == null || !LayoutElement.IsEnabled)
             return false;
-        if (_lastFocused?.TryGetTarget(out var previous) == true && IsInView(previous) && previous is Control control && control.IsEnabled && control.Visibility == Visibility.Visible && control.Focus(FocusState.Programmatic))
-            return true;
+        if (_lastFocused?.TryGetTarget(out var previous) == true && IsInView(previous) && previous is Control control && control.IsEnabled && control.Visibility == Visibility.Visible)
+        {
+            if (control.Focus(FocusState.Programmatic))
+                return true;
+#if WINDOWS
+            // Native WinUI focuses only elements that took part in a layout pass, and content
+            // that was just selected has not yet.
+            _view.UpdateLayout();
+            if (control.Focus(FocusState.Programmatic))
+                return true;
+            if (!deferred)
+                return false;
+#endif
+        }
+
         return Microsoft.UI.Xaml.Input.FocusManager.FindFirstFocusableElement(_view) is Control first && first.Focus(FocusState.Programmatic);
     }
 
+    /// <summary>The editor that last had focus in this item's view, if it is still there.</summary>
+    internal Control? RememberedEditor => _lastFocused?.TryGetTarget(out var previous) == true && IsInView(previous) ? previous as Control : null;
     public bool IsViewCreated => _view != null;
     internal ContentPresenter? ExistingView => _view;
 
@@ -83,6 +121,7 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
                     VerticalContentAlignment = VerticalAlignment.Stretch
                 };
                 _view.GotFocus += RememberFocus;
+                _view.LostFocus += RememberLeavingFocus;
                 UpdateView();
             }
 
@@ -288,6 +327,12 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
         // Unsubscription does not revoke an already captured multicast delivery.
         if (_disposed)
             return;
+#if WINDOWS
+        // Native WinUI raises no focus events for some programmatic focus moves; the editor
+        // is recorded when this content stops being active.
+        if (args.PropertyName == nameof(LayoutContent.IsActive) && !LayoutElement.IsActive)
+            RememberCurrentFocus();
+#endif
         if (args.PropertyName == nameof(LayoutContent.Content))
         {
             Model = LayoutElement.Content;
@@ -315,12 +360,18 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
             if (LayoutElement.Content is UIElement element)
                 VisualParenting.Detach(element);
             View.Content = LayoutElement.Content;
+            VisualParenting.Hosted(View, LayoutElement.Content);
         }
 
         var template = _manager.ContentTemplate(LayoutElement, View);
         if (!ReferenceEquals(View.ContentTemplate, template))
             View.ContentTemplate = template;
         View.DataContext = Model;
+#if WINDOWS
+        // An editor that already had focus when this item was created raises no focus event.
+        if (_lastFocused == null && View.XamlRoot is { } root && Microsoft.UI.Xaml.Input.FocusManager.GetFocusedElement(root) is DependencyObject focused && IsInView(focused))
+            Remember(focused);
+#endif
     }
 
     private IEnumerable<LayoutDocument> Documents() => (LayoutElement.Root as LayoutRoot)?.Descendents().OfType<LayoutDocument>() ?? [];

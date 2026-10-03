@@ -141,17 +141,27 @@ internal static class FluentPresentationTests
                     page.SetSampleTheme(mode);
                     docs[0].IsActive = true;
                     await Settle();
-                    var menu = Tab(docs[0]).ContextFlyout as MenuFlyout;
-                    Check.True(menu != null);
-                    menu!.ShowAt(Tab(docs[0]));
+                    var menu = Tab(docs[0]).ContextFlyout as MenuFlyout ?? throw new InvalidOperationException("The tab has no docking menu.");
+                    // Native WinUI ignores ShowAt while the same flyout is still closing.
+                    for (var i = 0; i < 50 && menu.IsOpen; i++)
+                        await Task.Delay(20);
+                    // Native WinUI ignores ShowAt while a theme change is still being applied to
+                    // the target; ask again until the menu opens.
+                    for (var attempt = 0; attempt < 4 && !menu.IsOpen; attempt++)
+                    {
+                        menu.ShowAt(Tab(docs[0]));
+                        for (var i = 0; i < 25 && !menu.IsOpen; i++)
+                            await Task.Delay(20);
+                    }
+
                     try
                     {
                         await Wait(() => VisualTreeHelper.GetOpenPopupsForXamlRoot(page.XamlRoot).Any());
-                        await Task.Delay(60);
+                        await Wait(() => menu.Items.OfType<MenuFlyoutItem>().Any(i => i.IsEnabled && i.Visibility == Visibility.Visible && i.ActualHeight > 0));
                         var row = menu.Items.OfType<MenuFlyoutItem>().First(i => i.IsEnabled && i.Visibility == Visibility.Visible);
                         Check.True(row.Template != null);
                         Check.False(row.FindVisualChildren<Border>().Any(b => b.Name == "PART_MenuGutter"));
-                        Check.True(row.ActualHeight >= 28 && row.UseSystemFocusVisuals);
+                        Check.True(row.ActualHeight >= 28 && row.UseSystemFocusVisuals, $"Menu row height {row.ActualHeight}, system focus visuals {row.UseSystemFocusVisuals}.");
                         var template = row.Template;
                         page.SetSampleTheme(mode == SampleTheme.Dark ? SampleTheme.Light : SampleTheme.Dark);
                         await Settle();

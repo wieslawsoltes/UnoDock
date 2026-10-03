@@ -1,4 +1,5 @@
 using Microsoft.UI.Xaml.Automation.Peers;
+using UnoDock.Internal;
 using UnoDock.Layout;
 
 namespace UnoDock.Controls;
@@ -17,7 +18,7 @@ public partial class LayoutCachePaneControl
         if (!DispatcherQueue.TryEnqueue(() =>
         {
             _automationSelectionQueued = false;
-            peer.Synchronize();
+            LiveTree.Announce(peer.Synchronize);
         }))
             _automationSelectionQueued = false;
     }
