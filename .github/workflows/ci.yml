@@ -255,6 +255,47 @@ jobs:
             samples/UnoDock.NativeWinUI/bin/x64/Release/
             samples/UnoDock.NativeWinUI/bin/ARM64/Release/
           if-no-files-found: error
+  winui:
+    # The Gallery and every self-test suite on native WinUI (Windows App SDK), not Uno.
+    name: Native WinUI Gallery (${{ matrix.shard }})
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: ['1/2', '2/2']
+    runs-on: windows-latest
+    timeout-minutes: 60
+    env:
+      PYTHONUTF8: '1'
+      UNODOCK_SELFTEST: '1'
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+      - uses: actions/cache@v6
+        with:
+          path: ~/.nuget/packages
+          key: nuget-packages-${{ hashFiles('global.json', '**/Directory.*.props', '**/*.csproj') }}
+          restore-keys: nuget-packages-
+      - uses: microsoft/setup-msbuild@v3
+      - name: Build the Gallery's native WinUI head
+        run: msbuild samples/UnoDock.Gallery/UnoDock.Gallery.csproj -restore -p:Configuration=Release -p:Platform=x64 -p:UnoDockTargetFrameworks=net10.0-windows10.0.26100.0 -p:UnoDockLibraryFrameworks=net10.0-windows10.0.26100.0 -v:minimal
+      - name: Run the Gallery suites on native WinUI
+        shell: bash
+        run: python3 tools/run-desktop-tests.py --app samples/UnoDock.Gallery/bin/x64/Release/net10.0-windows10.0.26100.0/UnoDock.Gallery.exe --output artifacts/winui --selector all --shard ${{ matrix.shard }} --suite-timeout 300 --total-timeout 2700
+      - name: Report application crashes
+        if: failure()
+        shell: pwsh
+        run: |
+          Get-ChildItem artifacts/winui -Recurse -Filter crash.log | ForEach-Object { Get-Content $_ }
+          Get-WinEvent -FilterHashtable @{ LogName = 'Application'; StartTime = (Get-Date).AddMinutes(-60) } -ErrorAction SilentlyContinue | Where-Object { $_.ProviderName -in '.NET Runtime', 'Application Error' } | Select-Object -First 10 | ForEach-Object { "[$($_.ProviderName)] $($_.Message)" }
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: winui-gallery-${{ strategy.job-index }}
+          path: artifacts/winui/
   browser:
     name: Browser
     runs-on: ubuntu-latest

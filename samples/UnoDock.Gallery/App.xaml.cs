@@ -13,13 +13,13 @@ public partial class App : Application
         AppDomain.CurrentDomain.UnhandledException += (_, e) => ReportCrash("AppDomain", e.ExceptionObject as Exception);
         TaskScheduler.UnobservedTaskException += (_, e) => ReportCrash("Task", e.Exception);
 #if WINDOWS
-        // WIP diagnostics: native WinUI fails fast on exceptions thrown in DispatcherQueue callbacks
-        // without raising UnhandledException, so record every first-chance exception.
+        // Native WinUI ends the process on an exception thrown in a DispatcherQueue callback
+        // without raising UnhandledException: self-test runs record first-chance exceptions so
+        // that such a failure leaves its cause behind.
         if (Environment.GetEnvironmentVariable("UNODOCK_TEST_RESULTS") is { Length: > 0 } results && Environment.GetEnvironmentVariable("UNODOCK_TEST_SUITE") is { Length: > 0 } suite)
         {
             var path = Path.Combine(results, "exceptions-" + suite + ".log");
             DebugSettings.XamlResourceReferenceFailed += (_, e) => File.AppendAllText(path, "--- XamlResourceReferenceFailed: " + e.Message + Environment.NewLine);
-            DebugSettings.LayoutCycleTracingLevel = LayoutCycleTracingLevel.High;
             var count = 0;
             var writing = false;
             AppDomain.CurrentDomain.FirstChanceException += (_, e) =>

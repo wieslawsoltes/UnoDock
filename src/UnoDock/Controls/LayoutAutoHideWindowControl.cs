@@ -200,8 +200,7 @@ public partial class LayoutAutoHideWindowControl : ContentControl, ILayoutContro
             catch (ArgumentException error)
             {
                 // WIP diagnostics for native WinUI re-parenting failures.
-                var parent = VisualTreeHelper.GetParent(item.View);
-                throw new InvalidOperationException($"Auto-hide host of {item.View.GetType().Name} failed; parent {parent?.GetType().FullName ?? "none"}; grandparent {(parent == null ? "none" : VisualTreeHelper.GetParent(parent)?.GetType().FullName)}; view content {item.View.Content?.GetType().FullName}", error);
+                throw new InvalidOperationException("Auto-hide host failed: " + VisualParenting.Describe(item.View, _presenter), error);
             }
 #else
             _presenter.Content = item.View;

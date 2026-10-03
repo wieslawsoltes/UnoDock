@@ -49,6 +49,14 @@ internal static class VisualParenting
     }
 
 #if WINDOWS
+    // WIP diagnostics for native WinUI re-parenting failures.
+    internal static string Describe(UIElement element, FrameworkElement target)
+    {
+        var parent = VisualTreeHelper.GetParent(element);
+        var host = Hosts.TryGetValue(element, out var recorded) && recorded.TryGetTarget(out var h) ? h : null;
+        return $"{element.GetType().Name}; visual parent {parent?.GetType().FullName ?? "none"}; logical parent {(element as FrameworkElement)?.Parent?.GetType().FullName ?? "none"}; same XamlRoot {ReferenceEquals(element.XamlRoot, target.XamlRoot)} (element root {(element.XamlRoot == null ? "none" : "set")}, target root {(target.XamlRoot == null ? "none" : "set")}); loaded {(element as FrameworkElement)?.IsLoaded}; recorded host {host?.GetType().FullName ?? "none"}; content {(element as ContentPresenter)?.Content?.GetType().FullName}";
+    }
+
     private static void Release(DependencyObject host, UIElement element)
     {
         switch (host)
@@ -85,8 +93,7 @@ internal static class VisualParenting
             catch (System.Runtime.InteropServices.COMException error)
             {
                 // WIP diagnostics for native WinUI re-parenting failures.
-                var parent = VisualTreeHelper.GetParent(wanted[i]);
-                throw new InvalidOperationException($"Insert of {wanted[i].GetType().Name} into {panel.GetType().Name} failed; parent {parent?.GetType().FullName ?? "none"}; parent content is element: {(parent as ContentPresenter)?.Content == (object)wanted[i]}; grandparent {(parent == null ? "none" : VisualTreeHelper.GetParent(parent)?.GetType().FullName)}", error);
+                throw new InvalidOperationException("Insert into " + panel.GetType().Name + " failed: " + Describe(wanted[i], panel), error);
             }
 #else
             panel.Children.Insert(i, wanted[i]);
