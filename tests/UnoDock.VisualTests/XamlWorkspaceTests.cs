@@ -154,7 +154,20 @@ internal static partial class XamlWorkspaceTests
                     await Task.Delay(20);
                 var surface = typeof(DockingManager).GetProperty("Surface", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(host.Manager) as FrameworkElement;
                 var docked = surface?.GetType().GetField("_docked", BindingFlags.Instance | BindingFlags.NonPublic)?.GetValue(surface) as FrameworkElement;
-                Check.True(host.Manager.FindVisualChildren<LayoutDocumentPaneControl>().First().ActualTheme == mode, $"Pane theme {host.Manager.FindVisualChildren<LayoutDocumentPaneControl>().First().ActualTheme}; same theme instance {ReferenceEquals(theme, host.Manager.Theme)}; docked requested {docked?.RequestedTheme} actual {docked?.ActualTheme}; manager actual {host.Manager.ActualTheme}; chrome theme {theme.RequestedTheme}.");
+                Check.True(host.Manager.FindVisualChildren<LayoutDocumentPaneControl>().First().ActualTheme == mode, $"Pane theme {host.Manager.FindVisualChildren<LayoutDocumentPaneControl>().First().ActualTheme}; same theme instance {ReferenceEquals(theme, host.Manager.Theme)}; docked requested {docked?.RequestedTheme} actual {docked?.ActualTheme}; manager actual {host.Manager.ActualTheme}; chrome theme {theme.RequestedTheme}; chain {Chain(host.Manager.FindVisualChildren<LayoutDocumentPaneControl>().First(), host.Manager)}.");
+                static string Chain(FrameworkElement from, FrameworkElement to)
+                {
+                    var parts = new List<string>();
+                    for (DependencyObject? node = from; node != null && parts.Count < 14; node = VisualTreeHelper.GetParent(node))
+                    {
+                        if (node is FrameworkElement e)
+                            parts.Add($"{e.GetType().Name}({e.RequestedTheme}/{e.ActualTheme})");
+                        if (ReferenceEquals(node, to))
+                            break;
+                    }
+
+                    return string.Join(" < ", parts);
+                }
                 Check.Same(theme, host.Manager.Theme);
                 Check.Equal(mode, (ElementTheme)theme.GetValue(FluentTheme.RequestedThemeProperty));
             });

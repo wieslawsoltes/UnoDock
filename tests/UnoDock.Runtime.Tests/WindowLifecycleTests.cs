@@ -513,6 +513,9 @@ public static class WindowLifecycleTests
             host.Refresh();
             await Tick();
             Check.True(f.EditorA2.Focus(FocusState.Programmatic));
+            await Tick();
+            var afterFocus = (typeof(LayoutItem).GetProperty("RememberedEditor", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(host.GetLayoutItemFromModel(f.A)) as TextBox)?.Text ?? "none";
+            var focusedNow = (FocusManager.GetFocusedElement(host.XamlRoot!) as TextBox)?.Text ?? FocusManager.GetFocusedElement(host.XamlRoot!)?.GetType().Name ?? "none";
             f.B.IsActive = true;
             host.Refresh();
             await Tick();
@@ -525,7 +528,7 @@ public static class WindowLifecycleTests
             CallSurface(host, "CloseNavigator", true);
             await Tick();
             Check.Same(f.A, host.Layout.ActiveContent);
-            Check.True(ReferenceEquals(f.EditorA2, FocusManager.GetFocusedElement(host.XamlRoot!)), "Expected retained second editor, focused: " + (FocusManager.GetFocusedElement(host.XamlRoot!) as TextBox)?.Text + "; remembered before commit: " + before + ", now: " + Remembered());
+            Check.True(ReferenceEquals(f.EditorA2, FocusManager.GetFocusedElement(host.XamlRoot!)), "Expected retained second editor, focused: " + (FocusManager.GetFocusedElement(host.XamlRoot!) as TextBox)?.Text + "; remembered before commit: " + before + ", now: " + Remembered() + ", after focusing A2: " + afterFocus + " (focused " + focusedNow + ")");
         });
         Live("navigator respects activation command CanExecute", async f =>
         {

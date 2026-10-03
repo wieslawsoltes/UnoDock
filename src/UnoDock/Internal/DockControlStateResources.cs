@@ -108,9 +108,13 @@ internal sealed class DockControlStateResources
         // Native WinUI resolves ThemeResource references, state setters included, when the
         // template loads and when the element's theme changes; replacing a dictionary entry or
         // entering a state again does not. Re-applying the theme resolves them again.
-        var requested = control.RequestedTheme;
-        control.RequestedTheme = control.ActualTheme == ElementTheme.Dark ? ElementTheme.Light : ElementTheme.Dark;
-        control.RequestedTheme = requested;
+        // Menu rows live in an open popup, where changing the theme faults on ARM64.
+        if (control is not MenuFlyoutItemBase)
+        {
+            var requested = control.RequestedTheme;
+            control.RequestedTheme = control.ActualTheme == ElementTheme.Dark ? ElementTheme.Light : ElementTheme.Dark;
+            control.RequestedTheme = requested;
+        }
 #endif
         // ThemeResource on a native state setter is resolved when that state is
         // entered. Dictionary replacement alone does not refresh an already-hot
