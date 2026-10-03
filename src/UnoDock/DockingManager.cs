@@ -372,6 +372,8 @@ public partial class DockingManager : Control, IDisposable, UnoDock.Compatibilit
 
     private void OnUnloaded(object sender, RoutedEventArgs args)
     {
+        if (LiveTree.IsStaleUnload(this))
+            return;
         _loaded = false;
         ReleaseThemeParameters();
         _surface?.CancelDrag();

@@ -35,7 +35,11 @@ public partial class NavigatorWindow : DockWindowControl
         BuildDefaultChrome();
         Attach(_documentsList);
         Attach(_anchorablesList);
-        Unloaded += (_, _) => EndSession();
+        Unloaded += (_, _) =>
+        {
+            if (!LiveTree.IsStaleUnload(this))
+                EndSession();
+        };
         // The selected row takes the active selection look while the navigator
         // holds keyboard focus, and the inactive one otherwise.
         GotFocus += (_, _) => TrackFocus();

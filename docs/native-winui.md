@@ -105,7 +105,7 @@ not called on a window that is being destroyed.
 |---|---|---|
 | Exception thrown by an event handler or property-changed callback that the framework raises (`DataContextChanged`, `RegisterPropertyChangedCallback`, ...) | returns to the code that changed the value | not returned to the caller |
 | Exception thrown by a `DispatcherQueue` callback | does not end the process | ends the process without raising `UnhandledException` |
-| `Loaded` | raised when the element joins the live tree | raised on a later dispatcher turn, after the layout pass; `Unloaded` likewise arrives after the change that removed the element |
+| `Loaded` | raised when the element joins the live tree | raised on a later dispatcher turn, after the layout pass; `Unloaded` likewise arrives after the change that removed the element, even when the element has been added back in the meantime |
 | A `ContentPresenter`'s or `ContentControl`'s element content, a `TabViewItem`'s header | becomes a visual child when assigned | becomes a visual child during the next layout pass |
 | Changed `ContentTemplate` | expanded when set | expanded during the next layout pass |
 | `ResourceDictionary.ContainsKey` and `Keys.Contains` | the dictionary's own entries | also merged and theme dictionaries, and the framework's theme resources (for example `ButtonBackgroundPointerOver` in any dictionary) |
@@ -138,6 +138,9 @@ UnoDock keeps its behavior the same on both platforms where it can:
   UnoDock shows it.
 * **`Refresh()`** applies template changes; on native WinUI their visuals appear after the
   next layout pass (call `UpdateLayout()` to force it).
+* **Stale `Unloaded`.** UnoDock ignores an `Unloaded` event that arrives while the element
+  is back in its window's tree, so a flyout or manager that is removed and re-added in one
+  turn is not torn down afterwards.
 * **Coordinates.** `DesktopWindowCoordinates` accepts an element that is already connected
   under its window content but whose `Loaded` event has not been raised yet.
 * **Focus.** Restoring a document's last focused editor, and `SetFocus` on a splitter's

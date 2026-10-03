@@ -148,7 +148,11 @@ public partial class LayoutAutoHideWindowControl : ContentControl, ILayoutContro
                     _manager?.Surface?.StartAutoHideTimer();
             });
         };
-        Unloaded += (_, _) => CloseView();
+        Unloaded += (_, _) =>
+        {
+            if (!LiveTree.IsStaleUnload(this))
+                CloseView();
+        };
         IsEnabledChanged += (_, _) =>
         {
             if (!IsEnabled)
