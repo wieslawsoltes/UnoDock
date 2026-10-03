@@ -155,7 +155,20 @@ internal static partial class XamlWorkspaceTests
                     await Task.Delay(20);
                 var surface = typeof(DockingManager).GetProperty("Surface", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(host.Manager) as FrameworkElement;
                 var docked = surface?.GetType().GetField("_docked", BindingFlags.Instance | BindingFlags.NonPublic)?.GetValue(surface) as FrameworkElement;
-                Check.True(host.Manager.FindVisualChildren<LayoutDocumentPaneControl>().First().ActualTheme == mode, $"Pane theme {host.Manager.FindVisualChildren<LayoutDocumentPaneControl>().First().ActualTheme}; same theme instance {ReferenceEquals(theme, host.Manager.Theme)}; docked requested {docked?.RequestedTheme} actual {docked?.ActualTheme}; manager actual {host.Manager.ActualTheme}; chrome theme {theme.RequestedTheme}; chain {Chain(host.Manager.FindVisualChildren<LayoutDocumentPaneControl>().First(), host.Manager)}; same pane {ReferenceEquals(initialPane, host.Manager.FindVisualChildren<LayoutDocumentPaneControl>().First())}; panes {host.Manager.FindVisualChildren<LayoutDocumentPaneControl>().Count()} [{string.Join(",", host.Manager.FindVisualChildren<LayoutDocumentPaneControl>().Select(p => p.ActualTheme))}].");
+                var remedies = "";
+                if (host.Manager.FindVisualChildren<LayoutDocumentPaneControl>().First().ActualTheme != mode && docked != null)
+                {
+                    var stuck = docked.FindVisualChildren<LayoutPanelControl>().First();
+                    var requested = docked.RequestedTheme;
+                    docked.RequestedTheme = ElementTheme.Light;
+                    docked.RequestedTheme = requested;
+                    remedies += $" re-set docked: panel {stuck.ActualTheme};";
+                    stuck.RequestedTheme = mode;
+                    stuck.RequestedTheme = ElementTheme.Default;
+                    remedies += $" toggled panel: panel {stuck.ActualTheme}, pane {host.Manager.FindVisualChildren<LayoutDocumentPaneControl>().First().ActualTheme};";
+                    Console.Error.WriteLine("DIAG theme remedies:" + remedies);
+                }
+                Check.True(host.Manager.FindVisualChildren<LayoutDocumentPaneControl>().First().ActualTheme == mode, $"Pane theme {host.Manager.FindVisualChildren<LayoutDocumentPaneControl>().First().ActualTheme}; same theme instance {ReferenceEquals(theme, host.Manager.Theme)}; docked requested {docked?.RequestedTheme} actual {docked?.ActualTheme}; manager actual {host.Manager.ActualTheme}; chrome theme {theme.RequestedTheme}; chain {Chain(host.Manager.FindVisualChildren<LayoutDocumentPaneControl>().First(), host.Manager)}; same pane {ReferenceEquals(initialPane, host.Manager.FindVisualChildren<LayoutDocumentPaneControl>().First())}; panes {host.Manager.FindVisualChildren<LayoutDocumentPaneControl>().Count()} [{string.Join(",", host.Manager.FindVisualChildren<LayoutDocumentPaneControl>().Select(p => p.ActualTheme))}]; remedies:{remedies}");
                 static string Chain(FrameworkElement from, FrameworkElement to)
                 {
                     var parts = new List<string>();
