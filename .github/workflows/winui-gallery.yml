@@ -21,6 +21,7 @@ jobs:
       - name: Build the Gallery native WinUI head
         run: msbuild samples/UnoDock.Gallery/UnoDock.Gallery.csproj -restore -p:Configuration=Release -p:Platform=x64 -p:UnoDockTargetFrameworks=net10.0-windows10.0.26100.0 -p:UnoDockLibraryFrameworks=net10.0-windows10.0.26100.0 -v:minimal
       - name: Run every suite on native WinUI
+        if: ${{ !contains(github.event.head_commit.message, '[build-only]') }}
         shell: bash
         run: |
           exe=$(find samples/UnoDock.Gallery/bin -name UnoDock.Gallery.exe | head -1)

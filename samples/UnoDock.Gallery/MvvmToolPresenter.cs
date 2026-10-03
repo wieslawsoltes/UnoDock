@@ -43,7 +43,20 @@ public sealed class MvvmToolPresenter : ContentControl
             }
         }
 
-        Content = view;
+        try
+        {
+            Content = view;
+        }
+        catch (Exception error) when (view != null && error is System.Runtime.InteropServices.COMException)
+        {
+            // WIP diagnostics.
+            var chain = new List<string>();
+            for (DependencyObject? node = VisualTreeHelper.GetParent(view); node != null && chain.Count < 8; node = VisualTreeHelper.GetParent(node))
+                chain.Add(node.GetType().Name + (node is ContentPresenter p ? "(content " + (ReferenceEquals(p.Content, view) ? "view" : p.Content?.GetType().Name) + ")" : node is ContentControl c ? "(content " + (ReferenceEquals(c.Content, view) ? "view" : c.Content?.GetType().Name) + ")" : ""));
+            var owner = Owners.TryGetValue(view, out var recorded) && recorded.TryGetTarget(out var o) ? o : null;
+            throw new InvalidOperationException($"Tool view hosting failed: chain [{string.Join(" < ", chain)}]; logical parent {view.Parent?.GetType().Name ?? "none"}; owner {(owner == null ? "none" : ReferenceEquals(owner, this) ? "this" : "other, content is view: " + ReferenceEquals(owner.Content, view) + ", loaded " + owner.IsLoaded)}; view loaded {view.IsLoaded}", error);
+        }
+
         if (view != null)
             Owners.AddOrUpdate(view, new(this));
     }
