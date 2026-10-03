@@ -122,6 +122,10 @@ internal sealed partial class DockSurface : Grid, IDisposable
         // ContentControl does not necessarily paint Background on every host.
         // Paint the full docking grid so side rails never depend on Window pixels.
         _docked.RequestedTheme = DockThemeResources.EffectiveTheme(Manager);
+#if WINDOWS
+        if (Environment.GetEnvironmentVariable("UNODOCK_TRACE") == "1")
+            Console.Error.WriteLine($"TRACE theme docked {_docked.RequestedTheme}/{_docked.ActualTheme} children [{string.Join(", ", _docked.Children.OfType<FrameworkElement>().Select(c => c.GetType().Name + ":" + c.RequestedTheme + "/" + c.ActualTheme))}]");
+#endif
         _docked.Background = DockChrome.Palette(Manager).States.Workspace;
         var root = Manager.Layout;
         var panel = (LayoutPanelControl)GetView(root.RootPanel);

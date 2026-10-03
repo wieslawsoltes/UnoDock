@@ -83,7 +83,11 @@ internal sealed class DockContextMenu : MenuFlyout, IDisposable
                     _palette = palette;
                     MenuFlyoutPresenterStyle = DockMenuRow.PresenterStyle(palette);
 #if WINDOWS
+                    if (Environment.GetEnvironmentVariable("UNODOCK_TRACE") == "1")
+                        Console.Error.WriteLine("TRACE menu repaint " + palette.Theme);
                     RepaintExistingPresenter(palette);
+                    if (Environment.GetEnvironmentVariable("UNODOCK_TRACE") == "1")
+                        Console.Error.WriteLine("TRACE menu repainted");
 #endif
                 }
 
