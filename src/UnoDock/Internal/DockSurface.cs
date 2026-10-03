@@ -174,6 +174,7 @@ internal sealed partial class DockSurface : Grid, IDisposable
         {
             VisualParenting.Detach(control);
             _floats.Children.Add(control);
+            VisualParenting.Hosted(_floats, control);
         }
 
         control.Visibility = control.IsMinimized ? Visibility.Collapsed : Visibility.Visible;

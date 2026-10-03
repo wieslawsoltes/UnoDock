@@ -5,17 +5,14 @@ namespace UnoDock.Internal;
 internal static class VisualParenting
 {
 #if WINDOWS
-    // The content host (ContentPresenter, ContentControl or TabViewItem header) last given each
-    // element, held for as long as the element lives. On native WinUI a discarded host can still
-    // own the element natively after its managed wrapper is unreachable, so it must stay
-    // reachable for Detach to release the element.
+    // The host (panel, ContentPresenter, ContentControl or TabViewItem header) UnoDock last gave
+    // each element, held for as long as the element lives. Native WinUI connects content during
+    // layout and reports no parent for an element whose host has left the live tree, yet still
+    // refuses that element to another host; Detach releases it from the recorded host.
     private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<UIElement, DependencyObject> Hosts = new();
 #endif
 
-    /// <summary>Records the content host that was just given <paramref name="content"/>.</summary>
-#if WINDOWS
-    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<UIElement, Panel> LastPanels = new();
-#endif
+    /// <summary>Records the host that was just given <paramref name="content"/>.</summary>
     internal static void Hosted(DependencyObject host, object? content)
     {
 #if WINDOWS
@@ -56,6 +53,9 @@ internal static class VisualParenting
     {
         switch (host)
         {
+            case Panel panel:
+                panel.Children.Remove(element);
+                break;
             case ContentPresenter presenter when ReferenceEquals(presenter.Content, element):
                 presenter.Content = null;
                 break;
@@ -80,37 +80,8 @@ internal static class VisualParenting
             if (i < panel.Children.Count && ReferenceEquals(panel.Children[i], wanted[i]))
                 continue;
             Detach(wanted[i]);
-#if WINDOWS
-            try
-            {
-                panel.Children.Insert(i, wanted[i]);
-                LastPanels.AddOrUpdate(wanted[i], panel);
-            }
-            catch (System.Runtime.InteropServices.COMException error)
-            {
-                // WIP diagnostics.
-                _ = error;
-                string probe;
-                try
-                {
-                    var grid = new Grid();
-                    grid.Children.Add(wanted[i]);
-                    grid.Children.Remove(wanted[i]);
-                    probe = "accepted by a new panel";
-                }
-                catch (Exception failure)
-                {
-                    probe = "rejected by a new panel " + failure.HResult.ToString("X8");
-                }
-
-                var last = LastPanels.TryGetValue(wanted[i], out var previous) ? previous : null;
-                var hosted = Hosts.TryGetValue(wanted[i], out var tracked) ? tracked : null;
-                probe += $"; last panel {(last == null ? "none" : (ReferenceEquals(last, panel) ? "same" : "other") + " contains " + last.Children.Contains(wanted[i]) + " loaded " + last.IsLoaded + " root " + (last.XamlRoot != null) + " parent " + (VisualTreeHelper.GetParent(last)?.GetType().Name ?? "none"))}; tracked host {(hosted == null ? "none" : hosted.GetType().Name)}";
-                throw new InvalidOperationException($"Insert of {wanted[i].GetType().Name} into {panel.GetType().Name} failed ({probe}); visual parent {VisualTreeHelper.GetParent(wanted[i])?.GetType().Name ?? "none"}; element root {(wanted[i].XamlRoot == null ? "none" : "set")}; panel root {(panel.XamlRoot == null ? "none" : "set")}; panel loaded {panel.IsLoaded}; element loaded {(wanted[i] as FrameworkElement)?.IsLoaded}", error);
-            }
-#else
             panel.Children.Insert(i, wanted[i]);
-#endif
+            Hosted(panel, wanted[i]);
         }
     }
 }

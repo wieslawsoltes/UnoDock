@@ -86,6 +86,7 @@ public abstract partial class LayoutGridControl<T> : Grid, ILayoutControl, IRefr
                 SetColumn(view, horizontal ? i * 2 : 0);
                 SetRow(view, horizontal ? 0 : i * 2);
                 Children.Add(view);
+                VisualParenting.Hosted(this, view);
                 if (i + 1 < models.Length)
                 {
                     if (horizontal)
