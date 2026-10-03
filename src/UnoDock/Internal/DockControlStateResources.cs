@@ -131,6 +131,11 @@ internal sealed class DockControlStateResources
             if (!VisualStateManager.GoToState(control, "Normal", false))
                 return;
             group.CurrentStateChanged -= Changed;
+#if WINDOWS
+            // Native WinUI raises CurrentStateChanged on a later turn: an event arriving now
+            // belongs to an earlier transition, and no callback can redirect this one.
+            interrupted = false;
+#endif
             if (!interrupted && version == _version && ReferenceEquals(control.Template, template) && LiveTree.IsLive(control) && group.CurrentState?.Name == "Normal")
             {
                 ReapplyTheme(control);

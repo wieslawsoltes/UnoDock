@@ -1,5 +1,6 @@
 #if WINDOWS
 using Microsoft.UI.Xaml.Markup;
+using UnoDock.Controls;
 
 namespace UnoDock;
 
@@ -55,10 +56,38 @@ public partial class DockingManager
             Microsoft.UI.Xaml.Input.FocusManager.GotFocus -= OnFocusManagerGotFocus;
     }
 
+    private LayoutItem? _guardedItem;
+    private Control? _guardedEditor;
+    private long _guardUntil;
+    /// <summary>For a moment after the navigator restores an editor, focus that WinUI moves to
+    /// another element of the same view returns to that editor.</summary>
+    internal void GuardEditorFocus(LayoutItem item, Control editor)
+    {
+        _guardedItem = item;
+        _guardedEditor = editor;
+        _guardUntil = Environment.TickCount64 + 500;
+    }
+
     private void OnFocusManagerGotFocus(object? sender, Microsoft.UI.Xaml.Input.FocusManagerGotFocusEventArgs e)
     {
         if (_disposed || e.NewFocusedElement is not DependencyObject focused || !DispatcherQueue.HasThreadAccess)
             return;
+        if (_guardedEditor is { } guarded && _guardedItem is { } owner)
+        {
+            if (Environment.TickCount64 > _guardUntil || ReferenceEquals(focused, guarded))
+            {
+                _guardedEditor = null;
+                _guardedItem = null;
+            }
+            else if (owner.ExistingView is { } guardedView && IsWithin(focused, guardedView))
+            {
+                _guardedEditor = null;
+                _guardedItem = null;
+                guarded.Focus(FocusState.Programmatic);
+                return;
+            }
+        }
+
         for (var node = focused; node != null; node = VisualTreeHelper.GetParent(node))
             if (node is ContentPresenter view)
                 foreach (var item in _items.Values)
@@ -67,6 +96,14 @@ public partial class DockingManager
                         item.Remember(focused);
                         return;
                     }
+    }
+
+    private static bool IsWithin(DependencyObject element, DependencyObject ancestor)
+    {
+        for (var node = element; node != null; node = VisualTreeHelper.GetParent(node))
+            if (ReferenceEquals(node, ancestor))
+                return true;
+        return false;
     }
 
     private static bool IsDescribedByXamlMetadata(Type type)

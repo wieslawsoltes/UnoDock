@@ -195,31 +195,15 @@ internal sealed partial class DockSurface
 #if WINDOWS
             // Native WinUI moves focus once more when the navigator leaves the tree, after this
             // turn; return it to the editor this commit restored.
-            DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () =>
-            {
-                if (CurrentFocus() && editor is { XamlRoot: { } root } && !ReferenceEquals(Microsoft.UI.Xaml.Input.FocusManager.GetFocusedElement(root), editor))
-                    editor.Focus(FocusState.Programmatic);
-            });
+            if (editor != null)
+                Manager.GuardEditorFocus(item, editor);
 #endif
             return;
         }
-#if WINDOWS
-        // Native WinUI focuses the remembered editor only once its view has been laid out, which
-        // can take a few turns after the navigator closes; fall back to the first editor last.
-        RetryEditorFocus(4);
-        void RetryEditorFocus(int remaining) => DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () =>
-        {
-            if (!CurrentFocus() || item.RestoreEditorFocus(deferred: remaining == 0))
-                return;
-            if (remaining > 0)
-                RetryEditorFocus(remaining - 1);
-        });
-#else
         DispatcherQueue.TryEnqueue(() =>
         {
             if (CurrentFocus())
                 item.RestoreEditorFocus();
         });
-#endif
     }
 }
