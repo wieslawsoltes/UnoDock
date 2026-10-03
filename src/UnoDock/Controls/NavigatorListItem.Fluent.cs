@@ -19,27 +19,36 @@ internal sealed partial class NavigatorListItem
 #if WINDOWS
         try
         {
-            Template = template;
+            ApplyTemplateKind(template);
+            _templateRetries = 0;
         }
-        catch (System.Runtime.InteropServices.COMException)
+        catch (System.Runtime.InteropServices.COMException) when (_templateRetries < 3)
         {
-            // Native WinUI can refuse to replace the template while the old one is still being
-            // torn down (0x80004005); switch on the next turn instead.
+            // Native WinUI can refuse changes to a row whose previous template is still being
+            // torn down (0x80004005); switch on a later turn instead, a bounded number of times.
+            _templateRetries++;
             _fluent = !_fluent;
             DispatcherQueue.TryEnqueue(() =>
             {
                 if (_surface != null)
                     Configure(_palette, _surface);
             });
-            return;
         }
-
 #else
-        Template = template;
+        ApplyTemplateKind(template);
 #endif
+    }
+
+#if WINDOWS
+    private int _templateRetries;
+#endif
+    private void ApplyTemplateKind(ControlTemplate template)
+    {
+        // Template-bound properties first: they then reach the new template when it is applied.
         CornerRadius = new(_fluent ? _palette.TabCornerRadius : 0);
         BorderThickness = new(_fluent ? 0 : 1);
         UseSystemFocusVisuals = _fluent;
+        Template = template;
     }
 
     protected override void OnApplyTemplate()
