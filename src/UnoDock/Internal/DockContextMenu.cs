@@ -124,7 +124,6 @@ internal sealed class DockContextMenu : MenuFlyout, IDisposable
         for (DependencyObject? node = _entries[0].Row; node != null; node = VisualTreeHelper.GetParent(node))
             if (node is MenuFlyoutPresenter presenter)
             {
-                presenter.RequestedTheme = palette.Theme;
                 presenter.Background = palette.Surface;
                 presenter.BorderBrush = palette.Border;
                 return;

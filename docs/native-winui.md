@@ -108,7 +108,9 @@ not called on a window that is being destroyed.
 | `Loaded` | raised when the element joins the live tree | raised on a later dispatcher turn, after the layout pass; `Unloaded` likewise arrives after the change that removed the element |
 | A `ContentPresenter`'s or `ContentControl`'s element content, a `TabViewItem`'s header | becomes a visual child when assigned | becomes a visual child during the next layout pass |
 | Changed `ContentTemplate` | expanded when set | expanded during the next layout pass |
-| `ResourceDictionary.ContainsKey` and `Keys.Contains` | the dictionary's own entries | also merged and theme dictionaries |
+| `ResourceDictionary.ContainsKey` and `Keys.Contains` | the dictionary's own entries | also merged and theme dictionaries, and the framework's theme resources (for example `ButtonBackgroundPointerOver` in any dictionary) |
+| `XamlControlsResources` theme dictionaries | visible | resolved internally, for the application's theme only |
+| `MenuFlyoutPresenterStyle` | applied whenever the menu opens | applied when the presenter is created; the presenter is reused |
 | One `ResourceDictionary` instance under several theme keys | allowed | rejected: a dictionary has one parent |
 | `Focus` on an element that has not been laid out | succeeds | fails |
 | `ControlTemplate` without `TargetType` that uses `{TemplateBinding}` on a member `Control` does not declare (such as `Content`) | binds | layout fails with `0x80004005` |
@@ -142,6 +144,8 @@ UnoDock keeps its behavior the same on both platforms where it can:
   automation peer, lay out newly shown content first.
 * **Theme resources.** UnoDock looks up density and palette overrides in each dictionary's own
   entries first, then in its merged dictionaries, on both platforms.
+* **Menus.** A docking menu whose palette changes while it exists repaints its existing
+  presenter.
 * **Images.** `UriSourceToBitmapImageConverter` resolves a relative URI as `ms-appx:///` (a
   file in the application package) on native WinUI.
 
