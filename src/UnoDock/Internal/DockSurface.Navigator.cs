@@ -189,7 +189,7 @@ internal sealed partial class DockSurface
         floating?.Activate();
         if (!CurrentFocus())
             return;
-        if (item.RestoreEditorFocus())
+        if (item.RestoreEditorFocus(deferred: false))
             return;
         DispatcherQueue.TryEnqueue(() =>
         {

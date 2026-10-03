@@ -149,7 +149,8 @@ internal static class XamlPresentationTests
                         Check.Same(editor, presenter.FindVisualChildren<XamlDocumentEditor>().Single());
                         Check.Equal("Density must not replace this draft.", view.Document.Text);
                         var caption = (Grid)typeof(LayoutFloatingWindowControl).GetField("_title", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(floating)!;
-                        Check.True(caption.ActualHeight >= Metric(manager, "TitleHeight") - .1);
+                        // A floating window lays out on its own (native WinUI: later) turn.
+                        await Wait(() => caption.ActualHeight >= Metric(manager, "TitleHeight") - .1);
                     }
 
                     document.Dock();

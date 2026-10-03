@@ -82,6 +82,9 @@ internal sealed class DockContextMenu : MenuFlyout, IDisposable
                 {
                     _palette = palette;
                     MenuFlyoutPresenterStyle = DockMenuRow.PresenterStyle(palette);
+#if WINDOWS
+                    RestyleExistingPresenter();
+#endif
                 }
 
                 var focused = _open && _manager?.XamlRoot != null ? Microsoft.UI.Xaml.Input.FocusManager.GetFocusedElement(_manager.XamlRoot) as DockMenuRow : null;
@@ -110,6 +113,22 @@ internal sealed class DockContextMenu : MenuFlyout, IDisposable
         }
     }
 
+#if WINDOWS
+    // Native WinUI applies MenuFlyoutPresenterStyle when it creates the presenter and keeps that
+    // presenter for later openings, so a changed palette must reach the existing one.
+    private void RestyleExistingPresenter()
+    {
+        if (_entries.Count == 0)
+            return;
+        for (DependencyObject? node = _entries[0].Row; node != null; node = VisualTreeHelper.GetParent(node))
+            if (node is MenuFlyoutPresenter presenter)
+            {
+                presenter.Style = MenuFlyoutPresenterStyle;
+                return;
+            }
+    }
+
+#endif
     internal void Suspend()
     {
         EndOpening();

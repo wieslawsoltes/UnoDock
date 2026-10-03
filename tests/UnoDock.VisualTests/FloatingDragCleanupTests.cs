@@ -82,8 +82,9 @@ internal static class FloatingDragCleanupTests
                             f.AssertIdle();
 #if !HAS_UNO
                             // Only guide observers failed, and native WinUI kept that from UnoDock:
-                            // the release is an ordinary drop there.
-                            if (!(commit && fault == "guides"))
+                            // the release is an ordinary drop there, and the window has docked.
+                            if (commit && fault == "guides")
+                                return;
 #endif
                             Check.True(f.Source.All(c => ReferenceEquals(c.FindParent<LayoutFloatingWindow>(), f.Floating)), "Teardown failure authorized a drop.");
                             for (var i = 0; i < editors.Length; i++)

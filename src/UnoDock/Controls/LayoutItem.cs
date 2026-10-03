@@ -59,7 +59,9 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
         return false;
     }
 
-    internal bool RestoreEditorFocus()
+    /// <param name="deferred">False on the first attempt: on native WinUI, a remembered editor
+    /// that cannot take focus yet is then retried on a later turn instead of falling back.</param>
+    internal bool RestoreEditorFocus(bool deferred = true)
     {
         if (_disposed || _view?.XamlRoot == null || !LayoutElement.IsEnabled)
             return false;
@@ -73,6 +75,8 @@ public abstract partial class LayoutItem : FrameworkElement, IDisposable
             _view.UpdateLayout();
             if (control.Focus(FocusState.Programmatic))
                 return true;
+            if (!deferred)
+                return false;
 #endif
         }
 
